@@ -32,14 +32,14 @@ export default function Home() {
         
         {isMobile && (
           <div
-            className={`absolute top-[40%] ${isOpen ? "left-[168px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-20 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
+            className={`absolute top-[40%] ${isOpen ? "left-[188px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-20 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
             onClick={toggleSidebar}
           >
             {isOpen ? <div className="rotate-180" ><Play /></div> : <Play />}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] w-full h-full">
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] w-full h-full">
           
           <Sidebar isOpen={isOpen} isMobile={isMobile} />
 

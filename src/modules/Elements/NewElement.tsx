@@ -4,7 +4,7 @@ export default function NewEpp() {
   return (
     <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
       <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full text-[12px] md:text-[14px]">
-        <h1 className="text-2xl font-bold mb-4">REGISTRAR EPP</h1>
+        <h1 className="text-2xl font-bold mb-4">REGISTRAR ELEMENTO</h1>
       </div>
       <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-[14px] text-gray-600">
         <form className="flex flex-col gap-4 w-full max-w-md">

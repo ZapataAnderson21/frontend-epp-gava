@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { IoMdArrowDropdown } from 'react-icons/io'; 
-import ContentTable from './components/ContentTable';
-import HeaderTable from './components/HeaderTable';
-import { FaPlus } from 'react-icons/fa6';
+import { useState } from "react";
+import { IoMdArrowDropdown } from "react-icons/io"; // ícono de flecha
+import ContentTable from "./components/ContentTable";
+import HeaderTable from "./components/HeaderTable";
+import { FaPlus } from "react-icons/fa6";
 
 const options = [
   { value: "all", label: "Todas" },
@@ -11,7 +11,7 @@ const options = [
   { value: "rejected", label: "Rechazadas" },
 ];
 
-export default function Epp() {
+export default function Requests() {
   const [selected, setSelected] = useState(options[0]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -22,10 +22,9 @@ export default function Epp() {
 
   return (
     <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-      <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full mb-4 text-[14px]">
-        <h1 className="text-2xl font-bold mb-4 sm:mb-0">LISTA DE EPP´s</h1>
+      <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full mb-4 text-[12px] md:text-[14px]">
+        <h1 className="text-2xl font-bold mb-4 sm:mb-0">REQUERIMIENTOS</h1>
         <div className="flex flex-row items-center justify-end w-full md:w-fit mb-4 gap-2">
-          
           <span className="hidden lg:block">Filtrar por:</span>
 
           <div className="relative w-[160px]">
@@ -55,14 +54,14 @@ export default function Epp() {
               </div>
             )}
           </div>
-          <a href="/admin/epps/new">
+          <a href="/admin/requests/new">
             <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-6 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
               <FaPlus />Añadir
             </button>
           </a>
         </div>
       </div>
-      <div className="flex flex-col items-start justify-start gap-2 w-full h-full text-gray-600">
+      <div className="flex flex-col items-start justify-start gap-2 w-full h-full text-[14px] text-gray-600">
 
         <HeaderTable />
         
