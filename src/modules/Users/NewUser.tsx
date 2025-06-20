@@ -25,7 +25,10 @@ export default function NewUser() {
             <input type="password" id="password" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" />
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="role" className="font-semibold">Rol</label>
+            <div className="flex flex-row items-end justify-between">
+              <label htmlFor="role" className="font-semibold">Rol</label>
+              <a href="/admin/users/role/new" className="text-xs text-blue-600 underline font-semibold">Agregar un nuevo rol</a>
+            </div>
             <select id="role" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]">
               <option value="admin">Administrador</option>
               <option value="user">Usuario</option>

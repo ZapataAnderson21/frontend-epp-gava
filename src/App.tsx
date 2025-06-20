@@ -10,6 +10,7 @@ import NewProject from './modules/Projects/NewProject.tsx';
 import Projects from './modules/Projects/Projects.tsx';
 import NewElement from './modules/Elements/NewElement.tsx';
 import Elements from './modules/Elements/Elements.tsx';
+import NewRole from './modules/Users/NewRole.tsx';
 
 export default function App() {
 
@@ -27,6 +28,7 @@ export default function App() {
           <Route path='elements/new' element={<NewElement />} />
           <Route path='users' element={<Users />} />
           <Route path='users/new' element={<NewUser />} />
+          <Route path='users/role/new' element={<NewRole />} />
         </Route>
       </Routes>
     </BrowserRouter>

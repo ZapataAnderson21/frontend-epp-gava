@@ -9,7 +9,7 @@ create table user(
 );
 
 create table user_type(
-  user_type_id primary key,
+  user_type_id int primary key,
   name varchar(50)
 );
 
@@ -17,6 +17,13 @@ create table user_user_type(
   user_user_type_id int primary key,
   user_id int not null foreign key references user(user_id),
   user_type_id int not null foreign key references user_type(user_type_id)
+);
+
+create table project(
+  project_id int primary key,
+  name varchar(50) not null,
+  description varchar(255) not null default 'Sin descripción',
+  status (active, inactive) not null default 'active'
 );
 
 create table element(
@@ -31,6 +38,7 @@ create table request(
   acceptance_date date null,
   status (pending, accepted, rejected) not null default 'pending',
   description varchar(255) not null,
+  project_id int not null foreign key references project(project_id),
   user_id int not null foreign key references user(user_id),
 );
 

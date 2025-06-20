@@ -3,7 +3,7 @@ export default function Header() {
     <section className="col-span-2 row-span-1 flex items-center justify-center w-full h-[90px] shadow-xs">
         <div className="flex flex-row items-center justify-between w-full p-8">
           <div className="flex flex-row items-center justify-start gap-4">
-            <img src="/logo-gava.png" alt="Logo" className="h-12" />
+            <img src="/logo-gava.png" alt="Logo" className="h-14" />
           </div>
           <div>
             <div className="flex flex-row items-center justify-center gap-4">

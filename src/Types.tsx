@@ -19,6 +19,13 @@ interface UserUserType {
   user_type?: UserType;
 }
 
+interface Project {
+  project_id?: number;
+  name: string;
+  description: string;
+  status: string;
+}
+
 interface Element {
   element_id?: number;
   name: string;
@@ -30,6 +37,8 @@ interface Request {
   user_id: number;
   date: string;
   status: string;
+  project_id?: number;
+  project?: Project;
   user?: User;
 }
 
