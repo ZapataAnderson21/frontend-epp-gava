@@ -3,19 +3,41 @@ import { FaProjectDiagram, FaTools } from "react-icons/fa";
 import { FaHistory } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface SidebarProps {
   isOpen: boolean;
   isMobile?: boolean;
+  setIsOpen?: (value: boolean) => void;
 }
 
-export default function Sidebar({ isOpen, isMobile }: SidebarProps) {
+
+export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
   const [isElementosOpen, setIsElementosOpen] = useState(false);
-  
+
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isMobile &&
+        isOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen?.(false); // Llama a la función si está definida
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, isMobile, setIsOpen]);
+
   return (
-    <section className={`text-[14px] text-gray-500
+    <section ref={sidebarRef} className={`text-[14px] text-gray-500
       ${isMobile ? `absolute h-full w-[220px] bg-white left-[-220px] ${isOpen && "translate-x-[220px]"} transition-all duration-300 ease-in-out shadow-2xl z-10`
         : `sticky flex h-full col-span-1 row-span-1 shadow-gray-300 shadow-md`
       }

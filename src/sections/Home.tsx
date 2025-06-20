@@ -40,8 +40,8 @@ export default function Home() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] w-full h-full">
-          
-          <Sidebar isOpen={isOpen} isMobile={isMobile} />
+
+          <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
 
           <div className={`col-span-1 w-full ${(isOpen && isMobile) && "blur-[1px]"} transition-all duration-300 ease-in-out`}>
             <Outlet />
