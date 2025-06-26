@@ -82,8 +82,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
               {isElementosOpen && (
                 <div className="w-full flex flex-col pl-2">
-                  <SidebarItem icon={<FaHelmetSafety />} label="Seguridad" href="/admin/elements" />
-                  <SidebarItem icon={<FaTools />} label="Operativos" href="/admin/elements" />
+                  <SidebarItem icon={<FaHelmetSafety />} label="EPP" href="/admin/elements/type/security" />
+                  <SidebarItem icon={<FaTools />} label="Operativos" href="/admin/elements/type/operative" />
                 </div>
               )}
             </div>
