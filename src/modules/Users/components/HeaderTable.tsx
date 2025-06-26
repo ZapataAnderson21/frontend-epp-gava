@@ -4,13 +4,13 @@ export default function HeaderTable() {
       <span className="flex items-center justify-start w-12">
         <a href="#">ID</a>
       </span>
-      <span className="flex items-start justify-start w-40">
+      <span className="flex items-start justify-start w-36">
         <a href="#">NOMBRE</a>
       </span>
-      <span className="flex items-start justify-start w-40">
+      <span className="flex items-start justify-start w-36">
         <a href="#">APELLIDO</a>
       </span>
-      <span className="flex items-center justify-start w-40">
+      <span className="hidden sm:flex items-center justify-start w-36 sm:w-48 md:w-56 lg:w-64">
         <a href="#">ROL</a>
       </span>
     </div>

@@ -1,22 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io"; // ícono de flecha
 import ContentTable from "./components/ContentTable";
 import HeaderTable from "./components/HeaderTable";
 import { FaPlus } from "react-icons/fa6";
 
 const options = [
-  { value: "all", label: "Todas" },
-  { value: "pending", label: "Pendientes" },
-  { value: "approved", label: "Aprobadas" },
-  { value: "rejected", label: "Rechazadas" },
+  { value: "all", label: "Todos" },
+  { value: "active", label: "Activos" },
+  { value: "inactive", label: "Inactivos" }
 ];
 
 export default function Projects() {
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [permission, setPermission] = useState(false);
+  const [filter , setFilter] = useState("all");
   const [selected, setSelected] = useState(options[0]);
   const [isOpen, setIsOpen] = useState(false);
 
+  useEffect(() => {
+    if (!user || !user.userUserTypes) return;
+
+    const userType = user.userUserTypes[0].userType.name;
+    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(userType)) {
+      setPermission(true);
+    }
+  }, [user]);
+
+  if (!user || !user.userUserTypes) {
+    return <div className="text-red-500">Iniciar sesión.</div>;
+  }
+
   const handleSelect = (option: { value: string; label: string }) => {
     setSelected(option);
+    setFilter(option.value);
     setIsOpen(false);
   };
 
@@ -54,18 +71,23 @@ export default function Projects() {
               </div>
             )}
           </div>
-          <a href="/admin/projects/new">
-            <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-6 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
-              <FaPlus />Añadir
-            </button>
-          </a>
+          
+          {
+            permission && (
+              <a href="/admin/projects/new">
+                <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-6 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
+                  <FaPlus />Añadir
+                </button>
+              </a>
+            )
+          }
         </div>
       </div>
       <div className="flex flex-col items-start justify-start gap-2 w-full h-full text-[14px] text-gray-600">
 
         <HeaderTable />
-        
-        <ContentTable />
+
+        <ContentTable filter={filter} />
       </div>
     </div>
   );

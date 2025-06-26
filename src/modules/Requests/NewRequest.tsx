@@ -1,12 +1,14 @@
 import Info from "../../Info";
 import RequestTypeCard from "./components/RequestTypeCard";
 import { FaHelmetSafety } from "react-icons/fa6";
-import { FaTools } from "react-icons/fa";
+import { FaRegSave, FaSave, FaTools } from "react-icons/fa";
 import { type Element, type ElementRequest } from "../../Types";
 import { useEffect, useState } from "react";
 import BlueButton from "../../BlueButton";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
+import RedButton from "../../RedButton";
+import { MdAttachEmail } from "react-icons/md";
 
 export default function NewRequest() {
 
@@ -77,12 +79,24 @@ export default function NewRequest() {
                     handleChangeElementRequest={handleChangeElementRequest}
                   />
                 ))}
-                <BlueButton href="#" name="Registrar" onClick={() => {}} />
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full mt-4">
+                  <button className="w-full flex flex-row gap-2 items-center justify-center bg-[#0047a3] px-4 py-2 rounded-md shadow-sm transition-colors 
+                                   hover:bg-[#003a80] cursor-pointer text-white font-semibold mt-1" 
+                                   onClick={() => {}} >
+                  <FaSave /> Guardar
+                  </button>
+                  <button className="w-full flex flex-row gap-2 items-center justify-center bg-black px-4 py-2 rounded-md shadow-sm transition-colors 
+                                   hover:bg-gray-900 cursor-pointer text-white font-semibold mt-1" 
+                                   onClick={() => {}} >
+                  <MdAttachEmail /> Guardar y Enviar
+                  </button>
+                </div>
               </>
             ) : (
-              <span className="text-gray-500">No hay elementos seleccionados.</span>
+              <span className="text-gray-500 border-t border-b border-gray-400 w-full py-4 px-2 mb-4">No hay elementos seleccionados.</span>
             )
           }
+          <RedButton href="/admin/requests" name="Regresar" />
         </div>
       </div>
 

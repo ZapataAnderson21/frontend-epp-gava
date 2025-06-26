@@ -4,6 +4,8 @@ import { FaHistory } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
 import { useState, useRef, useEffect } from "react";
+import { fetchLogoutUser } from "../data/userData";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,12 +13,35 @@ interface SidebarProps {
   setIsOpen?: (value: boolean) => void;
 }
 
-
 export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
   const [isElementosOpen, setIsElementosOpen] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    console.error("No access token found in localStorage");
+    return null;
+  }
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetchLogoutUser(accessToken);
+      if (response.statusCode === 200) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        navigate("/");
+      } else {
+        console.error("Error logging out:", response.message);
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -26,7 +51,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target as Node)
       ) {
-        setIsOpen?.(false); // Llama a la función si está definida
+        setIsOpen?.(false);
       }
     };
 
@@ -67,7 +92,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
         </div>
         <div className="flex flex-col gap-4 items-start justify-center w-full border-t border-gray-300 py-4 px-6">
-          <SidebarItem icon={<IoLogOut />} label="Salir" href="/" />
+          <SidebarItem icon={<IoLogOut />} label="Salir" onClick={handleLogout} />
         </div>
       </div>
     </section>
