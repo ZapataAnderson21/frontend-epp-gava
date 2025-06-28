@@ -9,7 +9,7 @@ interface ModalElementsProps {
 }
 
 export default function ModalElements({ typeElement, isOpen, onClose }: ModalElementsProps) {
-  
+
   if (!isOpen) return null;
 
   let title = "";

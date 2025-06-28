@@ -45,7 +45,7 @@ interface Request {
 interface ElementRequest{
   element_request_id?: number;
   unit: string;
-  quantity: number;
+  quantity_requested: number;
   element_id: number;
   request_id?: number;
   element?: Element;

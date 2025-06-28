@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import BlueButton from "../../../BlueButton";
-import dataModal from "../../../ListOfElements";
 import { type Element } from "../../../Types";
+import { fetchGetByType } from "../../../data/elementData";
 
 interface ContentModalProps {
   typeElement: string;
@@ -9,6 +9,19 @@ interface ContentModalProps {
 
 export default function ContentModal({ typeElement }: ContentModalProps) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const [elements, setElements] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchElements = async () => {
+      const response = await fetchGetByType(typeElement);
+      if (response.statusCode === 200) {
+        setElements(response.data);
+      }
+    };
+
+    fetchElements();
+  }, [typeElement]);
 
   const handleCheckboxChange = (id?: number) => {
     if (id === undefined) return;
@@ -21,11 +34,24 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   };
 
   const onClick = () => {
-    const selectedElements = dataModal.filter(
+    const selectedElements = elements.filter(
       (item) => item.element_id !== undefined && selectedIds.includes(item.element_id)
     );
 
-    localStorage.setItem("selectedElements", JSON.stringify(selectedElements));
+    // Leer los elementos previos del localStorage
+    const prevSelected = localStorage.getItem("selectedElementRequest");
+    let combined: any[] = [];
+
+    if (prevSelected) {
+      const parsed: any[] = JSON.parse(prevSelected);
+
+      // Filtrar elementos de otros tipos distintos al actual
+      const filtered = parsed.filter(
+        (item) => !elements.some((e) => e.element_id === item.element_id)
+      );
+
+      combined = [...filtered];
+    }
 
     const selectedElementRequest = selectedElements.map((item) => ({
       unit: " ",
@@ -35,10 +61,15 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       element: item
     }));
 
-    localStorage.setItem("selectedElementRequest", JSON.stringify(selectedElementRequest));
+    // Combinar sin duplicar
+    const updated = [...combined, ...selectedElementRequest];
+
+    localStorage.setItem("selectedElements", JSON.stringify(updated.map(e => e.element)));
+    localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
 
     window.location.reload();
   };
+
 
   useEffect(() => {
     const saved = localStorage.getItem("selectedElements");
@@ -52,9 +83,11 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
     }
   }, []);
 
+  
+
   return (
     <div className="flex flex-col items-center justify-between w-full pt-4 px-6 gap-4 text-[14px] md:text-[16px]">
-      {dataModal.map((item) => (
+      {elements.map((item) => (
         <div key={item.element_id ?? item.name} className="flex items-center justify-between w-full">
           <span className="flex items-center justify-start w-12">{item.element_id}</span>
           <span className="flex items-center justify-start w-full">{item.name}</span>

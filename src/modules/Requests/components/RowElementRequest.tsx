@@ -25,8 +25,8 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
         type="number"
         className="flex items-start justify-start w-12 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Cantidad"
-        value={elementRequest.quantity}
-        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "quantity", e.target.value)}
+        value={elementRequest.quantity_requested}
+        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "quantity_requested", e.target.value)}
       />
 
       <IoIosCloseCircle

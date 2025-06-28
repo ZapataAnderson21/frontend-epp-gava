@@ -15,6 +15,7 @@ import NewRole from './modules/Users/NewRole.tsx';
 import Project from './modules/Projects/Project.tsx';
 import ResetPassword from './ResetPassword.tsx';
 import Element from './modules/Elements/Element.tsx';
+import Request from './modules/Requests/Request.tsx';
 
 export default function App() {
 
@@ -29,6 +30,7 @@ export default function App() {
           <Route path='projects/:id' element={<Project />} />
           <Route path='projects/new' element={<NewProject />} />
           <Route path='requests' element={<Requests />} />
+          <Route path='requests/:id' element={<Request />} />
           <Route path='requests/new' element={<NewRequest />} />
           <Route path='elements/type/:type' element={<Elements />} />
           <Route path='elements/:id' element={<Element />} />
