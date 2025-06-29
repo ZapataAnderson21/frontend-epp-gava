@@ -28,6 +28,7 @@ export interface CreateElementRequestDto {
 }
 
 export interface UpdateElementRequestDto {
+  element_request_id?: number
   quantity_requested: number
   unit: string
   element_id: number
@@ -97,7 +98,7 @@ export async function fetchUpdateElementRequest(id: number, data: UpdateElementR
   try {
     const token = localStorage.getItem('accessToken')
     const response = await fetch(elementRequestData.update.replace(':id', String(id)), {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

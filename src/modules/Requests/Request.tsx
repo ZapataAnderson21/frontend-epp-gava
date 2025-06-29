@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchGetRequestById } from "../../data/requestData";
 import { fetchGetElementRequestsByRequest, fetchDeleteElementRequest } from "../../data/elementRequestData";
 import { useEffect, useState } from "react";
@@ -7,11 +7,12 @@ import { FaHelmetSafety } from "react-icons/fa6";
 import { FaSave, FaTools } from "react-icons/fa";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { handleSave, handleSaveAndSend } from "./HandleForm";
+import { handleUpdate, handleSend, handleUpdateAndSend } from "./HandleForm";
 import { MdAttachEmail } from "react-icons/md";
 import RedButton from "../../RedButton";
 import Info from "../../Info";
 import { fetchGetByStatus } from "../../data/projectData";
+import type { ElementRequest } from "../../Types";
 
 export default function Request() {
   const { id: request_id } = useParams<{ id: string }>();
@@ -23,56 +24,85 @@ export default function Request() {
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
   const [elements, setElements] = useState<any[]>([]);
-  const [selectedElements, setSelectedElements] = useState<any[]>([]);
-  const [selectedElementRequest, setSelectedElementRequest] = useState<any[]>([]);
+  const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequest[]>([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRequest = async () => {
-      if (request_id) {
-        const response = await fetchGetRequestById(Number(request_id));
-        if (response.statusCode === 200) {
-          setRequest(response.data);
-          setProjectId(response.data.project_id);
-          setDescription(response.data.description || "");
+    const fetchInitialData = async () => {
+      try {
+        if (!request_id) return;
+
+        // 1. Obtener la request
+        const resRequest = await fetchGetRequestById(Number(request_id));
+        if (resRequest.statusCode === 200) {
+          const req = resRequest.data;
+          setRequest(req);
+          setProjectId(req.project_id);
+          setDescription(req.description || "");
         }
+
+        const resProjects = await fetchGetByStatus("active");
+        if (resProjects.statusCode === 200) {
+          setProjects(resProjects.data);
+        }
+
+        // 3. Obtener elementos solicitados
+        const resElementRequests = await fetchGetElementRequestsByRequest(Number(request_id));
+        if (resElementRequests.statusCode === 200) {
+          const elementReqs = resElementRequests.data;
+          setElementRequests(elementReqs);
+          setSelectedElementRequest(elementReqs);
+
+          // 4. Obtener solo los elementos asociados
+          const elements = elementReqs
+            .map((er) => er.element)
+            .filter((e) => e !== undefined); // Asegurar que tengan relación cargada
+          setElements(elements);
+        }
+      } catch (error) {
+        console.error("Error al cargar los datos iniciales:", error);
       }
     };
 
-    const fetchElementRequests = async () => {
-      if (request_id) {
-        const response = await fetchGetElementRequestsByRequest(Number(request_id));
-        if (response.statusCode === 200) {
-          setElementRequests(response.data);
-          setSelectedElementRequest(response.data);
-        }
-      }
-    };
-
-    fetchRequest();
-    fetchElementRequests();
+    fetchInitialData();
   }, [request_id]);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const response = await fetchGetByStatus("active");
-      if (response.statusCode === 200) {
-        setProjects(response.data);
+  const handleRemoveElement = async (elementRequestId: number) => {
+    try {
+      const res = await fetchDeleteElementRequest(elementRequestId);
+      if (res.statusCode === 200) {
+        // Encontrar el element_id relacionado a este elementRequestId
+        const deletedElement = elementRequests.find(er => er.element_request_id === elementRequestId);
+        const deletedElementId = deletedElement?.element_id;
+
+        setElementRequests((prev) => prev.filter((er) => er.element_request_id !== elementRequestId));
+        setSelectedElementRequest((prev) => prev.filter((er) => er.element_request_id !== elementRequestId));
+        
+        // ✅ Ahora filtra correctamente el elemento usando el element_id
+        if (deletedElementId !== undefined) {
+          setElements((prev) => prev.filter((e) => e.element_id !== deletedElementId));
+        }
       }
-    };
-
-    fetchProjects();
-  }, []);
-  
-  const handleRemoveElement = (element: any) => {
-
-  }
-
-  const handleChangeElementRequest = (elementRequest: any) => {
-    const updatedRequests = elementRequests.map((req) =>
-      req.element_id === elementRequest.element_id ? elementRequest : req
-    );
-    setElementRequests(updatedRequests);
+    } catch (error) {
+      console.error("Error al eliminar el elemento:", error);
+    }
   };
+
+  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequest, value: string | number) => {
+    setElementRequests((prev) =>
+      prev.map((er) =>
+        er.element_id === element_id ? { ...er, [field]: value } : er
+      )
+    );
+
+    setSelectedElementRequest((prev) =>
+      prev.map((er) =>
+        er.element_id === element_id ? { ...er, [field]: value } : er
+      )
+    );
+  };
+
 
   return (
     <>
@@ -106,31 +136,39 @@ export default function Request() {
                     <>
                     <span className="font-semibold pt-2 pb-4">Elementos seleccionados:</span>
                     <HeaderNewRequest />
-                      {selectedElementRequest.map((element) => (
-                        <RowElementRequest 
-                          key={element.element_id}
-                          elementRequest={
-                            elementRequests.find(req => req.element_id === element.element_id) || 
-                            { unit: "", quantity: element.quantity_requested, element_id: element.element_id!, request_id: 0, element: element }
-                          }
-                          handleRemoveElement={handleRemoveElement}
-                          handleChangeElementRequest={handleChangeElementRequest}
-                        />
-                      ))}
-    
+                      
+                      {elements.map((element) => {
+                        const elementRequest = elementRequests.find(req => req.element_id === element.element_id) || {
+                          unit: "",
+                          quantity_requested: element.quantity_requested,
+                          element_id: element.element_id,
+                          request_id: 0,
+                          element: element,
+                        };
+
+                        return (
+                          <RowElementRequest 
+                            key={element.element_id}
+                            elementRequest={elementRequest}
+                            handleRemoveElement={() => handleRemoveElement(elementRequest.element_request_id)}
+                            handleChangeElementRequest={handleChangeElementRequest}
+                          />
+                        );
+                      })}
+
                       <span className="mt-4 font-semibold">Añade una descripción <span className="text-[10px] font-bold"> (opcional)</span></span>
                       <textarea className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full" value={description} onChange={(e) => setDescription(e.target.value)} />
     
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full mt-4">
                         <button className="w-full flex flex-row gap-2 items-center justify-center bg-[#0047a3] px-4 py-2 rounded-md shadow-sm transition-colors 
                                         hover:bg-[#003a80] cursor-pointer text-white font-semibold mt-1" 
-                                        onClick={() => handleSave(projectId, description)} >
+                                        onClick={() => handleUpdate(Number(request_id), projectId, elementRequests, description)} >
                         <FaSave /> Guardar
                         </button>
                         <button className="w-full flex flex-row gap-2 items-center justify-center bg-[black] px-4 py-2 rounded-md shadow-sm transition-colors 
                                         hover:bg-gray-900 cursor-pointer text-white font-semibold mt-1" 
                                         onClick={() => setOpenPasswordModal(true)} >
-                        <MdAttachEmail /> Enviar
+                        <MdAttachEmail /> Guardar y Enviar
                         </button>
                       </div>
                     </>
@@ -167,7 +205,7 @@ export default function Request() {
                       <button
                         className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
                         onClick={() => {
-                          handleSaveAndSend(projectId, description, passwordCPanel);
+                          handleUpdateAndSend(Number(request_id), projectId, elementRequests, passwordCPanel, description);
                           setOpenPasswordModal(false);
                         }}
                       >

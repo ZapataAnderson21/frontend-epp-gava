@@ -93,6 +93,7 @@ export async function fetchGetAllRequests(): Promise<RequestGetAllResponse> {
     const response = await fetch(requestData.getAll, {
       method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })
@@ -118,6 +119,7 @@ export async function fetchGetRequestById(id: number): Promise<RequestResponse> 
     const response = await fetch(requestData.getOne.replace(':id', id.toString()), {
       method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })
@@ -141,7 +143,7 @@ export async function fetchUpdateRequest(id: number, data: UpdateRequestDto): Pr
     }
 
     const response = await fetch(requestData.update.replace(':id', id.toString()), {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -170,6 +172,7 @@ export async function fetchDeleteRequest(id: number): Promise<RequestResponse> {
     const response = await fetch(requestData.delete.replace(':id', id.toString()), {
       method: 'DELETE',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })
@@ -195,6 +198,7 @@ export async function fetchGetRequestsByProject(projectId: number): Promise<Requ
     const response = await fetch(requestData.getByProject.replace(':projectId', projectId.toString()), {
       method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })
@@ -220,6 +224,7 @@ export async function fetchGetRequestsByUser(userId: number): Promise<RequestGet
     const response = await fetch(requestData.getByUser.replace(':userId', userId.toString()), {
       method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })
@@ -245,6 +250,7 @@ export async function fetchGetRequestsByStatus(status: string): Promise<RequestG
     const response = await fetch(requestData.getByStatus.replace(':status', status), {
       method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
     })

@@ -17,7 +17,7 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
         type="text"
         className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Unidad"
-        value={elementRequest.unit}
+        value={elementRequest.unit ?? ""}
         onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "unit", e.target.value)}
       />
 
@@ -25,8 +25,8 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
         type="number"
         className="flex items-start justify-start w-12 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Cantidad"
-        value={elementRequest.quantity_requested}
-        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "quantity_requested", e.target.value)}
+        value={elementRequest.quantity_requested ?? 0}
+        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "quantity_requested", Number(e.target.value))}
       />
 
       <IoIosCloseCircle
