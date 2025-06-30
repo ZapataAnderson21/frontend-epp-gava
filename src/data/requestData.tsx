@@ -1,4 +1,5 @@
 import type { UserType } from '../Types'
+import type { ProjectType } from './projectData'
 import { root } from './root'
 
 const requestRoot = `${root}/request`
@@ -14,6 +15,7 @@ const requestData = {
   getByStatus: `${requestRoot}/status/:status`,
   updateStatus: `${requestRoot}/:id/status`,
   sendToLogistics: `${requestRoot}/send-to-logistics`,
+  getPdf: `${requestRoot}/pdf/:id`,
 }
 
 export interface RequestType {
@@ -25,6 +27,7 @@ export interface RequestType {
   user_id: number
   type: string
   user?: UserType
+  project?: ProjectType
 }
 
 export interface CreateRequestDto {

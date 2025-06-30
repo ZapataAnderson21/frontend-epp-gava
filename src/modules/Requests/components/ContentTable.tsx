@@ -21,11 +21,11 @@ export default function ContentTable() {
 
         console.log("Original data:", response.data);
 
-        // const filteredData = response.data.filter(
-        //   (req: RequestType) => (req.status ?? "").trim().toLowerCase() !== "draft"
-        // );
+        const filteredData = response.data.filter(
+          (req: RequestType) => (req.status ?? "").trim().toLowerCase() !== "draft"
+        );
 
-        // console.log("Filtered data:", filteredData);
+        console.log("Filtered data:", filteredData);
 
         data = response.data.reverse();
       } else {
