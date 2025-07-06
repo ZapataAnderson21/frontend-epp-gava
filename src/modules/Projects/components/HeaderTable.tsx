@@ -4,7 +4,7 @@ export default function HeaderTable() {
       <span className="flex items-center justify-start w-6">
         <a href="#">ID</a>
       </span>
-      <span className="flex items-start justify-start w-32">
+      <span className="flex items-start justify-start w-48">
         <a href="#">NOMBRE</a>
       </span>
       <span className="flex items-center justify-start w-24">

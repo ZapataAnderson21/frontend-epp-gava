@@ -9,7 +9,6 @@ import RowElementRequest from "./components/RowElementRequest";
 import { handleUpdate, handleUpdateAndSend } from "./HandleForm";
 import { MdAttachEmail } from "react-icons/md";
 import RedButton from "../../RedButton";
-import Info from "../../Info";
 import { fetchGetByStatus } from "../../data/projectData";
 import type { ElementRequest } from "../../Types";
 
@@ -179,9 +178,6 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
                 <RedButton href="/admin/requests" name="Regresar" />
               </div>
             </div>
-    
-    
-            <Info />
           </div>
             {
               openPasswordModal && (

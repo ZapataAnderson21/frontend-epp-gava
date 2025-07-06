@@ -13,7 +13,7 @@ function getTypeFromElements(elements: any[]) {
   return "";
 }
 
-export async function handleSave(project_id: number, description?: string): Promise<any> {
+export async function handleSave(project_id: number, delivery_due_date: string, description?: string): Promise<any> {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
   const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
@@ -28,6 +28,7 @@ export async function handleSave(project_id: number, description?: string): Prom
   const requestData = {
     user_id: Number(user.user_id),
     project_id,
+    delivery_due_date,
     description,
     type,
   };
@@ -73,12 +74,12 @@ export async function handleSend(request_id: number, passwordCPanel: string): Pr
   return response.data;
 }
 
-export async function handleSaveAndSend(project_id: number, description?: string, passwordCPanel?: string): Promise<any> {
+export async function handleSaveAndSend(project_id: number, delivery_due_date: string, description?: string, passwordCPanel?: string): Promise<any> {
   if (!passwordCPanel) {
     throw new Error("La contraseña del panel de control es requerida.");
   }
 
-  const result = await handleSave(project_id, description);
+  const result = await handleSave(project_id, delivery_due_date, description);
   if (!result) {
     throw new Error("Error al guardar la solicitud.");
   }

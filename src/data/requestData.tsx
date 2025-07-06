@@ -1,5 +1,6 @@
 import type { UserType } from '../Types'
 import type { ProjectType } from './projectData'
+import type { ElementRequestType } from  './elementRequestData'
 import { root } from './root'
 
 const requestRoot = `${root}/request`
@@ -20,7 +21,8 @@ const requestData = {
 
 export interface RequestType {
   request_id: number
-  registration_date: string
+  createdAt: string
+  delivery_due_date: string
   status: string
   description: string
   project_id: number
@@ -28,9 +30,11 @@ export interface RequestType {
   type: string
   user?: UserType
   project?: ProjectType
+  elementRequests?: ElementRequestType[]
 }
 
 export interface CreateRequestDto {
+  delivery_due_date: string
   description?: string
   project_id: number
   user_id: number
@@ -38,8 +42,9 @@ export interface CreateRequestDto {
 }
 
 export interface UpdateRequestDto {
-  registration_date?: string
+  createdAt?: string
   status?: string
+  delivery_due_date?: string
   description?: string
   project_id?: number
   user_id?: number

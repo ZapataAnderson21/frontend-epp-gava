@@ -17,7 +17,7 @@ export default function NewEpp() {
       const response = await fetchCreateElement({ name, type, description });
 
       if (response.statusCode === 201) {
-        navigate(`/admin/elements/${type}`);
+        navigate(`/admin/elements/type/${type}`);
       } else {
         alert(`Error: ${response.message}`);
       }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
+import { fetchCreateRequestResponse } from "../../data/requestResponseData";
 import RedButton from "../../RedButton";
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
@@ -26,9 +27,10 @@ const typeOptions = [
 export default function RequestView({ request_id }: RequestViewProps) {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [permission, setPermission] = useState(false);
+  const [isLogistics, setIsLogistics] = useState(false);
+  const [isGerency, setIsGerency] = useState(false);
   const [request, setRequest] = useState<RequestType>();
-  const formattedDate = new Date(request?.registration_date || '').toLocaleDateString('es-ES', {
+  const formattedDate = new Date(request?.createdAt || '').toLocaleDateString('es-ES', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -41,8 +43,11 @@ export default function RequestView({ request_id }: RequestViewProps) {
     if (!user || !user.userUserTypes) return;
 
     const userType = user.userUserTypes[0].userType.name;
-    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(userType)) {
-      setPermission(true);
+    if (["GERENTE"].includes(userType)) {
+      setIsGerency(true);
+    }
+    if (["LOGISTICA"].includes(userType)) {
+      setIsLogistics(true);
     }
   }, [user]);
 
@@ -53,6 +58,16 @@ export default function RequestView({ request_id }: RequestViewProps) {
       });
     }
   }, [request_id]);
+
+  const handleReviewed = () => {
+    fetchCreateRequestResponse({
+      request_id: Number(request_id),
+      responder_user_id: Number(user.user_id),
+      description: "Solicitud revisada por logística."
+    }).then(() => {
+      handleChangeStatus("reviewed");
+    });
+  }
 
   const handleChangeStatus = (newStatus: string) => {
     if (request) {
@@ -65,7 +80,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
   return (
     <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start w-full h-full p-10 text-gray-800 gap-8">
-      <div className="flex flex-col items-start justify-start w-full lg:w-[680px] xl:w-[800px] gap-4 text-gray-800">
+      <div className="flex flex-col items-start justify-start w-full lg:w-[814px] xl:w-[900px] gap-4 text-gray-800">
         <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
           <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {request_id}</h1>
           <div>
@@ -92,13 +107,38 @@ export default function RequestView({ request_id }: RequestViewProps) {
           <span className="font-semibold text-nowrap">Descripción:</span>
           <span>{request?.description}</span>
         </div>
-        { permission && (
+        { isLogistics && (
+          <>
+            <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
+            <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+              <div className="flex flex-row items-center justify-between w-full max-w-2xl text-[14px] text-black font-extrabold gap-1">
+                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">ITEM</div>
+                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">UNIDAD</div>
+                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">CANT. PED.</div>
+                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"><span className="hidden xl:inline-flex">CANT.</span><span> ACEP.</span></div>
+              </div>
+              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+                {request?.elementRequests?.map((item, index) => (
+                  <div key={index} className="flex flex-row items-center justify-between w-full max-w-2xl text-[14px] text-gray-700 gap-1 mt-1">
+                    <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">{item.element?.name}</div>
+                    <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">{item.unit}</div>
+                    <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">{item.quantity_requested}</div>
+                    <input type="text" className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md bg-yellow-400 font-semibold" placeholder={item.quantity_requested.toString()} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+              <button 
+                className="bg-[#0047a3] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#003d8f] transition-colors
+                            font-bold flex flex-row gap-2 items-center" onClick={() => handleReviewed()}>
+                              <FaArrowRight /> Pasar a Gerencia
+              </button>
+            </div>
+          </>
+        )}
+        { isGerency && (
           <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-          <button 
-            className="bg-[#0047a3] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#003d8f] transition-colors
-                         font-bold flex flex-row gap-2 items-center" onClick={() => handleChangeStatus("reviewed")}>
-                          <FaArrowRight /> Pasar a Gerencia
-          </button>
           <button className="bg-[#218838] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#28a745] transition-colors
                             font-bold flex flex-row gap-2 items-center" onClick={() => handleChangeStatus("accepted")}>
                           <FaCheck /> Autorizar

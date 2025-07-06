@@ -15,7 +15,7 @@ export default function ContentTable() {
       let data: RequestType[] = [];
 
       if (
-        ["ADMINISTRADORA", "LOGISTICA", "GERENTE", "SISTEMAS"].includes(userType)
+        ["ADMINISTRADORA", "LOGISTICA", "GERENTE"].includes(userType)
       ) {
         const response = await fetchGetAllRequests() as RequestGetAllResponse;
 
@@ -27,9 +27,9 @@ export default function ContentTable() {
 
         console.log("Filtered data:", filteredData);
 
-        data = response.data.reverse();
+        data = filteredData.reverse();
       } else {
-        const response = await fetchGetRequestsByUser(user.id);
+        const response = await fetchGetRequestsByUser(user.user_id) as RequestGetAllResponse;
         data = response.data;
       }
 
@@ -46,8 +46,9 @@ export default function ContentTable() {
         <RowTable
           key={request.request_id}
           id={request.request_id}
-          dateTime={request.registration_date}
+          createdAt={request.createdAt}
           status={request.status}
+          deliveryDueDate={request.delivery_due_date}
           user={request.user?.name || "Desconocido"}
         />
       ))}
