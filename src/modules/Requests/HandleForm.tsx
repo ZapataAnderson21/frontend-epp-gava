@@ -7,7 +7,7 @@ function getTypeFromElements(elements: any[]) {
   const hasSecurity = types.includes("security");
   const hasOperative = types.includes("operative");
 
-  if (hasSecurity && hasOperative) return "operative and security";
+  if (hasSecurity && hasOperative) return "operative_and_security";
   if (hasSecurity) return "security";
   if (hasOperative) return "operative";
   return "";

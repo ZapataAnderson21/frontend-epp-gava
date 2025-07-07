@@ -14,19 +14,16 @@ import SaveModal from "../../SaveModal";
 import { useNavigate } from "react-router-dom";
 
 export default function NewRequest() {
-
-  const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
-
+  const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
+  const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
   const selectedElements: Element[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
   const selectedElementRequest: ElementRequest[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+  const [description, setDescription] = useState<string>("");
 
   const [elements, setElements] = useState<Element[]>(selectedElements);
   const [elementRequests, setElementRequests] = useState<ElementRequest[]>(selectedElementRequest);
 
   const [projects, setProjects] = useState<ProjectType[]>([]);
-
-  const [projectId, setProjectId] = useState<number>(0);
-  const [description, setDescription] = useState<string>("");
 
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
@@ -90,6 +87,8 @@ export default function NewRequest() {
         setOpenSaveModal(true);
         setElements([]);
         setElementRequests([]);
+        localStorage.removeItem("projectId");
+        localStorage.removeItem("deliveryDueDate");
         localStorage.removeItem("selectedElements");
         localStorage.removeItem("selectedElementRequest");
       } else {
@@ -100,6 +99,32 @@ export default function NewRequest() {
       alert("Ocurrió un error al guardar la solicitud.");
     }
   };
+
+  const handleSaveAndSendRequest = async () => {
+    if (projectId === 0) {
+      alert("Por favor, selecciona un proyecto.");
+      return;
+    }
+
+    try {
+      const result = await handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel);
+      if (result) {
+        setOpenPasswordModal(false);
+        setOpenSaveModal(true);
+        setElements([]);
+        setElementRequests([]);
+        localStorage.removeItem("projectId");
+        localStorage.removeItem("deliveryDueDate");
+        localStorage.removeItem("selectedElements");
+        localStorage.removeItem("selectedElementRequest");
+      } else {
+        alert("Error al guardar y enviar la solicitud.");
+      }
+    } catch (error) {
+      console.error("Error al guardar y enviar la solicitud:", error);
+      alert("Ocurrió un error al guardar y enviar la solicitud.");
+    }
+  }
 
 
   return (
@@ -113,8 +138,11 @@ export default function NewRequest() {
           <span className="font-semibold">Elige el proyecto:</span>
           <select
             className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
-            value={projectId ?? ""}
-            onChange={(e) => setProjectId(Number(e.target.value))} >
+            value={projectId}
+            onChange={(e) => {
+              setProjectId(Number(e.target.value));
+              localStorage.setItem("projectId", e.target.value);
+            }}>
             <option value={0} disabled>Selecciona un proyecto</option>
             {projects.map((project) => (
               <option key={project.project_id} value={project.project_id}>
@@ -123,14 +151,41 @@ export default function NewRequest() {
             ))}
           </select>
 
-          <span className="font-semibold">Fecha y hora de entrega:</span>
-          <input
-            type="datetime-local"
-            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
-            value={deliveryDueDate}
-            onChange={(e) => setDeliveryDueDate(e.target.value)} />
+            <span className="font-semibold">Fecha y hora de entrega:</span>
+            <input
+              type="datetime-local"
+              className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
+              value={deliveryDueDate}
+              onChange={(e) => {
+              const value = e.target.value;
+              localStorage.setItem("deliveryDueDate", value);
+              const selectedDate = new Date(value);
+              const now = new Date();
+              if (selectedDate <= now) {
+                alert("La fecha y hora de entrega deben ser mayores a la fecha y hora actual.");
+                return;
+              }
+              const hour = selectedDate.getHours();
+              if (hour < 6 || hour > 18) {
+                alert("La hora debe ser dentro del horario laboral (6:00 - 18:00).");
+                return;
+              }
+              setDeliveryDueDate(value);
+              }}
+              min={(() => {
+              const now = new Date();
+              now.setHours(6, 0, 0, 0);
+              return now.toISOString().slice(0, 16);
+              })()}
+              max={(() => {
+              const future = new Date();
+              future.setDate(future.getDate() + 30);
+              future.setHours(18, 0, 0, 0);
+              return future.toISOString().slice(0, 16);
+              })()}
+            />
 
-          <p className="text-amber-600 font-semibold inline-flex gap-1"> <IoWarning className="w-8 mt-1" /> Recuerda que si el requerimiento es para el día de mañana, la hora límite para pedirlo es a la 1 PM. Si es para pasado mañana, la hora límite es a las 5 PM.</p>
+          <p className="text-amber-600 font-semibold inline-flex gap-1"> <IoWarning className="w-8 mt-1" /> Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.</p>
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
           <div className="flex flex-row items-center justify-around gap-4 w-full">
@@ -183,7 +238,7 @@ export default function NewRequest() {
         openPasswordModal && (
           <div className={`fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center`}>
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-xl font-semibold mb-4">Contraseña del Panel de Control</h2>
+              <h2 className="text-xl font-semibold mb-4">Contraseña del Sistema de Correos</h2>
               <input
                 type="password"
                 className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-4"
@@ -200,11 +255,7 @@ export default function NewRequest() {
                 </button>
                 <button
                   className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
-                  onClick={() => {
-                    handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel, );
-                    setOpenPasswordModal(false);
-                  }}
-                >
+                  onClick={handleSaveAndSendRequest}>
                   Enviar
                 </button>
               </div>
@@ -214,7 +265,11 @@ export default function NewRequest() {
       }
       {
         openSaveModal && (
-          <SaveModal onOk={() => navigate("/admin/requests")} />
+          <SaveModal onOk={() => {
+            navigate("/admin/requests");
+            localStorage.removeItem("projectId");
+            localStorage.removeItem("deliveryDueDate");
+          }} />
         )
       }
       </>

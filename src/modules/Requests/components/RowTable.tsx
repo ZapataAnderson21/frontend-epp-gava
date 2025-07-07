@@ -14,11 +14,11 @@ const statusColorClasses: { [key: string]: { color: string, value: string } } = 
   },
   pending: {
     color:"bg-yellow-500",
-    value:"Pendiente",
+    value:"En progreso",
   },
   reviewed: {
     color:"bg-blue-500",
-    value:"Revisado",
+    value:"En revisión",
   },
   accepted: {
     color:"bg-green-500",
