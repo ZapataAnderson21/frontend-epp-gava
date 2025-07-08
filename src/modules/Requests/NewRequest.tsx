@@ -12,6 +12,7 @@ import { handleSave, handleSaveAndSend}  from "./HandleForm";
 import { IoWarning } from "react-icons/io5";
 import SaveModal from "../../SaveModal";
 import { useNavigate } from "react-router-dom";
+import { RiQuestionFill } from "react-icons/ri";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
@@ -126,7 +127,6 @@ export default function NewRequest() {
     }
   }
 
-
   return (
     <>
       <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
@@ -134,10 +134,15 @@ export default function NewRequest() {
           <h1 className="text-2xl font-bold mb-4">REGISTRAR SOLICITUD</h1>
         </div>
 
-        <div className="flex flex-col items-start justify-start gap-6 w-full max-w-2xl h-full text-[14px] text-gray-600">
+        <p className="text-amber-500 font-semibold inline-flex gap-1 mb-3">
+          <IoWarning className="w-8 mt-1" /> 
+          Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
+        </p>
+
+        <div className="flex flex-col items-start justify-start gap-3 w-full max-w-2xl h-full text-[14px] text-gray-600">
           <span className="font-semibold">Elige el proyecto:</span>
           <select
-            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
+            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-3"
             value={projectId}
             onChange={(e) => {
               setProjectId(Number(e.target.value));
@@ -151,44 +156,42 @@ export default function NewRequest() {
             ))}
           </select>
 
-            <span className="font-semibold">Fecha y hora de entrega:</span>
-            <input
-              type="datetime-local"
-              className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
-              value={deliveryDueDate}
-              onChange={(e) => {
-              const value = e.target.value;
-              localStorage.setItem("deliveryDueDate", value);
-              const selectedDate = new Date(value);
-              const now = new Date();
-              if (selectedDate <= now) {
-                alert("La fecha y hora de entrega deben ser mayores a la fecha y hora actual.");
-                return;
-              }
-              const hour = selectedDate.getHours();
-              if (hour < 6 || hour > 18) {
-                alert("La hora debe ser dentro del horario laboral (6:00 - 18:00).");
-                return;
-              }
-              setDeliveryDueDate(value);
-              }}
-              min={(() => {
-              const now = new Date();
-              now.setHours(6, 0, 0, 0);
-              return now.toISOString().slice(0, 16);
-              })()}
-              max={(() => {
-              const future = new Date();
-              future.setDate(future.getDate() + 30);
-              future.setHours(18, 0, 0, 0);
-              return future.toISOString().slice(0, 16);
-              })()}
-            />
-
-          <p className="text-amber-600 font-semibold inline-flex gap-1"> <IoWarning className="w-8 mt-1" /> Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.</p>
+          <span className="font-semibold flex items-center w-full justify-between">Fecha y hora de entrega: <RiQuestionFill className="inline-flex text-gray-500 cursor-pointer size-5" /></span>
+          <input
+            type="datetime-local"
+            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
+            value={deliveryDueDate}
+            onChange={(e) => {
+            const value = e.target.value;
+            localStorage.setItem("deliveryDueDate", value);
+            const selectedDate = new Date(value);
+            const now = new Date();
+            if (selectedDate <= now) {
+              alert("La fecha y hora de entrega deben ser mayores a la fecha y hora actual.");
+              return;
+            }
+            const hour = selectedDate.getHours();
+            if (hour < 8 || hour > 18) {
+              alert("La hora debe ser dentro del horario laboral (8:00 - 18:00).");
+              return;
+            }
+            setDeliveryDueDate(value);
+            }}
+            min={(() => {
+            const now = new Date();
+            now.setHours(8, 0, 0, 0);
+            return now.toISOString().slice(0, 16);
+            })()}
+            max={(() => {
+            const future = new Date();
+            future.setDate(future.getDate() + 30);
+            future.setHours(18, 0, 0, 0);
+            return future.toISOString().slice(0, 16);
+            })()}
+          />
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
-          <div className="flex flex-row items-center justify-around gap-4 w-full">
+          <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
             <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="security" />
             <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" />
           </div>
