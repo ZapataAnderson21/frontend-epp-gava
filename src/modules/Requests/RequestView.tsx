@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
 import { fetchCreateRequestResponse } from "../../data/requestResponseData";
 import RedButton from "../../RedButton";
-import { FaArrowRight, FaCheck } from "react-icons/fa6";
+import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import Button from "../../Button";
+import HeaderTableSummary from "./components/HeaderTableSummary";
+import RequestProperty from "./components/RequestProperty";
 
 interface RequestViewProps {
   request_id: number;
@@ -12,16 +15,18 @@ interface RequestViewProps {
 
 const statusOptions = [
   { value: "draft", label: "Borrador" },
-  { value: "pending", label: "Pendiente" },
-  { value: "reviewed", label: "En Gerencia" },
-  { value: "accepted", label: "Aceptado" },
+  { value: "in_progress", label: "En progreso" },
+  { value: "under_review", label: "En revisión" },
+  { value: "approved", label: "Aprobado" },
   { value: "rejected", label: "Rechazado" },
+  { value: "attended", label: "Atendido" },
+  { value: "completed", label: "Completado" }
 ];
 
 const typeOptions = [
   { value: "operative", label: "Operativos" },
   { value: "security", label: "de Protección Personal (EPP)" },
-  { value: "operative and security", label: "Operativos y EPP" }
+  { value: "operative_and_security", label: "Operativos y EPP" }
 ];
 
 export default function RequestView({ request_id }: RequestViewProps) {
@@ -29,6 +34,10 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [isLogistics, setIsLogistics] = useState(false);
   const [isGerency, setIsGerency] = useState(false);
+  const [isInProgress, setIsInProgress] = useState(false);
+  const [isUnderReview, setIsUnderReview] = useState(false);
+  const [isApprovedOrRejected, setIsApprovedOrRejected] = useState(false);
+  const [isAttend, setIsAttend] = useState(false);
   const [request, setRequest] = useState<RequestType>();
   const formattedDate = new Date(request?.createdAt || '').toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -48,6 +57,18 @@ export default function RequestView({ request_id }: RequestViewProps) {
     }
     if (["LOGISTICA"].includes(userType)) {
       setIsLogistics(true);
+    }
+    if (request && request.status === "in_progress") {
+      setIsInProgress(true);
+    }
+    if (request && request.status === "under_review") {
+      setIsUnderReview(true);
+    }
+    if (request && (request.status === "approved" || request.status === "rejected")) {
+      setIsApprovedOrRejected(true);
+    }
+    if (request && request.status === "attended") {
+      setIsAttend(true);
     }
   }, [user]);
 
@@ -84,39 +105,19 @@ export default function RequestView({ request_id }: RequestViewProps) {
         <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
           <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {request_id}</h1>
           <div>
-            <RedButton href="/admin/requests" name="Regresar" />
+            <Button icon={<FaArrowLeft />} label="Regresar" onClick={() => navigate('/admin/requests')} bgColor={'#000'} bgHoverColor={'#1f1f1f'} />
           </div>
         </div>
-        <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-          <span className="font-semibold text-nowrap">Proyecto:</span>
-          <span>{request?.project?.name}</span>
-        </div>
-        <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-          <span className="font-semibold text-nowrap">Fecha y hora:</span>
-          <span>{formattedDate}</span>
-        </div>
-        <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-          <span className="font-semibold text-nowrap">Estado:</span>
-          <span>{statusOptions.find(option => option.value === request?.status)?.label}</span>
-        </div>
-        <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-          <span className="font-semibold text-nowrap">Tipo:</span>
-          <span>Req. de Elementos {typeOptions.find(option => option.value === request?.type)?.label}</span>
-        </div>
-        <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-          <span className="font-semibold text-nowrap">Descripción:</span>
-          <span>{request?.description}</span>
-        </div>
+        <RequestProperty label='Proyecto' value={request?.project?.name || '---'} />
+        <RequestProperty label='Fecha y hora' value={formattedDate || '---'} />
+        <RequestProperty label='Estado' value={statusOptions.find(option => option.value === request?.status)?.label || '---'} />
+        <RequestProperty label='Tipo' value={`Req. de Elementos ${typeOptions.find(option => option.value === request?.type)?.label || '---'}`} />
+        <RequestProperty label='Descripción' value={request?.description || '---'} />
         { isLogistics && (
           <>
             <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
             <div className="flex flex-col items-start justify-start w-full max-w-2xl">
-              <div className="flex flex-row items-center justify-between w-full max-w-2xl text-[14px] text-black font-extrabold gap-1">
-                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">ITEM</div>
-                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">UNIDAD</div>
-                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md">CANT. PED.</div>
-                <div className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"><span className="hidden xl:inline-flex">CANT.</span><span> ACEP.</span></div>
-              </div>
+              <HeaderTableSummary />
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 {request?.elementRequests?.map((item, index) => (
                   <div key={index} className="flex flex-row items-center justify-between w-full max-w-2xl text-[14px] text-gray-700 gap-1 mt-1">
@@ -129,23 +130,14 @@ export default function RequestView({ request_id }: RequestViewProps) {
               </div>
             </div>
             <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-              <button 
-                className="bg-[#0047a3] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#003d8f] transition-colors
-                            font-bold flex flex-row gap-2 items-center" onClick={() => handleReviewed()}>
-                              <FaArrowRight /> Pasar a Gerencia
-              </button>
+              <Button icon={<FaArrowRight />} label="Pasar a Gerencia" onClick={() => handleReviewed()} bgColor='#0047a3' bgHoverColor='#003d8f' />
             </div>
           </>
         )}
         { isGerency && (
           <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-          <button className="bg-[#218838] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#28a745] transition-colors
-                            font-bold flex flex-row gap-2 items-center" onClick={() => handleChangeStatus("accepted")}>
-                          <FaCheck /> Autorizar
-          </button>
-          <button className="bg-[#d80027] cursor-pointer px-4 py-2 rounded-md shadow-sm hover:bg-[#c80008] transition-colors font-bold flex flex-row gap-2 items-center" onClick={() => handleChangeStatus("rejected")}>
-                          <FaTimes /> Rechazar
-          </button>
+            <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleChangeStatus("approved")} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
+            <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
         </div>)}
       </div>
       <iframe

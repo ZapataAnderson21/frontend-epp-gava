@@ -18,11 +18,11 @@ const statusColorClasses: { [key: string]: { color: string, value: string } } = 
   },
   reviewed: {
     color:"bg-blue-500",
-    value:"En revisión",
+    value:"Revisado",
   },
   accepted: {
     color:"bg-green-500",
-    value:"Aceptado",
+    value:"Aprobado",
   },
   rejected: {
     color:"bg-red-500",
