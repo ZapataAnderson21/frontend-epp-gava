@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ModalElements from "./ModalElements";
+import ModalElements from "./ModalElements/ModalElements";
 
 interface RequestTypeCardProps {
   icon: React.ReactNode;

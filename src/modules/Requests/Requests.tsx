@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io"; // ícono de flecha
-import ContentTable from "./components/ContentTable";
-import HeaderTable from "./components/HeaderTable";
+import ContentTable from "./components/Table/ContentTable";
+import HeaderTable from "./components/Table/HeaderTable";
 import { FaPlus } from "react-icons/fa6";
 
 const options = [

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import BlueButton from "../../../BlueButton";
-import { type Element } from "../../../Types";
-import { fetchGetByType } from "../../../data/elementData";
+import BlueButton from "../../../../BlueButton";
+import { type Element } from "../../../../Types";
+import { fetchGetByType } from "../../../../data/elementData";
 import {
   fetchCreateElementRequest,
   fetchDeleteElementRequest,
   fetchGetElementRequestsByRequest
-} from "../../../data/elementRequestData";
+} from "../../../../data/elementRequestData";
 
 interface ContentModalProps {
   typeElement: string;

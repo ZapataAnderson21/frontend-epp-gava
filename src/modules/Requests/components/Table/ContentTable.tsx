@@ -1,6 +1,6 @@
 import { useState } from "react";
 import RowTable from "./RowTable";
-import { fetchGetRequestsByUser, fetchGetAllRequests, type RequestType, type RequestGetAllResponse } from "../../../data/requestData";
+import { fetchGetRequestsByUser, fetchGetAllRequests, type RequestType, type RequestGetAllResponse } from "../../../../data/requestData";
 import { useEffect } from "react";
 
 export default function ContentTable() {

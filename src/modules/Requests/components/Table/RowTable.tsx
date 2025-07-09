@@ -12,15 +12,15 @@ const statusColorClasses: { [key: string]: { color: string, value: string } } = 
     color:"bg-gray-500",
     value:"Borrador",
   },
-  pending: {
-    color:"bg-yellow-500",
+  in_progress: {
+    color:"bg-orange-500",
     value:"En progreso",
   },
-  reviewed: {
-    color:"bg-blue-500",
+  under_review: {
+    color:"bg-yellow-500",
     value:"Revisado",
   },
-  accepted: {
+  approved: {
     color:"bg-green-500",
     value:"Aprobado",
   },
@@ -28,9 +28,13 @@ const statusColorClasses: { [key: string]: { color: string, value: string } } = 
     color:"bg-red-500",
     value:"Rechazado",
   },
-  default: {
-    color:"bg-gray-500",
-    value:"Desconocido",
+  attended: {
+    color:"bg-blue-500",
+    value:"Atendido",
+  },
+  completed: {
+    color:"bg-purple-500",
+    value:"Completado",
   },
 };
 
