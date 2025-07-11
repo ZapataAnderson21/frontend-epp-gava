@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RedButton from "../../RedButton";
 import { fetchCreateUser } from "../../data/userData";
+import { fetchGetAllUserTypes, type ApiResponseGetAllUserTypes, type UserTypeResponse } from "../../data/userTypeData";
 import { useNavigate } from "react-router-dom";
 import SaveModal from "../../SaveModal";
 
@@ -11,6 +12,8 @@ export default function NewUser() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [userTypeId, setUserTypeId] = useState<number>(0);
+
+  const [userTypes, setUserTypes] = useState<UserTypeResponse[]>([]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -40,9 +43,24 @@ export default function NewUser() {
       console.error("Error creating user:", error);
       setError("Error creating user");
     }
-
   }
 
+  useEffect(() => {
+    const fetchUserTypes = async () => {
+      try {
+        const response = await fetchGetAllUserTypes() as ApiResponseGetAllUserTypes;
+        if (response.statusCode === 200) {
+          setUserTypes(response.data);
+        } else {
+          console.error("Error fetching user types:", response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching user types:", error);
+      }
+    };
+
+    fetchUserTypes();
+  }, []);
 
   return (
     <>
@@ -70,7 +88,14 @@ export default function NewUser() {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="role" className="font-semibold">Rol</label>
-              <input type="number" id="userTypeId" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={userTypeId} onChange={(e) => setUserTypeId(Number(e.target.value))} />
+              <select name="userTypeId" id="userTypeId" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={userTypeId} onChange={(e) => setUserTypeId(Number(e.target.value))}>
+                <option value="">Seleccione un rol</option>
+                {userTypes.map((userType) => (
+                  <option key={userType.user_type_id} value={userType.user_type_id}>
+                    {userType.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
               <RedButton href="/admin/users" name="Cancelar" />
