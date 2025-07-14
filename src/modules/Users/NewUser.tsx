@@ -7,11 +7,11 @@ import SaveModal from "../../SaveModal";
 
 export default function NewUser() {
 
-  const [name, setName] = useState<string>("");
-  const [lastname, setLastname] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [userTypeId, setUserTypeId] = useState<number>(0);
+  const [name, setName] = useState<string>(localStorage.getItem("newUserForm") ? JSON.parse(localStorage.getItem("newUserForm") || "{}").name : "");
+  const [lastname, setLastname] = useState<string>(localStorage.getItem("newUserForm") ? JSON.parse(localStorage.getItem("newUserForm") || "{}").lastname : "");
+  const [email, setEmail] = useState<string>(localStorage.getItem("newUserForm") ? JSON.parse(localStorage.getItem("newUserForm") || "{}").email : "");
+  const [password, setPassword] = useState<string>(localStorage.getItem("newUserForm") ? JSON.parse(localStorage.getItem("newUserForm") || "{}").password : "");
+  const [userTypeId, setUserTypeId] = useState<number>(localStorage.getItem("newUserForm") ? JSON.parse(localStorage.getItem("newUserForm") || "{}").userTypeId : 0);
 
   const [userTypes, setUserTypes] = useState<UserTypeResponse[]>([]);
 
@@ -34,8 +34,10 @@ export default function NewUser() {
       });
 
       if (response.statusCode === 201) {
+        localStorage.removeItem("newUserForm");
         setOpenSaveModal(true);
-      } else {
+      }
+      else {
         setError(response.message);
         console.error("Error creating user:", response.message);
       }
@@ -46,6 +48,26 @@ export default function NewUser() {
   }
 
   useEffect(() => {
+    localStorage.setItem("newUserForm", JSON.stringify({
+      name,
+      lastname,
+      email,
+      password,
+      userTypeId
+    }));
+  }, [name, lastname, email, password, userTypeId]);
+
+  useEffect(() => {
+    const savedData = localStorage.getItem("newUserForm");
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      setName(parsed.name || "");
+      setLastname(parsed.lastname || "");
+      setEmail(parsed.email || "");
+      setPassword(parsed.password || "");
+      setUserTypeId(parsed.userTypeId || 0);
+    }
+
     const fetchUserTypes = async () => {
       try {
         const response = await fetchGetAllUserTypes() as ApiResponseGetAllUserTypes;
@@ -87,7 +109,7 @@ export default function NewUser() {
               <input type="password" id="password" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="role" className="font-semibold">Rol</label>
+              <div className="flex flex-row items-end justify-between"><label htmlFor="role" className="font-semibold">Rol</label><a href="/admin/users/role/new" className="text-[#0047a3] font-bold underline">Nuevo rol</a></div>
               <select name="userTypeId" id="userTypeId" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={userTypeId} onChange={(e) => setUserTypeId(Number(e.target.value))}>
                 <option value="">Seleccione un rol</option>
                 {userTypes.map((userType) => (

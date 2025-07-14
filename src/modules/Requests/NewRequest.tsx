@@ -165,16 +165,12 @@ export default function NewRequest() {
             const value = e.target.value;
             localStorage.setItem("deliveryDueDate", value);
             const selectedDate = new Date(value);
-            const now = new Date();
-            if (selectedDate <= now) {
-              alert("La fecha y hora de entrega deben ser mayores a la fecha y hora actual.");
-              return;
-            }
             const hour = selectedDate.getHours();
             if (hour < 8 || hour > 18) {
               alert("La hora debe ser dentro del horario laboral (8:00 - 18:00).");
               return;
             }
+
             setDeliveryDueDate(value);
             }}
             min={(() => {
