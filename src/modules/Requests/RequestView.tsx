@@ -299,7 +299,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
         <iframe
             src={`http://localhost:3000/request/pdf/${request_id}`}
             title="Requerimiento PDF"
-            className=" w-full h-full"
+            className=" w-full h-full min-h-120"
           />
       </div>
       {
