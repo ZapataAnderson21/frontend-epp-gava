@@ -25,7 +25,7 @@ export default function ContentTable() {
   return (
     <div className="flex flex-col items-center justify-between w-full px-2 text-[13px] md:text-[14px]">
       {users.map(user => (
-        <RowTable key={user.user.user_id} id={user.user.user_id} name={user.user.name} lastname={user.user.last_name} rol={user.userType.name} />
+        <RowTable key={user.user.user_id} id={user.user.user_id} name={user.user.name} lastname={user.user.last_name} email={user.user.email} rol={user.userType.name} />
       ))}
     </div>
   );

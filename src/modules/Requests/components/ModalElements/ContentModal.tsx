@@ -8,6 +8,8 @@ import {
   fetchDeleteElementRequest,
   fetchGetElementRequestsByRequest
 } from "../../../../data/elementRequestData";
+import HeaderModal from "./HeaderModal";
+import { FaDeleteLeft } from "react-icons/fa6";
 
 interface ContentModalProps {
   typeElement: string;
@@ -17,6 +19,18 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   const [elements, setElements] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [originalIds, setOriginalIds] = useState<number[]>([]);
+  const [searchItem, setSearchItem] = useState("");
+  const filteredElements = elements.filter((item) =>
+    item.name?.toLowerCase().includes(searchItem.toLowerCase())
+  );
+
+  const [pages, setPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const itemsPerPage = 5;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentElements = filteredElements.slice(indexOfFirstItem, indexOfLastItem);
 
   const { id } = useParams();
   const location = useLocation();
@@ -30,6 +44,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       const response = await fetchGetByType(typeElement);
       if (response.statusCode === 200) {
         setElements(response.data);
+        setPages(Math.ceil(response.data.length / itemsPerPage));
       }
     };
 
@@ -53,7 +68,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
         if (res.statusCode === 200) {
           const ids = res.data.map((er) => er.element_id);
           setSelectedIds(ids);
-          setOriginalIds(ids); // para comparar cambios
+          setOriginalIds(ids);
         }
       };
       fetchExisting();
@@ -124,8 +139,25 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full pt-4 px-6 gap-4 text-[14px] md:text-[16px]">
-      {elements.map((item) => (
+    <>
+      <div className="px-3">
+        <div className="flex flex-row items-center justify-between border border-gray-300 rounded-md px-2 py-1 w-full">
+          <input
+            type="text"
+            className="outline-none size-full p-1"
+            placeholder="Buscar por nombre..."
+            value={searchItem}
+            onChange={(e) => setSearchItem(e.target.value)}
+          />
+          <FaDeleteLeft
+            className="size-6 hover:scale-110 cursor-pointer"
+            onClick={() => setSearchItem("")}
+          />
+        </div>
+      </div>
+      <HeaderModal />
+      <div className="flex flex-col items-center justify-between w-full pt-4 px-6 gap-4 text-[14px] md:text-[16px]">
+      {currentElements.map((item) => (
         <div key={item.element_id ?? item.name} className="flex items-center justify-between w-full">
           <span className="flex items-center justify-start w-12">{item.element_id}</span>
           <span className="flex items-center justify-start w-full">{item.name}</span>
@@ -137,7 +169,19 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
           />
         </div>
       ))}
+      <div className="flex flex-row justify-end w-full font-bold mt-4 gap-2">
+        {Array.from({ length: pages }, (_, i) => (
+          <div
+            key={i}
+            className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${currentPage === i + 1 ? "bg-gray-300" : ""}`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </div>
+        ))}
+      </div>
       <BlueButton href="#" name="Guardar" onClick={onClick} />
     </div>
+    </>
   );
 }

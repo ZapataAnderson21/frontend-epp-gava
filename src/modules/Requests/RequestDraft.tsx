@@ -11,6 +11,8 @@ import { MdAttachEmail } from "react-icons/md";
 import RedButton from "../../RedButton";
 import { fetchGetByStatus } from "../../data/projectData";
 import type { ElementRequest } from "../../Types";
+import { RiQuestionFill } from "react-icons/ri";
+import { IoWarning } from "react-icons/io5";
 
 interface RequestDraftProps {
   request_id: number;
@@ -27,6 +29,9 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
   const [elements, setElements] = useState<any[]>([]);
   const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequest[]>([]);
 
+  const [openWarning, setOpenWarning] = useState<boolean>(false);
+  const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -39,6 +44,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
           setRequest(req);
           setProjectId(req.project_id);
           setDescription(req.description || "");
+            setDeliveryDueDate(req.delivery_due_date ? req.delivery_due_date.slice(0, 16) : "");
         }
 
         const resProjects = await fetchGetByStatus("active");
@@ -123,6 +129,47 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
                   </option>
                 ))}
               </select>
+
+              <span className="font-semibold flex items-center w-full justify-between">Fecha y hora de entrega: 
+                <div className="relative">
+                  <RiQuestionFill className="inline-flex text-amber-500 cursor-pointer size-5" onClick={() => setOpenWarning(!openWarning)} />
+                  { 
+                    openWarning && (
+                    <p className="absolute bg-amber-500 p-2 rounded-md text-white font-semibold inline-flex w-78 right-0 top-6 gap-1 mb-1">
+                      <IoWarning className="w-8 mt-1" /> 
+                      Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
+                    </p>
+                  )}
+                </div>
+              </span>
+              <input
+                type="datetime-local"
+                className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
+                value={deliveryDueDate}
+                onChange={(e) => {
+                const value = e.target.value;
+                localStorage.setItem("deliveryDueDate", value);
+                const selectedDate = new Date(value);
+                const hour = selectedDate.getHours();
+                if (hour < 8 || hour > 18) {
+                  alert("La hora debe ser dentro del horario laboral (8:00 - 18:00).");
+                  return;
+                }
+    
+                setDeliveryDueDate(value);
+                }}
+                min={(() => {
+                const now = new Date();
+                now.setHours(8, 0, 0, 0);
+                return now.toISOString().slice(0, 16);
+                })()}
+                max={(() => {
+                const future = new Date();
+                future.setDate(future.getDate() + 30);
+                future.setHours(18, 0, 0, 0);
+                return future.toISOString().slice(0, 16);
+                })()}
+              />
     
               <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
               <div className="flex flex-row items-center justify-around gap-4 w-full">

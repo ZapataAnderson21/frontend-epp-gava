@@ -31,14 +31,13 @@ export interface CreateRequestResponseDto {
 export interface UpdateRequestResponseDto {
   request_id: number
   responder_user_id: number
-  response_date: string
   description?: string
 }
 
 export interface RequestResponseGetAllResponse {
   statusCode: number
   message: string
-  data: RequestType[]
+  data: RequestResponseType[]
 }
 
 export interface RequestResponseResponse {
@@ -129,7 +128,7 @@ export async function fetchGetRequestResponseById(id: number): Promise<RequestRe
   }
 }
 
-export async function fetchUpdateRequest(id: number, data: UpdateRequestResponseDto): Promise<RequestResponseResponse> {
+export async function fetchUpdateRequestResponse(id: number, data: UpdateRequestResponseDto): Promise<RequestResponseResponse> {
   try {
     const token = localStorage.getItem('accessToken')
 
@@ -156,7 +155,7 @@ export async function fetchUpdateRequest(id: number, data: UpdateRequestResponse
   }
 }
 
-export async function fetchGetRequestResponseByRequestId(requestId: number): Promise<RequestResponseGetAllResponse> {
+export async function fetchGetRequestResponseByRequestId(requestId: number): Promise<RequestResponseResponse> {
   try {
     const token = localStorage.getItem('accessToken')
 

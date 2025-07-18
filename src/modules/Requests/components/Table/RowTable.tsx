@@ -57,7 +57,7 @@ export default function RowTable({ id, createdAt, deliveryDueDate, status, user 
       <div className="flex flex-row items-center justify-between w-full p-4 border-b border-gray-200 
                     gap-4 hover:rounded-lg hover:bg-[#eff2ff] cursor-pointer">
         <span className="flex items-start justify-start w-12">{id}</span>
-        <span className="flex items-start justify-start w-32">{formattedDateTime(createdAt)}</span>
+        <span className="hidden lg:flex items-start justify-start w-32">{formattedDateTime(createdAt)}</span>
         <span className="hidden sm:flex items-start justify-start w-24">{user}</span>
         <span className="flex items-start justify-start w-32">{formattedDateTime(deliveryDueDate)}</span>
         <span className="flex flex-row items-center justify-center md:justify-start gap-2 w-12 md:w-24">

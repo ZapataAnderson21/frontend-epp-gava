@@ -1,4 +1,5 @@
 import type { ElementType } from './elementData'
+import type { ElementRequestResponseType } from './elementRequestResponseData'
 import { root } from './root'
 
 const elementRequestRoot = `${root}/element-request`
@@ -18,6 +19,7 @@ export interface ElementRequestType {
   element_id: number
   request_id: number
   element?: ElementType
+  elementRequestResponses?: ElementRequestResponseType[]
 }
 
 export interface CreateElementRequestDto {

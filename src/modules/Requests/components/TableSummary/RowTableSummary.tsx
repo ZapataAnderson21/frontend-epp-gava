@@ -8,7 +8,7 @@ interface RowTableSummaryProps {
 }
 
 export default function RowTableSummary({ elementRequest, onQuantityChange }: RowTableSummaryProps) {
-  const [quantity_accepted, setQuantityAccepted] = useState<number>();
+  const [quantity_accepted, setQuantityAccepted] = useState<number>(elementRequest.elementRequestResponses?.[0]?.quantity_accepted || 0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);

@@ -31,6 +31,8 @@ export default function NewRequest() {
 
   const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
 
+  const [openWarning, setOpenWarning] = useState<boolean>(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -134,11 +136,6 @@ export default function NewRequest() {
           <h1 className="text-2xl font-bold mb-4">REGISTRAR SOLICITUD</h1>
         </div>
 
-        <p className="text-amber-500 font-semibold inline-flex gap-1 mb-3">
-          <IoWarning className="w-8 mt-1" /> 
-          Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
-        </p>
-
         <div className="flex flex-col items-start justify-start gap-3 w-full max-w-2xl h-full text-[14px] text-gray-600">
           <span className="font-semibold">Elige el proyecto:</span>
           <select
@@ -156,7 +153,18 @@ export default function NewRequest() {
             ))}
           </select>
 
-          <span className="font-semibold flex items-center w-full justify-between">Fecha y hora de entrega: <RiQuestionFill className="inline-flex text-gray-500 cursor-pointer size-5" /></span>
+          <span className="font-semibold flex items-center w-full justify-between">Fecha y hora de entrega: 
+            <div className="relative">
+              <RiQuestionFill className="inline-flex text-amber-500 cursor-pointer size-5" onClick={() => setOpenWarning(!openWarning)} />
+              { 
+                openWarning && (
+                <p className="absolute bg-amber-500 p-2 rounded-md text-white font-semibold inline-flex w-78 right-0 top-6 gap-1 mb-1">
+                  <IoWarning className="w-8 mt-1" /> 
+                  Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
+                </p>
+              )}
+            </div>
+          </span>
           <input
             type="datetime-local"
             className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"

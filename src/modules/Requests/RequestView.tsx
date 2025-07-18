@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
-import { fetchCreateRequestResponse } from "../../data/requestResponseData";
-import { fetchCreateElementRequestResponse } from "../../data/elementRequestResponseData";
+import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse, type RequestResponseType } from "../../data/requestResponseData";
+import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } from "../../data/elementRequestResponseData";
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -43,16 +43,31 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEmployee, setIsEmployee] = useState(false);
   const [request, setRequest] = useState<RequestType>( {} as RequestType);
+  const [requestResponse, setRequestResponse] = useState<RequestResponseType>({} as RequestResponseType);
+  const [descriptionResponse, setDescriptionResponse] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [openSaveModal, setOpenSaveModal] = useState(false);
 
-  const formattedDate = new Date(request?.createdAt || '').toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const formattedDate = request?.createdAt
+    ? new Date(request.createdAt).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '---';
+
+  const formattedDeliveryDueDate = request?.delivery_due_date
+    ? new Date(request.delivery_due_date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '---';
+
   const navigate = useNavigate();  
 
   useEffect(() => {
@@ -90,6 +105,14 @@ export default function RequestView({ request_id }: RequestViewProps) {
       fetchGetRequestById(Number(request_id)).then((response) => {
         setRequest(response.data);
       });
+
+      fetchGetRequestResponseByRequestId(Number(request_id)).then((response) => {
+        if (response.data) {
+          setRequestResponse(response.data);
+          setDescriptionResponse(response.data.description || "");
+        }
+      });
+
     }
   }, [request_id]);
 
@@ -99,7 +122,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
       const response = await fetchCreateRequestResponse({
         request_id: Number(request_id),
         responder_user_id: Number(user.user_id),
-        description: "Solicitud revisada por logística."
+        description: "Solicitud revisada por administración."
       });
 
       // 2. Registrar cada respuesta de elemento
@@ -123,6 +146,61 @@ export default function RequestView({ request_id }: RequestViewProps) {
     }
   };
 
+  const handleApproved = async () => {
+    console.log("Aprobando solicitud con ID:", request_id);
+    try{
+      //1. Buscar la RequestResponseByRequestId
+
+      const response = await fetchGetRequestResponseByRequestId(Number(request_id));
+      if (!response.data) {
+        console.log("No se encontró la respuesta de la solicitud.");
+      }
+
+      console.log("Respuesta de la solicitud:", response.data);
+
+      //2. Actualizar las cantidades aceptadas de las ElementRequestResponse
+      for (const elementRequest of request.elementRequests || []) {
+        const acceptedQuantity = acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested;
+
+        console.log("Actualizando ElementRequestResponse con ID:", elementRequest.element_request_id, "Cantidad aceptada:", acceptedQuantity);
+
+        if (
+          elementRequest.elementRequestResponses &&
+          elementRequest.elementRequestResponses.length > 0
+        ) {
+          await fetchUpdateElementRequestResponse(elementRequest.elementRequestResponses[0].element_request_response_id, {
+            element_request_id: elementRequest.element_request_id,
+            quantity_accepted: acceptedQuantity,
+            request_response_id: response.data.request_response_id
+          });
+        } else {
+          console.warn(
+            `No se encontró ElementRequestResponse para elementRequest_id: ${elementRequest.element_request_id}`
+          );
+        }
+      }
+
+      //3. Actualizar la RequestResponse con la descripción
+
+      console.log("Actualizando RequestResponse con ID:", response.data.request_response_id, "Descripción:", descriptionResponse);
+
+      const bodyUpdate = {
+        request_id: response.data.request_id,
+        responder_user_id: Number(user.user_id),
+        description: descriptionResponse
+      };
+
+      console.log("Cuerpo de actualización:", bodyUpdate);
+
+      await fetchUpdateRequestResponse(response.data.request_response_id, bodyUpdate);
+
+      //4. Actualiza el estado de la request a "approved"
+      handleChangeStatus("approved");
+    } catch (error) {
+      console.error("Error al aprobar la solicitud:", error);
+    }
+  }
+
 
   const handleChangeStatus = (newStatus: string) => {
     if (request) {
@@ -143,11 +221,26 @@ export default function RequestView({ request_id }: RequestViewProps) {
               <Button icon={<FaArrowLeft />} label="Regresar" onClick={() => navigate('/admin/requests')} bgColor={'#000'} bgHoverColor={'#1f1f1f'} />
             </div>
           </div>
+          <RequestProperty label='Remitente' value={request.user?.name || '---'} />
           <RequestProperty label='Proyecto' value={request?.project?.name || '---'} />
-          <RequestProperty label='Fecha y hora' value={formattedDate || '---'} />
+          <RequestProperty label='F. y H. de registro' value={formattedDate || '---'} />
+          <RequestProperty label='F. y H. de entrega' value={formattedDeliveryDueDate || '---'} />
           <RequestProperty label='Estado' value={statusOptions.find(option => option.value === request?.status)?.label || '---'} />
           <RequestProperty label='Tipo' value={`Req. de Elementos ${typeOptions.find(option => option.value === request?.type)?.label || '---'}`} />
           <RequestProperty label='Descripción' value={request?.description || '---'} />
+          { (isApproved || isAttend || isUnderReview) && (
+            <>
+              <p className="font-semibold text-nowrap text-[14px]">Cantidades Aceptadas:</p>
+              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+                <HeaderTableSummary />
+                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+              </div>
+              <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
+                <p className="font-semibold text-nowrap">Respuesta:</p>
+                <span> {requestResponse.description}</span>
+              </div>
+            </>
+          )}
           { isAdmin && isInProgress && (
             <>
               <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
@@ -161,14 +254,41 @@ export default function RequestView({ request_id }: RequestViewProps) {
             </>
           )}
           { isGerency && isUnderReview && (
-            <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-              <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleChangeStatus("approved")} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
-              <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
-          </div>)}
-          { isLogistics && isApproved && (
-            <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-              <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor={'#0047a3'} bgHoverColor={'#003d8f'} />
-            </div>
+            <>
+              <p className="mt-1 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
+              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+                <HeaderTableSummary />
+                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+              </div>
+              <p className="mt-4 text-[12px] font-bold">Respuesta:</p>
+              <p className="text-[12px] font-bold"> {requestResponse.description}</p>
+              <textarea
+                className="w-full h-24 p-2 border-2 border-gray-300 rounded-md"
+                placeholder="Escribe aquí tus comentarios o justificaciones para la aprobación o rechazo..."
+                value={descriptionResponse}
+                onChange={(e) => {
+                  setDescriptionResponse(e.target.value);
+                  console.log(descriptionResponse);
+                }}
+              ></textarea>
+              <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+                <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleApproved()} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
+                <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
+              </div>
+          </>
+        )}
+          { isApproved && isLogistics && (
+            <>
+              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+                <HeaderTableSummary />
+                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+              </div>
+              <div>Respuesta: <span>{requestResponse.description}</span></div>
+              
+              <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+                <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor={'#0047a3'} bgHoverColor={'#003d8f'} />
+              </div>
+            </>
           )}
           { isEmployee && isAttend && (
             <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">

@@ -8,10 +8,13 @@ export default function Header() {
         <div className="flex flex-row items-center justify-between w-full p-8">
           <div className="flex flex-row items-center justify-start gap-4">
             <img src="/logo-gava.png" alt="Logo" className="h-14" />
+            {/* <h1 className="border-2 rounded-md p-2">LOGO DE LA EMPRESA</h1> */}
           </div>
           <div>
             <div className="flex flex-row items-center justify-center gap-4">
               <div className="hidden sm:flex flex-col items-end justify-center">
+                {/* <span className="text-gray-700 font-bold text-nowrap">Nombre de Usuario</span>
+                <span className="text-gray-800 text-sm font-extrabold">ROL</span> */}
                 <span className="text-gray-700 font-bold text-nowrap">{parsedUser?.name} {parsedUser?.last_name}</span>
                 <span className="text-gray-800 text-sm font-extrabold">{parsedUser?.userUserTypes[0]?.userType.name}</span>
               </div>
