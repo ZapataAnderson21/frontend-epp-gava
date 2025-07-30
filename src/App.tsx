@@ -5,6 +5,7 @@ import Requests from './modules/Requests/Requests.tsx';
 import Users from './modules/Users/Users.tsx';
 import User from './modules/Users/User.tsx';
 import Home from './sections/Home.tsx';
+import AppHome from './App-Home.tsx';
 import NewUser from './modules/Users/NewUser.tsx';
 import NewRequest from './modules/Requests/NewRequest.tsx';
 import NewProject from './modules/Projects/NewProject.tsx';
@@ -25,7 +26,7 @@ export default function App() {
         <Route path='/' element={<Login />} />
         <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/admin' element={<Home />} >
-          <Route path='' element={<Projects />} />
+          <Route path='' element={<AppHome />} />
           <Route path='projects' element={<Projects />} />
           <Route path='projects/:id' element={<Project />} />
           <Route path='projects/new' element={<NewProject />} />
