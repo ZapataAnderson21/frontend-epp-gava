@@ -61,7 +61,7 @@ export default function RowTable({ id, createdAt, deliveryDueDate, status, user 
         <span className="hidden sm:flex items-start justify-start w-24">{user}</span>
         <span className="flex items-start justify-start w-32">{formattedDateTime(deliveryDueDate)}</span>
         <span className="flex flex-row items-center justify-center md:justify-start gap-2 w-12 md:w-24">
-          <div className={`${statusClass.color} size-3 rounded-full border-1 border-black`}></div>
+          <div className={`${statusClass.color} size-3 rounded-full`}></div>
           <span className="hidden md:block">{statusColorClasses[status]?.value}</span>
         </span>
       </div>

@@ -221,6 +221,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
               <Button icon={<FaArrowLeft />} label="Regresar" onClick={() => navigate('/admin/requests')} bgColor={'#000'} bgHoverColor={'#1f1f1f'} />
             </div>
           </div>
+
           <RequestProperty label='Remitente' value={request.user?.name || '---'} />
           <RequestProperty label='Proyecto' value={request?.project?.name || '---'} />
           <RequestProperty label='F. y H. de registro' value={formattedDate || '---'} />
@@ -228,32 +229,23 @@ export default function RequestView({ request_id }: RequestViewProps) {
           <RequestProperty label='Estado' value={statusOptions.find(option => option.value === request?.status)?.label || '---'} />
           <RequestProperty label='Tipo' value={`Req. de Elementos ${typeOptions.find(option => option.value === request?.type)?.label || '---'}`} />
           <RequestProperty label='Descripción' value={request?.description || '---'} />
-          { (isApproved || isAttend || isUnderReview) && (
-            <>
-              <p className="font-semibold text-nowrap text-[14px]">Cantidades Aceptadas:</p>
-              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
-                <HeaderTableSummary />
-                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
-              </div>
-              <div className="flex flex-row items-start justify-start gap-2 w-full max-w-2xl text-[14px] text-gray-700">
-                <p className="font-semibold text-nowrap">Respuesta:</p>
-                <span> {requestResponse.description}</span>
-              </div>
-            </>
-          )}
-          { isAdmin && isInProgress && (
+
+          {isAdmin && (
             <>
               <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
                 <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
               </div>
-              <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                <Button icon={<FaArrowRight />} label="Revisado" onClick={() => handleReviewed()} bgColor='#f0b100' bgHoverColor='#f69f00' />
-              </div>
+              {isInProgress && (
+                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+                  <Button icon={<FaArrowRight />} label="Revisado" onClick={() => handleReviewed()} bgColor='#f0b100' bgHoverColor='#f69f00' />
+                </div>
+              )}
             </>
           )}
-          { isGerency && isUnderReview && (
+
+          {isGerency && (
             <>
               <p className="mt-1 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
@@ -271,13 +263,16 @@ export default function RequestView({ request_id }: RequestViewProps) {
                   console.log(descriptionResponse);
                 }}
               ></textarea>
-              <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleApproved()} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
-                <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
-              </div>
-          </>
-        )}
-          { isApproved && isLogistics && (
+              {isUnderReview && (
+                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+                  <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleApproved()} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
+                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
+                </div>
+              )}
+            </>
+          )}
+
+          {isLogistics && (
             <>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
@@ -285,12 +280,15 @@ export default function RequestView({ request_id }: RequestViewProps) {
               </div>
               <div>Respuesta: <span>{requestResponse.description}</span></div>
               
-              <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor={'#0047a3'} bgHoverColor={'#003d8f'} />
-              </div>
+              {isApproved && (
+                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
+                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor={'#0047a3'} bgHoverColor={'#003d8f'} />
+                </div>
+              )}
             </>
           )}
-          { isEmployee && isAttend && (
+
+          {isEmployee && isAttend && (
             <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
               <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor={'#ad46ff'} bgHoverColor={'#9b3bff'} />
             </div>
