@@ -295,7 +295,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
           )}
         </div>
         <iframe
-            src={`http://localhost:3000/request/pdf/${request_id}`}
+            src={`https://www.sir.gavacyc.com/request/pdf/${request_id}`}
             title="Requerimiento PDF"
             className=" w-full h-full min-h-120"
           />
