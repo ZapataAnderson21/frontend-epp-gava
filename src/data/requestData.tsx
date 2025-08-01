@@ -328,7 +328,7 @@ export async function fetchSendRequestToLogistics(requestId: number, passwordCPa
 }
 
 export async function fetchPdfBlob(requestId: number, token: string): Promise<string> {
-  const response = await fetch(`https://sir.gavacyc.com/request/pdf/${requestId}`, {
+  const response = await fetch(`https://sir.gavacyc.com/api/request/pdf/${requestId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
