@@ -1,1 +1,1 @@
-export const root = "http://localhost:3000"; 
+export const root = "https://sir.gavacyc.com/api"; 
