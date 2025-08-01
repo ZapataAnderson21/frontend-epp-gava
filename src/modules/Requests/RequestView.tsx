@@ -51,15 +51,19 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) return;
 
-    fetchPdfBlob(request_id, token)
-      .then(url => {
-        setPdfUrl(url);
+    fetch(`${import.meta.env.VITE_API_URL}/request/pdf/${request_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.blob())
+      .then((blob) => {
+        setPdfUrl(URL.createObjectURL(blob));
       })
-      .catch(err => {
-        console.error("Error al cargar PDF:", err);
+      .catch((err) => {
+        console.error("Error al cargar el PDF:", err);
       });
   }, [request_id]);
 
