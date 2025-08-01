@@ -15,8 +15,6 @@ export default function NewUser() {
 
   const [userTypes, setUserTypes] = useState<UserTypeResponse[]>([]);
 
-  const [error, setError] = useState<string | null>(null);
-
   const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -38,12 +36,10 @@ export default function NewUser() {
         setOpenSaveModal(true);
       }
       else {
-        setError(response.message);
         console.error("Error creating user:", response.message);
       }
     } catch (error) {
       console.error("Error creating user:", error);
-      setError("Error creating user");
     }
   }
 
