@@ -326,3 +326,18 @@ export async function fetchSendRequestToLogistics(requestId: number, passwordCPa
     throw error
   }
 }
+
+export async function fetchPdfBlob(requestId: number, token: string): Promise<string> {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/request/pdf/${requestId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("No se pudo obtener el PDF");
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}

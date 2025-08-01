@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
+import { fetchGetRequestById, fetchUpdateRequestStatus, fetchPdfBlob, type RequestType } from "../../data/requestData";
 import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse, type RequestResponseType } from "../../data/requestResponseData";
 import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } from "../../data/elementRequestResponseData";
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
@@ -47,6 +47,21 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const [descriptionResponse, setDescriptionResponse] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [openSaveModal, setOpenSaveModal] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    fetchPdfBlob(request_id, token)
+      .then(url => {
+        setPdfUrl(url);
+      })
+      .catch(err => {
+        console.error("Error al cargar PDF:", err);
+      });
+  }, [request_id]);
 
   const formattedDate = request?.createdAt
     ? new Date(request.createdAt).toLocaleDateString('es-ES', {
@@ -294,11 +309,13 @@ export default function RequestView({ request_id }: RequestViewProps) {
             </div>
           )}
         </div>
-        <iframe
-            src={`https://www.sir.gavacyc.com/request/pdf/${request_id}`}
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
             title="Requerimiento PDF"
-            className=" w-full h-full min-h-120"
+            className="w-full h-full min-h-120"
           />
+        )}
       </div>
       {
         openSaveModal && (
