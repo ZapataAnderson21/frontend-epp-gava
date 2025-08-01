@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchGetRequestById, fetchUpdateRequestStatus, fetchPdfBlob, type RequestType } from "../../data/requestData";
+import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
 import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse, type RequestResponseType } from "../../data/requestResponseData";
 import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } from "../../data/elementRequestResponseData";
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
@@ -53,7 +53,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch(`${import.meta.env.VITE_API_URL}/request/pdf/${request_id}`, {
+    fetch(`https://sir.gavacyc.com/api/request/pdf/${request_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
