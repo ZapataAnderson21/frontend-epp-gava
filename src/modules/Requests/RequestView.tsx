@@ -50,7 +50,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) return;
 
     fetch(`https://sir.gavacyc.com/api/request/pdf/${request_id}`, {
