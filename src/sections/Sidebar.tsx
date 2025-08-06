@@ -1,11 +1,11 @@
 import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes } from "react-icons/fa6";
 import { FaHome, FaProjectDiagram, FaTools } from "react-icons/fa";
-import { FaHistory } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
 import { useState, useRef, useEffect } from "react";
 import { fetchLogoutUser } from "../data/userData";
 import { useNavigate } from "react-router-dom";
+import { RiAlertFill } from "react-icons/ri";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -89,7 +89,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
               )}
             </div>
             <SidebarItem icon={<FaUsers />} label="Usuarios" href="/admin/users" />
-            <SidebarItem icon={<FaHistory />} label="Historial" href="#" />
+            <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" />
           </div>
         </div>
         <div className="flex flex-col gap-4 items-start justify-center w-full border-t border-gray-300 py-4 px-6">

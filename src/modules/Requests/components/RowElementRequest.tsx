@@ -1,10 +1,11 @@
 import { IoIosCloseCircle } from "react-icons/io";
-import type { Element, ElementRequest } from "../../../Types";
+import type { ElementType } from "../../../data/elementData";
+import type { ElementRequestType } from "../../../data/elementRequestData";
 
 interface RowElementRequestProps {
-  elementRequest: ElementRequest;
-  handleRemoveElement: (element: Element) => void;
-  handleChangeElementRequest: (element_id: number, field: keyof ElementRequest, value: string | number) => void;
+  elementRequest: ElementRequestType;
+  handleRemoveElement: (element: ElementType) => void;
+  handleChangeElementRequest: (element_id: number, field: keyof ElementRequestType, value: string | number) => void;
 }
 
 export default function RowElementRequest({ elementRequest, handleRemoveElement, handleChangeElementRequest }: RowElementRequestProps) {

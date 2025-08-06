@@ -1,28 +1,29 @@
 import RequestTypeCard from "./components/RequestTypeCard";
 import { FaHelmetSafety } from "react-icons/fa6";
 import { FaSave, FaTools } from "react-icons/fa";
-import { type Element, type ElementRequest } from "../../Types";
+import type { ElementType } from "../../data/elementData";
+import type { ElementRequestType } from "../../data/elementRequestData";
 import { useEffect, useState } from "react";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import RedButton from "../../RedButton";
+import RedButton from "../../components/RedButton";
 import { MdAttachEmail } from "react-icons/md";
 import { fetchGetByStatus, type ProjectType } from "../../data/projectData";
 import { handleSave, handleSaveAndSend}  from "./HandleForm";
 import { IoWarning } from "react-icons/io5";
-import SaveModal from "../../SaveModal";
+import SaveModal from "../../components/SaveModal";
 import { useNavigate } from "react-router-dom";
 import { RiQuestionFill } from "react-icons/ri";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
-  const selectedElements: Element[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
-  const selectedElementRequest: ElementRequest[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+  const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
+  const selectedElementRequest: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
   const [description, setDescription] = useState<string>("");
 
-  const [elements, setElements] = useState<Element[]>(selectedElements);
-  const [elementRequests, setElementRequests] = useState<ElementRequest[]>(selectedElementRequest);
+  const [elements, setElements] = useState<ElementType[]>(selectedElements);
+  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(selectedElementRequest);
 
   const [projects, setProjects] = useState<ProjectType[]>([]);
 
@@ -48,7 +49,7 @@ export default function NewRequest() {
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const updatedElements: Element[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
+      const updatedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
       setElements(updatedElements);
     };
 
@@ -59,7 +60,7 @@ export default function NewRequest() {
     };
   }, []);
 
-  const handleRemoveElement = (element: Element) => {
+  const handleRemoveElement = (element: ElementType) => {
     const updatedElements = elements.filter((elem) => elem.element_id !== element.element_id);
     const updatedElementRequests = elementRequests.filter((req) => req.element_id !== element.element_id);
 
@@ -70,7 +71,7 @@ export default function NewRequest() {
     localStorage.setItem("selectedElementRequest", JSON.stringify(updatedElementRequests));
   };
 
-  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequest, value: string | number) => {
+  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequestType, value: string | number) => {
     const updated = elementRequests.map((req) =>
       req.element_id === element_id ? { ...req, [field]: field === "quantity_requested" ? Number(value) : value } : req
     );
@@ -137,7 +138,7 @@ export default function NewRequest() {
         </div>
 
         <div className="flex flex-col items-start justify-start gap-3 w-full max-w-2xl h-full text-[14px] text-gray-600">
-          <span className="font-semibold">Elige el proyecto:</span>
+          <span className="font-semibold">Seleccione un proyecto:</span>
           <select
             className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-3"
             value={projectId}

@@ -13,7 +13,7 @@ const elementRequestData = {
 }
 
 export interface ElementRequestType {
-  element_request_id: number
+  element_request_id?: number
   quantity_requested: number
   unit: string
   element_id: number

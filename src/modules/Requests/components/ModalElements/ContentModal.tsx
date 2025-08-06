@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import BlueButton from "../../../../BlueButton";
-import { type Element } from "../../../../Types";
+import BlueButton from "../../../../components/BlueButton";
+import { type ElementType } from "../../../../data/elementData";
 import { fetchGetByType } from "../../../../data/elementData";
 import {
   fetchCreateElementRequest,
@@ -55,7 +55,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
     if (isNewRequest) {
       const saved = localStorage.getItem("selectedElements");
       if (saved) {
-        const parsed: Element[] = JSON.parse(saved);
+        const parsed: ElementType[] = JSON.parse(saved);
         setSelectedIds(
           parsed
             .map((item) => item.element_id)
@@ -129,7 +129,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       for (const removeId of removed) {
         const res = await fetchGetElementRequestsByRequest(requestId);
         const itemToDelete = res.data.find((e) => e.element_id === removeId);
-        if (itemToDelete) {
+        if (itemToDelete && itemToDelete.element_request_id !== undefined) {
           await fetchDeleteElementRequest(itemToDelete.element_request_id);
         }
       }

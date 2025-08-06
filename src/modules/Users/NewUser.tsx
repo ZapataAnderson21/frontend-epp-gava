@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import RedButton from "../../RedButton";
+import RedButton from "../../components/RedButton";
 import { fetchCreateUser } from "../../data/userData";
 import { fetchGetAllUserTypes, type ApiResponseGetAllUserTypes, type UserTypeResponse } from "../../data/userTypeData";
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../SaveModal";
+import SaveModal from "../../components/SaveModal";
 
 export default function NewUser() {
 

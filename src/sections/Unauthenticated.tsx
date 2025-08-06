@@ -1,4 +1,4 @@
-import BlueButton from "../BlueButton";
+import BlueButton from "../components/BlueButton";
 
 export default function Unauthenticated() {
   return (

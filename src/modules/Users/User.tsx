@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import RedButton from "../../RedButton";
+import RedButton from "../../components/RedButton";
 import { fetchGetOne, fetchUpdateUser, type UpdateUserDto } from "../../data/userData";
 import { useNavigate } from "react-router-dom";
 

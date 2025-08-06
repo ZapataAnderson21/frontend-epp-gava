@@ -17,6 +17,7 @@ import Project from './modules/Projects/Project.tsx';
 import ResetPassword from './ResetPassword.tsx';
 import Element from './modules/Elements/Element.tsx';
 import Request from './modules/Requests/Request.tsx';
+import Emergencies from './modules/Emergencies/Emergencies.tsx';
 
 export default function App() {
 
@@ -40,6 +41,7 @@ export default function App() {
           <Route path='users/:id' element={<User />} />
           <Route path='users/new' element={<NewUser />} />
           <Route path='users/role/new' element={<NewRole />} />
+          <Route path='emergencies' element={<Emergencies />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -5,11 +5,11 @@ import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } 
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Button from "../../Button";
+import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import RequestProperty from "./components/RequestProperty";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
-import SaveModal from "../../SaveModal";
+import SaveModal from "../../components/SaveModal";
 
 interface RequestViewProps {
   request_id: number;

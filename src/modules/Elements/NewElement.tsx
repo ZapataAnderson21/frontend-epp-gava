@@ -1,8 +1,8 @@
 import { useState } from "react";
-import RedButton from "../../RedButton";
+import RedButton from "../../components/RedButton";
 import { fetchCreateElement } from "../../data/elementData";
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../SaveModal";
+import SaveModal from "../../components/SaveModal";
 
 export default function NewEpp() {
 

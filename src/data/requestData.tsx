@@ -1,7 +1,7 @@
-import type { UserType } from '../Types'
 import type { ProjectType } from './projectData'
 import type { ElementRequestType } from  './elementRequestData'
 import { root } from './root'
+import type { UserResponse } from './userData'
 
 const requestRoot = `${root}/request`
 
@@ -28,7 +28,7 @@ export interface RequestType {
   project_id: number
   user_id: number
   type: string
-  user?: UserType
+  user?: UserResponse
   project?: ProjectType
   elementRequests?: ElementRequestType[]
 }

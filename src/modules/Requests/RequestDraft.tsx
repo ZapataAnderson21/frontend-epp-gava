@@ -8,9 +8,9 @@ import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { handleUpdate, handleUpdateAndSend } from "./HandleForm";
 import { MdAttachEmail } from "react-icons/md";
-import RedButton from "../../RedButton";
+import RedButton from "../../components/RedButton";
 import { fetchGetByStatus } from "../../data/projectData";
-import type { ElementRequest } from "../../Types";
+import type { ElementRequestType } from "../../data/elementRequestData";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";
 
@@ -27,7 +27,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
   const [elements, setElements] = useState<any[]>([]);
-  const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequest[]>([]);
+  const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequestType[]>([]);
 
   const [openWarning, setOpenWarning] = useState<boolean>(false);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
@@ -94,7 +94,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
     }
   };
 
-  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequest, value: string | number) => {
+  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequestType, value: string | number) => {
     setElementRequests((prev) =>
       prev.map((er) =>
         er.element_id === element_id ? { ...er, [field]: value } : er
