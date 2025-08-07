@@ -8,7 +8,7 @@ export default function NewEpp() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState("all");
 
   const [openSaveModal, setOpenSaveModal] = useState(false);
 
@@ -56,7 +56,7 @@ export default function NewEpp() {
               </select>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href="/admin/elements" name="Cancelar" />
+              <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" />
               <button type="submit" className="w-full bg-[#0047a3] px-4 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer">Registrar</button>
             </div>
           </form>

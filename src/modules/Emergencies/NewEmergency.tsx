@@ -20,15 +20,15 @@ export default function NewEmergency() {
   const navigate = useNavigate();
 
   useEffect(() => {
-      const fetchProjects = async () => {
-        const response = await fetchGetByStatus("active");
-        if (response.statusCode === 200) {
-          setProjects(response.data);
-        }
-      };
-  
-      fetchProjects();
-    }, []);
+    const fetchProjects = async () => {
+      const response = await fetchGetByStatus("active");
+      if (response.statusCode === 200) {
+        setProjects(response.data);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,7 +60,7 @@ export default function NewEmergency() {
     <>
       <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
         <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full text-[12px] md:text-[14px]">
-          <h1 className="text-2xl font-bold mb-4">REGISTRAR USUARIO</h1>
+          <h1 className="text-2xl font-bold mb-4">REGISTRAR EMERGENCIA</h1>
         </div>
         <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-[14px] text-gray-600">
           <form className="flex flex-col gap-4 w-full max-w-md" onSubmit={handleSubmit}>
@@ -70,10 +70,10 @@ export default function NewEmergency() {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="description" className="font-semibold">Descripción</label>
-              <input type="text" id="description" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <textarea id="description" className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]" value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="flex flex-row items-end justify-between"><label htmlFor="project" className="font-semibold">Proyecto</label><a href="/admin/users/role/new" className="text-[#0047a3] font-bold underline">Nuevo rol</a></div>
+              <label htmlFor="project" className="font-semibold">Proyecto</label>
               <select
                 className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-3"
                 value={projectId}
@@ -101,7 +101,7 @@ export default function NewEmergency() {
               />
             </div>
             <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href="/admin/users" name="Cancelar" />
+              <RedButton href="/admin/emergencies" name="Cancelar" />
               <button type="submit" className="w-full bg-[#0047a3] px-4 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer">Registrar</button>
             </div>
           </form>
@@ -109,7 +109,7 @@ export default function NewEmergency() {
       </div>
       {
         openSaveModal && (
-          <SaveModal onOk={() => navigate("/admin/users")} />
+          <SaveModal onOk={() => navigate("/admin/emergencies")} />
         )
       }
     </>
