@@ -13,7 +13,9 @@ export default function RowTableSummary({ elementRequest, onQuantityChange }: Ro
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     setQuantityAccepted(value);
-    onQuantityChange(elementRequest.element_request_id, value);
+    if (typeof elementRequest.element_request_id === 'number') {
+      onQuantityChange(elementRequest.element_request_id, value);
+    }
   };
 
   return (
