@@ -146,13 +146,19 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
       // 2. Registrar cada respuesta de elemento
       for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity = acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested;
+        const acceptedQuantity = elementRequest.element_request_id !== undefined
+          ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
+          : elementRequest.quantity_requested;
 
-        await fetchCreateElementRequestResponse({
-          element_request_id: elementRequest.element_request_id,
-          quantity_accepted: acceptedQuantity,
-          request_response_id: response.data.request_response_id
-        });
+        if (elementRequest.element_request_id !== undefined) {
+          await fetchCreateElementRequestResponse({
+            element_request_id: elementRequest.element_request_id,
+            quantity_accepted: acceptedQuantity,
+            request_response_id: response.data.request_response_id
+          });
+        } else {
+          console.warn("element_request_id is undefined for elementRequest:", elementRequest);
+        }
       }
 
       // 3. Cambiar estado
@@ -179,7 +185,9 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
       //2. Actualizar las cantidades aceptadas de las ElementRequestResponse
       for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity = acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested;
+        const acceptedQuantity = elementRequest.element_request_id !== undefined
+          ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
+          : elementRequest.quantity_requested;
 
         console.log("Actualizando ElementRequestResponse con ID:", elementRequest.element_request_id, "Cantidad aceptada:", acceptedQuantity);
 
