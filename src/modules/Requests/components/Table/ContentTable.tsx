@@ -13,7 +13,7 @@ export default function ContentTable() {
 
   const [requests, setRequests] = useState<RequestType[]>([]);
 
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentRequests = requests.slice(indexOfFirstItem, indexOfLastItem);

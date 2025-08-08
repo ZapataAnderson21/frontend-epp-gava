@@ -62,37 +62,44 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   }, [isOpen, isMobile, setIsOpen]);
 
   return (
-    <section ref={sidebarRef} className={`text-[14px] text-gray-500
-      ${isMobile ? `absolute h-full w-[220px] bg-white left-[-220px] ${isOpen && "translate-x-[220px]"} transition-all duration-300 ease-in-out shadow-2xl z-10`
-        : `sticky flex h-full col-span-1 row-span-1 shadow-gray-300 shadow-md`
-      }
-      `}>
-      <div className="flex flex-col gap-2 items-start justify-between w-full h-full">
-        <div className="w-full">
-          <div className="flex flex-col items-start justify-start w-full py-4 px-6">
-            <SidebarItem icon={<FaHome />} label="Inicio" href="/admin/" />
-            <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" />
-            <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" />
-            <div className="w-full flex flex-col">
-              <div
-                className="flex flex-row items-center justify-between w-full cursor-pointer"
-                onClick={() => setIsElementosOpen(!isElementosOpen)}
-              >
-                <SidebarItem icon={<FaCubes />} label="Elementos" isRoot={true} isOpen={isElementosOpen} />
-              </div>
-
-              {isElementosOpen && (
-                <div className="w-full flex flex-col pl-2">
-                  <SidebarItem icon={<FaHelmetSafety />} label="EPP" href="/admin/elements/type/security" />
-                  <SidebarItem icon={<FaTools />} label="Operativos" href="/admin/elements/type/operative" />
-                </div>
-              )}
-            </div>
-            <SidebarItem icon={<FaUsers />} label="Usuarios" href="/admin/users" />
-            <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" />
+    <section
+      ref={sidebarRef}
+      className={`text-[14px] text-gray-500
+        ${isMobile
+          ? `absolute top-0 left-0 h-screen w-[220px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[220px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
+          : `fixed top-0 left-0 h-screen w-[220px] shadow-gray-300 shadow-md bg-white z-10`
+        }
+      `}
+    >
+      <div className="flex flex-col justify-between h-full overflow-y-auto">
+        <div className="flex flex-col gap-2 py-3 px-4">
+          <div className="flex flex-row items-center justify-start m-3">
+            <img src="/logo-gava.png" alt="Logo" className="h-14" />
           </div>
+          <SidebarItem icon={<FaHome />} label="Inicio" href="/admin/" />
+          <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" />
+          <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" />
+
+          <div className="w-full flex flex-col">
+            <div
+              className="flex flex-row items-center justify-between w-full cursor-pointer"
+              onClick={() => setIsElementosOpen(!isElementosOpen)}
+            >
+              <SidebarItem icon={<FaCubes />} label="Elementos" isRoot={true} isOpen={isElementosOpen} />
+            </div>
+            {isElementosOpen && (
+              <div className="w-full flex flex-col pl-2">
+                <SidebarItem icon={<FaHelmetSafety />} label="EPP" href="/admin/elements/type/security" />
+                <SidebarItem icon={<FaTools />} label="Operativos" href="/admin/elements/type/operative" />
+              </div>
+            )}
+          </div>
+
+          <SidebarItem icon={<FaUsers />} label="Usuarios" href="/admin/users" />
+          <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" />
         </div>
-        <div className="flex flex-col gap-4 items-start justify-center w-full border-t border-gray-300 py-4 px-6">
+
+        <div className="flex flex-col gap-4 border-t border-gray-300 py-4 px-6">
           <SidebarItem icon={<IoLogOut />} label="Salir" onClick={handleLogout} />
         </div>
       </div>

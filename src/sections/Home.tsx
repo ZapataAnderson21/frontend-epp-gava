@@ -59,30 +59,30 @@ export default function Home() {
           <Unauthenticated />
         </div>
       ) : (
-        <div className={`relative grid grid-cols-1 grid-rows-[auto_1fr] w-full min-h-screen`}>
-      
-          <Header />
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] w-full">
+          {isMobile && (
+            <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
+          )}
 
-          <section className={`relative col-span-1 row-span-1 w-full h-full`}>
-            
-            {isMobile && (
-              <div
-                className={`absolute top-[40%] ${isOpen ? "left-[188px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-20 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
-                onClick={toggleSidebar}
-              >
-                {isOpen ? <div className="rotate-180" ><Play /></div> : <Play />}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] w-full h-full">
-
-              <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
-
-              <div className={`col-span-1 w-full ${(isOpen && isMobile) && "blur-[1px]"} transition-all duration-300 ease-in-out`}>
-                <Outlet />
-              </div>
+          {isMobile && (
+            <div
+              className={`absolute top-80 
+                        ${isOpen ? "left-[188px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-40 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
+              onClick={toggleSidebar}
+            >
+              {isOpen ? <div className="rotate-180" ><Play /></div> : <Play />}
             </div>
-          </section>
+          )}
+          <div
+            className={`col-span-2 w-full ${(isOpen && isMobile) && "blur-[1px]"} 
+                        transition-all duration-300 ease-in-out ${!isMobile ? "md:pl-[220px]" : ""}`}
+          >
+            {!isMobile && (
+              <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
+            )}
+            <Header />
+            <Outlet />
+          </div>
         </div>
       )}
     </>

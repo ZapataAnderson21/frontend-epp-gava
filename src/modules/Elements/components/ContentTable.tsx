@@ -13,7 +13,7 @@ export default function ContentTable({ type }: ContentTableProps) {
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentElements = elements.slice(indexOfFirstItem, indexOfLastItem);
