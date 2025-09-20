@@ -25,14 +25,11 @@ export default function NewProject() {
 
     fetchCreateProject(projectData)
       .then(response => {
-        if (response.statusCode !== 201) {
-          throw new Error(response.message);
+        if (!response) {
+          throw new Error("Error creating project");
         }
         setOpenSaveModal(true);
       })
-      .catch(error => {
-        console.error("Error creating project:", error);
-      });
   };
 
   return (

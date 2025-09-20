@@ -27,7 +27,7 @@ export default function Home() {
       try {
         const response = await fetchValidateToken(accessToken);
 
-        if (response.statusCode !== 200 || response.data.isBlacklisted === true) {
+        if (response) {
           setUnauthenticated(true);
         } else {
           setUnauthenticated(false);

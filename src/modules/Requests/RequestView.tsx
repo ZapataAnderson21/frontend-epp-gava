@@ -249,14 +249,6 @@ export default function RequestView({ request_id }: RequestViewProps) {
             </div>
           </div>
 
-          <RequestProperty label='Remitente' value={request.user?.name || '---'} />
-          <RequestProperty label='Proyecto' value={request?.project?.name || '---'} />
-          <RequestProperty label='F. y H. de registro' value={formattedDate || '---'} />
-          <RequestProperty label='F. y H. de entrega' value={formattedDeliveryDueDate || '---'} />
-          <RequestProperty label='Estado' value={statusOptions.find(option => option.value === request?.status)?.label || '---'} />
-          <RequestProperty label='Tipo' value={`Req. de Elementos ${typeOptions.find(option => option.value === request?.type)?.label || '---'}`} />
-          <RequestProperty label='Descripción' value={request?.description || '---'} />
-
           {isAdmin && (
             <>
               <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>

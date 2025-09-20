@@ -35,15 +35,7 @@ export interface UserResponse {
   last_name: string,
   email: string,
   password: string,
-  user_user_type: {
-    user_user_type_id: number,
-    user_id: number,
-    user_type_id: number,
-    user_type: {
-      user_type_id: number,
-      name: string
-    }
-  }
+  userType: string;
 }
 
 export interface UserNodeList {
@@ -74,20 +66,8 @@ export interface ApiResponseUserList {
 }
 
 export interface ApiResponseUserLogin {
-  statusCode: number;
-  message: string;
-  data: {
-    user: UserResponse;
-    accessToken: string;
-  };
-}
-
-export interface validateTokenResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    isBlacklisted: boolean;
-  };
+  user: UserResponse;
+  accessToken: string;
 }
 
 export interface ApiResponseGetOne {
@@ -213,8 +193,10 @@ export async function fetchLoginUser(email: string, password: string):  Promise<
       throw new Error(`Error logging in user: ${response.statusText}`);
     }
 
-    localStorage.setItem("accessToken", result.data.accessToken);
-    localStorage.setItem("user", JSON.stringify(result.data.user));
+    console.log()
+
+    localStorage.setItem("accessToken", result.accessToken);
+    localStorage.setItem("user", JSON.stringify(result.user));
     
     return result;
   } catch (error) {
@@ -274,36 +256,31 @@ export async function fetchLogoutUser(accessToken: string): Promise<ApiResponseU
   return response.json();
 }
 
-export async function fetchValidateToken(accessToken: string): Promise<validateTokenResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchValidateToken(accessToken: string): Promise<boolean> {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(userData.validateToken, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ accessToken }),
-    });
-
-    const result = await response.json() as validateTokenResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error validating token: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchValidateToken:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(userData.validateToken, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify({ accessToken }),
+  });
+
+  const result = await response.json() as boolean;
+
+  if (!response.ok) {
+    throw new Error(`Error validating token`);
+  }
+
+  return result;
 }
 
 export async function fetchForgotPassword(email: string) {

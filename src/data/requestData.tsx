@@ -90,30 +90,22 @@ export async function fetchCreateRequest(data: CreateRequestDto): Promise<Reques
   }
 }
 
-export async function fetchGetAllRequests(): Promise<RequestGetAllResponse> {
-  try {
-    const token = localStorage.getItem('accessToken')
+export async function fetchGetAllRequests() {
+  const token = localStorage.getItem('accessToken')
 
-    if (!token) {
-      throw new Error('Iniciar sesión.')
-    }
-
-    const response = await fetch(requestData.getAll, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Error al obtener las solicitudes.')
-    }
-
-    return await response.json()
-  } catch (error) {
-    throw error
+  if (!token) {
+    throw new Error('Iniciar sesión.')
   }
+
+  const response = await fetch(requestData.getAll, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  return await response;
 }
 
 export async function fetchGetRequestById(id: number): Promise<RequestResponse> {

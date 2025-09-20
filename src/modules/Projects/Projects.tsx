@@ -19,15 +19,14 @@ export default function Projects() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!user || !user.userUserTypes) return;
+    if (!user) return;
 
-    const userType = user.userUserTypes[0].userType.name;
-    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(userType)) {
+    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(user.userType)) {
       setPermission(true);
     }
   }, [user]);
 
-  if (!user || !user.userUserTypes) {
+  if (!user) {
     return <div className="text-red-500">Iniciar sesión.</div>;
   }
 

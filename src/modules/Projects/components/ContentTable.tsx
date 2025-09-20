@@ -19,8 +19,8 @@ export default function ContentTable({ filter }: ContentTableProps) {
         response = await fetchGetByStatus(filter);
       }
 
-      if (response.statusCode === 200) {
-        setProjects(response.data);
+      if (response) {
+        setProjects(response);
       }
     };
 

@@ -7,7 +7,7 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 export default function ContentTable() {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const userType = user.userUserTypes[0].userType.name;
+  const userType = user.userType;
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -26,9 +26,9 @@ export default function ContentTable() {
       if (
         ["ADMINISTRADORA", "LOGISTICA", "GERENTE"].includes(userType)
       ) {
-        const response = await fetchGetAllRequests() as RequestGetAllResponse;
-
-        const filteredData = response.data.filter(
+        const response = await fetchGetAllRequests();
+        
+        const filteredData = (await response.json()).filter(
           (req: RequestType) => (req.status ?? "").trim().toLowerCase() !== "draft"
         );
 

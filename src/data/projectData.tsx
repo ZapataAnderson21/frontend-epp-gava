@@ -33,193 +33,140 @@ export interface UpdateProjectDto {
   status?: string;
 }
 
-export interface ProjectGetAllResponse {
-  statusCode: number;
-  message: string;
-  data: ProjectType[];
-}
-
-export interface ProjectResponse {
-  statusCode: number;
-  message: string;
-  data: ProjectType;
-}
-
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-export async function fetchCreateProject(data: CreateProjectDto): Promise<ProjectResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchCreateProject(data: CreateProjectDto): Promise<ProjectType> {
+  const token = localStorage.getItem("accessToken");
 
-    if(!user) {
-      throw new Error("Iniciar sesión.");
-    }
-
-    const userType = user.userUserTypes[0].userType.name;
-
-    if (userType !== "GERENTE" && userType !== "ADMINISTRADORA" && userType !== "SISTEMAS") {
-      throw new Error("No tienes permisos para crear un proyecto.");
-    }
-
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.create, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json() as ProjectResponse;
-
-    if( !response.ok) {
-      throw new Error(`Error creating project: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchCreateProject:", error);
-    throw error;
+  if(!user) {
+    throw new Error("Iniciar sesión.");
   }
+
+  if (!token) {
+    throw new Error("No token found in localStorage");
+  }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(projectData.create, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json() as ProjectType;
+
+  if( !response) {
+    throw new Error(`Error creating project`);
+  }
+
+  return result;
 }
 
 
-export async function fetchGetAllProjects(): Promise<ProjectGetAllResponse> {
+export async function fetchGetAllProjects(): Promise<ProjectType[]> {
+  const token = localStorage.getItem("accessToken");
 
-  try {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.getAll, {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ProjectGetAllResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching projects: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetAllProjects:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(projectData.getAll, {
+    method: "GET",
+    headers: headers,
+  });
+
+  const result = await response.json() as ProjectType[];
+
+  return result;
+}
+
+export async function fetchGetByStatus(status: string): Promise<ProjectType[]> {
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    throw new Error("No token found in localStorage");
+  }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(projectData.getByStatus.replace(":status", status), {
+    method: "GET",
+    headers: headers,
+  });
+
+  const result = await response.json() as ProjectType[];
+
+  return result;
 }
 
 
-export async function fetchGetByStatus(status: string): Promise<ProjectGetAllResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchGetOne(projectId: number): Promise<ProjectType> {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.getByStatus.replace(":status", status), {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ProjectGetAllResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching projects by status: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetByStatus:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(projectData.getOne.replace(":id", projectId.toString()), {
+    method: "GET",
+    headers: headers,
+  });
+
+  const result = await response.json() as ProjectType;
+
+  if (!response) {
+    throw new Error(`Error fetching project`);
+  }
+
+  return result;
 }
 
 
-export async function fetchGetOne(projectId: number): Promise<ProjectResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchUpdateProject(projectId:number, data: UpdateProjectDto) {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.getOne.replace(":id", projectId.toString()), {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ProjectResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching project: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetOne:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  if(!user) {
+    throw new Error("Iniciar sesión.");
+  }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  const response = await fetch(projectData.update.replace(":id", projectId.toString()), {
+    method: "PATCH",
+    headers: headers,
+    body: JSON.stringify(data),
+  });
+
+  console.log(response);
+
+  return await response;
 }
 
-
-export async function fetchUpdateProject(projectId:number, data: UpdateProjectDto): Promise<ProjectResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.update.replace(":id", projectId.toString()), {
-      method: "PATCH",
-      headers: headers,
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json() as ProjectResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error updating project: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchUpdateProject:", error);
-    throw error;
-  }
-}
-
-export async function fetchUpdateStatus(projectId: number, status: string): Promise<ProjectResponse> {
+export async function fetchUpdateStatus(projectId: number, status: string): Promise<ProjectType> {
   try {
     const token = localStorage.getItem("accessToken");
 
@@ -231,9 +178,11 @@ export async function fetchUpdateStatus(projectId: number, status: string): Prom
       throw new Error("Iniciar sesión.");
     }
 
-    const userType = user.userUserTypes[0].userType.name;
+    const userType = user.userType;
 
-    if (userType !== "GERENTE" && userType !== "ADMINISTRADORA" && userType !== "SISTEMAS") {
+    const authorizedTypes = ["GERENTE", "ADMINISTRADORA", "SISTEMAS"];
+
+    if (!authorizedTypes.includes(userType)) {
       throw new Error("No tienes permisos para crear un proyecto.");
     }
 
@@ -248,10 +197,10 @@ export async function fetchUpdateStatus(projectId: number, status: string): Prom
       body: JSON.stringify({ status }),
     });
 
-    const result = await response.json() as ProjectResponse;
+    const result = await response.json() as ProjectType;
 
     if (!response.ok) {
-      throw new Error(`Error updating project status: ${result.message}`);
+      throw new Error(`Error updating project status`);
     }
 
     return result;

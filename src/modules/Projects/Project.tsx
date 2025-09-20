@@ -33,10 +33,10 @@ export default function Project() {
       const fetchData = async () => {
           const response = await fetchGetOne(Number(projectId));
           if (response) {
-              setName(response.data.name);
-              setCode(response.data.code);
-              setDescription(response.data.description);
-              setStatus(response.data.status);
+              setName(response.name);
+              setCode(response.code);
+              setDescription(response.description);
+              setStatus(response.status);
           }
       };
       fetchData();
@@ -45,10 +45,8 @@ export default function Project() {
   const handleChangeStatus = () => {
     fetchUpdateStatus(Number(projectId), changeStatus.value)
       .then(response => {
-        if (response.statusCode === 200) {
-          navigate(0);
-        } else {
-          console.error("Error updating project status:", response.message);
+        if (response) {
+          setStatus(response.status);
         }
       })
       .catch(error => {
@@ -66,17 +64,22 @@ export default function Project() {
           status
       };
   
-      try {
-        const response = await fetchUpdateProject(Number(projectId), updatedData);
+      const response = await fetchUpdateProject(Number(projectId), updatedData);
 
-        if (response.statusCode === 200) {
+      console.log(response);
+
+      switch (response.status) {
+        case 200:
           navigate("/admin/projects");
-        } else {
-          console.error("Error updating project:", response.message || "Unknown error");
-        }
-  
-      } catch (error) {
-        console.error("Error updating project:", error);
+          break;
+        case 400:
+          alert("Error: Datos inválidos. Por favor, verifica la información e intenta nuevamente.");
+          break;
+        case 401:
+          alert("Error: No autorizado. Por favor, inicia sesión.");
+          break;
+        default:
+          alert("Error: Ocurrió un problema al actualizar el proyecto. Por favor, intenta nuevamente más tarde.");
       }
     };
     
