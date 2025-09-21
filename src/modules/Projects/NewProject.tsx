@@ -10,12 +10,19 @@ export default function NewProject() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
 
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [openSaveModal, setOpenSaveModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setOpenSaveModal(true);
+    setLoading(true);
+    setError("");
 
     const projectData = {
       name,
@@ -23,14 +30,39 @@ export default function NewProject() {
       description
     };
 
-    fetchCreateProject(projectData)
-      .then(response => {
-        if (!response) {
-          throw new Error("Error creating project");
-        }
-        setOpenSaveModal(true);
-      })
+    const response = await fetchCreateProject(projectData);
+    const responseData = await response.json();
+
+    switch (responseData.statusCode) {
+      case 201:
+        setSuccessMessage(responseData.message || "Proyecto creado exitosamente");
+        setLoading(false);
+        break;
+      default:
+        setError(responseData.message || "Error desconocido");
+        setLoading(false);
+        break;
+    }
+
+    setLoading(false);
   };
+
+  if(error) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full text-gray-800 p-10">
+        <div className="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg shadow-lg w-full max-w-md text-[#003a80]">
+          <h1 className="text-2xl font-bold">Error</h1>
+          <p>{error}</p>
+          <button
+            className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
+            onClick={() => setError("")}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <>
@@ -61,7 +93,7 @@ export default function NewProject() {
         </div>
         {
           openSaveModal && (
-            <SaveModal onOk={() => navigate("/admin/projects")} />
+            <SaveModal onOk={() => navigate("/admin/projects")} message={successMessage} loading={loading} />
           )
         }
       </>

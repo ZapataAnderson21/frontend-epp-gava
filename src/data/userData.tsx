@@ -174,35 +174,18 @@ export async function fetchGetOne(userId: number): Promise<ApiResponseGetOne> {
 }
 
 
-export async function fetchLoginUser(email: string, password: string):  Promise<ApiResponseUserLogin> {
-  try {
+export async function fetchLoginUser(email: string, password: string) {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+  });
 
-    const headers = new Headers({
-      "Content-Type": "application/json",
-    });
+  const response = await fetch(userData.login, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify({ email, password }),
+  });
 
-    const response = await fetch(userData.login, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ email, password }),
-    });
-
-    const result = await response.json() as ApiResponseUserLogin;
-
-    if (!response.ok) {
-      throw new Error(`Error logging in user: ${response.statusText}`);
-    }
-
-    console.log()
-
-    localStorage.setItem("accessToken", result.accessToken);
-    localStorage.setItem("user", JSON.stringify(result.user));
-    
-    return result;
-  } catch (error) {
-    console.error("Login error:", error);
-    throw error;
-  }
+  return response;
 }
 
 

@@ -35,7 +35,7 @@ export interface UpdateProjectDto {
 
 const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-export async function fetchCreateProject(data: CreateProjectDto): Promise<ProjectType> {
+export async function fetchCreateProject(data: CreateProjectDto) {
   const token = localStorage.getItem("accessToken");
 
   if(!user) {
@@ -51,23 +51,15 @@ export async function fetchCreateProject(data: CreateProjectDto): Promise<Projec
     "Authorization": `Bearer ${token}`,
   });
 
-  const response = await fetch(projectData.create, {
+ return await fetch(projectData.create, {
     method: "POST",
     headers: headers,
     body: JSON.stringify(data),
   });
-
-  const result = await response.json() as ProjectType;
-
-  if( !response) {
-    throw new Error(`Error creating project`);
-  }
-
-  return result;
 }
 
 
-export async function fetchGetAllProjects(): Promise<ProjectType[]> {
+export async function fetchGetAllProjects() {
   const token = localStorage.getItem("accessToken");
 
   if (!token) {
@@ -79,17 +71,13 @@ export async function fetchGetAllProjects(): Promise<ProjectType[]> {
     "Authorization": `Bearer ${token}`,
   });
 
-  const response = await fetch(projectData.getAll, {
+  return await fetch(projectData.getAll, {
     method: "GET",
     headers: headers,
   });
-
-  const result = await response.json() as ProjectType[];
-
-  return result;
 }
 
-export async function fetchGetByStatus(status: string): Promise<ProjectType[]> {
+export async function fetchGetByStatus(status: string) {
   const token = localStorage.getItem("accessToken");
 
   if (!token) {
@@ -101,14 +89,10 @@ export async function fetchGetByStatus(status: string): Promise<ProjectType[]> {
     "Authorization": `Bearer ${token}`,
   });
 
-  const response = await fetch(projectData.getByStatus.replace(":status", status), {
+  return await fetch(projectData.getByStatus.replace(":status", status), {
     method: "GET",
     headers: headers,
   });
-
-  const result = await response.json() as ProjectType[];
-
-  return result;
 }
 
 

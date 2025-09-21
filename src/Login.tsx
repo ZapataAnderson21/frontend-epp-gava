@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchLoginUser, fetchForgotPassword } from "./data/userData";
+import { fetchLoginUser, fetchForgotPassword, type ApiResponseUserLogin } from "./data/userData";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() { 
@@ -8,6 +8,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
+
+
   const handleLogin = async (e: React.FormEvent) => { 
     e.preventDefault();
     if (!email || !password) { 
@@ -15,14 +17,22 @@ export default function Login() {
       return;
     } 
     
-    const result = await fetchLoginUser(email, password);
+    const response = await fetchLoginUser(email, password);
+    const responseData = await response.json();
     
-    if (!result) {
-      setError("Error al iniciar sesión. Por favor, verifica tus credenciales.");
-      return;
+    switch (responseData.statusCode) {
+      case 200:
+        const data = responseData.data as ApiResponseUserLogin;
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/admin");
+        break;
+      default:
+        setError(responseData.message || "Error desconocido");
+        break;
     }
     
-    navigate("/admin");
+    
   }; 
   
   const handleForgotPassword = async () => { 
