@@ -11,6 +11,9 @@ export default function ContentTable() {
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const [requests, setRequests] = useState<RequestType[]>([]);
 
   const itemsPerPage = 10;

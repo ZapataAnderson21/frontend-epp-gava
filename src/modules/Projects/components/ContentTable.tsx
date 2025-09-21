@@ -1,6 +1,7 @@
 import RowTable from "./RowTable";
 import { fetchGetAllProjects, fetchGetByStatus, type ProjectType } from "../../../data/projectData";
 import { useEffect, useState } from "react";
+import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 
 interface ContentTableProps {
   filter: string;
@@ -48,8 +49,8 @@ export default function ContentTable({ filter }: ContentTableProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center w-full h-full">
-        <img className="h-32" src="/loading.gif" alt="Loading..." />
+      <div className="w-full">
+        <LoadingSkeletonTable />
       </div>
     );
   }

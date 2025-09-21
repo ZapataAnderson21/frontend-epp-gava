@@ -3,10 +3,10 @@ import RedButton from "../../components/RedButton";
 import { useParams } from "react-router-dom";
 import { fetchGetOne, fetchUpdateProject, fetchUpdateStatus, type UpdateProjectDto } from "../../data/projectData";
 import { useNavigate } from "react-router-dom";
+import SaveModal from "../../components/SaveModal";
+import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
 
 export default function Project() {
-
-  const navigate = useNavigate();
 
   const { id: projectId } = useParams<{ id: string }>();
 
@@ -14,6 +14,15 @@ export default function Project() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [openSaveModal, setOpenSaveModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [onOk, setOnOk] = useState<() => void>(() => () => {});
+
+  const navigate = useNavigate();
 
   let changeStatus: { label: string; value: string };
 
@@ -30,16 +39,18 @@ export default function Project() {
   }
 
   useEffect(() => {
-      const fetchData = async () => {
-          const response = await fetchGetOne(Number(projectId));
-          if (response) {
-              setName(response.name);
-              setCode(response.code);
-              setDescription(response.description);
-              setStatus(response.status);
-          }
-      };
-      fetchData();
+    setLoading(true);
+    const fetchData = async () => {
+      const response = await fetchGetOne(Number(projectId));
+      if (response) {
+        setName(response.name);
+        setCode(response.code);
+        setDescription(response.description);
+        setStatus(response.status);
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [projectId]);
 
   const handleChangeStatus = () => {
@@ -54,37 +65,55 @@ export default function Project() {
       });
   }
 
+  const closeModalAndReset = () => {
+    setSuccessMessage("");
+    setError(false);
+    setOpenSaveModal(false);
+  }
+
+  const navigateToProjects = () => {
+    setSuccessMessage("");
+    setError(false);
+    setOpenSaveModal(false);
+    navigate("/admin/projects");
+  }
+
   const handleUpdate = async (e: React.FormEvent) => {
-      e.preventDefault();
+    e.preventDefault();
 
-      const updatedData: UpdateProjectDto = {
-          name,
-          description,
-          code,
-          status
-      };
-  
-      const response = await fetchUpdateProject(Number(projectId), updatedData);
+    setOpenSaveModal(true);
 
-      console.log(response);
-
-      switch (response.status) {
-        case 200:
-          navigate("/admin/projects");
-          break;
-        case 400:
-          alert("Error: Datos inválidos. Por favor, verifica la información e intenta nuevamente.");
-          break;
-        case 401:
-          alert("Error: No autorizado. Por favor, inicia sesión.");
-          break;
-        default:
-          alert("Error: Ocurrió un problema al actualizar el proyecto. Por favor, intenta nuevamente más tarde.");
-      }
+    const updatedData: UpdateProjectDto = {
+      name,
+      description,
+      code,
+      status
     };
-    
+
+    const response = await fetchUpdateProject(Number(projectId), updatedData);
+    const responseData = await response.json();
+
+    setError(false);
+    setSuccessMessage(responseData.message);
+
+    console.log(responseData.statusCode);
+
+    if (responseData.statusCode !== 200) {
+      setError(true);
+      setOnOk(() => () => closeModalAndReset());
+    } else {
+      setOnOk(() => () => navigateToProjects());
+    }
+  };
+
+  if (loading) {
+    return (
+      <LoadingSkeletonForm numberRows={4} />
+    );
+  }
 
   return (
+    <>
       <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
         <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full text-[12px] md:text-[14px]">
           <h1 className="text-2xl font-bold mb-4">PROYECTO {projectId}</h1>
@@ -119,5 +148,11 @@ export default function Project() {
           </form>
         </div>
       </div>
-    );
+      {
+        openSaveModal && (
+          <SaveModal onOk={onOk} message={successMessage} error={error} />
+        )
+      }
+    </>
+  );
 }

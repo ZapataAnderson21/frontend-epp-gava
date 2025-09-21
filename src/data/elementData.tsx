@@ -41,69 +41,42 @@ export interface ElementResponse {
   data: ElementType;
 }
 
-export async function fetchCreateElement(data: CreateElementDto): Promise<ElementResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchCreateElement(data: CreateElementDto) {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(elementData.create, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json() as ElementResponse;
-
-    if( !response.ok) {
-      throw new Error(`Error creating element: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchCreateElement:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(elementData.create, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(data),
+  });
 }
 
 
-export async function fetchGetAllElements(): Promise<ElementGetAllResponse> {
+export async function fetchGetAllElements() {
+  const token = localStorage.getItem("accessToken");
 
-  try {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(elementData.getAll, {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ElementGetAllResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching elements: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetAllElements:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(elementData.getAll, {
+    method: "GET",
+    headers: headers,
+  });
 }
 
 

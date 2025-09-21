@@ -6,30 +6,61 @@ import SaveModal from "../../components/SaveModal";
 
 export default function NewEpp() {
 
+  const typeRoot = new URLSearchParams(window.location.search).get('type') || '';
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("all");
+  const [type, setType] = useState(typeRoot);
 
+  const [error, setError] = useState(false);
   const [openSaveModal, setOpenSaveModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
   const navigate = useNavigate();
 
+  const closeModalAndReset = () => {
+    setOpenSaveModal(false);
+    setError(false);
+  }
+
+  const navigateToElements = () => {
+    if(type) {
+      if(type === "security") {
+        navigate("/admin/elements/type/security");
+      } else if(type === "operative") {
+        navigate("/admin/elements/type/operative");
+      }
+    } else {
+      navigate("/admin/elements/type/all");
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      const response = await fetchCreateElement({ name, type, description });
 
-      if (response.statusCode === 201) {
-        setOpenSaveModal(true);
-      } else {
-        alert(`Error: ${response.message}`);
-      }
-    } catch (error) {
-      console.error("Error creating element:", error);
-      alert("Ocurrió un error al registrar el elemento");
+    setOpenSaveModal(true);
+
+    const elementData = {
+      name,
+      type,
+      description
+    }
+
+    const response = await fetchCreateElement(elementData);
+    const responseData = await response.json();
+
+    setError(false);
+    setSuccessMessage(responseData.message);
+
+
+    if (responseData.statusCode !== 201) {
+        setError(true);
+        setOnOk(() => () => closeModalAndReset());
+    }else {
+        setOnOk(() => () => navigateToElements());
     }
   };
-
 
   return (
     <>
@@ -56,7 +87,7 @@ export default function NewEpp() {
               </select>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" />
+              <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" /> 
               <button type="submit" className="w-full bg-[#0047a3] px-4 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer">Registrar</button>
             </div>
           </form>
@@ -64,12 +95,7 @@ export default function NewEpp() {
       </div>
       {
         openSaveModal && (
-          <SaveModal onOk={() => {
-            navigate(`/admin/elements/type/${type}`);
-            localStorage.removeItem("name");
-            localStorage.removeItem("description");
-            localStorage.removeItem("type");
-          }} />
+          <SaveModal onOk={onOk} message={successMessage} error={error} />
         )
       }
     </>

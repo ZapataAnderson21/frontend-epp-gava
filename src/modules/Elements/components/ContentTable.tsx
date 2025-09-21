@@ -2,6 +2,7 @@ import RowTable from "./RowTable";
 import { fetchGetAllElements, fetchGetByType, type ElementType } from "../../../data/elementData";
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
+import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 
 interface ContentTableProps {
   type: string;
@@ -13,6 +14,9 @@ export default function ContentTable({ type }: ContentTableProps) {
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const itemsPerPage = 10;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -20,6 +24,7 @@ export default function ContentTable({ type }: ContentTableProps) {
 
   useEffect(() => {
     const fetchElements = async () => {
+      setLoading(true);
       let response;
       if (type === "all") {
         response = await fetchGetAllElements();
@@ -27,14 +32,48 @@ export default function ContentTable({ type }: ContentTableProps) {
         response = await fetchGetByType(type);
       }
 
-      if (response.statusCode === 200) {
-        setElements(response.data);
-        setPages(Math.ceil(response.data.length / itemsPerPage));
+      let responseData;
+
+      if (response instanceof Response) {
+        responseData = await response.json();
+      } else {
+        responseData = response;
+      }
+
+      switch (responseData.statusCode) {
+        case 200:
+          setElements(responseData.data);
+          setPages(Math.ceil(responseData.data.length / itemsPerPage));
+          setLoading(false);
+          setError(null);
+          break;
+        default:
+          setError(responseData.message);
+          setLoading(false);
+          setElements([]);
+          break;
       }
     };
 
     fetchElements();
   }, [type]);
+
+
+  if (loading) {
+    return (
+      <div className="w-full">
+        <LoadingSkeletonTable />
+      </div>
+    );
+  }
+
+  if (error) {
+    return(
+      <div className="flex items-center justify-center w-full h-full">
+       {error}
+      </div>
+    );
+  }
 
   return (
     <>

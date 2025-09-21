@@ -39,8 +39,11 @@ export default function NewRequest() {
   useEffect(() => {
     const fetchProjects = async () => {
       const response = await fetchGetByStatus("active");
-      if (response.statusCode === 200) {
-        setProjects(response.data);
+
+      const responseData = await response.json();
+
+      if (responseData.statusCode === 200) {
+        setProjects(responseData.data);
       }
     };
 

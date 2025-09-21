@@ -139,15 +139,11 @@ export async function fetchUpdateProject(projectId:number, data: UpdateProjectDt
     "Authorization": `Bearer ${token}`,
   });
 
-  const response = await fetch(projectData.update.replace(":id", projectId.toString()), {
+  return await fetch(projectData.update.replace(":id", projectId.toString()), {
     method: "PATCH",
     headers: headers,
     body: JSON.stringify(data),
   });
-
-  console.log(response);
-
-  return await response;
 }
 
 export async function fetchUpdateStatus(projectId: number, status: string): Promise<ProjectType> {
