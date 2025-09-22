@@ -16,6 +16,8 @@ export default function Project() {
   const [status, setStatus] = useState("active");
 
   const [loading, setLoading] = useState(false);
+  const [errorGet, setErrorGet] = useState(false);
+  const [messageGet, setMessageGet] = useState("");
   const [error, setError] = useState(false);
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -42,27 +44,30 @@ export default function Project() {
     setLoading(true);
     const fetchData = async () => {
       const response = await fetchGetOne(Number(projectId));
-      if (response) {
-        setName(response.name);
-        setCode(response.code);
-        setDescription(response.description);
-        setStatus(response.status);
+      const responseData = await response.json();
+
+      if (responseData.statusCode !== 200) {
+        setErrorGet(true);
+        setMessageGet(responseData.message);
+        setLoading(false);
+      } else {
+        setName(responseData.data.name);
+        setCode(responseData.data.code);
+        setDescription(responseData.data.description);
+        setStatus(responseData.data.status);
         setLoading(false);
       }
     };
     fetchData();
   }, [projectId]);
 
-  const handleChangeStatus = () => {
-    fetchUpdateStatus(Number(projectId), changeStatus.value)
-      .then(response => {
-        if (response) {
-          setStatus(response.status);
-        }
-      })
-      .catch(error => {
-        console.error("Error updating project status:", error);
-      });
+  const handleChangeStatus = async () => {
+    const response = await fetchUpdateStatus(Number(projectId), changeStatus.value);
+    const responseData = await response.json();
+    
+    if (responseData.statusCode === 200) {
+      setStatus(changeStatus.value);
+    }
   }
 
   const closeModalAndReset = () => {
@@ -96,8 +101,6 @@ export default function Project() {
     setError(false);
     setSuccessMessage(responseData.message);
 
-    console.log(responseData.statusCode);
-
     if (responseData.statusCode !== 200) {
       setError(true);
       setOnOk(() => () => closeModalAndReset());
@@ -109,6 +112,17 @@ export default function Project() {
   if (loading) {
     return (
       <LoadingSkeletonForm numberRows={4} />
+    );
+  }
+
+  if( errorGet ) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full text-gray-800 p-10">
+        <h1 className="mb-4">{messageGet}</h1>
+        <div className="max-w-fit">
+          <RedButton href="/admin/projects" name="Regresar" />
+        </div>
+      </div>
     );
   }
 

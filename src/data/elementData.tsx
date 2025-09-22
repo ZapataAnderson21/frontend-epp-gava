@@ -80,72 +80,47 @@ export async function fetchGetAllElements() {
 }
 
 
-export async function fetchGetByType(type: string): Promise<ElementGetAllResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchGetByType(type: string) {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(elementData.getByType.replace(":type", type), {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ElementGetAllResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching elements by type: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetByType:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(elementData.getByType.replace(":type", type), {
+    method: "GET",
+    headers: headers,
+  });
 }
 
 
-export async function fetchGetOne(elementId: number): Promise<ElementResponse> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchGetOne(elementId: number) {
+  
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(elementData.getOne.replace(":id", elementId.toString()), {
-      method: "GET",
-      headers: headers,
-    });
-
-    const result = await response.json() as ElementResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error fetching element: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchGetOne:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(elementData.getOne.replace(":id", elementId.toString()), {
+    method: "GET",
+    headers: headers,
+  });
 }
 
 
-export async function fetchUpdateElement(elementId:number, data: UpdateElementDto): Promise<ElementResponse> {
-  try {
+export async function fetchUpdateElement(elementId:number, data: UpdateElementDto) {
+  
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
@@ -157,21 +132,9 @@ export async function fetchUpdateElement(elementId:number, data: UpdateElementDt
       "Authorization": `Bearer ${token}`,
     });
 
-    const response = await fetch(elementData.update.replace(":id", elementId.toString()), {
+    return await fetch(elementData.update.replace(":id", elementId.toString()), {
       method: "PATCH",
       headers: headers,
       body: JSON.stringify(data),
     });
-
-    const result = await response.json() as ElementResponse;
-
-    if (!response.ok) {
-      throw new Error(`Error updating element: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchUpdateElement:", error);
-    throw error;
-  }
 }

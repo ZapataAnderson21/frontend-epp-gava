@@ -213,30 +213,20 @@ export async function fetchGetRequestsByProject(projectId: number): Promise<Requ
   }
 }
 
-export async function fetchGetRequestsByUser(userId: number): Promise<RequestGetAllResponse> {
-  try {
-    const token = localStorage.getItem('accessToken')
+export async function fetchGetRequestsByUser(userId: number) {
+  const token = localStorage.getItem('accessToken')
 
-    if (!token) {
-      throw new Error('Iniciar sesión.')
-    }
-
-    const response = await fetch(requestData.getByUser.replace(':userId', userId.toString()), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Error al obtener las solicitudes por usuario.')
-    }
-
-    return await response.json()
-  } catch (error) {
-    throw error
+  if (!token) {
+    throw new Error('Iniciar sesión.')
   }
+
+  return await fetch(requestData.getByUser.replace(':userId', userId.toString()), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 }
 
 export async function fetchGetRequestsByStatus(status: string): Promise<RequestGetAllResponse> {

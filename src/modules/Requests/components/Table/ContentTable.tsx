@@ -3,6 +3,7 @@ import RowTable from "./RowTable";
 import { fetchGetRequestsByUser, fetchGetAllRequests, type RequestType, type RequestGetAllResponse } from "../../../../data/requestData";
 import { useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
+import LoadingSkeletonTable from "../../../../common/LoadingSkeletonTable";
 
 export default function ContentTable() {
 
@@ -11,7 +12,7 @@ export default function ContentTable() {
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   const [requests, setRequests] = useState<RequestType[]>([]);
@@ -23,6 +24,7 @@ export default function ContentTable() {
 
 
   useEffect(() => {
+    setLoading(true);
     const fetchRequests = async () => {
       let data: RequestType[] = [];
 
@@ -30,16 +32,29 @@ export default function ContentTable() {
         ["ADMINISTRADORA", "LOGISTICA", "GERENTE"].includes(userType)
       ) {
         const response = await fetchGetAllRequests();
-        
-        const filteredData = (await response.json()).filter(
-          (req: RequestType) => (req.status ?? "").trim().toLowerCase() !== "draft"
-        );
+        const responseData = await response.json();
 
-        data = filteredData.reverse();
+        setLoading(false);
+        if (responseData.statusCode === 200) {
+          const filteredData = responseData.data.filter(
+            (req: RequestType) => (req.status ?? "").trim().toLowerCase() !== "draft"
+          );
+
+           data = filteredData.reverse();
+        } else {
+          setError(responseData.message);
+        }
 
       } else {
-        const response = await fetchGetRequestsByUser(user.user_id) as RequestGetAllResponse;
-        data = response.data.reverse();
+        const response = await fetchGetRequestsByUser(user.user_id);
+        const responseData = await response.json();
+
+        setLoading(false);
+        if (responseData.statusCode === 200) {
+          data = responseData.data.reverse();
+        } else {
+          setError(responseData.message);
+        }
       }
 
       setRequests(data);
@@ -50,6 +65,21 @@ export default function ContentTable() {
   }, [userType, user.id]);
 
 
+  if (loading) {
+    return (
+      <div className="w-full">
+        <LoadingSkeletonTable />
+      </div>
+    );
+  }
+
+  if (error) {
+    return(
+      <div className="flex items-center justify-center w-full h-full">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <>

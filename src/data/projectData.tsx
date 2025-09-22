@@ -96,7 +96,7 @@ export async function fetchGetByStatus(status: string) {
 }
 
 
-export async function fetchGetOne(projectId: number): Promise<ProjectType> {
+export async function fetchGetOne(projectId: number) {
   const token = localStorage.getItem("accessToken");
 
   if (!token) {
@@ -108,18 +108,10 @@ export async function fetchGetOne(projectId: number): Promise<ProjectType> {
     "Authorization": `Bearer ${token}`,
   });
 
-  const response = await fetch(projectData.getOne.replace(":id", projectId.toString()), {
+  return await fetch(projectData.getOne.replace(":id", projectId.toString()), {
     method: "GET",
     headers: headers,
   });
-
-  const result = await response.json() as ProjectType;
-
-  if (!response) {
-    throw new Error(`Error fetching project`);
-  }
-
-  return result;
 }
 
 
@@ -146,46 +138,33 @@ export async function fetchUpdateProject(projectId:number, data: UpdateProjectDt
   });
 }
 
-export async function fetchUpdateStatus(projectId: number, status: string): Promise<ProjectType> {
-  try {
-    const token = localStorage.getItem("accessToken");
+export async function fetchUpdateStatus(projectId: number, status: string) {
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    if(!user) {
-      throw new Error("Iniciar sesión.");
-    }
-
-    const userType = user.userType;
-
-    const authorizedTypes = ["GERENTE", "ADMINISTRADORA", "SISTEMAS"];
-
-    if (!authorizedTypes.includes(userType)) {
-      throw new Error("No tienes permisos para crear un proyecto.");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(projectData.updateStatus.replace(":id", projectId.toString()), {
-      method: "PATCH",
-      headers: headers,
-      body: JSON.stringify({ status }),
-    });
-
-    const result = await response.json() as ProjectType;
-
-    if (!response.ok) {
-      throw new Error(`Error updating project status`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchUpdateStatus:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  if(!user) {
+    throw new Error("Iniciar sesión.");
+  }
+
+  const userType = user.userType;
+
+  const authorizedTypes = ["GERENTE", "ADMINISTRADORA", "SISTEMAS"];
+
+  if (!authorizedTypes.includes(userType)) {
+    throw new Error("No tienes permisos para crear un proyecto.");
+  }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(projectData.updateStatus.replace(":id", projectId.toString()), {
+    method: "PATCH",
+    headers: headers,
+    body: JSON.stringify({ status }),
+  });
 }

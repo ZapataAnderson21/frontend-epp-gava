@@ -10,6 +10,7 @@ import {
 } from "../../../../data/elementRequestData";
 import HeaderModal from "./HeaderModal";
 import { FaDeleteLeft } from "react-icons/fa6";
+import LoadingSkeletonTable from "../../../../common/LoadingSkeletonTable";
 
 interface ContentModalProps {
   typeElement: string;
@@ -23,6 +24,9 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   const filteredElements = elements.filter((item) =>
     item.name?.toLowerCase().includes(searchItem.toLowerCase())
   );
+
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [pages, setPages] = useState<number>(1);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -40,11 +44,18 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoading(true);
+
     const fetchElements = async () => {
       const response = await fetchGetByType(typeElement);
-      if (response.statusCode === 200) {
-        setElements(response.data);
-        setPages(Math.ceil(response.data.length / itemsPerPage));
+      const responseData = await response.json();
+      
+      setLoading(false);
+      if (responseData.statusCode === 200) {
+        setElements(responseData.data);
+        setPages(Math.ceil(responseData.data.length / itemsPerPage));
+      } else {
+        setError(responseData.message);
       }
     };
 
@@ -137,6 +148,20 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       navigate(0);
     }
   };
+
+  if (loading) {
+    return (
+      <LoadingSkeletonTable />
+    );
+  }
+
+  if (error) {
+    return(
+      <div className="flex items-center justify-center w-full h-full">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <>

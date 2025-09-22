@@ -15,7 +15,6 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
   useEffect(() => {
     setHidden("");
     setLoading(!loading);
-    console.log(onOk);
   }, [error, message]);
 
   return (

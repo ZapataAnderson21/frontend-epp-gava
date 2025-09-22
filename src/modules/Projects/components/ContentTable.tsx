@@ -10,7 +10,7 @@ interface ContentTableProps {
 export default function ContentTable({ filter }: ContentTableProps) {
 
   const [projects, setProjects] = useState<ProjectType[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -30,17 +30,14 @@ export default function ContentTable({ filter }: ContentTableProps) {
         responseData = response;
       }
 
-      switch (responseData.statusCode) {
-        case 200:
-          setProjects(responseData.data);
-          setLoading(false);
-          setError(null);
-          break;
-        default:
-          setError(responseData.message);
-          setLoading(false);
-          setProjects([]);
-          break;
+      if (responseData.statusCode === 200) {
+        setProjects(responseData.data);
+        setLoading(false);
+        setError("");
+      } else {
+        setError(responseData.message);
+        setLoading(false);
+        setProjects([]);
       }
     };
 
