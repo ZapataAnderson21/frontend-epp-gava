@@ -3,6 +3,7 @@ import { fetchGetAllElements, fetchGetByType, type ElementType } from "../../../
 import { useEffect, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
+import HeaderTable from "./HeaderTable";
 
 interface ContentTableProps {
   type: string;
@@ -21,6 +22,8 @@ export default function ContentTable({ type }: ContentTableProps) {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentElements = elements.slice(indexOfFirstItem, indexOfLastItem);
+
+  let count = 0;
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -77,10 +80,14 @@ export default function ContentTable({ type }: ContentTableProps) {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-between w-full px-2 text-[13px] md:text-[14px]">
-        {currentElements.map((element) => (
-          <RowTable key={element.element_id} id={element.element_id} name={element.name} type={element.type} description={element.description} />
-        ))}
+      <div className="flex flex-col items-center justify-between min-w-full">
+        <HeaderTable />
+        {currentElements.map((element) => {
+          count = count + 1;
+          return (
+            <RowTable key={element.element_id} order={count} id={element.element_id} name={element.name} type={element.type} description={element.description} />
+          );
+        })}
       </div>
       <div className="flex flex-row justify-end w-full font-bold mt-4 gap-2">
         <div

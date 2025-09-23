@@ -132,7 +132,7 @@ export default function Project() {
         <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
           <h1 className="text-2xl font-bold mb-4">PROYECTO {projectId}</h1>
         </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-gray-800">
+        <div className="flex flex-col items-start justify-start gap-4 w-full h-full">
           <form className="flex flex-col gap-4 w-full max-w-2xl"  onSubmit={handleUpdate}>
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="font-semibold">Nombre</label>
@@ -150,7 +150,7 @@ export default function Project() {
               <div className="flex flex-row items-center justify-between">
                 <label htmlFor="status" className="font-semibold">Estado</label>
                 <div className="flex flex-row items-end gap-1">
-                  <span className="text-[12px] text-right">Cambiar estado a: </span> <span onClick={handleChangeStatus} className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold">{changeStatus.label}</span>
+                  <span className="text-[14px] text-right">Cambiar estado a: </span> <span onClick={handleChangeStatus} className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold">{changeStatus.label}</span>
                 </div>
               </div>
               <input type="text" id="status" className="border border-gray-400 p-3 rounded-sm" value={status === "active" ? "ACTIVO" : "INACTIVO"} disabled />

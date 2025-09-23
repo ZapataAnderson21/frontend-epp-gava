@@ -95,7 +95,7 @@ export default function Element() {
         <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
           <h1 className="text-2xl font-bold mb-4">ELEMENTO {elementId}</h1>
         </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-gray-600">
+        <div className="flex flex-col items-start justify-start gap-4 w-full h-full">
           <form className="flex flex-col gap-4 w-full max-w-2xl" onSubmit={handleUpdate}>
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="font-semibold">Nombre</label>

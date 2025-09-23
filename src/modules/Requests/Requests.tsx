@@ -28,7 +28,7 @@ export default function Requests() {
 
           <div className="relative w-[160px]">
             <button
-              className="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-[#eff2ff] hover:border-gray-400 cursor-pointer"
+              className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-[#eff2ff] hover:border-gray-400 cursor-pointer"
               onClick={() => setIsOpen(!isOpen)}
             >
               {selected.label}
@@ -54,7 +54,7 @@ export default function Requests() {
             )}
           </div>
           <a href="/admin/requests/new">
-            <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-6 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
+            <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
               <FaPlus />Añadir
             </button>
           </a>
