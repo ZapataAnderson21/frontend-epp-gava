@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { fetchLoginUser, fetchForgotPassword, type ApiResponseUserLogin } from "./data/userData";
+import { fetchLoginUser, fetchForgotPassword } from "./data/userData";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() { 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
 
@@ -19,20 +19,17 @@ export default function Login() {
     
     const response = await fetchLoginUser(email, password);
     const responseData = await response.json();
-    
+
     switch (responseData.statusCode) {
       case 200:
-        const data = responseData.data as ApiResponseUserLogin;
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("accessToken", responseData.data.accessToken);
+        localStorage.setItem("user", JSON.stringify(responseData.data.user));
         navigate("/admin");
         break;
       default:
         setError(responseData.message || "Error desconocido");
         break;
     }
-    
-    
   }; 
   
   const handleForgotPassword = async () => { 
@@ -48,14 +45,15 @@ export default function Login() {
       return; 
     } 
     
-    const result = await fetchForgotPassword(email);
-    
-    if (result.statusCode === 200) { 
-      setOpenModal(true); setError(null);
+    const response = await fetchForgotPassword(email);
+    const responseData = await response.json();
+
+    if (responseData.statusCode === 200) { 
+      setOpenModal(true); setError("");
       setEmail("");
       setPassword("");
     } else { 
-      console.error("Error sending forgot password email:", result.message || "Unknown error");
+      console.error("Error sending forgot password email:", responseData.message || "Unknown error");
     }
   }; 
   

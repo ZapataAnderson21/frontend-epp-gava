@@ -1,9 +1,10 @@
 import { useState } from "react";
 import RowTable from "./RowTable";
-import { fetchGetRequestsByUser, fetchGetAllRequests, type RequestType, type RequestGetAllResponse } from "../../../../data/requestData";
+import { fetchGetRequestsByUser, fetchGetAllRequests, type RequestType } from "../../../../data/requestData";
 import { useEffect } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import LoadingSkeletonTable from "../../../../common/LoadingSkeletonTable";
+import HeaderTable from "./HeaderTable";
 
 export default function ContentTable() {
 
@@ -21,6 +22,8 @@ export default function ContentTable() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentRequests = requests.slice(indexOfFirstItem, indexOfLastItem);
+
+  let count = 0;
 
 
   useEffect(() => {
@@ -83,11 +86,14 @@ export default function ContentTable() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-between w-full px-2 text-[12px] md:text-[14px]">
+      <div className="flex flex-col items-center justify-between min-w-full">
+        <HeaderTable />
         {currentRequests.map((request) => (
+          count = count + 1,
           <RowTable
             key={request.request_id}
             id={request.request_id}
+            order={count}
             createdAt={request.createdAt}
             status={request.status}
             deliveryDueDate={request.delivery_due_date}

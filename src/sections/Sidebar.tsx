@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   return (
     <section
       ref={sidebarRef}
-      className={`text-[14px] text-gray-500
+      className={`text-gray-500
         ${isMobile
           ? `absolute top-0 left-0 h-screen w-[220px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[220px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
           : `fixed top-0 left-0 h-screen w-[220px] shadow-gray-300 shadow-md bg-white z-10`

@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io";
 import ContentTable from "./components/Table/ContentTable";
-import HeaderTable from "./components/Table/HeaderTable";
 import { FaPlus } from "react-icons/fa6";
-import Play from "../../icons/Play";
-import StatesList from "./components/StatesList/StatesList";
 
 const options = [
   { value: "all", label: "Todas" },
@@ -16,7 +13,6 @@ const options = [
 export default function Requests() {
   const [selected, setSelected] = useState(options[0]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isStatesListOpen, setIsStatesListOpen] = useState(false);
 
   const handleSelect = (option: { value: string; label: string }) => {
     setSelected(option);
@@ -25,7 +21,7 @@ export default function Requests() {
 
   return (
     <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-      <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full mb-2 md:mb-3 text-[12px] md:text-[14px]">
+      <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full mb-2 md:mb-3">
         <h1 className="text-2xl font-bold mb-4 sm:mb-0">REQUERIMIENTOS</h1>
         <div className="flex flex-row items-center justify-end w-full md:w-fit mb-4 gap-2">
           <span className="hidden lg:block">Filtrar por:</span>
@@ -65,23 +61,7 @@ export default function Requests() {
         </div>
       </div>
 
-      <div className="relative md:hidden flex flex-row items-center justify-start w-full h-full mb-2 md:mb-3 gap-1 text-[14px] text-gray-600">
-        <h2 className="font-extrabold">ESTADOS</h2>
-        <div className={`flex items-center h-full size-5 text-gray-800 transition-transform cursor-pointer ${isStatesListOpen ? "rotate-180" : ""}`} onClick={() => setIsStatesListOpen(!isStatesListOpen)}>
-          <Play />
-        </div>
-        
-        {
-          isStatesListOpen && (
-            <StatesList />
-          )
-        }
-      </div>
-
-      <div className="flex flex-col items-start justify-start gap-2 w-full h-full text-[14px] text-gray-600">
-
-        <HeaderTable />
-        
+      <div className="flex flex-col items-start justify-start gap-2 px-2 overflow-auto w-full text-gray-600">  
         <ContentTable />
       </div>
     </div>

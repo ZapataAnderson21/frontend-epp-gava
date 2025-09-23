@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import RedButton from "../../components/RedButton";
 import { fetchGetOne, fetchUpdateUser, type UpdateUserDto } from "../../data/userData";
 import { useNavigate } from "react-router-dom";
+import { fetchGetAllUserTypes, type UserType } from "../../data/userTypeData";
 
 export default function User() {
 
@@ -13,26 +14,35 @@ export default function User() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
+  const [userTypes, setUserTypes] = useState<UserType[]>([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const getUser = async () => {
-      try {
-        const response = await fetchGetOne(userId);
-        if (response.statusCode === 200 && response.data) {
-          const userData = response.data.user;
-          setName(userData.name);
-          setLastname(userData.last_name);
-          setEmail(userData.email);
-          setRole(response.data.userType.name);
-        } else {
-          console.error("Error fetching user data:", response.message || "Unknown error");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+      const response = await fetchGetOne(userId);
+      const responseData = await response.json();
+
+      if (responseData.statusCode === 200) {
+        setName(responseData.data.name);
+        setLastname(responseData.data.last_name);
+        setEmail(responseData.data.email);
+        setRole(responseData.data.userType);
+      } else {
+        console.error("Error fetching user:", responseData.message);
       }
     };
 
+    const getUserTypes = async () => {
+      const response = await fetchGetAllUserTypes();
+      const responseData = await response.json();
+
+      if (responseData.statusCode === 200) {
+        setUserTypes(responseData.data);
+      }
+    };
+
+    getUserTypes();
     getUser();
   }, [userId]);
 
@@ -48,11 +58,12 @@ export default function User() {
 
     try {
       const response = await fetchUpdateUser(userId, updatedData);
-      
-      if (response.statusCode === 200) {
+      const responseData = await response.json();
+
+      if (responseData.statusCode === 200) {
         navigate("/admin/users");
       } else {
-        console.error("Error updating user:", response.message || "Unknown error");
+        console.error("Error updating user:", responseData.message || "Unknown error");
       }
 
 
@@ -86,7 +97,13 @@ export default function User() {
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="role" className="font-semibold">Rol</label>
-            <input type="text" id="role" className="border border-gray-400 p-2 rounded-sm" disabled value={role} />
+            <select id="role" className="border border-gray-400 p-2 rounded-sm" value={role} onChange={(e) => setRole(e.target.value)}>
+              {userTypes.map((userType) => (
+                <option key={userType.user_type_id} value={userType.user_type_id}>
+                  {userType.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
             <RedButton href="/admin/users" name="Regresar" />
