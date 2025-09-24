@@ -34,6 +34,8 @@ export default function NewUser() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    setOpenSaveModal(true);
+
     const payload = {
       name,
       last_name: lastname,
