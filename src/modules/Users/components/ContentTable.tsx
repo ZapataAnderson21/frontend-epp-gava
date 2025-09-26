@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 import type { User } from "../../../data/userData";
 import HeaderTable from "./HeaderTable";
+import ErrorMessage from "../../../common/ErrorMessage";
 
 export default function ContentTable() {
   const [users, setUsers] = useState<User[]>([]);
@@ -35,17 +36,13 @@ export default function ContentTable() {
 
   if (loading) {
     return (
-      <div className="w-full">
-        <LoadingSkeletonTable />
-      </div>
+      <LoadingSkeletonTable />
     );
   }
 
   if (error) {
     return(
-      <div className="flex items-center justify-center w-full h-full">
-        {error}
-      </div>
+      <ErrorMessage errorMessage={error} />
     );
   }
 

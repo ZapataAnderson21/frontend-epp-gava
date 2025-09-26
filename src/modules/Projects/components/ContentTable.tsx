@@ -44,9 +44,7 @@ export default function ContentTable({ filter }: ContentTableProps) {
 
   if (loading) {
     return (
-      <div className="w-full">
-        <LoadingSkeletonTable />
-      </div>
+      <LoadingSkeletonTable />
     );
   }
 
