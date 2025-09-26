@@ -1,5 +1,5 @@
 import type { ProjectType } from "./projectData";
-import { root } from "./root";
+import { root } from "./apiUrl";
 import type { UserResponse } from "./userData";
 
 const emergencyRoot = `${root}/emergency`;

@@ -1,5 +1,5 @@
 import type { RequestType } from './requestData'
-import { root } from './root'
+import { root } from './apiUrl'
 import type { UserResponse } from './userData'
 
 const requestRoot = `${root}/request-response`

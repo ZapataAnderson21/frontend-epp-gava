@@ -1,6 +1,6 @@
 import type { ElementRequestType } from './elementRequestData'
 import type { RequestResponseType } from './requestResponseData'
-import { root } from './root'
+import { root } from './apiUrl'
 
 const elementRequestResponseRoot = `${root}/element-request-response`
 

@@ -1,6 +1,6 @@
 import type { ProjectType } from './projectData'
 import type { ElementRequestType } from  './elementRequestData'
-import { root } from './root'
+import { root } from './apiUrl'
 import type { User } from './userData'
 
 const requestRoot = `${root}/request`

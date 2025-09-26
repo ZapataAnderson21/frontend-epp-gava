@@ -1,8 +1,10 @@
 import RowTable from "./RowTable";
-import { fetchGetAllProjects, fetchGetByStatus, type ProjectType } from "../../../data/projectData";
+import { type ProjectType } from "../../../data/projectData";
 import { useEffect, useState } from "react";
 import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 import HeaderTable from "./HeaderTable";
+import { projectApi } from "../../../data/apiUrl";
+import { getFetch } from "../../../hooks/useFetch";
 
 interface ContentTableProps {
   filter: string;
@@ -21,24 +23,17 @@ export default function ContentTable({ filter }: ContentTableProps) {
       setLoading(true);
       let response;
       if (filter === "all") {
-        response = await fetchGetAllProjects();
+        response = await getFetch(projectApi);
       } else {
-        response = await fetchGetByStatus(filter);
+        response = await getFetch(projectApi + 'status/' + filter);
       }
 
-      let responseData;
-      if (response instanceof Response) {
-        responseData = await response.json();
-      } else {
-        responseData = response;
-      }
-
-      if (responseData.statusCode === 200) {
-        setProjects(responseData.data);
+      if (response.statusCode === 200) {
+        setProjects(response.data);
         setLoading(false);
         setError("");
       } else {
-        setError(responseData.message);
+        setError(response.message);
         setLoading(false);
         setProjects([]);
       }

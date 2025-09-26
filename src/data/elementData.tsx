@@ -1,4 +1,4 @@
-import { root } from "./root";
+import { root } from "./apiUrl";
 
 const elementRoot = `${root}/element`;
 

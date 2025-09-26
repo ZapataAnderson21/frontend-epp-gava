@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import RedButton from "../../components/RedButton";
 import { useParams } from "react-router-dom";
-import { fetchGetOne, fetchUpdateProject, fetchUpdateStatus, type UpdateProjectDto } from "../../data/projectData";
 import { useNavigate } from "react-router-dom";
 import SaveModal from "../../components/SaveModal";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
+import { getFetch, patchFetch } from "../../hooks/useFetch";
+import { projectApi } from "../../data/apiUrl";
 
 export default function Project() {
 
@@ -43,29 +44,27 @@ export default function Project() {
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
-      const response = await fetchGetOne(Number(projectId));
-      const responseData = await response.json();
+      const response = await getFetch(projectApi + Number(projectId));
 
-      if (responseData.statusCode !== 200) {
+      if (response.statusCode !== 200) {
         setErrorGet(true);
-        setMessageGet(responseData.message);
+        setMessageGet(response.message);
         setLoading(false);
       } else {
-        setName(responseData.data.name);
-        setCode(responseData.data.code);
-        setDescription(responseData.data.description);
-        setStatus(responseData.data.status);
+        setName(response.data.name);
+        setCode(response.data.code);
+        setDescription(response.data.description);
+        setStatus(response.data.status);
         setLoading(false);
       }
     };
     fetchData();
   }, [projectId]);
-
+  
   const handleChangeStatus = async () => {
-    const response = await fetchUpdateStatus(Number(projectId), changeStatus.value);
-    const responseData = await response.json();
+    const response = await patchFetch(projectApi + Number(projectId) + '/status', { status: changeStatus.value });
     
-    if (responseData.statusCode === 200) {
+    if (response.statusCode === 200) {
       setStatus(changeStatus.value);
     }
   }
@@ -88,20 +87,19 @@ export default function Project() {
 
     setOpenSaveModal(true);
 
-    const updatedData: UpdateProjectDto = {
+    const updatedData = {
       name,
       description,
       code,
       status
     };
 
-    const response = await fetchUpdateProject(Number(projectId), updatedData);
-    const responseData = await response.json();
+    const response = await patchFetch(projectApi + projectId, updatedData);
 
     setError(false);
-    setSuccessMessage(responseData.message);
+    setSuccessMessage(response.message);
 
-    if (responseData.statusCode !== 200) {
+    if (response.statusCode !== 200) {
       setError(true);
       setOnOk(() => () => closeModalAndReset());
     } else {

@@ -1,4 +1,4 @@
-import { root } from "./root";
+import { root } from "./apiUrl";
 
 const userRoot = `${root}/user`;
 
@@ -113,35 +113,22 @@ export async function fetchLoginUser(email: string, password: string) {
 
 
 export async function fetchUpdateUser(userId:number, data: UpdateUserDto) {
-  try {
-    const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("accessToken");
 
-    if (!token) {
-      throw new Error("No token found in localStorage");
-    }
-
-    const headers = new Headers({
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    });
-
-    const response = await fetch(userData.update.replace(":id", userId.toString()), {
-      method: "PATCH",
-      headers: headers,
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Error updating user: ${result.message}`);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error in fetchUpdateUser:", error);
-    throw error;
+  if (!token) {
+    throw new Error("No token found in localStorage");
   }
+
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  });
+
+  return await fetch(userData.update.replace(":id", userId.toString()), {
+    method: "PATCH",
+    headers: headers,
+    body: JSON.stringify(data),
+  });
 }
 
 export async function fetchLogoutUser(accessToken: string) {
