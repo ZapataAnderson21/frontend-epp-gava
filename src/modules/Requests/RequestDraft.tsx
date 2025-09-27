@@ -10,7 +10,7 @@ import { handleUpdate, handleUpdateAndSend } from "./HandleForm";
 import { MdAttachEmail } from "react-icons/md";
 import RedButton from "../../components/RedButton";
 import { fetchGetByStatus } from "../../data/projectData";
-import type { ElementRequestType } from "../../data/elementRequestData";
+import type { ElementRequestType } from "../../data/types";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";
 

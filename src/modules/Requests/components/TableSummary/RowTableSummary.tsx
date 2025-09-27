@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ElementRequestType } from '../../../../data/elementRequestData';
+import type { ElementRequestType } from '../../../../data/types';
 import CellTableSummary from './CellTableSummary';
 
 interface RowTableSummaryProps {

@@ -1,6 +1,6 @@
 import { fetchCreateRequest, fetchSendRequestToLogistics, fetchUpdateRequest } from "../../data/requestData";
-import { fetchCreateElementRequest, fetchUpdateElementRequest, type CreateElementRequestDto, type ElementRequestType, type UpdateElementRequestDto } from "../../data/elementRequestData";
-import type { ElementType } from "../../data/elementData";
+import { fetchCreateElementRequest, fetchUpdateElementRequest } from "../../data/elementRequestData";
+import type { ElementType, CreateElementRequestDto, ElementRequestType, UpdateElementRequestDto } from "../../data/types";
 
 function getTypeFromElements(elements: any[]) {
   const types = elements.map((el: any) => el.type);

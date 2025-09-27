@@ -1,35 +1,19 @@
 import { useEffect, useState } from "react";
-import { fetchGetRequestById, fetchUpdateRequestStatus, type RequestType } from "../../data/requestData";
-import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse, type RequestResponseType } from "../../data/requestResponseData";
+import type { RequestType, RequestResponseType } from "../../data/types";
+import { fetchGetRequestById, fetchUpdateRequestStatus } from "../../data/requestData";
+import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse } from "../../data/requestResponseData";
 import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } from "../../data/elementRequestResponseData";
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
-import RequestProperty from "./components/RequestProperty";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
 import SaveModal from "../../components/SaveModal";
 
 interface RequestViewProps {
   request_id: number;
 }
-
-const statusOptions = [
-  { value: "draft", label: "Borrador" },
-  { value: "in_progress", label: "En progreso" },
-  { value: "under_review", label: "En revisión" },
-  { value: "approved", label: "Aprobado" },
-  { value: "rejected", label: "Rechazado" },
-  { value: "attended", label: "Atendido" },
-  { value: "completed", label: "Completado" }
-];
-
-const typeOptions = [
-  { value: "operative", label: "Operativos" },
-  { value: "security", label: "de Protección Personal (EPP)" },
-  { value: "operative_and_security", label: "Operativos y EPP" }
-];
 
 export default function RequestView({ request_id }: RequestViewProps) {
 

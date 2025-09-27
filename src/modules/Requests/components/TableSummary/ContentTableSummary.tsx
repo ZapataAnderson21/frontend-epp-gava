@@ -1,4 +1,4 @@
-import type { RequestType } from '../../../../data/requestData'
+import type { RequestType } from '../../../../data/types';
 import RowTableSummary from './RowTableSummary';
 
 interface ContentTableSummaryProps {

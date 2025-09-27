@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
-import Play  from "../icons/Play";
-import { fetchValidateToken } from "../data/userData";
+import Play from "../icons/Play";
 import Unauthenticated from "./Unauthenticated";
+import { useApiAction } from "../hooks/useApiAction";
+import { userApi } from "../data/apiUrl";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,9 +13,10 @@ export default function Home() {
   const [unauthenticated, setUnauthenticated] = useState(false);
 
   const accessToken = localStorage.getItem("accessToken");
+  const { execute } = useApiAction<boolean>();
 
   const toggleSidebar = () => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   };
 
   useEffect(() => {
@@ -25,21 +27,20 @@ export default function Home() {
       }
 
       try {
-        const response = await fetchValidateToken(accessToken);
+        const result = await execute(`${userApi}validateToken`, "POST", { accessToken });
 
-        if (response) {
+        // Si el token está en blacklist, backend devuelve true → no autenticado
+        if (result.data === true) {
           setUnauthenticated(true);
         } else {
           setUnauthenticated(false);
         }
-      } catch (error) {
-        console.error("Error validating token:", error);
+      } catch (err) {
+        console.error("Error validating token:", err);
         setUnauthenticated(true);
       }
     })();
   }, [accessToken]);
-
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -55,7 +56,7 @@ export default function Home() {
   return (
     <>
       {unauthenticated ? (
-        <div  className="flex flex-col items-center justify-center w-full h-screen">
+        <div className="flex flex-col items-center justify-center w-full h-screen">
           <Unauthenticated />
         </div>
       ) : (
@@ -70,7 +71,13 @@ export default function Home() {
                         ${isOpen ? "left-[188px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-40 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
               onClick={toggleSidebar}
             >
-              {isOpen ? <div className="rotate-180" ><Play /></div> : <Play />}
+              {isOpen ? (
+                <div className="rotate-180">
+                  <Play />
+                </div>
+              ) : (
+                <Play />
+              )}
             </div>
           )}
           <div

@@ -1,14 +1,13 @@
 import RequestTypeCard from "./components/RequestTypeCard";
 import { FaHelmetSafety } from "react-icons/fa6";
 import { FaSave, FaTools } from "react-icons/fa";
-import type { ElementType } from "../../data/elementData";
-import type { ElementRequestType } from "../../data/elementRequestData";
+import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
 import { useEffect, useState } from "react";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import RedButton from "../../components/RedButton";
 import { MdAttachEmail } from "react-icons/md";
-import { fetchGetByStatus, type ProjectType } from "../../data/projectData";
+import { fetchGetByStatus } from "../../data/projectData";
 import { handleSave, handleSaveAndSend}  from "./HandleForm";
 import { IoWarning } from "react-icons/io5";
 import SaveModal from "../../components/SaveModal";

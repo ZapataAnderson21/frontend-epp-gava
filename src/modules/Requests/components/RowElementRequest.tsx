@@ -1,6 +1,5 @@
 import { IoIosCloseCircle } from "react-icons/io";
-import type { ElementType } from "../../../data/elementData";
-import type { ElementRequestType } from "../../../data/elementRequestData";
+import type { ElementType , ElementRequestType } from "../../../data/types";
 
 interface RowElementRequestProps {
   elementRequest: ElementRequestType;

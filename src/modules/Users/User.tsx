@@ -1,85 +1,68 @@
 import { useEffect, useState } from "react";
-import RedButton from "../../components/RedButton";
-import { fetchGetOne, fetchUpdateUser, type UpdateUserDto } from "../../data/userData";
 import { useNavigate } from "react-router-dom";
-import { fetchGetAllUserTypes, type UserType } from "../../data/userTypeData";
+import RedButton from "../../components/RedButton";
+import type { UserType, UpdateUserDto } from "../../data/types";
+import { userApi, userTypeApi } from "../../data/apiUrl";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
 import SaveModal from "../../components/SaveModal";
 import ErrorWithButton from "../../common/ErrorWithButton";
+import { useFetch } from "../../hooks/useFetch";
+import { useApiAction } from "../../hooks/useApiAction";
 
 export default function User() {
+  const userId = Number(window.location.pathname.split("/").pop());
 
-  const userId = Number(window.location.pathname.split('/').pop());
-
+  // Campos controlados del form
   const [name, setName] = useState("");
   const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
 
-  const [userTypes, setUserTypes] = useState<UserType[]>([]);
-
-  const [loading, setLoading] = useState(false);
-  const [errorGet, setErrorGet] = useState(false);
-  const [messageGet, setMessageGet] = useState("");
-  const [error, setError] = useState(false);
+  // Para modal de éxito/error
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
+  const [error, setError] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
   const navigate = useNavigate();
 
+  // 🔹 Traer info del usuario
+  const { data: user, loading: loadingUser, error: errorUser } = useFetch<{ name: string; last_name: string; email: string; userType: string }>(
+    `${userApi}/${userId}`,
+    [userId]
+  );
+
+  // 🔹 Traer todos los userTypes
+  const { data: userTypes, loading: loadingTypes, error: errorTypes } = useFetch<UserType[]>(userTypeApi, []);
+
+  // 🔹 Hook para actualizar usuario
+  const { execute: updateUser } = useApiAction<any>();
+
+  // Cuando llega el usuario desde la API, setear campos en el form
   useEffect(() => {
-    setLoading(true);
-    const getUser = async () => {
-      const response = await fetchGetOne(80);
-      const responseData = await response.json();
-
-      if (responseData.statusCode !== 200) {
-        setErrorGet(true);
-        setMessageGet(responseData.message);
-        setLoading(false);
-      } else {
-        setName(responseData.data.name);
-        setLastname(responseData.data.last_name);
-        setEmail(responseData.data.email);
-        setRole(responseData.data.userType);
-        setLoading(false);
-      }
-    };
-
-    const getUserTypes = async () => {
-      const response = await fetchGetAllUserTypes();
-      const responseData = await response.json();
-
-      if (responseData.statusCode !== 200) {
-        setErrorGet(true);
-        setMessageGet(responseData.message);
-        setLoading(false);
-      } else{
-        setUserTypes(responseData.data);
-        setLoading(false);
-      }
-    };
-
-    getUserTypes();
-    getUser();
-  }, [userId]);
+    if (user) {
+      setName(user.name);
+      setLastname(user.last_name);
+      setEmail(user.email);
+      setRole(user.userType);
+    }
+  }, [user]);
 
   const closeModalAndReset = () => {
     setSuccessMessage("");
     setError(false);
     setOpenSaveModal(false);
-  }
+  };
 
   const navigateToUsers = () => {
     setSuccessMessage("");
     setError(false);
     setOpenSaveModal(false);
     navigate("/admin/users");
-  }
+  };
 
+  // 🔹 Actualizar usuario
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,32 +72,40 @@ export default function User() {
       name,
       last_name: lastname,
       email,
-      password
+      password,
     };
 
-    const response = await fetchUpdateUser(userId, updatedData);
-    const responseData = await response.json();
+    try {
+      const res = await updateUser(`${userApi}/${userId}`, "PATCH", updatedData);
 
-    setError(false);
-    setSuccessMessage(responseData.message);
+      setSuccessMessage(res.message);
 
-    if (responseData.statusCode !== 200) {
+      if (res.statusCode !== 200) {
+        setError(true);
+        setOnOk(() => () => closeModalAndReset());
+      } else {
+        setError(false);
+        setOnOk(() => () => navigateToUsers());
+      }
+    } catch (err) {
       setError(true);
+      setSuccessMessage("Error inesperado al actualizar el usuario");
       setOnOk(() => () => closeModalAndReset());
-    } else {
-      setOnOk(() => () => navigateToUsers());
     }
   };
 
-  if (loading) {
-    return (
-      <LoadingSkeletonForm numberRows={5} />
-    );
+  // 🔹 Loading
+  if (loadingUser || loadingTypes) {
+    return <LoadingSkeletonForm numberRows={5} />;
   }
 
-  if( errorGet ) {
+  // 🔹 Error
+  if (errorUser || errorTypes) {
     return (
-      <ErrorWithButton errorMessage={messageGet} href="/admin/users" />
+      <ErrorWithButton
+        errorMessage={errorUser || errorTypes || "Ocurrió un error"}
+        href="/admin/users"
+      />
     );
   }
 
@@ -128,24 +119,54 @@ export default function User() {
           <form className="flex flex-col gap-4 w-full max-w-2xl" onSubmit={handleUpdate}>
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="font-semibold">Nombre</label>
-              <input type="text" id="name" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={name} onChange={(e) => setName(e.target.value)} />
+              <input
+                type="text"
+                id="name"
+                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="lastname" className="font-semibold">Apellido</label>
-              <input type="text" id="lastname" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={lastname} onChange={(e) => setLastname(e.target.value)} />
+              <input
+                type="text"
+                id="lastname"
+                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
+                value={lastname}
+                onChange={(e) => setLastname(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="font-semibold">Correo</label>
-              <input type="text" id="email" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input
+                type="text"
+                id="email"
+                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="password" className="font-semibold">Contraseña</label>
-              <input type="password" id="password" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" placeholder="Nueva contraseña" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input
+                type="password"
+                id="password"
+                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
+                placeholder="Nueva contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="role" className="font-semibold">Rol</label>
-              <select id="role" className="border border-gray-400 p-3 rounded-sm" value={role} onChange={(e) => setRole(e.target.value)}>
-                {userTypes.map((userType) => (
+              <select
+                id="role"
+                className="border border-gray-400 p-3 rounded-sm"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                {userTypes?.map((userType) => (
                   <option key={userType.user_type_id} value={userType.user_type_id}>
                     {userType.name}
                   </option>
@@ -154,16 +175,19 @@ export default function User() {
             </div>
             <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
               <RedButton href="/admin/users" name="Regresar" />
-              <button type="submit" className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer">Actualizar</button>
+              <button
+                type="submit"
+                className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer"
+              >
+                Actualizar
+              </button>
             </div>
           </form>
         </div>
       </div>
-      {
-        openSaveModal && (
-          <SaveModal onOk={onOk} message={successMessage} error={error} />
-        )
-      }
+      {openSaveModal && (
+        <SaveModal onOk={onOk} message={successMessage} error={error} />
+      )}
     </>
-  )
+  );
 }
