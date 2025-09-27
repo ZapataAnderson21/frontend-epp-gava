@@ -1,4 +1,4 @@
-import type { EmergencyType } from "../../../data/emergencyData";
+import type { EmergencyType } from "../../../data/types";
 
 interface RowTableProps {
   emergency: EmergencyType;

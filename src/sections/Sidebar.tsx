@@ -3,9 +3,10 @@ import { FaHome, FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
 import { useState, useRef, useEffect } from "react";
-import { fetchLogoutUser } from "../data/userData";
 import { useNavigate } from "react-router-dom";
 import { RiAlertFill } from "react-icons/ri";
+import { useApiAction } from "../hooks/useApiAction";
+import { userApi } from "../data/apiUrl";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -14,23 +15,25 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
-
   const [isElementosOpen, setIsElementosOpen] = useState(false);
-
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const accessToken = localStorage.getItem("accessToken");
-  
   if (!accessToken) {
     console.error("No access token found in localStorage");
     return null;
   }
 
-  const navigate = useNavigate();
+  // instancia del hook para logout
+  const { execute: logoutAction, loading: loggingOut } = useApiAction<null>();
 
   const handleLogout = async () => {
     try {
-      const response = await fetchLogoutUser(accessToken);
+      const response = await logoutAction(`${userApi}logout`, "POST", {
+        accessToken,
+      });
+
       if (response.statusCode === 200) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
@@ -66,7 +69,9 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
       ref={sidebarRef}
       className={`text-gray-500
         ${isMobile
-          ? `absolute top-0 left-0 h-screen w-[220px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[220px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
+          ? `absolute top-0 left-0 h-screen w-[220px] bg-white transform ${
+              isOpen ? "translate-x-0" : "-translate-x-[220px]"
+            } transition-transform duration-300 ease-in-out shadow-2xl z-10`
           : `fixed top-0 left-0 h-screen w-[220px] shadow-gray-300 shadow-md bg-white z-10`
         }
       `}
@@ -100,18 +105,13 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-gray-300 py-4 px-6">
-          <SidebarItem icon={<IoLogOut />} label="Salir" onClick={handleLogout} />
+          <SidebarItem
+            icon={<IoLogOut />}
+            label={loggingOut ? "Saliendo..." : "Salir"}
+            onClick={handleLogout}
+          />
         </div>
       </div>
     </section>
   );
 }
-
-
-
-
-
-
-
-
-

@@ -1,66 +1,34 @@
 import RowTable from "./RowTable";
-import { fetchGetAllElements, fetchGetByType, type ElementType } from "../../../data/elementData";
-import { useEffect, useState } from "react";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 import HeaderTable from "./HeaderTable";
+import { useFetch } from "../../../hooks/useFetch";
+import { elementApi } from "../../../data/apiUrl";
+import type { ElementType } from "../../../data/types";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
+import { useState, useMemo } from "react";
 
 interface ContentTableProps {
   type: string;
 }
 
 export default function ContentTable({ type }: ContentTableProps) {
+  // Construyo la URL dinámicamente según el `type`
+  const url = type === "all" ? elementApi : `${elementApi}/type/${type}`;
+  const { data: elements, loading, error } = useFetch<ElementType[]>(url, []);
 
-  const [elements, setElements] = useState<ElementType[]>([]);
-  const [pages, setPages] = useState<number>(1);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentElements = elements.slice(indexOfFirstItem, indexOfLastItem);
 
-  let count = 0;
+  const pages = useMemo(
+    () => Math.ceil((elements?.length ?? 0) / itemsPerPage),
+    [elements]
+  );
 
-  useEffect(() => {
-    const fetchElements = async () => {
-      setLoading(true);
-      let response;
-      if (type === "all") {
-        response = await fetchGetAllElements();
-      } else {
-        response = await fetchGetByType(type);
-      }
-
-      let responseData;
-
-      if (response instanceof Response) {
-        responseData = await response.json();
-      } else {
-        responseData = response;
-      }
-
-      switch (responseData.statusCode) {
-        case 200:
-          setElements(responseData.data);
-          setPages(Math.ceil(responseData.data.length / itemsPerPage));
-          setLoading(false);
-          setError(null);
-          break;
-        default:
-          setError(responseData.message);
-          setLoading(false);
-          setElements([]);
-          break;
-      }
-    };
-
-    fetchElements();
-  }, [type]);
-
+  const currentElements = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return elements?.slice(start, start + itemsPerPage) ?? [];
+  }, [elements, currentPage]);
 
   if (loading) {
     return (
@@ -71,9 +39,9 @@ export default function ContentTable({ type }: ContentTableProps) {
   }
 
   if (error) {
-    return(
+    return (
       <div className="flex items-center justify-center w-full h-full">
-       {error}
+        {error}
       </div>
     );
   }
@@ -82,13 +50,19 @@ export default function ContentTable({ type }: ContentTableProps) {
     <>
       <div className="flex flex-col items-center justify-between min-w-full">
         <HeaderTable />
-        {currentElements.map((element) => {
-          count = count + 1;
-          return (
-            <RowTable key={element.element_id} order={count} id={element.element_id} name={element.name} type={element.type} description={element.description} />
-          );
-        })}
+        {currentElements.map((element, index) => (
+          <RowTable
+            key={element.element_id}
+            order={(currentPage - 1) * itemsPerPage + index + 1}
+            id={element.element_id}
+            name={element.name}
+            type={element.type}
+            description={element.description}
+          />
+        ))}
       </div>
+
+      {/* Paginación */}
       <div className="flex flex-row justify-end w-full font-bold mt-4 gap-2">
         <div
           className="flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer"
@@ -99,7 +73,9 @@ export default function ContentTable({ type }: ContentTableProps) {
         {Array.from({ length: pages }, (_, i) => (
           <div
             key={i}
-            className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${currentPage === i + 1 ? "bg-gray-300" : ""}`}
+            className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${
+              currentPage === i + 1 ? "bg-gray-300" : ""
+            }`}
             onClick={() => setCurrentPage(i + 1)}
           >
             {i + 1}

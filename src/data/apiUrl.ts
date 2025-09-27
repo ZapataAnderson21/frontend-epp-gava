@@ -1,7 +1,7 @@
 //export const root = "https://sir.gavacyc.com/api"; 
 export const root = "http://localhost:3001";
 
-export const userTypeRoot = `${root}/user-type`;
+export const userTypeApi = `${root}/user-type`;
 
 export const userApi = `${root}/user/`;
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IoMdArrowDropdown } from 'react-icons/io'; 
 import ContentTable from './components/ContentTable';
-import HeaderTable from './components/HeaderTable';
 import { FaPlus } from 'react-icons/fa6';
 import { useParams } from 'react-router-dom';
 

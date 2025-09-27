@@ -4,7 +4,7 @@ import { fetchCreateEmergencyWithImage } from "../../data/emergencyData";
 import { fetchGetByStatus } from "../../data/projectData";
 import { useNavigate } from "react-router-dom";
 import SaveModal from "../../components/SaveModal";
-import type { ProjectType } from "../../data/projectData";
+import type { ProjectType } from "../../data/types";
 
 export default function NewEmergency() {
 

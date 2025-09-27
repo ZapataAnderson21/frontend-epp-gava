@@ -1,96 +1,50 @@
-export const getFetch = async (url: string) => {
-  
-  const token = localStorage.getItem("accessToken");
+import getAuthHeaders from "./getAuthHeaders";
 
-  if (!token) {
-    throw new Error("No token found in localStorage");
-  }
+import { useEffect, useState } from "react";
 
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  });
-
-  const controller = new AbortController();
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers,
-    signal: controller.signal,
-  });
-
-  return response.json();
+interface ApiResponse<T> {
+  statusCode: number;
+  message: string;
+  data: T;
 }
 
-export const postFetch = async (url: string, data: any) => {
+export function useFetch<T>(url: string, extraDeps: any[] = []) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const token = localStorage.getItem("accessToken");
+  useEffect(() => {
+    let active = true;
 
-  if (!token) {
-    throw new Error("No token found in localStorage");
-  }
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(url, {
+          headers: getAuthHeaders(),
+        });
+        const json: ApiResponse<T> = await res.json();
 
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  });
+        if (!active) return;
 
-  const controller = new AbortController();
+        if (json.statusCode === 200) {
+          setData(json.data);
+          setError(null);
+        } else {
+          setError(json.message);
+          setData(null);
+        }
+      } catch (err: any) {
+        if (active) setError(err.message || "Error desconocido");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(data),
-    signal: controller.signal,
-  });
+    fetchData();
+    return () => {
+      active = false;
+    };
+  }, [url, ...extraDeps]);  // 👈 el url siempre se incluye en deps
 
-  return response.json();
-}
-
-export const patchFetch = async (url: string, data: any) => {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
-    throw new Error("No token found in localStorage");
-  }
-
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  });
-
-  const controller = new AbortController();
-
-  const response = await fetch(url, {
-    method: "PATCH",
-    headers,
-    body: JSON.stringify(data),
-    signal: controller.signal,
-  });
-
-  return response.json();
-}
-
-export const deleteFetch = async (url: string) => {
-
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
-    throw new Error("No token found in localStorage");
-  }
-
-  const headers = new Headers({
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  });
-
-  const controller = new AbortController();
-
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers,
-    signal: controller.signal,
-  });
-
-  return response.json();
+  return { data, loading, error };
 }

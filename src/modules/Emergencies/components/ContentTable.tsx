@@ -1,5 +1,5 @@
 import RowTable from "./RowTable";
-import { fetchGetAllEmergencies, type EmergencyType } from "../../../data/emergencyData";
+import { fetchGetAllEmergencies, type EmergencyType } from "../../../data/types";
 import { useEffect, useState } from "react";
 
 export default function ContentTable() {

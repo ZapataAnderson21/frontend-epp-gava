@@ -3,8 +3,7 @@ import RedButton from "../../components/RedButton";
 import { useParams } from "react-router-dom";
 import { fetchGetEmergencyById, fetchUpdateEmergency } from "../../data/emergencyData";
 import { useNavigate } from "react-router-dom";
-import type { ProjectType } from "../../data/projectData";
-import type { UserResponse } from "../../data/userData";
+import type { User, ProjectType } from "../../data/types";
 
 export default function Emergency() {
 
@@ -15,7 +14,7 @@ export default function Emergency() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [project, setProject] = useState<ProjectType | null>(null);
-  const [user, setUser] = useState<UserResponse | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState("");
 
   let changeStatus: { label: string; value: string };

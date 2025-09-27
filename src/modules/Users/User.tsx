@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchGetAllUserTypes, type UserType } from "../../data/userTypeData";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
 import SaveModal from "../../components/SaveModal";
+import ErrorWithButton from "../../common/ErrorWithButton";
 
 export default function User() {
 
@@ -32,7 +33,7 @@ export default function User() {
   useEffect(() => {
     setLoading(true);
     const getUser = async () => {
-      const response = await fetchGetOne(userId);
+      const response = await fetchGetOne(80);
       const responseData = await response.json();
 
       if (responseData.statusCode !== 200) {
@@ -113,12 +114,7 @@ export default function User() {
 
   if( errorGet ) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-full text-gray-800 p-10">
-        <h1 className="mb-4">{messageGet}</h1>
-        <div className="max-w-fit">
-          <RedButton href="/admin/projects" name="Regresar" />
-        </div>
-      </div>
+      <ErrorWithButton errorMessage={messageGet} href="/admin/users" />
     );
   }
 

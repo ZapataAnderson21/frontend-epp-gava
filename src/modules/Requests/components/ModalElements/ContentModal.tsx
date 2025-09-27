@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import BlueButton from "../../../../components/BlueButton";
-import { type ElementType } from "../../../../data/elementData";
+import { type ElementType } from "../../../../data/types";
 import { fetchGetByType } from "../../../../data/elementData";
 import {
   fetchCreateElementRequest,
