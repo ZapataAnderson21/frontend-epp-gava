@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
-import type { RequestType, RequestResponseType } from "../../data/types";
-import { fetchGetRequestById, fetchUpdateRequestStatus } from "../../data/requestData";
-import { fetchCreateRequestResponse, fetchGetRequestResponseByRequestId, fetchUpdateRequestResponse } from "../../data/requestResponseData";
-import { fetchCreateElementRequestResponse, fetchUpdateElementRequestResponse } from "../../data/elementRequestResponseData";
+import type { RequestType } from "../../data/types";
+
 import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
 import SaveModal from "../../components/SaveModal";
+import ErrorMessage from "../../common/ErrorMessage";
+
+import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
+import { useFetch } from "../../hooks/useFetch";
+import { useApiAction } from "../../hooks/useApiAction";
 
 interface RequestViewProps {
   request_id: number;
 }
 
 export default function RequestView({ request_id }: RequestViewProps) {
-
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [isLogistics, setIsLogistics] = useState(false);
   const [isGerency, setIsGerency] = useState(false);
@@ -26,18 +29,32 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const [isAttend, setIsAttend] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEmployee, setIsEmployee] = useState(false);
-  const [request, setRequest] = useState<RequestType>( {} as RequestType);
-  const [requestResponse, setRequestResponse] = useState<RequestResponseType>({} as RequestResponseType);
   const [descriptionResponse, setDescriptionResponse] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
+  // ✅ useFetch para traer la Request
+  const { data: request, loading: loadingRequest, error: errorRequest } = useFetch<RequestType>(
+    `${requestApi}/${request_id}`,
+    [request_id]
+  );
+
+  // ✅ useApiAction para POST y PATCH
+  const { execute: createRequestResponse } = useApiAction<any>();
+  const { execute: updateRequestResponse } = useApiAction<any>();
+  const { execute: createElementRequestResponse } = useApiAction<any>();
+  const { execute: updateElementRequestResponse } = useApiAction<any>();
+  const { execute: updateRequestStatus } = useApiAction<any>();
+
+  // Cargar PDF
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    fetch(`https://sir.gavacyc.com/api/request/pdf/${request_id}`, {
+    fetch(`${requestApi}/pdf/${request_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -51,139 +68,91 @@ export default function RequestView({ request_id }: RequestViewProps) {
       });
   }, [request_id]);
 
-  const formattedDate = request?.createdAt
-    ? new Date(request.createdAt).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '---';
-
-  const formattedDeliveryDueDate = request?.delivery_due_date
-    ? new Date(request.delivery_due_date).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : '---';
-
-  const navigate = useNavigate();  
-
+  // Roles y estado
   useEffect(() => {
     if (!user || !user.userUserTypes) return;
 
     const userType = user.userUserTypes[0].userType.name;
-    if (["GERENTE"].includes(userType)) {
-      setIsGerency(true);
-    }
-    if (["LOGISTICA"].includes(userType)) {
-      setIsLogistics(true);
-    }
-    if (["ADMINISTRADORA"].includes(userType)) {
-      setIsAdmin(true);
-    }
-    if (!["GERENTE", "ADMINISTRADORA", "LOGISTICA"].includes(userType)) {
-      setIsEmployee(true);
-    }
-    if (request && request.status === "in_progress") {
-      setIsInProgress(true);
-    }
-    if (request && request.status === "under_review") {
-      setIsUnderReview(true);
-    }
-    if (request && request.status === "approved") {
-      setIsApproved(true);
-    }
-    if (request && request.status === "attended") {
-      setIsAttend(true);
-    }
-  }, [user]);
+    if (["GERENTE"].includes(userType)) setIsGerency(true);
+    if (["LOGISTICA"].includes(userType)) setIsLogistics(true);
+    if (["ADMINISTRADORA"].includes(userType)) setIsAdmin(true);
+    if (!["GERENTE", "ADMINISTRADORA", "LOGISTICA"].includes(userType)) setIsEmployee(true);
 
-  useEffect(() => {
-    if (request_id) {
-      fetchGetRequestById(Number(request_id)).then((response) => {
-        setRequest(response.data);
-      });
+    if (request?.status === "in_progress") setIsInProgress(true);
+    if (request?.status === "under_review") setIsUnderReview(true);
+    if (request?.status === "approved") setIsApproved(true);
+    if (request?.status === "attended") setIsAttend(true);
+  }, [user, request]);
 
-      fetchGetRequestResponseByRequestId(Number(request_id)).then((response) => {
-        if (response.data) {
-          setRequestResponse(response.data);
-          setDescriptionResponse(response.data.description || "");
-        }
-      });
-
+  // Cambiar estado
+  const handleChangeStatus = async (newStatus: string) => {
+    if (!request) return;
+    try {
+      await updateRequestStatus(`${requestApi}/${request.request_id}/status`, "PATCH", { status: newStatus });
+      navigate(0);
+    } catch (err) {
+      console.error("Error al cambiar estado:", err);
     }
-  }, [request_id]);
+  };
 
+  // Revisado
   const handleReviewed = async () => {
     try {
-      // 1. Registrar respuesta general de la solicitud
-      const response = await fetchCreateRequestResponse({
+      const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
         request_id: Number(request_id),
         responder_user_id: Number(user.user_id),
-        description: "Solicitud revisada por administración."
+        description: "Solicitud revisada por administración.",
       });
 
-      // 2. Registrar cada respuesta de elemento
+      if (!request) return;
+
       for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity = elementRequest.element_request_id !== undefined
-          ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
-          : elementRequest.quantity_requested;
+        const acceptedQuantity =
+          elementRequest.element_request_id !== undefined
+            ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
+            : elementRequest.quantity_requested;
 
         if (elementRequest.element_request_id !== undefined) {
-          await fetchCreateElementRequestResponse({
+          await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
             element_request_id: elementRequest.element_request_id,
             quantity_accepted: acceptedQuantity,
-            request_response_id: response.data.request_response_id
+            request_response_id: response.data.request_response_id,
           });
-        } else {
-          console.warn("element_request_id is undefined for elementRequest:", elementRequest);
         }
       }
 
-      // 3. Cambiar estado
       handleChangeStatus("under_review");
-
-      // 4. Recargar la página para reflejar los cambios
       setOpenSaveModal(true);
     } catch (error) {
       console.error("Error al revisar la solicitud:", error);
     }
   };
 
+  // Aprobado
   const handleApproved = async () => {
-    console.log("Aprobando solicitud con ID:", request_id);
-    try{
-      //1. Buscar la RequestResponseByRequestId
+    try {
+      // Buscar la respuesta existente
+      const response = await fetch(`${requestResponseApi}/request/${request_id}`).then((r) => r.json());
 
-      const response = await fetchGetRequestResponseByRequestId(Number(request_id));
-      if (!response.data) {
-        console.log("No se encontró la respuesta de la solicitud.");
-      }
+      if (!request || !response?.data) return;
 
-      console.log("Respuesta de la solicitud:", response.data);
-
-      //2. Actualizar las cantidades aceptadas de las ElementRequestResponse
       for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity = elementRequest.element_request_id !== undefined
-          ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
-          : elementRequest.quantity_requested;
+        const acceptedQuantity =
+          elementRequest.element_request_id !== undefined
+            ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
+            : elementRequest.quantity_requested;
 
-        console.log("Actualizando ElementRequestResponse con ID:", elementRequest.element_request_id, "Cantidad aceptada:", acceptedQuantity);
-
-        if (
-          elementRequest.elementRequestResponses &&
-          elementRequest.elementRequestResponses.length > 0
-        ) {
-          await fetchUpdateElementRequestResponse(elementRequest.elementRequestResponses[0].element_request_response_id, {
-            element_request_id: elementRequest.element_request_id,
-            quantity_accepted: acceptedQuantity,
-            request_response_id: response.data.request_response_id
-          });
+        // ✅ Validar que elementRequestResponses exista y tenga elementos
+        if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
+          await updateElementRequestResponse(
+            `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].element_request_response_id}`,
+            "PATCH",
+            {
+              element_request_id: elementRequest.element_request_id,
+              quantity_accepted: acceptedQuantity,
+              request_response_id: response.data.request_response_id,
+            }
+          );
         } else {
           console.warn(
             `No se encontró ElementRequestResponse para elementRequest_id: ${elementRequest.element_request_id}`
@@ -191,36 +160,22 @@ export default function RequestView({ request_id }: RequestViewProps) {
         }
       }
 
-      //3. Actualizar la RequestResponse con la descripción
 
-      console.log("Actualizando RequestResponse con ID:", response.data.request_response_id, "Descripción:", descriptionResponse);
-
-      const bodyUpdate = {
+      await updateRequestResponse(`${requestResponseApi}/${response.data.request_response_id}`, "PATCH", {
         request_id: response.data.request_id,
         responder_user_id: Number(user.user_id),
-        description: descriptionResponse
-      };
+        description: descriptionResponse,
+      });
 
-      console.log("Cuerpo de actualización:", bodyUpdate);
-
-      await fetchUpdateRequestResponse(response.data.request_response_id, bodyUpdate);
-
-      //4. Actualiza el estado de la request a "approved"
       handleChangeStatus("approved");
     } catch (error) {
       console.error("Error al aprobar la solicitud:", error);
     }
-  }
-
-
-  const handleChangeStatus = (newStatus: string) => {
-    if (request) {
-      fetchUpdateRequestStatus(request.request_id, newStatus).then((response) => {
-        setRequest(response.data);
-      });
-      navigate(0);
-    }
   };
+
+  if (loadingRequest) return <p>Cargando...</p>;
+  if (errorRequest) return <ErrorMessage errorMessage={errorRequest} />;
+  if (!request) return <ErrorMessage errorMessage="No se encontró la solicitud." />;
 
   return (
     <>
@@ -229,20 +184,29 @@ export default function RequestView({ request_id }: RequestViewProps) {
           <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
             <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {request_id}</h1>
             <div>
-              <Button icon={<FaArrowLeft />} label="Regresar" onClick={() => navigate('/admin/requests')} bgColor={'#000'} bgHoverColor={'#1f1f1f'} />
+              <Button
+                icon={<FaArrowLeft />}
+                label="Regresar"
+                onClick={() => navigate("/admin/requests")}
+                bgColor={"#000"}
+                bgHoverColor={"#1f1f1f"}
+              />
             </div>
           </div>
 
           {isAdmin && (
             <>
-              <p className="mt-4 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
+              <p className="mt-4 text-[12px] font-bold">Puedes modificar la cantidad de elementos solicitados:</p>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
-                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+                <ContentTableSummary
+                  request={request}
+                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                />
               </div>
               {isInProgress && (
-                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                  <Button icon={<FaArrowRight />} label="Revisado" onClick={() => handleReviewed()} bgColor='#f0b100' bgHoverColor='#f69f00' />
+                <div className="flex flex-row flex-wrap items-center gap-8 w-full max-w-2xl text-white mt-2">
+                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" />
                 </div>
               )}
             </>
@@ -250,26 +214,24 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
           {isGerency && (
             <>
-              <p className="mt-1 text-[12px] font-bold">Aquí puedes modificar la cantidad de elementos solicitados antes de enviar la solicitud:</p>
+              <p className="mt-1 text-[12px] font-bold">Modifica las cantidades antes de aprobar:</p>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
-                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+                <ContentTableSummary
+                  request={request}
+                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                />
               </div>
-              <p className="mt-4 text-[12px] font-bold">Respuesta:</p>
-              <p className="text-[12px] font-bold"> {requestResponse.description}</p>
               <textarea
-                className="w-full h-24 p-2 border-2 border-gray-300 rounded-md"
-                placeholder="Escribe aquí tus comentarios o justificaciones para la aprobación o rechazo..."
+                className="w-full h-24 p-2 border-2 border-gray-300 rounded-md mt-4"
+                placeholder="Comentarios de aprobación o rechazo..."
                 value={descriptionResponse}
-                onChange={(e) => {
-                  setDescriptionResponse(e.target.value);
-                  console.log(descriptionResponse);
-                }}
+                onChange={(e) => setDescriptionResponse(e.target.value)}
               ></textarea>
               {isUnderReview && (
-                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                  <Button icon={<FaCheck />} label="Aprobar" onClick={() => handleApproved()} bgColor={'#008000'} bgHoverColor={'#0c4a28'} />
-                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor={'#d80027'} bgHoverColor={'#c80008'} />
+                <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
+                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" />
+                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" />
                 </div>
               )}
             </>
@@ -279,40 +241,35 @@ export default function RequestView({ request_id }: RequestViewProps) {
             <>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
-                <ContentTableSummary request={request} onQuantityChange={(id, quantity) => { setAcceptedQuantities(prev => ({ ...prev, [id]: quantity })); }} />
+                <ContentTableSummary
+                  request={request}
+                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                />
               </div>
-              <div>Respuesta: <span>{requestResponse.description}</span></div>
-              
               {isApproved && (
-                <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor={'#0047a3'} bgHoverColor={'#003d8f'} />
+                <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
+                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" />
                 </div>
               )}
             </>
           )}
 
           {isEmployee && isAttend && (
-            <div className="flex flex-row flex-wrap items-center justify-start gap-8 w-full max-w-2xl text-[12px] md:text-[14px] text-white mt-2">
-              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor={'#ad46ff'} bgHoverColor={'#9b3bff'} />
+            <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
+              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" />
             </div>
           )}
         </div>
-        {pdfUrl && (
-          <iframe
-            src={pdfUrl}
-            title="Requerimiento PDF"
-            className="w-full h-full min-h-120"
-          />
-        )}
+        {pdfUrl && <iframe src={pdfUrl} title="Requerimiento PDF" className="w-full h-full min-h-120" />}
       </div>
-      {
-        openSaveModal && (
-          <SaveModal
-            onOk={() => {
-              navigate(0);
-            }}
-          />
-        )}
+
+      {openSaveModal && (
+        <SaveModal
+          onOk={() => {
+            navigate(0);
+          }}
+        />
+      )}
     </>
   );
 }

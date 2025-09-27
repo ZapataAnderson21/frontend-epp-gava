@@ -1,18 +1,20 @@
-import RequestTypeCard from "./components/RequestTypeCard";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { IoWarning } from "react-icons/io5";
+import { RiQuestionFill } from "react-icons/ri";
+import { MdAttachEmail } from "react-icons/md";
 import { FaHelmetSafety } from "react-icons/fa6";
 import { FaSave, FaTools } from "react-icons/fa";
+import RequestTypeCard from "./components/RequestTypeCard";
 import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
-import { useEffect, useState } from "react";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import RedButton from "../../components/RedButton";
-import { MdAttachEmail } from "react-icons/md";
-import { fetchGetByStatus } from "../../data/projectData";
-import { handleSave, handleSaveAndSend}  from "./HandleForm";
-import { IoWarning } from "react-icons/io5";
 import SaveModal from "../../components/SaveModal";
-import { useNavigate } from "react-router-dom";
-import { RiQuestionFill } from "react-icons/ri";
+import { handleSave, handleSaveAndSend}  from "./HandleForm";
+import { projectApi } from "../../data/apiUrl";
+import { useFetch } from "../../hooks/useFetch";
+import ErrorMessage from "../../common/ErrorMessage";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
@@ -24,7 +26,7 @@ export default function NewRequest() {
   const [elements, setElements] = useState<ElementType[]>(selectedElements);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(selectedElementRequest);
 
-  const [projects, setProjects] = useState<ProjectType[]>([]);
+  const { data: projects } = useFetch<ProjectType[]>(`${projectApi}status/active`, []);
 
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
@@ -34,20 +36,6 @@ export default function NewRequest() {
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const response = await fetchGetByStatus("active");
-
-      const responseData = await response.json();
-
-      if (responseData.statusCode === 200) {
-        setProjects(responseData.data);
-      }
-    };
-
-    fetchProjects();
-  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -130,6 +118,10 @@ export default function NewRequest() {
       console.error("Error al guardar y enviar la solicitud:", error);
       alert("Ocurrió un error al guardar y enviar la solicitud.");
     }
+  }
+
+  if (!projects) {
+    return <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente más tarde." />;
   }
 
   return (
