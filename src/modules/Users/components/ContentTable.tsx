@@ -4,7 +4,7 @@ import HeaderTable from "./HeaderTable";
 import ErrorMessage from "../../../common/ErrorMessage";
 import { useFetch } from "../../../hooks/useFetch";
 import { userApi } from "../../../data/apiUrl";
-import type { User } from "../../../data/userData";
+import type { User } from "../../../data/types";
 
 export default function ContentTable() {
 

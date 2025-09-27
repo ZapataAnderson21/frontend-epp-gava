@@ -1,32 +1,36 @@
 import RequestDraft from "./RequestDraft";
 import RequestView from "./RequestView";
-import { fetchGetRequestById, type RequestType } from "../../data/requestData";
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useFetch } from "../../hooks/useFetch";
+import type { RequestType } from "../../data/types";
+import { requestApi } from "../../data/apiUrl";
+import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
+import ErrorMessage from "../../common/ErrorMessage";
 
 export default function Request() {
-
   const { id: request_id } = useParams<{ id: string }>();
 
-  const [request, setRequest] = useState<RequestType>();
+  const { data: request, loading, error } = useFetch<RequestType>(`${requestApi}${request_id}`);
 
-  useEffect(() => {
-    if (request_id) {
-      fetchGetRequestById(Number(request_id)).then((response) => {
-        setRequest(response.data);
-      });
-    }
-  }, [request_id]);
+  if (loading) {
+    return <LoadingSkeletonForm numberRows={4} />;
+  }
+
+  if (error) {
+    return <ErrorMessage errorMessage={error} />;
+  }
+
+  if (!request) {
+    return <ErrorMessage errorMessage="No se encontró el requerimiento." />;
+  }
 
   return (
     <>
-      {
-        request?.status === "draft" ? (
-          <RequestDraft request_id={Number(request_id)} />
-        ) : (
-          <RequestView request_id={Number(request_id)} />
-        )
-      }
+      {request.status === "draft" ? (
+        <RequestDraft request_id={Number(request_id)} />
+      ) : (
+        <RequestView request_id={Number(request_id)} />
+      )}
     </>
   );
 }
