@@ -22,13 +22,13 @@ export default function ContentTable() {
   }
 
   if (!emergencies) {
-    return null;
+    return <ErrorMessage errorMessage="No se encontraron emergencias." />;
   }
 
   return (
     <div className="flex flex-col items-center justify-between w-full px-2 text-[12px] md:text-[14px]">
       {emergencies.map((emergency) => (
-        <RowTable key={emergency.project_id} emergency={emergency} />
+        <RowTable key={emergency.emergency_id} emergency={emergency} />
       ))}
     </div>
   );

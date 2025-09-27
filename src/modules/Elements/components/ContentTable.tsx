@@ -13,7 +13,7 @@ interface ContentTableProps {
 
 export default function ContentTable({ type }: ContentTableProps) {
   // Construyo la URL dinámicamente según el `type`
-  const url = type === "all" ? elementApi : `${elementApi}/type/${type}`;
+  const url = type === "all" ? elementApi : `${elementApi}type/${type}`;
   const { data: elements, loading, error } = useFetch<ElementType[]>(url, []);
 
   // Paginación

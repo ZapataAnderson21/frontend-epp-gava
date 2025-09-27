@@ -42,15 +42,11 @@ export default function NewEmergency() {
     formData.append("user_id", user.user_id);
     formData.append("project_id", projectId.toString());
 
-    try {
-      const result = await execute(emergencyApi, "POST", formData);
+    const result = await execute(emergencyApi, "POST", formData);
 
-      if (result.statusCode === 201) {
-        setOnOk(() => () => navigateToEmergencies());
-      } else {
-        setOnOk(() => () => closeModalAndReset());
-      }
-    } catch {
+    if (result.statusCode === 201) {
+      setOnOk(() => () => navigateToEmergencies());
+    } else {
       setOnOk(() => () => closeModalAndReset());
     }
   };

@@ -26,6 +26,8 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
 
         if (!active) return;
 
+        console.log("Fetch URL:", url, "Response:", json.data);
+
         if (json.statusCode === 200) {
           setData(json.data);
           setError(null);

@@ -1,3 +1,4 @@
+// src/modules/Requests/NewRequest.tsx
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { IoWarning } from "react-icons/io5";
@@ -11,7 +12,7 @@ import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import RedButton from "../../components/RedButton";
 import SaveModal from "../../components/SaveModal";
-import { handleSave, handleSaveAndSend}  from "./HandleForm";
+import { useHandleForm } from "./HandleForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import ErrorMessage from "../../common/ErrorMessage";
@@ -36,6 +37,9 @@ export default function NewRequest() {
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
   const navigate = useNavigate();
+
+  // ✅ usar useHandleForm
+  const { handleSave, handleSaveAndSend } = useHandleForm();
 
   useEffect(() => {
     const handleStorageChange = () => {
