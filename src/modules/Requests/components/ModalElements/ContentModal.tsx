@@ -92,7 +92,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       }
 
       const selectedElementRequest = selectedElements.map((item) => ({
-        unit: " ",
+        unit: "",
         quantity: 0,
         request_id: 0,
         element_id: item.element_id as number,

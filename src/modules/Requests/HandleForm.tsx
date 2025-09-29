@@ -85,7 +85,7 @@ export function useHandleForm() {
     }
 
     const response = await sendRequestToLogistics(
-      `${requestApi}/send-to-logistics`,
+      `${requestApi}send-to-logistics`,
       "POST",
       { request_id, passwordCPanel }
     );

@@ -32,7 +32,10 @@ export default function NewRequest() {
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
 
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [onOk, setOnOk] = useState<() => void>(() => () => {});
   const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
 
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
@@ -40,6 +43,16 @@ export default function NewRequest() {
 
   // ✅ usar useHandleForm
   const { handleSave, handleSaveAndSend } = useHandleForm();
+
+
+  const closeModalAndReset = () => {
+    setOpenSaveModal(false);
+    setError(false);
+  };
+
+  const navigateToRequests = () => {
+    navigate("/admin/requests");
+  };
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -79,22 +92,22 @@ export default function NewRequest() {
       return;
     }
 
-    try {
-      const result = await handleSave(projectId, deliveryDueDate, description);
-      if (result) {
-        setOpenSaveModal(true);
-        setElements([]);
-        setElementRequests([]);
-        localStorage.removeItem("projectId");
-        localStorage.removeItem("deliveryDueDate");
-        localStorage.removeItem("selectedElements");
-        localStorage.removeItem("selectedElementRequest");
-      } else {
-        alert("Error al guardar la solicitud.");
-      }
-    } catch (error) {
-      console.error("Error al guardar la solicitud:", error);
-      alert("Ocurrió un error al guardar la solicitud.");
+    const result = await handleSave(projectId, deliveryDueDate, description);
+    if (result) {
+      setOpenSaveModal(true);
+      setSuccessMessage("Solicitud guardada correctamente.");
+      setOnOk(() => navigateToRequests);
+      setElements([]);
+      setElementRequests([]);
+      localStorage.removeItem("projectId");
+      localStorage.removeItem("deliveryDueDate");
+      localStorage.removeItem("selectedElements");
+      localStorage.removeItem("selectedElementRequest");
+    } else {
+      setError(true);
+      setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
+      setOnOk(() => closeModalAndReset);
+      setOpenSaveModal(true);
     }
   };
 
@@ -271,11 +284,7 @@ export default function NewRequest() {
       }
       {
         openSaveModal && (
-          <SaveModal onOk={() => {
-            navigate("/admin/requests");
-            localStorage.removeItem("projectId");
-            localStorage.removeItem("deliveryDueDate");
-          }} />
+          <SaveModal onOk={onOk} message={successMessage} error={error} />
         )
       }
       </>

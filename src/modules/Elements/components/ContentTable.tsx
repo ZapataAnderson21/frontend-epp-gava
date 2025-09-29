@@ -6,6 +6,7 @@ import { elementApi } from "../../../data/apiUrl";
 import type { ElementType } from "../../../data/types";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { useState, useMemo } from "react";
+import ErrorMessage from "../../../common/ErrorMessage";
 
 interface ContentTableProps {
   type: string;
@@ -30,21 +31,9 @@ export default function ContentTable({ type }: ContentTableProps) {
     return elements?.slice(start, start + itemsPerPage) ?? [];
   }, [elements, currentPage]);
 
-  if (loading) {
-    return (
-      <div className="w-full">
-        <LoadingSkeletonTable />
-      </div>
-    );
-  }
+  if (loading) return <LoadingSkeletonTable />
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center w-full h-full">
-        {error}
-      </div>
-    );
-  }
+  if (error) return <ErrorMessage errorMessage={error} />
 
   return (
     <>
