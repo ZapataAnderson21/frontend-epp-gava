@@ -38,7 +38,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
   // ✅ useFetch para traer la Request
   const { data: request, loading: loadingRequest, error: errorRequest } = useFetch<RequestType>(
-    `${requestApi}/${request_id}`,
+    `${requestApi}${request_id}`,
     [request_id]
   );
 
@@ -54,7 +54,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    fetch(`${requestApi}/pdf/${request_id}`, {
+    fetch(`${requestApi}pdf/${request_id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -159,7 +159,6 @@ export default function RequestView({ request_id }: RequestViewProps) {
           );
         }
       }
-
 
       await updateRequestResponse(`${requestResponseApi}/${response.data.request_response_id}`, "PATCH", {
         request_id: response.data.request_id,
