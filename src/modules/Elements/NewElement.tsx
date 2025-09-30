@@ -1,9 +1,8 @@
 import { useState } from "react";
-import RedButton from "../../components/RedButton";
-import { elementApi } from "../../data/apiUrl"; // 👈 url base de elementos
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../components/SaveModal";
-import { useApiAction } from "../../hooks/useApiAction"; // 👈 nuestro hook
+import { elementApi } from "../../data/apiUrl";
+import { useApiAction } from "../../hooks";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm, RedButton, SaveModal } from "../../common/form";
 
 interface ElementResponse {
   name: string;
@@ -60,59 +59,37 @@ export default function NewEpp() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-          <h1 className="text-2xl font-bold mb-4">REGISTRAR ELEMENTO</h1>
-        </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-gray-600">
-          <form className="flex flex-col gap-4 w-full max-w-2xl" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="font-semibold">Nombre</label>
-              <input
-                type="text"
-                id="name"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="description" className="font-semibold">Descripción</label>
-              <textarea
-                id="description"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="type" className="font-semibold">Tipo</label>
-              <select
-                id="type"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-              >
-                <option value="" disabled>
-                  Seleccione un tipo
-                </option>
-                <option value="security">Elementos de Protección Personal (EPP)</option>
-                <option value="operative">Elementos Operativos</option>
-              </select>
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" />
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {loading ? "Guardando..." : "Registrar"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <Form name="REGISTRAR ELEMENTO" handleSubmit={handleSubmit}>
+        <InputForm 
+          label="Nombre"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)} 
+          optional={false}
+        />
+
+        <TextAreaForm 
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={false}
+        />
+          
+        <SelectForm label="Tipo" name="type" value={type} onChange={(value) => setType(value as string)}
+          options={[
+            { value: "security", label: "Elementos de Protección Personal (EPP)" },
+            { value: "operative", label: "Elementos Operativos" }
+          ]}
+        />
+
+        <ButtonContainer>
+          <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" />
+          <ButtonSubmit loading={loading} label="Registrar" loadingLabel="Guardando..." />
+        </ButtonContainer>
+      </Form>
+
       {openSaveModal && (
         <SaveModal onOk={onOk} message={successMessage} error={error} />
       )}

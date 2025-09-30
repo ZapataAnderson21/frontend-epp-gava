@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Login from './Login.tsx';
+import Login from './modules/Login/Login.tsx';
 
 import Requests from './modules/Requests/Requests.tsx';
 import Users from './modules/Users/Users.tsx';

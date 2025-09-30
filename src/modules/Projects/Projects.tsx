@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io";
 import ContentTable from "./components/ContentTable";
 import { FaPlus } from "react-icons/fa6";
+import Button from "../../components/Button";
 
 const options = [
   { value: "all", label: "Todos" },
@@ -44,7 +45,7 @@ export default function Projects() {
 
           <div className="relative w-[160px]">
             <button
-              className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-[#eff2ff] hover:border-gray-400 cursor-pointer"
+              className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-[#eff2ff] hover:border-gray-400 cursor-pointer"
               onClick={() => setIsOpen(!isOpen)}
             >
               {selected.label}
@@ -71,17 +72,17 @@ export default function Projects() {
           </div>
           
           {
-            permission && (
-              <a href="/admin/projects/new">
-                <button className='flex flex-row gap-2 items-center justify-center bg-[#0047a3] text-white font-semibold px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer'>
-                  <FaPlus />Añadir
-                </button>
-              </a>
-            )
+            permission && <Button
+              icon={<FaPlus />}
+              label="Añadir"
+              onClick={() => window.location.href = "/admin/projects/new"}
+              bgColor="#0047a3"
+              bgHoverColor="#003a80"
+            />
           }
         </div>
       </div>
-      <div className="flex flex-col items-start justify-start gap-2 px-2 overflow-auto w-full text-gray-600">
+      <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
         <ContentTable filter={filter} />
       </div>
     </div>

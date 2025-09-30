@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { type UpdateElementDto, type ElementType } from "../../data/types";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { elementApi } from "../../data/apiUrl";
@@ -21,7 +21,7 @@ export default function Element() {
   const [error, setError] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
-  const { data: element, loading, error: fetchError } = useFetch<ElementType>(`${elementApi}/${elementId}`);
+  const { data: element, loading, error: fetchError } = useFetch<ElementType>(`${elementApi}${elementId}`);
 
   const { execute: updateElement, loading: updating } = useApiAction<ElementType>();
 

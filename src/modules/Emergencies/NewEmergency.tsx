@@ -1,11 +1,12 @@
 import { useState } from "react";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import { emergencyApi, projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import { useFormDataAction } from "../../hooks/useFormDataAction";
 import type { ProjectType } from "../../data/types";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 
 export default function NewEmergency() {
   const navigate = useNavigate();
@@ -53,91 +54,54 @@ export default function NewEmergency() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-          <h1 className="text-2xl font-bold mb-4">REGISTRAR EMERGENCIA</h1>
+      <Form name="REGISTRAR EMERGENCIA" handleSubmit={handleSubmit}>
+        <InputForm 
+          label="Asunto"
+          name="title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          optional={false}
+        />
+        <TextAreaForm
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={false}
+        />
+        {loadingProjects && <p>Cargando proyectos...</p>}
+        {errorProjects && <p className="text-red-500">{errorProjects}</p>}
+        {!loadingProjects && !errorProjects && (
+          <SelectForm
+            label="Proyecto"
+            name="project"
+            value={projectId}
+            onChange={(value) => setProjectId(Number(value))}
+            options={projects ? projects.map((project) => ({ value: project.project_id, label: project.name })) : []}
+          />
+        )}
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="image" className="font-semibold">
+            Imagen
+          </label>
+          <input
+            type="file"
+            id="image"
+            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                setImage(e.target.files[0]);
+              }
+            }}
+          />
         </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-gray-600">
-          <form
-            className="flex flex-col gap-4 w-full max-w-md"
-            onSubmit={handleSubmit}
-          >
-            <div className="flex flex-col gap-2">
-              <label htmlFor="title" className="font-semibold">
-                Asunto
-              </label>
-              <input
-                type="text"
-                id="title"
-                className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="description" className="font-semibold">
-                Descripción
-              </label>
-              <textarea
-                id="description"
-                className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="project" className="font-semibold">
-                Proyecto
-              </label>
-              {loadingProjects ? (
-                <p>Cargando proyectos...</p>
-              ) : errorProjects ? (
-                <p className="text-red-500">{errorProjects}</p>
-              ) : (
-                <select
-                  className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-3"
-                  value={projectId}
-                  onChange={(e) => setProjectId(Number(e.target.value))}
-                >
-                  <option value={0} disabled>
-                    Selecciona un proyecto
-                  </option>
-                  {projects?.map((project) => (
-                    <option key={project.project_id} value={project.project_id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="image" className="font-semibold">
-                Imagen
-              </label>
-              <input
-                type="file"
-                id="image"
-                className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    setImage(e.target.files[0]);
-                  }
-                }}
-              />
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href="/admin/emergencies" name="Cancelar" />
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#0047a3] px-4 py-2 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer"
-              >
-                {loading ? "Registrando..." : "Registrar"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+        <ButtonContainer>
+          <RedButton href="/admin/emergencies" name="Cancelar" />
+          <ButtonSubmit label="Registrar" loadingLabel="Guardando..." loading={loading} />
+        </ButtonContainer>
+      </Form>
 
       {openSaveModal && (
         <SaveModal

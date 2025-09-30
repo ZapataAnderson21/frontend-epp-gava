@@ -4,6 +4,7 @@ interface RowTableProps {
   name: string;
   code: string;
   status: string;
+  createdAt: string;
 }
 
 const statusColorClasses: { [key: string]: string } = {
@@ -18,8 +19,9 @@ const statusTranslated: { [key: string]: string } = {
   default: "Desconocido",
 };
 
-export default function RowTable({ id, order, name, code, status }: RowTableProps) {
+export default function RowTable({ id, order, name, code, status, createdAt }: RowTableProps) {
   const statusClass = statusColorClasses[status] || statusColorClasses.default;
+  const createdAtFormatted = new Date(createdAt).toLocaleDateString();
 
   return (
     <a href={`/admin/projects/${id}`} className="min-w-full">
@@ -28,6 +30,7 @@ export default function RowTable({ id, order, name, code, status }: RowTableProp
         <span className="flex items-start justify-start min-w-18">{id}</span>
         <span className="flex items-start justify-start min-w-42 truncate">{name}</span>
         <span className="flex items-start justify-start min-w-36">{code}</span>
+        <span className="flex items-start justify-start min-w-60">{createdAtFormatted}</span>
         <span className="flex flex-row items-center justify-start gap-2 min-w-28">
           <div className={`${statusClass} size-3 aspect-square rounded-full`}></div>
           <span>{statusTranslated[status] || statusTranslated.default}</span>

@@ -6,7 +6,7 @@ import { FaSave, FaTools } from "react-icons/fa";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { MdAttachEmail } from "react-icons/md";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { type RequestType, type ElementRequestType, type ProjectType } from "../../data/types";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";

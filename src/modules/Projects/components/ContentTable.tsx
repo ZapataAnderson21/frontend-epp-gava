@@ -39,6 +39,7 @@ export default function ContentTable({ filter }: ContentTableProps) {
           id={project.project_id}
           name={project.name}
           code={project.code}
+          createdAt={project.createdAt}
           status={project.status}
         />
       ))}

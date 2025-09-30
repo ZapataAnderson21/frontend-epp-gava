@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import type { UserType, UpdateUserDto } from "../../data/types";
 import { userApi, userTypeApi } from "../../data/apiUrl";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import ErrorWithButton from "../../common/ErrorWithButton";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";

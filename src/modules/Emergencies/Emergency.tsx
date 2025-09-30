@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { useParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";

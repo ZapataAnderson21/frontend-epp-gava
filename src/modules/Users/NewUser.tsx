@@ -1,12 +1,13 @@
 import { useState } from "react";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { userApi } from "../../data/apiUrl";
 import { userTypeApi } from "../../data/apiUrl";
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { UserType } from "../../data/types";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
 
 interface UserResponse {
   user_id: number;
@@ -72,86 +73,30 @@ export default function NewUser() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-          <h1 className="text-2xl font-bold mb-4">REGISTRAR USUARIO</h1>
-        </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full">
-          <form className="flex flex-col gap-4 w-full max-w-2xl" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="font-semibold">Nombre</label>
-              <input
-                type="text"
-                id="name"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="lastname" className="font-semibold">Apellido</label>
-              <input
-                type="text"
-                id="lastname"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="font-semibold">Correo</label>
-              <input
-                type="text"
-                id="email"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="font-semibold">Contraseña</label>
-              <input
-                type="password"
-                id="password"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-row items-end justify-between">
-                <label htmlFor="role" className="font-semibold">Rol</label>
-                <a href="/admin/users/role/new" className="text-[#0047a3] font-bold underline">Nuevo rol</a>
-              </div>
-              <select
-                id="userTypeId"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={userTypeId}
-                onChange={(e) => setUserTypeId(Number(e.target.value))}
-              >
-                <option value="">Seleccione un rol</option>
-                {userTypes?.map((userType) => (
-                  <option key={userType.user_type_id} value={userType.user_type_id}>
-                    {userType.name}
-                  </option>
-                ))}
-              </select>
-              {loadingRoles && <span className="text-sm text-gray-500">Cargando roles...</span>}
-              {errorRoles && <span className="text-sm text-red-500">Error cargando roles</span>}
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href="/admin/users" name="Cancelar" />
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {saving ? "Guardando..." : "Registrar"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <Form name="REGISTRAR USUARIO" handleSubmit={handleSubmit}>
+        <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
+        <InputForm label="Apellido" name="lastname" type="text" value={lastname} onChange={(e) => setLastname(e.target.value)} optional={false} />
+        <InputForm label="Correo" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
+        <InputForm label="Contraseña" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} optional={false} />
+        
+        {loadingRoles && <span className="text-sm text-gray-500">Cargando roles...</span>}
+        {errorRoles && <span className="text-sm text-red-500">Error al cargar los roles</span>}
+        
+        {!loadingRoles && !errorRoles && userTypes && (
+          <SelectForm
+            label="Rol"
+            name="role"
+            value={userTypeId}
+            onChange={(value) => setUserTypeId(Number(value))}
+            options={userTypes ? userTypes.map((role) => ({ value: role.user_type_id, label: role.name })) : []}
+          />
+        )}
+
+        <ButtonContainer>
+          <RedButton href="/admin/users" name="Cancelar" />
+          <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
+        </ButtonContainer>
+      </Form>
       {openSaveModal && (
         <SaveModal onOk={onOk} message={successMessage} error={error} />
       )}

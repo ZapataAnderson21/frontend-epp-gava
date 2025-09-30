@@ -1,4 +1,4 @@
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 
 export default function NewRole() {
   return (

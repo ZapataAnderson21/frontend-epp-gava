@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
-import Loading from "../common/loading";
+import Loading from "../loading";
 
 interface SaveModalProps {
   onOk: () => void;
@@ -27,7 +27,7 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
             (<FaTimesCircle className="w-16 h-16 text-red-500" />) : 
             (<FaCheckCircle className="w-16 h-16 text-[#003a80]" />)
           }
-          <h1 className="text-2xl font-bold text-center">
+          <h1 className="text-2xl text-center">
             {message || "Error al guardar"}
           </h1>
           <button

@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import ErrorMessage from "../../common/ErrorMessage";
 
 import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";

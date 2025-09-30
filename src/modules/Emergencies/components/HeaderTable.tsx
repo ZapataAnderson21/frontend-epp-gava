@@ -11,7 +11,7 @@ export default function HeaderTable() {
         <a href="#">PROYECTO</a>
       </span>
       <span className="hidden sm:flex items-center justify-start w-[20%]">
-        <a href="#">RESPONSABLE</a>
+        <a href="#">SOLICITANTE</a>
       </span>
     </div>
   )

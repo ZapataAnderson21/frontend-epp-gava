@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import RedButton from "../../components/RedButton";
+import RedButton from "../../common/form/RedButton";
 import { useParams, useNavigate } from "react-router-dom";
-import SaveModal from "../../components/SaveModal";
+import SaveModal from "../../common/form/SaveModal";
 import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";

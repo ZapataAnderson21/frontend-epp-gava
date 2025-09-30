@@ -100,6 +100,7 @@ export interface ProjectType {
   description: string;
   code: string;
   status: string;
+  createdAt: string;
 }
 
 export interface CreateProjectDto {

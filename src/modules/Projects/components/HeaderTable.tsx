@@ -10,6 +10,9 @@ export default function HeaderTable() {
       <span className="flex items-center justify-start min-w-36">
         <a href="#">CÓDIGO</a>
       </span>
+      <span className="flex items-center justify-start min-w-60">
+        <a href="#">CREACIÓN</a>
+      </span>
       <span className="flex items-center justify-start min-w-28">
         <a href="#">ESTADO</a>
       </span>

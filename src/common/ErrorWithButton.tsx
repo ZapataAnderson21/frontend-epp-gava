@@ -1,4 +1,4 @@
-import RedButton from "../components/RedButton";
+import RedButton from "./form/RedButton";
 import ErrorMessage from "./ErrorMessage";
 
 interface ErrorWithButtonProps {
