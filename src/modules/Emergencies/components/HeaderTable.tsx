@@ -1,6 +1,6 @@
 export default function HeaderTable() {
   return (
-    <div className="flex flex-row items-center justify-between w-full pt-4 px-6 font-bold gap-4 text-[14px] md:text-[16px]">
+    <div className="flex flex-row items-center justify-between w-full pt-4 px-6 font-bold gap-4">
       <span className="flex items-center justify-start w-[10%]">
         <a href="#">ID</a>
       </span>
@@ -10,7 +10,7 @@ export default function HeaderTable() {
       <span className="flex items-start justify-start w-[30%]">
         <a href="#">PROYECTO</a>
       </span>
-      <span className="hidden sm:flex items-center justify-start w-[20%]">
+      <span className="flex items-center justify-start w-[20%]">
         <a href="#">SOLICITANTE</a>
       </span>
     </div>

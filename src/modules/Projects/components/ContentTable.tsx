@@ -30,19 +30,21 @@ export default function ContentTable({ filter }: ContentTableProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between min-w-full">
-      <HeaderTable />
-      {projects.map((project, index) => (
-        <RowTable
-          key={project.project_id}
-          order={index + 1}
-          id={project.project_id}
-          name={project.name}
-          code={project.code}
-          createdAt={project.createdAt}
-          status={project.status}
-        />
-      ))}
+    <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
+      <div className="flex flex-col items-center justify-between min-w-full">
+        <HeaderTable />
+        {projects.map((project, index) => (
+          <RowTable
+            key={project.project_id}
+            order={index + 1}
+            id={project.project_id}
+            name={project.name}
+            code={project.code}
+            createdAt={project.createdAt}
+            status={project.status}
+          />
+        ))}
+      </div>
     </div>
   );
 }

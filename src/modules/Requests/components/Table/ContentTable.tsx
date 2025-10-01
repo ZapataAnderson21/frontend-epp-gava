@@ -56,7 +56,7 @@ export default function ContentTable() {
   if (!requests.length) return <p className="text-gray-500">No hay solicitudes.</p>;
 
   return (
-    <>
+    <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
       <div className="flex flex-col items-center justify-between min-w-full">
         <HeaderTable />
         {currentRequests.map((request, index) => (
@@ -98,6 +98,6 @@ export default function ContentTable() {
           <FaArrowRight className="size-3" />
         </div>
       </div>
-    </>
+    </div>
   );
 }

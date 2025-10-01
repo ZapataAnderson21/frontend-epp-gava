@@ -4,6 +4,7 @@ import { useFetch } from "../../../hooks/useFetch";
 import { emergencyApi } from "../../../data/apiUrl";
 import LoadingSkeletonTable from "../../../common/LoadingSkeletonTable";
 import ErrorMessage from "../../../common/ErrorMessage";
+import HeaderTable from "./HeaderTable";
 
 export default function ContentTable() {
 
@@ -26,10 +27,13 @@ export default function ContentTable() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between w-full px-2 text-[12px] md:text-[14px]">
-      {emergencies.map((emergency) => (
-        <RowTable key={emergency.emergency_id} emergency={emergency} />
-      ))}
+    <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
+      <div className="flex flex-col items-center justify-between min-w-full">
+        <HeaderTable />
+        {emergencies.map((emergency) => (
+          <RowTable key={emergency.emergency_id} emergency={emergency} />
+        ))}
+      </div>
     </div>
   );
 }

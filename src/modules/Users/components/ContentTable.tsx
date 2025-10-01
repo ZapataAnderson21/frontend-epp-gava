@@ -23,19 +23,21 @@ export default function ContentTable() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between min-w-full">
-      <HeaderTable />
-      {users.map((user, index) => (
-        <RowTable
-          key={user.user_id}
-          order={index + 1}
-          id={user.user_id}
-          name={user.name}
-          lastname={user.last_name}
-          email={user.email}
-          rol={user.userType}
-        />
-      ))}
+    <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
+      <div className="flex flex-col items-center justify-between min-w-full">
+        <HeaderTable />
+        {users.map((user, index) => (
+          <RowTable
+            key={user.user_id}
+            order={index + 1}
+            id={user.user_id}
+            name={user.name}
+            lastname={user.last_name}
+            email={user.email}
+            rol={user.userType}
+          />
+        ))}
+      </div>
     </div>
   );
 }
