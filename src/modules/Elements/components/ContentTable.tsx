@@ -36,7 +36,7 @@ export default function ContentTable({ type }: ContentTableProps) {
   if (error) return <ErrorMessage errorMessage={error} />
 
   return (
-    <>
+    <div className="flex flex-col items-start justify-start gap-2 overflow-auto w-full text-gray-600">
       <div className="flex flex-col items-center justify-between min-w-full">
         <HeaderTable />
         {currentElements.map((element, index) => (
@@ -77,6 +77,6 @@ export default function ContentTable({ type }: ContentTableProps) {
           <FaArrowRight className="size-3" />
         </div>
       </div>
-    </>
+    </div>
   );
 }

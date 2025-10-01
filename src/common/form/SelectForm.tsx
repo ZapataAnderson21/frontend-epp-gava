@@ -10,12 +10,13 @@ interface SelectFormProps {
   label: string;
   name: string;
   value: string | number;
-  onChange: (value: string | number) => void;   // 👈 cambia esto
+  onChange: (value: string | number) => void;
   options: OptionsSelect[];
+  directionRow?: boolean;
 }
 
 
-export default function SelectForm({ label, name, onChange, options }: SelectFormProps) {
+export default function SelectForm({ label, name, onChange, options, directionRow }: SelectFormProps) {
   // Add this state and handler before the return
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<OptionsSelect>(options[0] || { value: '', label: '' });
@@ -29,12 +30,12 @@ export default function SelectForm({ label, name, onChange, options }: SelectFor
   // Updated return statement
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-2">
+      <div className={`flex ${directionRow ? "flex-row items-center" : "flex-col"} gap-2`}>
         <label className="text-gray-700 font-bold" htmlFor={name}>{label}</label>
         <div className="relative">
           <button
             type="button"
-            className="w-full flex items-center justify-between border border-gray-400 p-2 rounded-sm focus:border-2 focus:border-[#0047a3]"
+            className="w-full flex items-center justify-between border border-gray-400 min-w-[180px] p-2 rounded-sm focus:border-2 focus:border-[#0047a3]"
             onClick={() => setIsOpen(!isOpen)}
           >
             {selected.label}
