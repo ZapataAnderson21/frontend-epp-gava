@@ -7,9 +7,10 @@ interface InputFormProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   optional?: boolean;
+  disabled?: boolean;
 }
 
-export default function InputForm({ label, name, type, value, onChange, error, optional }: InputFormProps) {
+export default function InputForm({ label, name, type, value, onChange, error, optional, disabled }: InputFormProps) {
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-2">
@@ -22,6 +23,7 @@ export default function InputForm({ label, name, type, value, onChange, error, o
           value={value}
           onChange={onChange}
           required={!optional}
+          disabled={disabled}
         />
       </div>
       {error && <p className="text-red-600 text-sm">{error}</p>}

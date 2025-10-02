@@ -8,6 +8,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { ProjectType } from "../../data/types";
 import ErrorWithButton from "../../common/error/ErrorWithButton";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, TextAreaForm } from "../../common/form";
 
 export default function Project() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -43,7 +44,7 @@ export default function Project() {
     updateStatus(`${projectApi}${projectId}/status`, "PATCH", {
       status: changeStatus.value,
     }).then(() => {
-      setStatus(changeStatus.value); // reflejar en UI
+      setStatus(changeStatus.value);
     });
   };
 
@@ -77,87 +78,64 @@ export default function Project() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-          <h1 className="text-2xl font-bold mb-4">PROYECTO {projectId}</h1>
-        </div>
-        <div className="flex flex-col items-start justify-start gap-4 w-full h-full">
-          <form
-            className="flex flex-col gap-4 w-full max-w-2xl"
-            onSubmit={handleUpdate}
+      <Form name={`PROYECTO ${projectId}`} handleSubmit={handleUpdate}>
+        <InputForm
+          label="Nombre"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          optional={false}
+        />
+        <InputForm
+          label="Código"
+          name="code"
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          optional={false}
+        />
+        <TextAreaForm
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={true}
+        />
+
+        <InputForm
+          label="Estado"
+          name="status"
+          type="text"
+          value={status === "active" ? "ACTIVO" : "INACTIVO"}
+          onChange={() => {}}
+          optional={false}
+          disabled={true}
+        />
+
+        <div className="flex flex-row w-full justify-end items-end gap-1">
+          <span className="text-[14px] text-right">Cambiar estado a: </span>
+          <span
+            onClick={handleChangeStatus}
+            className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
           >
-            <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="font-semibold">
-                Nombre
-              </label>
-              <input
-                type="text"
-                id="name"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="code" className="font-semibold">
-                Código
-              </label>
-              <input
-                type="text"
-                id="code"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="description" className="font-semibold">
-                Descripción{" "}
-                <span className="text-[10px] font-bold"> (opcional)</span>
-              </label>
-              <textarea
-                id="description"
-                className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-row items-center justify-between">
-                <label htmlFor="status" className="font-semibold">
-                  Estado
-                </label>
-                <div className="flex flex-row items-end gap-1">
-                  <span className="text-[14px] text-right">Cambiar estado a: </span>
-                  <span
-                    onClick={handleChangeStatus}
-                    className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
-                  >
-                    {changeStatus.label}
-                  </span>
-                </div>
-              </div>
-              <input
-                type="text"
-                id="status"
-                className="border border-gray-400 p-3 rounded-sm"
-                value={status === "active" ? "ACTIVO" : "INACTIVO"}
-                disabled
-              />
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-              <RedButton href="/admin/projects" name="Regresar" />
-              <button
-                type="submit"
-                disabled={updating}
-                className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer"
-              >
-                {updating ? "Actualizando..." : "Actualizar"}
-              </button>
-            </div>
-          </form>
+            {changeStatus.label}
+          </span>
         </div>
-      </div>
+        
+        <ButtonContainer>
+          <RedButton 
+            href="/admin/projects"
+            name="Regresar"
+          />
+          <ButtonSubmit 
+            loading={loading}
+            label="Actualizar"
+            loadingLabel="Actualizando..."
+          />
+        </ButtonContainer>
+      </Form>
+        
       {openSaveModal && (
         <SaveModal
           onOk={onOk}
@@ -168,3 +146,4 @@ export default function Project() {
     </>
   );
 }
+

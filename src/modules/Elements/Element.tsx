@@ -7,6 +7,7 @@ import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { elementApi } from "../../data/apiUrl";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 
 export default function Element() {
   const elementId = Number(useParams<{ id: string }>().id ?? 0);
@@ -51,7 +52,7 @@ export default function Element() {
     setOpenSaveModal(true);
 
     const updatedData: UpdateElementDto = { name, type, description };
-    const response = await updateElement(`${elementApi}/${elementId}`, "PATCH", updatedData);
+    const response = await updateElement(`${elementApi}${elementId}`, "PATCH", updatedData);
 
     setSuccessMessage(response.message);
 
@@ -69,36 +70,40 @@ export default function Element() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <h1 className="text-2xl font-bold mb-4">ELEMENTO {elementId}</h1>
+      <Form name={`ELEMENTO ${elementId}`} handleSubmit={handleUpdate}>
+        <InputForm
+          label="Nombre"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          optional={false}
+        />
 
-        <form className="flex flex-col gap-4 w-full max-w-2xl" onSubmit={handleUpdate}>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="name" className="font-semibold">Nombre</label>
-            <input type="text" id="name" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
+        <SelectForm 
+          label="Tipo" 
+          name="type" 
+          value={type}
+          onChange={(value) => setType(value as string)}
+          options={[
+            { value: "security", label: "Elementos de Protección Personal (EPP)" },
+            { value: "operative", label: "Elementos Operativos" }
+          ]}
+        />
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="type" className="font-semibold">Tipo</label>
-            <select id="type" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={type} onChange={(e) => setType(e.target.value)}>
-              <option value="security">EPP</option>
-              <option value="operative">Operativo</option>
-            </select>
-          </div>
+        <TextAreaForm
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={false}
+        />
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="description" className="font-semibold">Descripción</label>
-            <textarea id="description" className="border border-gray-400 p-3 rounded-sm focus:outline-[#0047a3]" value={description} onChange={(e) => setDescription(e.target.value)} />
-          </div>
-
-          <div className="flex flex-row items-center justify-center gap-2 mt-2 text-white font-semibold">
-            <RedButton href={`/admin/elements/type/${type}`} name="Regresar" />
-            <button type="submit" disabled={updating} className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] transition-colors cursor-pointer">
-              {updating ? "Actualizando..." : "Actualizar"}
-            </button>
-          </div>
-        </form>
-      </div>
+         <ButtonContainer>
+          <RedButton href={`/admin/elements/type/${type}`} name="Regresar" />
+          <ButtonSubmit loading={updating} label="Actualizar" loadingLabel="Actualizando..." />
+        </ButtonContainer>
+      </Form>
 
       {openSaveModal && (
         <SaveModal onOk={onOk} message={successMessage} error={error} />

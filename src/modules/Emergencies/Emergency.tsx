@@ -97,7 +97,7 @@ export default function Emergency() {
           <button
             onClick={handleChangeStatus}
             disabled={updating}
-            className="w-full bg-[#0047a3] px-4 py-3 rounded-md shadow-sm hover:bg-[#003a80] 
+            className="w-full bg-[#0047a3] px-3 py-2 rounded-md shadow-sm hover:bg-[#003a80] 
                       transition-colors cursor-pointer"
           >
             {updating ? "Actualizando..." : changeStatus.label}
