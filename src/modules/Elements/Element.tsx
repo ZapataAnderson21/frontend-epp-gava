@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import RedButton from "../../common/form/RedButton";
 import { type UpdateElementDto, type ElementType } from "../../data/types";
 import { useNavigate, useParams } from "react-router-dom";
-import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
+import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
 import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";

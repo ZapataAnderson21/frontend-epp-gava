@@ -15,7 +15,7 @@ import SaveModal from "../../common/form/SaveModal";
 import { useHandleForm } from "./HandleForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
-import ErrorMessage from "../../common/ErrorMessage";
+import ErrorMessage from "../../common/error/ErrorMessage";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);

@@ -74,6 +74,8 @@ export interface EmergencyType {
   status: string;
   user?: User;
   project?: ProjectType;
+  userName?: string;
+  projectName?: string;
 }
 
 export interface CreateEmergencyDto {
@@ -128,6 +130,7 @@ export interface RequestType {
   user?: User
   project?: ProjectType
   elementRequests?: ElementRequestType[]
+  userName?: string
 }
 
 export interface CreateRequestDto {

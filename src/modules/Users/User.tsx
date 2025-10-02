@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import RedButton from "../../common/form/RedButton";
 import type { UserType, UpdateUserDto } from "../../data/types";
 import { userApi, userTypeApi } from "../../data/apiUrl";
-import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
+import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
 import SaveModal from "../../common/form/SaveModal";
-import ErrorWithButton from "../../common/ErrorWithButton";
+import ErrorWithButton from "../../common/error/ErrorWithButton";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 

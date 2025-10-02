@@ -19,7 +19,7 @@ export default function Table<T>({ data, columns, getHref }: TableProps<T>) {
           {columns.map((col) => (
             <span
               key={String(col.key)}
-              className={`min-${col.width ?? "flex-1"} flex text-nowrap`}
+              className={`min-${col.width ?? "flex-1"} flex items-start justify-start text-nowrap`}
             >
               {col.label}
             </span>
@@ -37,7 +37,7 @@ export default function Table<T>({ data, columns, getHref }: TableProps<T>) {
               {columns.map((col) => (
                 <span
                   key={String(col.key)}
-                  className={`min-${col.width ?? "flex-1"} flex text-nowrap`}
+                  className={`min-${col.width ?? "flex-1"} flex items-start justify-start text-nowrap`}
                 >
                   {String(item[col.key] ?? "")}
                 </span>

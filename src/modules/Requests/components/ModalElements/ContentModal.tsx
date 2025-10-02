@@ -4,7 +4,7 @@ import BlueButton from "../../../../components/BlueButton";
 import { type ElementType, type ElementRequestType } from "../../../../data/types";
 import HeaderModal from "./HeaderModal";
 import { FaDeleteLeft } from "react-icons/fa6";
-import LoadingSkeletonTable from "../../../../common/LoadingSkeletonTable";
+import LoadingSkeletonTable from "../../../../common/loading/LoadingSkeletonTable";
 import { useFetch } from "../../../../hooks/useFetch";
 import { useApiAction } from "../../../../hooks/useApiAction";
 import { elementApi, elementRequestApi } from "../../../../data/apiUrl";

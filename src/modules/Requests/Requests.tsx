@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
-import ContentTable from "./components/Table/ContentTable";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import { Button } from "../../components";
+import { useFetch } from "../../hooks";
+import type { RequestType } from "../../data/types";
+import { requestApi } from "../../data/apiUrl";
+import LoadingSkeletonTable from "../../common/loading/LoadingSkeletonTable";
+import ErrorMessage from "../../common/error/ErrorMessage";
+import RequestTable from "./components/Table/RequestTable";
 
 const options = [
   { value: "all", label: "Todas" },
@@ -13,10 +18,11 @@ const options = [
 ];
 
 export default function Requests() {
-  const [selected, setSelected] = useState(options[0]);
+  const [ filter, setFilter ] = useState(options[0]);
+  const { data: requests, loading, error } = useFetch<RequestType[]>(requestApi + `${filter.value === "all" ? "" : `status/${filter.value}`}`, [filter]);
 
   const handleSelect = (option: { value: string; label: string }) => {
-    setSelected(option);
+    setFilter(option);
   };
 
   return (
@@ -26,7 +32,7 @@ export default function Requests() {
         <SelectForm
           label="Filtrar por"
           name="filter"
-          value={selected.value}
+          value={filter.value}
           onChange={(value) => {
             const option = options.find(opt => opt.value === value);
             if (option) {
@@ -46,7 +52,15 @@ export default function Requests() {
         />
       </HeaderPanel>
 
-      <ContentTable />
+      {loading && <LoadingSkeletonTable />}
+
+      {error && <ErrorMessage errorMessage={error} />}
+
+      {
+        requests && requests.length > 0 && (
+          <RequestTable requests={requests} />
+        )
+      }
 
     </Panel>
   );

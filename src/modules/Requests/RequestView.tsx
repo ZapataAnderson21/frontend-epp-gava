@@ -9,7 +9,7 @@ import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
 import SaveModal from "../../common/form/SaveModal";
-import ErrorMessage from "../../common/ErrorMessage";
+import ErrorMessage from "../../common/error/ErrorMessage";
 
 import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";

@@ -1,5 +1,5 @@
-import { Table } from "../../../common/table";
-import { type ProjectType } from "../../../data/types";
+import { Table } from "../../common/table";
+import { type ProjectType } from "../../data/types";
 
 export default function ProjectTable({ projects }: { projects: ProjectType[] }) {
   const columns = [

@@ -4,8 +4,8 @@ import { useParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import type { RequestType } from "../../data/types";
 import { requestApi } from "../../data/apiUrl";
-import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
-import ErrorMessage from "../../common/ErrorMessage";
+import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
+import ErrorMessage from "../../common/error/ErrorMessage";
 
 export default function Request() {
   const { id: request_id } = useParams<{ id: string }>();

@@ -5,8 +5,8 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { emergencyApi } from "../../data/apiUrl";
 import type { User, ProjectType } from "../../data/types";
-import Loading from "../../common/loading";
-import ErrorMessage from "../../common/ErrorMessage";
+import Loading from "../../common/loading/Loading";
+import ErrorMessage from "../../common/error/ErrorMessage";
 
 interface EmergencyType {
   emergency_id: number;

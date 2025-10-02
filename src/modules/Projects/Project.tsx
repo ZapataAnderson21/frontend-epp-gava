@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import RedButton from "../../common/form/RedButton";
 import { useParams, useNavigate } from "react-router-dom";
 import SaveModal from "../../common/form/SaveModal";
-import LoadingSkeletonForm from "../../common/LoadingSkeletonForm";
+import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { ProjectType } from "../../data/types";
-import ErrorWithButton from "../../common/ErrorWithButton";
+import ErrorWithButton from "../../common/error/ErrorWithButton";
 
 export default function Project() {
   const { id: projectId } = useParams<{ id: string }>();
