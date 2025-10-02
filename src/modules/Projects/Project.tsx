@@ -129,7 +129,7 @@ export default function Project() {
             name="Regresar"
           />
           <ButtonSubmit 
-            loading={loading}
+            loading={updating}
             label="Actualizar"
             loadingLabel="Actualizando..."
           />
