@@ -1,13 +1,32 @@
+import { ErrorMessage } from "../../common/error";
+import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
+import { userApi } from "../../data/apiUrl";
 import type { User } from "../../data/types";
+import { useFetch } from "../../hooks";
 
-export default function UserTable({ users }: { users: User[] }) {
+export default function UserTable() {
+
+  const { data: users, loading, error } = useFetch<User[]>(userApi)
+
   const columns = [
-    { key: "name", label: "Nombre", width: "w-36" },
-    { key: "last_name", label: "Apellido", width: "w-36" },
-    { key: "email", label: "Correo", width: "w-48" },
-    { key: "userType", label: "Rol", width: "w-144" },
+    { key: "name", label: "Nombre", width: "9rem" },
+    { key: "last_name", label: "Apellido", width: "9rem" },
+    { key: "email", label: "Correo", width: "16rem" },
+    { key: "userType", label: "Rol", width: "20rem" },
   ] as const;
+
+  if(loading) {
+    return <LoadingSkeletonTable />;
+  }
+
+  if (error) {
+    return <ErrorMessage errorMessage={error} />;
+  }
+
+  if (!users || users.length === 0) {
+    return <div className="text-gray-500">No hay usuarios disponibles.</div>;
+  }
 
   return (
     <Table<User>

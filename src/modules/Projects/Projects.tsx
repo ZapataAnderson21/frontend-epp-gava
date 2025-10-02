@@ -4,11 +4,6 @@ import { Button } from "../../components";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import ProjectTable from "./ProjectTable";
-import { useFetch } from "../../hooks";
-import { projectApi } from "../../data/apiUrl";
-import type { ProjectType } from "../../data/types";
-import LoadingSkeletonTable from "../../common/loading/LoadingSkeletonTable";
-import ErrorMessage from "../../common/error/ErrorMessage";
 
 const options = [
   { value: "all", label: "Todos" },
@@ -21,8 +16,6 @@ export default function Projects() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [permission, setPermission] = useState(false);
   const [filter , setFilter] = useState("all");
-  const { data: projects, loading, error } = useFetch<ProjectType[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
-
 
   useEffect(() => {
     if (!user) return;
@@ -63,17 +56,7 @@ export default function Projects() {
         }
       </HeaderPanel>
 
-      {loading && <LoadingSkeletonTable />}
-
-      {error && <ErrorMessage errorMessage={error} />}
-
-      {projects && projects.length === 0 && (
-        <div className="text-gray-500">No hay proyectos disponibles.</div>
-      )}
-
-      { projects && projects.length > 0 &&
-        <ProjectTable projects={projects} />
-      }
+      <ProjectTable filter={filter} />
     </Panel>
   );
 }

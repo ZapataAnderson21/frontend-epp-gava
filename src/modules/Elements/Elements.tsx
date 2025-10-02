@@ -4,11 +4,6 @@ import { FaPlus } from 'react-icons/fa6';
 import { Button } from '../../components';
 import { SelectForm } from '../../common/form';
 import { HeaderPanel, Panel } from '../../common/panel';
-import { elementApi } from '../../data/apiUrl';
-import { useFetch } from '../../hooks';
-import type { ElementType } from '../../data/types';
-import { LoadingSkeletonTable } from '../../common/loading';
-import { ErrorMessage } from '../../common/error';
 import ElementTable from './ElementTable';
 
 const options = [
@@ -27,7 +22,6 @@ export default function Elements() {
 
   const [filter, setFilter] = useState(elementType ?? "all");
   const [selected, setSelected] = useState(options[0]);
-  const { data: elements, loading, error } = useFetch<ElementType[]>(elementApi + (filter !== "all" ? `type/${filter}` : ""), [filter]);
 
   useEffect(() => {
     setFilter(elementType);
@@ -62,17 +56,7 @@ export default function Elements() {
             />  
         </HeaderPanel>
 
-        {loading && <LoadingSkeletonTable />}
-  
-        {error && <ErrorMessage errorMessage={error} />}
-
-        {elements && elements.length === 0 && (
-          <div className="text-gray-500">No hay elementos disponibles.</div>
-        )}
-
-        { elements && elements.length > 0 && 
-          <ElementTable elements={elements} 
-        /> }
+        <ElementTable filter={filter} />
     </Panel>
   );
 }
