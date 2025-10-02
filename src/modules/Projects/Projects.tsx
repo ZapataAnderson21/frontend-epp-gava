@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { FaPlus } from "react-icons/fa6";
-import ContentTable from "./components/ContentTable";
-import { Button } from "../../components/";
+import { Button } from "../../components";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
+import ProjectTable from "./components/ContentTable";
+import { useFetch } from "../../hooks";
+import { projectApi } from "../../data/apiUrl";
+import type { ProjectType } from "../../data/types";
+import LoadingSkeletonTable from "../../common/LoadingSkeletonTable";
+import ErrorMessage from "../../common/ErrorMessage";
 
 const options = [
   { value: "all", label: "Todos" },
@@ -16,6 +21,8 @@ export default function Projects() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [permission, setPermission] = useState(false);
   const [filter , setFilter] = useState("all");
+  const { data: projects, loading, error } = useFetch<ProjectType[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -56,7 +63,15 @@ export default function Projects() {
         }
       </HeaderPanel>
 
-      <ContentTable filter={filter} />
+      {loading && <LoadingSkeletonTable />}
+
+      {error && <ErrorMessage errorMessage="Error al cargar los proyectos." />}
+
+      {projects && projects.length === 0 && (
+        <div className="text-gray-500">No hay proyectos disponibles.</div>
+      )}
+
+      {projects && projects.length > 0 && <ProjectTable projects={projects} />}
 
     </Panel>
   );

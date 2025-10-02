@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom'; 
-import { FaPlus } from 'react-icons/fa6';
+import { useParams } from 'react-router-dom';
+import { FaPlus } from 'react-icons/fa6'; 
 import ContentTable from './components/ContentTable';
 import { Button } from '../../components';
 import { SelectForm } from '../../common/form';

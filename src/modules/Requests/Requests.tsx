@@ -1,6 +1,6 @@
 import { useState } from "react";
-import ContentTable from "./components/Table/ContentTable";
 import { FaPlus } from "react-icons/fa6";
+import ContentTable from "./components/Table/ContentTable";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import { Button } from "../../components";
