@@ -1,4 +1,3 @@
-// src/modules/Requests/RequestDraft.tsx
 import { useEffect, useState } from "react";
 import RequestTypeCard from "./components/RequestTypeCard";
 import { FaHelmetSafety } from "react-icons/fa6";
@@ -7,12 +6,11 @@ import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { MdAttachEmail } from "react-icons/md";
 import RedButton from "../../common/form/RedButton";
-import { type RequestType, type ElementRequestType, type ProjectType } from "../../data/types";
+import type { RequestType, ElementRequestType, ProjectType } from "../../data/types";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";
 import { useFetch } from "../../hooks/useFetch";
-import { useApiAction } from "../../hooks/useApiAction";
-import { useHandleForm } from "./HandleForm";
+import { useApiAction, useHandleForm } from "../../hooks";
 import { projectApi, requestApi, elementRequestApi } from "../../data/apiUrl";
 
 interface RequestDraftProps {

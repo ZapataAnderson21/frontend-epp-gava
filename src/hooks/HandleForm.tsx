@@ -1,14 +1,14 @@
-import { useApiAction } from "../../hooks/useApiAction";
+import { useApiAction } from "./useApiAction";
 import type {
   ElementType,
   CreateElementRequestDto,
   ElementRequestType,
   UpdateElementRequestDto,
-} from "../../data/types";
+} from "../data/types";
 import {
   requestApi,
   elementRequestApi,
-} from "../../data/apiUrl";
+} from "../data/apiUrl";
 
 function getTypeFromElements(elements: any[]) {
   const types = elements.map((el: any) => el.type);

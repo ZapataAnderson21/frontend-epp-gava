@@ -3,7 +3,7 @@ import { FaPlus } from "react-icons/fa6";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import { Button } from "../../components";
-import RequestTable from "./components/Table/RequestTable";
+import RequestTable from "./RequestTable";
 
 const options = [
   { value: "all", label: "Todas" },

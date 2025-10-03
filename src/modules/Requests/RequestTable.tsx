@@ -1,9 +1,9 @@
-import { ErrorMessage } from "../../../../common/error";
-import { LoadingSkeletonTable } from "../../../../common/loading";
-import { Table } from "../../../../common/table";
-import { requestApi } from "../../../../data/apiUrl";
-import type { RequestType } from "../../../../data/types";
-import { useFetch } from "../../../../hooks";
+import { ErrorMessage } from "../../common/error";
+import { LoadingSkeletonTable } from "../../common/loading";
+import { Table } from "../../common/table";
+import { requestApi } from "../../data/apiUrl";
+import type { RequestType } from "../../data/types";
+import { useFetch } from "../../hooks";
 
 interface RequestTableProps {
   filter: string;

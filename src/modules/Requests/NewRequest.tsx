@@ -1,24 +1,21 @@
-// src/modules/Requests/NewRequest.tsx
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IoWarning } from "react-icons/io5";
 import { RiQuestionFill } from "react-icons/ri";
 import { MdAttachEmail } from "react-icons/md";
 import { FaHelmetSafety } from "react-icons/fa6";
 import { FaSave, FaTools } from "react-icons/fa";
+import { TiArrowBack } from "react-icons/ti";
+
 import RequestTypeCard from "./components/RequestTypeCard";
 import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import RedButton from "../../common/form/RedButton";
-import SaveModal from "../../common/form/SaveModal";
-import { useHandleForm } from "./HandleForm";
+import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
-import { useFetch } from "../../hooks/useFetch";
-import ErrorMessage from "../../common/error/ErrorMessage";
-import { InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { useFetch, useHandleForm } from "../../hooks";
+import { ErrorMessage } from "../../common/error";
 import { Button } from "../../components";
-import { TiArrowBack } from "react-icons/ti";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
