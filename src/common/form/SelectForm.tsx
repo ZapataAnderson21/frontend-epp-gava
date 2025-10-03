@@ -29,7 +29,7 @@ export default function SelectForm({ label, name, onChange, options, directionRo
 
   // Updated return statement
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full">
       <div className={`flex ${directionRow ? "flex-row items-center" : "flex-col"} gap-2`}>
         <label className="text-gray-700 font-bold" htmlFor={name}>{label}</label>
         <div className="relative">

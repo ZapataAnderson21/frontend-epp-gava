@@ -9,7 +9,7 @@ interface TextAreaFormProps {
 
 export default function TextAreaForm({ label, name, value, onChange, optional }: TextAreaFormProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col w-full gap-2">
       <label htmlFor={name} className="font-semibold">
         {label} {optional && <span className="text-[10px] font-bold">(opcional)</span>}
       </label>

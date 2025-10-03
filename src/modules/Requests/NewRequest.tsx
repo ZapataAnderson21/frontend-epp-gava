@@ -16,6 +16,9 @@ import { useHandleForm } from "./HandleForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import ErrorMessage from "../../common/error/ErrorMessage";
+import { InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { Button } from "../../components";
+import { TiArrowBack } from "react-icons/ti";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
@@ -143,30 +146,35 @@ export default function NewRequest() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full text-[12px] md:text-[14px]">
+      <div className="flex flex-col items-start justify-start w-full h-full text-gray-700 p-10">
+        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
           <h1 className="text-2xl font-bold mb-4">REGISTRAR SOLICITUD</h1>
         </div>
 
-        <div className="flex flex-col items-start justify-start gap-3 w-full max-w-2xl h-full text-[14px] text-gray-600">
-          <span className="font-semibold">Seleccione un proyecto:</span>
-          <select
-            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-3"
+        <div className="flex flex-col items-start justify-start gap-4 w-full max-w-2xl h-full">
+          
+          <SelectForm
+            label="Proyecto"
+            name="projectId"
             value={projectId}
-            onChange={(e) => {
-              setProjectId(Number(e.target.value));
-              localStorage.setItem("projectId", e.target.value);
-            }}>
-            <option value={0} disabled>Selecciona un proyecto</option>
-            {projects.map((project) => (
-              <option key={project.project_id} value={project.project_id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setProjectId(Number(value))}
+            options={[
+              { value: 0, label: "Selecciona un proyecto" },
+              ...projects.map((project) => ({
+                value: project.project_id,
+                label: project.name,
+              })),
+            ]}
+          />
 
-          <span className="font-semibold flex items-center w-full justify-between">Fecha y hora de entrega: 
-            <div className="relative">
+          <InputForm
+            label="Fecha y Hora de Entrega"
+            name="deliveryDueDate"
+            type="datetime-local"
+            value={deliveryDueDate}
+            onChange={(e) => {setDeliveryDueDate(e.target.value);
+            }}>
+            <div className="relative flex w-full justify-end">
               <RiQuestionFill className="inline-flex text-amber-500 cursor-pointer size-5" onClick={() => setOpenWarning(!openWarning)} />
               { 
                 openWarning && (
@@ -176,35 +184,7 @@ export default function NewRequest() {
                 </p>
               )}
             </div>
-          </span>
-          <input
-            type="datetime-local"
-            className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full"
-            value={deliveryDueDate}
-            onChange={(e) => {
-            const value = e.target.value;
-            localStorage.setItem("deliveryDueDate", value);
-            const selectedDate = new Date(value);
-            const hour = selectedDate.getHours();
-            if (hour < 8 || hour > 18) {
-              alert("La hora debe ser dentro del horario laboral (8:00 - 18:00).");
-              return;
-            }
-
-            setDeliveryDueDate(value);
-            }}
-            min={(() => {
-            const now = new Date();
-            now.setHours(8, 0, 0, 0);
-            return now.toISOString().slice(0, 16);
-            })()}
-            max={(() => {
-            const future = new Date();
-            future.setDate(future.getDate() + 30);
-            future.setHours(18, 0, 0, 0);
-            return future.toISOString().slice(0, 16);
-            })()}
-          />
+          </InputForm>
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
           <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
@@ -229,24 +209,37 @@ export default function NewRequest() {
                     />
                   ))}
 
-                  <span className="mt-4 font-semibold">Añade una descripción <span className="text-[10px] font-bold"> (opcional)</span></span>
-                  <textarea className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full" value={description} onChange={(e) => setDescription(e.target.value)} />
+                  <TextAreaForm
+                    label="Descripción"
+                    name="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    optional={true}
+                  />
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 w-full mt-4">
-                    <button className="w-full flex flex-row gap-2 items-center justify-center bg-[#0047a3] px-4 py-2 rounded-md shadow-sm transition-colors 
-                                    hover:bg-[#003a80] cursor-pointer text-white font-semibold mt-1" 
-                                    onClick={handleSaveRequest} >
-                    <FaSave /> Guardar
-                    </button>
-                    <button className="w-full flex flex-row gap-2 items-center justify-center bg-[black] px-4 py-2 rounded-md shadow-sm transition-colors 
-                                    hover:bg-gray-900 cursor-pointer text-white font-semibold mt-1" 
-                                    onClick={() => setOpenPasswordModal(true)} >
-                    <MdAttachEmail /> Guardar y Enviar
-                    </button>
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full mt-4">
+                    <Button
+                      label="Guardar"
+                      onClick={handleSaveRequest}
+                      bgColor="#0047a3"
+                      bgHoverColor="#003a80"
+                      icon={<FaSave />}
+                    />
+                    <Button
+                      label="Guardar y Enviar"
+                      onClick={() => setOpenPasswordModal(true)}
+                      bgColor="black"
+                      bgHoverColor="gray-900"
+                      icon={<MdAttachEmail />}
+                    />
                   </div>
                 </>
               ) : (
-                <span className="text-gray-500 border-t border-b border-gray-400 w-full py-4 px-2 mb-4">No hay elementos seleccionados.</span>
+                <div className="flex flex-col gap-2 w-full mb-4">
+                  <div className="flex w-full border border-gray-100"></div>
+                  <ErrorMessage errorMessage="No hay elementos seleccionados." />
+                  <div className="flex w-full border border-gray-100"></div>
+                </div>
               )
             }
             <RedButton href="/admin/requests" name="Regresar" />
@@ -258,25 +251,29 @@ export default function NewRequest() {
           <div className={`fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center`}>
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
               <h2 className="text-xl font-semibold mb-4">Contraseña del Sistema de Correos</h2>
-              <input
+              <InputForm
+                label="Contraseña"
+                name="passwordCPanel"
                 type="password"
-                className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-4"
-                placeholder="Ingresa la contraseña"
                 value={passwordCPanel}
                 onChange={(e) => setPasswordCPanel(e.target.value)}
+                optional={false}
               />
               <div className="flex justify-between">
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-400 transition-colors cursor-pointer"
+                <Button
+                  label="Cancelar"
                   onClick={() => setOpenPasswordModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
-                  onClick={handleSaveAndSendRequest}>
-                  Enviar
-                </button>
+                  bgColor="red"
+                  bgHoverColor="darkred"
+                  icon={<TiArrowBack />}
+                />
+                <Button
+                  label="Enviar"
+                  onClick={handleSaveAndSendRequest}
+                  bgColor="#0047a3"
+                  bgHoverColor="#003a80"
+                  icon={<MdAttachEmail />}
+                />
               </div>
             </div>
           </div>

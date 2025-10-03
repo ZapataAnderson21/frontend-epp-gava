@@ -8,13 +8,17 @@ interface InputFormProps {
   error?: string;
   optional?: boolean;
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
-export default function InputForm({ label, name, type, value, onChange, error, optional, disabled }: InputFormProps) {
+export default function InputForm({ label, name, type, value, onChange, error, optional, disabled, children }: InputFormProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2">
-        <p className="text-gray-700 font-bold">{label}</p>
+        <div className="flex flex-row justify-between">
+          <label htmlFor={name} className="w-full text-gray-700 font-bold">{label}</label>
+          {children}
+        </div>
         <input
           id={name}
           name={name}
