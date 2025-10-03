@@ -15,9 +15,9 @@ export default function RequestTable({ filter }: RequestTableProps) {
   
   const columns = [
     { key: "request_id", label: "Id", width: "4rem" },
-    { key: "createdAt", label: "FyH de Reg", width: "9rem" },
+    { key: "createdAt", label: "F y H de Registro", width: "9rem" },
     { key: "userName", label: "Solicitante", width: "9rem" },
-    { key: "delivery_due_date", label: "FyH de Entr", width: "9rem" },
+    { key: "delivery_due_date", label: "F y H de Entrega", width: "9rem" },
     { key: "status", label: "Estado", width: "9rem" },
   ] as const;
 

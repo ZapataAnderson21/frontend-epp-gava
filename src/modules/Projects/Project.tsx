@@ -111,17 +111,17 @@ export default function Project() {
           onChange={() => {}}
           optional={false}
           disabled={true}
-        />
-
-        <div className="flex flex-row w-full justify-end items-end gap-1">
-          <span className="text-[14px] text-right">Cambiar estado a: </span>
-          <span
-            onClick={handleChangeStatus}
-            className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
-          >
-            {changeStatus.label}
-          </span>
-        </div>
+        >
+          <div className="flex flex-row w-full justify-end items-end gap-1">
+            <span className="text-[14px] text-right">Cambiar estado a: </span>
+            <span
+              onClick={handleChangeStatus}
+              className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
+            >
+              {changeStatus.label}
+            </span>
+          </div>
+        </InputForm>
         
         <ButtonContainer>
           <RedButton 

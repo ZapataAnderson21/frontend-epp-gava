@@ -2,6 +2,7 @@ interface Column<T> {
   key: keyof T;
   label: string;
   width?: string; // tailwind width (ej: "w-32")
+  truncate?: boolean;
 }
 
 interface TableProps<T> {
@@ -12,51 +13,45 @@ interface TableProps<T> {
 
 export default function Table<T>({ data, columns, getHref }: TableProps<T>) {
   return (
-    <div className="flex flex-col w-full border border-gray-200 rounded-lg text-gray-700">
-      <div className="flex flex-col overflow-auto">
-        {/* Header */}
-        <div className="flex flex-row min-w-fit items-center justify-between bg-gray-100 text-gray-700 font-semibold border-b border-gray-200 gap-4 p-4">
-          {columns.map((col) => (
-            <span
-              key={String(col.key)}
-              style={{ minWidth: col.width }}
-              className={`flex items-start justify-start text-nowrap`}
-            >
-              {col.label}
-            </span>
-          ))}
-        </div>
-
-        {/* Rows */}
-        {data.map((item, idx) => {
-          const rowContent = (
-            <div
-              className={`flex flex-row min-w-full items-center justify-between gap-4 p-4 ${
-                idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-              } hover:bg-[#eff2ff] cursor-pointer`}
-            >
+    <div className="w-full">
+      <div className="overflow-auto">
+        <div className="table w-full border border-gray-200 text-gray-700 rounded-lg">
+          {/* Header */}
+          <div className="table-header-group bg-gray-100 font-semibold">
+            <div className="table-row">
               {columns.map((col) => (
-                <span
+                <div
                   key={String(col.key)}
-                  style={{ minWidth: col.width }}
-                  className={`flex items-start justify-start text-nowrap`}
+                  className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`}
+                  style={{ width: col.width }}
                 >
-                  {String(item[col.key] ?? "")}
-                </span>
+                  {col.label}
+                </div>
               ))}
             </div>
-          );
+          </div>
 
-          return getHref ? (
-            <a key={idx} href={getHref(item)} className="min-w-full">
-              {rowContent}
-            </a>
-          ) : (
-            <div key={idx} className="min-w-full">
-              {rowContent}
-            </div>
-          );
-        })}
+          {/* Rows */}
+          <div className="table-row-group">
+            {data.map((item, idx) => (
+              <div
+                key={idx}
+                className={`table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-[#eff2ff] cursor-pointer`}
+                onClick={() => { if (getHref) window.location.href = getHref(item); }}
+              >
+                {columns.map((col) => (
+                  <div
+                    key={String(col.key)}
+                    className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`}
+                    style={{ width: col.width }}
+                  >
+                    {String(item[col.key] ?? "")}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

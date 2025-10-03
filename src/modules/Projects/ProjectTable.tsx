@@ -18,7 +18,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "code", label: "Código", width: "12rem" },
     { key: "status", label: "Estado", width: "12rem" },
-    { key: "createdAt", label: "Fecha de Reg", width: "12rem" },
+    { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
   ] as const;
 
   if (loading) {

@@ -15,9 +15,9 @@ export default function ElementTable({ filter }: ElementTableProps) {
   
   const columns = [
     { key: "element_id", label: "Id", width: "4rem" },
-    { key: "name", label: "Nombre", width: "9rem" },
+    { key: "name", label: "Nombre", width: "16rem" },
     { key: "type", label: "Tipo", width: "9rem" },
-    { key: "description", label: "Descripción", width: "24rem" }
+    { key: "description", label: "Descripción", width: "36rem", truncate: true }
   ] as const;
 
   if(loading) {
