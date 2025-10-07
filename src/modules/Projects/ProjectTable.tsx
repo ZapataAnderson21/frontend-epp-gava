@@ -14,7 +14,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   const { data: projects, loading, error } = useFetch<ProjectType[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
 
   const columns = [
-    { key: "project_id", label: "Id", width: "4rem" },
+    { key: "projectId", label: "Id", width: "4rem" },
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "code", label: "Código", width: "12rem" },
     { key: "status", label: "Estado", width: "12rem" },
@@ -46,7 +46,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     <Table<ProjectType>
       data={processedProjects}
       columns={columns}
-      getHref={(p) => `/admin/projects/${p.project_id}`}
+      getHref={(p) => `/admin/projects/${p.projectId}`}
     />
   );
 }
