@@ -88,6 +88,7 @@ export default function Login() {
           </div>
 
           <InputForm
+            name="email"
             label="Correo:"
             type="text"
             value={email}
@@ -95,6 +96,7 @@ export default function Login() {
           />
 
           <InputForm 
+            name="password"
             label="Contraseña:"
             type="password"
             value={password}

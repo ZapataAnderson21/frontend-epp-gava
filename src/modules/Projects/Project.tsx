@@ -20,6 +20,9 @@ export default function Project() {
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [location, setLocation] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
 
@@ -32,6 +35,9 @@ export default function Project() {
       setCode(project.code);
       setDescription(project.description ?? "");
       setStatus(project.status);
+      setLocation(project.location ?? "");
+      setStartDate(project.startDate ? project.startDate.split('T')[0] : "");
+      setEndDate(project.endDate ? project.endDate.split('T')[0] : "");
     }
   }, [project]);
 
@@ -57,6 +63,9 @@ export default function Project() {
       description,
       code,
       status,
+      location,
+      startDate: startDate ? new Date(startDate + 'T00:00:00.000Z').toISOString() : null,
+      endDate: endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null,
     }).then((res) => {
       if (res?.statusCode === 200) {
         setOnOk(() => () => navigate("/admin/projects"));
@@ -95,6 +104,34 @@ export default function Project() {
           onChange={(e) => setCode(e.target.value)}
           optional={false}
         />
+
+        <InputForm
+          label="Ubicación"
+          name="location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          optional={false}
+        />
+
+        <InputForm
+          label="Fecha de inicio"
+          name="startDate"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          optional={true}
+        />
+
+        <InputForm
+          label="Fecha de fin"
+          name="endDate"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          optional={true}
+        />
+
         <TextAreaForm
           label="Descripción"
           name="description"

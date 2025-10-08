@@ -101,6 +101,9 @@ export interface ProjectType {
   name: string;
   description: string;
   code: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
   status: string;
   createdAt: string;
 }

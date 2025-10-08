@@ -20,7 +20,11 @@ interface Project {
 export default function NewProject() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [location, setLocation] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
+
 
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
@@ -35,10 +39,18 @@ export default function NewProject() {
     e.preventDefault();
     setOpenSaveModal(true);
 
+    const toIso = (d: string) => (d ? new Date(d + 'T00:00:00.000Z').toISOString() : undefined);
+
     const result = await execute(
       `${projectApi}`,
       "POST",
-      { name, code, description }
+      { name, 
+        code, 
+        description, 
+        location, 
+        startDate: toIso(startDate), 
+        endDate: toIso(endDate) 
+      },
     );
 
     if (result.statusCode === 201) setOnOk(() => () => navigateToProjects());
@@ -63,6 +75,33 @@ export default function NewProject() {
           value={code}
           onChange={(e) => setCode(e.target.value)}
           optional={false}
+        />
+
+        <InputForm
+          label="Ubicación"
+          name="location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          optional={false}
+        />
+
+        <InputForm
+          label="Fecha de inicio"
+          name="startDate"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          optional={true}
+        />
+
+        <InputForm
+          label="Fecha de fin"
+          name="endDate"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          optional={true}
         />
 
         <TextAreaForm
