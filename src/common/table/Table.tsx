@@ -1,7 +1,9 @@
+import { Link } from "react-router-dom";
+
 interface Column<T> {
   key: keyof T;
   label: string;
-  width?: string; // tailwind width (ej: "w-32")
+  width?: string;
   truncate?: boolean;
 }
 
@@ -13,7 +15,7 @@ interface TableProps<T> {
 
 export default function Table<T>({ data, columns, getHref }: TableProps<T>) {
   return (
-    <div className="w-full">
+    <div className="w-full text-nowrap">
       <div className="overflow-auto">
         <div className="table w-full border border-gray-200 text-gray-700 rounded-lg">
           {/* Header */}
@@ -33,23 +35,39 @@ export default function Table<T>({ data, columns, getHref }: TableProps<T>) {
 
           {/* Rows */}
           <div className="table-row-group">
-            {data.map((item, idx) => (
-              <div
-                key={idx}
-                className={`table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-[#eff2ff] cursor-pointer`}
-                onClick={() => { if (getHref) window.location.href = getHref(item); }}
-              >
-                {columns.map((col) => (
-                  <div
-                    key={String(col.key)}
-                    className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`}
-                    style={{ width: col.width }}
-                  >
-                    {String(item[col.key] ?? "")}
-                  </div>
-                ))}
-              </div>
-            ))}
+            {data.map((item, idx) => {
+              const href = getHref ? getHref(item) : undefined;
+              const RowContent = (
+                <>
+                  {columns.map((col) => (
+                    <div
+                      key={String(col.key)}
+                      className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`}
+                      style={{ width: col.width }}
+                    >
+                      {String(item[col.key] ?? "")}
+                    </div>
+                  ))}
+                </>
+              );
+
+              return href ? (
+                <Link
+                  key={idx}
+                  to={href}
+                  className={`table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-[#eff2ff] cursor-pointer`}
+                >
+                  {RowContent}
+                </Link>
+              ) : (
+                <div
+                  key={idx}
+                  className={`table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
+                >
+                  {RowContent}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

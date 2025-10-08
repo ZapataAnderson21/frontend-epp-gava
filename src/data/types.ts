@@ -208,3 +208,35 @@ export interface UserType {
   userTypeId: number,
   name: string
 }
+
+export interface Resource {
+  resourceId: number;
+  name: string;
+  description: string;
+  categoryResourceId: number;
+  categoryResource?: CategoryResource;
+  categoryName?: string;
+  unit: string;
+}
+
+export interface CategoryResource {
+  categoryResourceId: number;
+  name: string;
+  description: string;
+  parentCategoryId?: number;
+}
+
+export interface Supplier {
+  supplierId: number;
+  name: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  address?: string;
+  ruc: string;
+  accountNumber: string;
+  bank: string;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}

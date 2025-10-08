@@ -1,4 +1,4 @@
-import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes } from "react-icons/fa6";
+import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen } from "react-icons/fa6";
 import { FaHome, FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -83,6 +83,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
           <SidebarItem icon={<FaHome />} label="Inicio" href="/admin/" />
           <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" />
+          <SidebarItem icon={<FaTruck />} label="Proveedores" href="/admin/suppliers" />
           <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" />
 
           <div className="w-full flex flex-col">
@@ -94,11 +95,13 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             </div>
             {isElementosOpen && (
               <div className="w-full flex flex-col pl-2">
-                <SidebarItem icon={<FaHelmetSafety />} label="EPP" href="/admin/elements/type/security" />
+                <SidebarItem icon={<FaHelmetSafety />} label="EPP" href="/admin/elements/type/epp" />
                 <SidebarItem icon={<FaTools />} label="Operativos" href="/admin/elements/type/operative" />
               </div>
             )}
           </div>
+
+          <SidebarItem icon={<FaBoxOpen />} label="Recursos" href="/admin/resources" />
 
           <SidebarItem icon={<FaUsers />} label="Usuarios" href="/admin/users" />
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" />

@@ -1,24 +1,24 @@
 import { FaPlus } from "react-icons/fa6";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { Button } from "../../components";
-import EmergencyTable from "./EmergencyTable";
+import ResourceTable from "./ResourceTable";
 
-export default function Emergencies() {
-
+export default function Resources() {
   return (
     <Panel>
-      <HeaderPanel name={`EMERGENCIAS`}>
+      <HeaderPanel name={`RECURSOS`} >
         <Button
           icon={<FaPlus />}
           label="Añadir"
-          href="/admin/emergencies/new"
+          href="/admin/resources/new"
+          onClick={() => {}}
           bgColor="#0047a3"
           bgHoverColor="#003a80"
-          onClick={() => {}}
         />
       </HeaderPanel>
-      
-      <EmergencyTable />
-    </Panel> 
-  )
+
+      <ResourceTable />
+
+    </Panel>
+  );
 }

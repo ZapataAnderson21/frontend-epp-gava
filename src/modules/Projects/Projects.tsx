@@ -46,12 +46,14 @@ export default function Projects() {
           directionRow={true}
         />
 
-        { permission && <Button
+        { permission && 
+        <Button
           icon={<FaPlus />}
           label="Añadir"
-          onClick={() => window.location.href = "/admin/projects/new"}
+          href = "/admin/projects/new"
           bgColor="#0047a3"
           bgHoverColor="#003a80"
+          onClick={() => {}}
         />
         }
       </HeaderPanel>

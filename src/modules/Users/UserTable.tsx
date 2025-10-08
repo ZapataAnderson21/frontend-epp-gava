@@ -11,7 +11,7 @@ export default function UserTable() {
 
   const columns = [
     { key: "name", label: "Nombre", width: "9rem" },
-    { key: "last_name", label: "Apellido", width: "9rem" },
+    { key: "lastName", label: "Apellido", width: "9rem" },
     { key: "email", label: "Correo", width: "16rem" },
     { key: "userType", label: "Rol", width: "20rem" },
   ] as const;
@@ -32,7 +32,7 @@ export default function UserTable() {
     <Table<User>
       data={users}
       columns={columns}
-      getHref={(user) => `/admin/users/${user.user_id}`}
+      getHref={(user) => `/admin/users/${user.userId}`}
     />
   );
 }

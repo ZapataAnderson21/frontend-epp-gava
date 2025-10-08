@@ -14,10 +14,10 @@ export default function RequestTable({ filter }: RequestTableProps) {
   const { data: requests, loading, error } = useFetch<RequestType[]>(requestApi + `${filter === "all" ? "" : `status/${filter}`}`, [filter]);
   
   const columns = [
-    { key: "request_id", label: "Id", width: "4rem" },
+    { key: "requestId", label: "Id", width: "4rem" },
     { key: "createdAt", label: "F y H de Registro", width: "9rem" },
     { key: "userName", label: "Solicitante", width: "9rem" },
-    { key: "delivery_due_date", label: "F y H de Entrega", width: "9rem" },
+    { key: "deliveryDueDate", label: "F y H de Entrega", width: "9rem" },
     { key: "status", label: "Estado", width: "9rem" },
   ] as const;
 
@@ -47,14 +47,14 @@ export default function RequestTable({ filter }: RequestTableProps) {
     ...request,
     userName: request.user?.name,
     createdAt: formatDateTime(request.createdAt),
-    delivery_due_date: formatDateTime(request.delivery_due_date)
+    deliveryDueDate: formatDateTime(request.deliveryDueDate)
   }));
 
   return (
     <Table<RequestType>
       data={processedRequests}
       columns={columns}
-      getHref={(p) => `/admin/requests/${p.request_id}`}
+      getHref={(p) => `/admin/requests/${p.requestId}`}
     />
   );
 }

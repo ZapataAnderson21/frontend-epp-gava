@@ -20,6 +20,12 @@ import Request from './modules/Requests/Request.tsx';
 import Emergencies from './modules/Emergencies/Emergencies.tsx';
 import NewEmergency from './modules/Emergencies/NewEmergency.tsx';
 import Emergency from './modules/Emergencies/Emergency.tsx';
+import Resources from './modules/Resources/Resources.tsx';
+import NewResource from './modules/Resources/NewResource.tsx';
+import Resource from './modules/Resources/Resource.tsx';
+import Suppliers from './modules/Suppliers/Suppliers.tsx';
+import NewSupplier from './modules/Suppliers/NewSupplier.tsx';
+import Supplier from './modules/Suppliers/Supplier.tsx';
 
 export default function App() {
 
@@ -46,6 +52,14 @@ export default function App() {
           <Route path='emergencies' element={<Emergencies />} />
           <Route path='emergencies/:id' element={<Emergency />} />
           <Route path='emergencies/new' element={<NewEmergency />} />
+          <Route path='resources/new' element={<NewResource />} />
+          <Route path='resources/:id' element={<Resource />} />
+          <Route path='resources' element={<Resources />} />
+          {/* Suppliers routes */}
+          <Route path='suppliers' element={<Suppliers />} />
+          <Route path='suppliers/new' element={<NewSupplier />} />
+          <Route path='suppliers/:id' element={<Supplier />} />
+          {/* End suppliers routes */}
         </Route>
       </Routes>
     </BrowserRouter>

@@ -8,7 +8,7 @@ import ElementTable from './ElementTable';
 
 const options = [
   { value: "all", label: "Todos" },
-  { value: "security", label: "de Protección Personal (EPP)" },
+  { value: "epp", label: "de Protección Personal (EPP)" },
   { value: "operative", label: "Operativos" },
 ];
 
@@ -50,9 +50,10 @@ export default function Elements() {
           <Button
               icon={<FaPlus />}
               label="Añadir"
-              onClick={() => window.location.href = `/admin/elements/new?type=${filter}`}
+              href={`/admin/elements/new?type=${filter}`}
               bgColor="#0047a3"
               bgHoverColor="#003a80"
+              onClick={() => {}}
             />  
         </HeaderPanel>
 

@@ -79,7 +79,7 @@ export default function NewEpp() {
           
         <SelectForm label="Tipo" name="type" value={type} onChange={(value) => setType(value as string)}
           options={[
-            { value: "security", label: "Elementos de Protección Personal (EPP)" },
+            { value: "epp", label: "Elementos de Protección Personal (EPP)" },
             { value: "operative", label: "Elementos Operativos" }
           ]}
         />

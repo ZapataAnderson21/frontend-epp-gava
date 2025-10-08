@@ -15,7 +15,8 @@ export default function Users() {
         <Button
           icon={<FaPlus />}
           label="Añadir"
-          onClick={() => window.location.href = "/admin/users/new"}
+          href="/admin/users/new"
+          onClick={() => {}}
           bgColor="#0047a3"
           bgHoverColor="#003a80"
         />

@@ -80,6 +80,14 @@ export default function Element() {
           optional={false}
         />
 
+        <TextAreaForm
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={false}
+        />
+
         <SelectForm 
           label="Tipo" 
           name="type" 
@@ -90,15 +98,7 @@ export default function Element() {
             { value: "operative", label: "Elementos Operativos" }
           ]}
         />
-
-        <TextAreaForm
-          label="Descripción"
-          name="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          optional={false}
-        />
-
+        
          <ButtonContainer>
           <RedButton href={`/admin/elements/type/${type}`} name="Regresar" />
           <ButtonSubmit loading={updating} label="Actualizar" loadingLabel="Actualizando..." />

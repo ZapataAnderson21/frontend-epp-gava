@@ -10,7 +10,7 @@ export default function EmergencyTable() {
   const { data: emergencies, loading, error } = useFetch<EmergencyType[]>(emergencyApi);
   
   const columns = [
-    { key: "emergency_id", label: "Id", width: "4rem" },
+    { key: "emergencyId", label: "Id", width: "4rem" },
     { key: "title", label: "Asunto", width: "12rem" },
     { key: "projectName", label: "Proyecto", width: "12rem" },
     { key: "userName", label: "Responsable", width: "12rem" },
@@ -38,7 +38,7 @@ export default function EmergencyTable() {
     <Table<EmergencyType>
       data={processedEmergencies}
       columns={columns}
-      getHref={(emergency) => `/admin/emergencies/${emergency.emergency_id}`}
+      getHref={(emergency) => `/admin/emergencies/${emergency.emergencyId}`}
     />
   );
 }

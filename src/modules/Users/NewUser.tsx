@@ -10,17 +10,18 @@ import type { UserType } from "../../data/types";
 import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
 
 interface UserResponse {
-  user_id: number;
+  userId: number;
   name: string;
-  last_name: string;
+  lastName: string;
   email: string;
-  user_type_id: number;
+  userTypeId: number;
 }
 
 export default function NewUser() {
   const [name, setName] = useState("");
-  const [lastname, setLastname] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [userTypeId, setUserTypeId] = useState<number>(0);
 
@@ -52,10 +53,11 @@ export default function NewUser() {
 
     const payload = {
       name,
-      last_name: lastname,
+      lastName,
       email,
+      phone,
       password,
-      user_type_id: userTypeId,
+      userTypeId,
     };
 
     const response = await execute(userApi, "POST", payload);
@@ -75,11 +77,17 @@ export default function NewUser() {
     <>
       <Form name="REGISTRAR USUARIO" handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
-        <InputForm label="Apellido" name="lastname" type="text" value={lastname} onChange={(e) => setLastname(e.target.value)} optional={false} />
+        <InputForm label="Apellido" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} optional={false} />
         <InputForm label="Correo" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
+        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => setPhone(e.target.value)} optional={true} />
         <InputForm label="Contraseña" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} optional={false} />
         
-        {loadingRoles && <span className="text-sm text-gray-500">Cargando roles...</span>}
+        {loadingRoles && 
+          <div className="w-full flex flex-col items-start justify-center gap-4">
+            <div className="h-8 bg-gray-300 rounded animate-pulse w-48"></div>
+            <div className="h-8 bg-gray-300 rounded animate-pulse w-full"></div>
+          </div>
+        }
         {errorRoles && <span className="text-sm text-red-500">Error al cargar los roles</span>}
         
         {!loadingRoles && !errorRoles && userTypes && (
@@ -88,7 +96,7 @@ export default function NewUser() {
             name="role"
             value={userTypeId}
             onChange={(value) => setUserTypeId(Number(value))}
-            options={userTypes ? userTypes.map((role) => ({ value: role.user_type_id, label: role.name })) : []}
+            options={userTypes ? userTypes.map((role) => ({ value: role.userTypeId, label: role.name })) : []}
           />
         )}
 

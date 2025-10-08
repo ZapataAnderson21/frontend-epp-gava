@@ -40,9 +40,10 @@ export default function Requests() {
         <Button
           icon={<FaPlus />}
           label="Añadir"
-          onClick={() => window.location.href = "/admin/requests/new"}
+          href = "/admin/requests/new"
           bgColor="#0047a3"
           bgHoverColor="#003a80"
+          onClick={() => {}}
         />
       </HeaderPanel>
 
