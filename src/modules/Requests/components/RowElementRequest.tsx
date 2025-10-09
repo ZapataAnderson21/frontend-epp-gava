@@ -4,7 +4,7 @@ import type { ElementType , ElementRequestType } from "../../../data/types";
 interface RowElementRequestProps {
   elementRequest: ElementRequestType;
   handleRemoveElement: (element: ElementType) => void;
-  handleChangeElementRequest: (element_id: number, field: keyof ElementRequestType, value: string | number) => void;
+  handleChangeElementRequest: (elementId: number, field: keyof ElementRequestType, value: string | number) => void;
 }
 
 export default function RowElementRequest({ elementRequest, handleRemoveElement, handleChangeElementRequest }: RowElementRequestProps) {
@@ -18,15 +18,15 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
         className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Unidad"
         value={elementRequest.unit ?? ""}
-        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "unit", e.target.value)}
+        onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "unit", e.target.value)}
       />
 
       <input
         type="number"
         className="flex items-start justify-start w-12 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Cantidad"
-        value={elementRequest.quantity_requested ?? 0}
-        onChange={(e) => handleChangeElementRequest(elementRequest.element_id, "quantity_requested", Number(e.target.value))}
+        value={elementRequest.quantityRequested ?? 0}
+        onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "quantityRequested", Number(e.target.value))}
       />
 
       <IoIosCloseCircle

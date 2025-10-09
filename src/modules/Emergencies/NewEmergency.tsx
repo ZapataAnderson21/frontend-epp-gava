@@ -41,8 +41,8 @@ export default function NewEmergency() {
     if (image) formData.append("image", image);
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("user_id", user.user_id);
-    formData.append("project_id", projectId.toString());
+    formData.append("userId", user.userId);
+    formData.append("projectId", projectId.toString());
 
     const result = await execute(emergencyApi, "POST", formData);
 
@@ -79,7 +79,7 @@ export default function NewEmergency() {
             name="project"
             value={projectId}
             onChange={(value) => setProjectId(Number(value))}
-            options={projects ? projects.map((project) => ({ value: project.project_id, label: project.name })) : []}
+            options={projects ? projects.map((project) => ({ value: project.projectId, label: project.name })) : []}
           />
         )}
 

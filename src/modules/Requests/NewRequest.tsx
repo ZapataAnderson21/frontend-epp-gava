@@ -68,8 +68,8 @@ export default function NewRequest() {
   }, []);
 
   const handleRemoveElement = (element: ElementType) => {
-    const updatedElements = elements.filter((elem) => elem.element_id !== element.element_id);
-    const updatedElementRequests = elementRequests.filter((req) => req.element_id !== element.element_id);
+    const updatedElements = elements.filter((elem) => elem.elementId !== element.elementId);
+    const updatedElementRequests = elementRequests.filter((req) => req.elementId !== element.elementId);
 
     setElements(updatedElements);
     setElementRequests(updatedElementRequests);
@@ -78,9 +78,9 @@ export default function NewRequest() {
     localStorage.setItem("selectedElementRequest", JSON.stringify(updatedElementRequests));
   };
 
-  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequestType, value: string | number) => {
+  const handleChangeElementRequest = (elementId: number, field: keyof ElementRequestType, value: string | number) => {
     const updated = elementRequests.map((req) =>
-      req.element_id === element_id ? { ...req, [field]: field === "quantity_requested" ? Number(value) : value } : req
+      req.elementId === elementId ? { ...req, [field]: field === "quantityRequested" ? Number(value) : value } : req
     );
     setElementRequests(updated);
     localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
@@ -158,7 +158,7 @@ export default function NewRequest() {
             options={[
               { value: 0, label: "Selecciona un proyecto" },
               ...projects.map((project) => ({
-                value: project.project_id,
+                value: project.projectId,
                 label: project.name,
               })),
             ]}
@@ -185,7 +185,7 @@ export default function NewRequest() {
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
           <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
-            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="security" />
+            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="epp" />
             <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" />
           </div>
           <div className="flex flex-col items-start gap-2 justify-start w-full">
@@ -196,10 +196,10 @@ export default function NewRequest() {
                 <HeaderNewRequest />
                   {elements.map((element) => (
                     <RowElementRequest 
-                      key={element.element_id}
+                      key={element.elementId}
                       elementRequest={
-                        elementRequests.find(req => req.element_id === element.element_id) || 
-                        { unit: "", quantity_requested: 0, element_id: element.element_id!, request_id: 0, element: element }
+                        elementRequests.find(req => req.elementId === element.elementId) || 
+                        { unit: "", quantityRequested: 0, elementId: element.elementId!, requestId: 0, element: element }
                       }
                       handleRemoveElement={handleRemoveElement}
                       handleChangeElementRequest={handleChangeElementRequest}
@@ -217,6 +217,7 @@ export default function NewRequest() {
                   <div className="flex flex-col sm:flex-row items-center gap-2 w-full mt-4">
                     <Button
                       label="Guardar"
+                      href="#"
                       onClick={handleSaveRequest}
                       bgColor="#0047a3"
                       bgHoverColor="#003a80"
@@ -224,6 +225,7 @@ export default function NewRequest() {
                     />
                     <Button
                       label="Guardar y Enviar"
+                      href="#"
                       onClick={() => setOpenPasswordModal(true)}
                       bgColor="black"
                       bgHoverColor="gray-900"
@@ -259,6 +261,7 @@ export default function NewRequest() {
               <div className="flex justify-between">
                 <Button
                   label="Cancelar"
+                  href="#"
                   onClick={() => setOpenPasswordModal(false)}
                   bgColor="red"
                   bgHoverColor="darkred"
@@ -266,6 +269,7 @@ export default function NewRequest() {
                 />
                 <Button
                   label="Enviar"
+                  href="#"
                   onClick={handleSaveAndSendRequest}
                   bgColor="#0047a3"
                   bgHoverColor="#003a80"

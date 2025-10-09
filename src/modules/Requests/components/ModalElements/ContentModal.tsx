@@ -35,7 +35,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
 
   // ✅ Hooks para API
   const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(`${elementApi}type/${typeElement}`, [typeElement]);
-  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(id ? `${elementRequestApi}/request/${id}` : "", [id]);
+  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(id ? `${elementRequestApi}request/${id}` : "", [id]);
 
   const { execute: createElementRequest } = useApiAction<any>();
   const { execute: deleteElementRequest } = useApiAction<any>();
@@ -55,11 +55,11 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       if (saved) {
         const parsed: ElementType[] = JSON.parse(saved);
         setSelectedIds(
-          parsed.map((item) => item.element_id).filter((id): id is number => id !== undefined)
+          parsed.map((item) => item.elementId).filter((id): id is number => id !== undefined)
         );
       }
     } else if (fetchedElementRequests) {
-      const ids = fetchedElementRequests.map((er) => er.element_id);
+      const ids = fetchedElementRequests.map((er) => er.elementId);
       setSelectedIds(ids);
       setOriginalIds(ids);
     }
@@ -77,7 +77,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   const onClick = async () => {
     if (isNewRequest) {
       const selectedElements = elements.filter(
-        (item) => item.element_id !== undefined && selectedIds.includes(item.element_id)
+        (item) => item.elementId !== undefined && selectedIds.includes(item.elementId)
       );
 
       const prevSelected = localStorage.getItem("selectedElementRequest");
@@ -86,7 +86,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       if (prevSelected) {
         const parsed: any[] = JSON.parse(prevSelected);
         const filtered = parsed.filter(
-          (item) => !elements.some((e) => e.element_id === item.element_id)
+          (item) => !elements.some((e) => e.elementId === item.elementId)
         );
         combined = [...filtered];
       }
@@ -94,8 +94,8 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       const selectedElementRequest = selectedElements.map((item) => ({
         unit: "",
         quantity: 0,
-        request_id: 0,
-        element_id: item.element_id as number,
+        requestId: 0,
+        elementId: item.elementId as number,
         element: item,
       }));
 
@@ -112,19 +112,19 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       // ✅ Crear nuevos
       for (const addId of added) {
         await createElementRequest(`${elementRequestApi}`, "POST", {
-          element_id: addId,
+          elementId: addId,
           quantity_requested: 0,
           unit: " ",
-          request_id: requestId,
+          requestId: requestId,
         });
       }
 
       // ✅ Eliminar removidos
       if (fetchedElementRequests) {
         for (const removeId of removed) {
-          const itemToDelete = fetchedElementRequests.find((e) => e.element_id === removeId);
-          if (itemToDelete?.element_request_id !== undefined) {
-            await deleteElementRequest(`${elementRequestApi}/${itemToDelete.element_request_id}`, "DELETE");
+          const itemToDelete = fetchedElementRequests.find((e) => e.elementId === removeId);
+          if (itemToDelete?.elementRequestId !== undefined) {
+            await deleteElementRequest(`${elementRequestApi}/${itemToDelete.elementRequestId}`, "DELETE");
           }
         }
       }
@@ -161,14 +161,14 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
       <HeaderModal />
       <div className="flex flex-col items-center justify-between w-full pt-4 px-6 gap-4 text-[14px] md:text-[16px]">
         {currentElements.map((item) => (
-          <div key={item.element_id ?? item.name} className="flex items-center justify-between w-full">
-            <span className="flex items-center justify-start w-12">{item.element_id}</span>
+          <div key={item.elementId ?? item.name} className="flex items-center justify-between w-full">
+            <span className="flex items-center justify-start w-12">{item.elementId}</span>
             <span className="flex items-center justify-start w-full">{item.name}</span>
             <input
               type="checkbox"
               className="p-2 size-4"
-              checked={item.element_id !== undefined && selectedIds.includes(item.element_id)}
-              onChange={() => handleCheckboxChange(item.element_id)}
+              checked={item.elementId !== undefined && selectedIds.includes(item.elementId)}
+              onChange={() => handleCheckboxChange(item.elementId)}
             />
           </div>
         ))}

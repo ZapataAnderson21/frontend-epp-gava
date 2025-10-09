@@ -14,7 +14,7 @@ export default function ModalElements({ typeElement, isOpen, onClose }: ModalEle
   let title = "";
 
   switch (typeElement) {
-    case "security":
+    case "epp":
       title = "Elementos de Seguridad";
       break;
     case "operative":
