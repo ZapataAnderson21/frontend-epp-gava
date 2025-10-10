@@ -14,10 +14,10 @@ import { useApiAction, useHandleForm } from "../../hooks";
 import { projectApi, requestApi, elementRequestApi } from "../../data/apiUrl";
 
 interface RequestDraftProps {
-  request_id: number;
+  requestId: number;
 }
 
-export default function RequestDraft({ request_id }: RequestDraftProps) {
+export default function RequestDraft({ requestId }: RequestDraftProps) {
   const [request, setRequest] = useState<RequestType | null>(null);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
   const [projectId, setProjectId] = useState<number>(0);
@@ -33,17 +33,17 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
 
   // ✅ hooks nuevos
   const { execute: deleteElementRequest } = useApiAction<any>();
-  const { data: fetchedRequest } = useFetch<RequestType>(`${requestApi}/${request_id}`, [request_id]);
-  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(`${elementRequestApi}/request/${request_id}`, [request_id]);
+  const { data: fetchedRequest } = useFetch<RequestType>(`${requestApi}${requestId}`, [requestId]);
+  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(`${elementRequestApi}request/${requestId}`, [requestId]);
 
   const { handleUpdate, handleUpdateAndSend } = useHandleForm();
 
   useEffect(() => {
     if (fetchedRequest) {
       setRequest(fetchedRequest);
-      setProjectId(fetchedRequest.project_id);
+      setProjectId(fetchedRequest.projectId);
       setDescription(fetchedRequest.description || "");
-      setDeliveryDueDate(fetchedRequest.delivery_due_date ? fetchedRequest.delivery_due_date.slice(0, 16) : "");
+      setDeliveryDueDate(fetchedRequest.deliveryDueDate ? fetchedRequest.deliveryDueDate.slice(0, 16) : "");
     }
 
     if (fetchedElementRequests) {
@@ -56,16 +56,16 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
 
   const handleRemoveElement = async (elementRequestId: number) => {
     try {
-      const res = await deleteElementRequest(`${elementRequestApi}/${elementRequestId}`, "DELETE");
+      const res = await deleteElementRequest(`${elementRequestApi}${elementRequestId}`, "DELETE");
       if (res.statusCode === 200) {
-        const deletedElement = elementRequests.find((er) => er.element_request_id === elementRequestId);
-        const deletedElementId = deletedElement?.element_id;
+        const deletedElement = elementRequests.find((er) => er.elementRequestId === elementRequestId);
+        const deletedElementId = deletedElement?.elementId;
 
-        setElementRequests((prev) => prev.filter((er) => er.element_request_id !== elementRequestId));
-        setSelectedElementRequest((prev) => prev.filter((er) => er.element_request_id !== elementRequestId));
+        setElementRequests((prev) => prev.filter((er) => er.elementRequestId !== elementRequestId));
+        setSelectedElementRequest((prev) => prev.filter((er) => er.elementRequestId !== elementRequestId));
 
         if (deletedElementId !== undefined) {
-          setElements((prev) => prev.filter((e) => e.element_id !== deletedElementId));
+          setElements((prev) => prev.filter((e) => e.elementId !== deletedElementId));
         }
       }
     } catch (error) {
@@ -73,16 +73,16 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
     }
   };
 
-  const handleChangeElementRequest = (element_id: number, field: keyof ElementRequestType, value: string | number) => {
+  const handleChangeElementRequest = (elementId: number, field: keyof ElementRequestType, value: string | number) => {
     setElementRequests((prev) =>
       prev.map((er) =>
-        er.element_id === element_id ? { ...er, [field]: value } : er
+        er.elementId === elementId ? { ...er, [field]: value } : er
       )
     );
 
     setSelectedElementRequest((prev) =>
       prev.map((er) =>
-        er.element_id === element_id ? { ...er, [field]: value } : er
+        er.elementId === elementId ? { ...er, [field]: value } : er
       )
     );
   };
@@ -95,7 +95,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
     <>
       <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
         <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full text-[12px] md:text-[14px]">
-          <h1 className="text-2xl font-bold mb-4">SOLICITUD {request_id}</h1>
+          <h1 className="text-2xl font-bold mb-4">SOLICITUD {requestId}</h1>
         </div>
 
         <div className="flex flex-col items-start justify-start gap-6 w-full max-w-2xl h-full text-[14px] text-gray-600">
@@ -107,7 +107,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
           >
             <option value={0} disabled>Selecciona un proyecto</option>
             {projects.map((project) => (
-              <option key={project.project_id} value={project.project_id}>
+              <option key={project.projectId} value={project.projectId}>
                 {project.name}
               </option>
             ))}
@@ -167,20 +167,20 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
                 <HeaderNewRequest />
 
                 {elements.map((element) => {
-                  const elementRequest = elementRequests.find(req => req.element_id === element.element_id) || {
+                  const elementRequest = elementRequests.find(req => req.elementId === element.elementId) || {
                     unit: "",
-                    quantity_requested: element.quantity_requested,
-                    element_id: element.element_id,
-                    request_id: 0,
+                    quantityRequested: element.quantityRequested,
+                    elementId: element.elementId,
+                    requestId: 0,
                     element: element,
-                    element_request_id: undefined,
+                    elementRequestId: undefined,
                   };
 
                   return (
                     <RowElementRequest
-                      key={element.element_id}
+                      key={element.elementId}
                       elementRequest={elementRequest}
-                      handleRemoveElement={() => elementRequest.element_request_id ? handleRemoveElement(elementRequest.element_request_id) : undefined}
+                      handleRemoveElement={() => elementRequest.elementRequestId ? handleRemoveElement(elementRequest.elementRequestId) : undefined}
                       handleChangeElementRequest={handleChangeElementRequest}
                     />
                   );
@@ -194,7 +194,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
                     <button
                       className="w-full flex flex-row gap-2 items-center justify-center bg-[#0047a3] px-4 py-2 rounded-md shadow-sm transition-colors 
                                 hover:bg-[#003a80] cursor-pointer text-white font-semibold mt-1"
-                      onClick={() => handleUpdate(Number(request_id), projectId, elementRequests, description)}
+                      onClick={() => handleUpdate(Number(requestId), projectId, elementRequests, description)}
                     >
                       <FaSave /> Guardar
                     </button>
@@ -239,7 +239,7 @@ export default function RequestDraft({ request_id }: RequestDraftProps) {
               <button
                 className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
                 onClick={() => {
-                  handleUpdateAndSend(Number(request_id), projectId, elementRequests, passwordCPanel, description);
+                  handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, description);
                   setOpenPasswordModal(false);
                 }}
               >

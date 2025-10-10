@@ -16,10 +16,10 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 
 interface RequestViewProps {
-  request_id: number;
+  requestId: number;
 }
 
-export default function RequestView({ request_id }: RequestViewProps) {
+export default function RequestView({ requestId }: RequestViewProps) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [isLogistics, setIsLogistics] = useState(false);
   const [isGerency, setIsGerency] = useState(false);
@@ -38,8 +38,8 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
   // ✅ useFetch para traer la Request
   const { data: request, loading: loadingRequest, error: errorRequest } = useFetch<RequestType>(
-    `${requestApi}${request_id}`,
-    [request_id]
+    `${requestApi}${requestId}`,
+    [requestId]
   );
 
   // ✅ useApiAction para POST y PATCH
@@ -54,7 +54,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    fetch(`${requestApi}pdf/${request_id}`, {
+    fetch(`${requestApi}pdf/${requestId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -66,7 +66,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
       .catch((err) => {
         console.error("Error al cargar el PDF:", err);
       });
-  }, [request_id]);
+  }, [requestId]);
 
   // Roles y estado
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
     if (!["GERENTE", "ADMINISTRADORA", "LOGISTICA"].includes(userType)) setIsEmployee(true);
 
     if (request?.status === "in_progress") setIsInProgress(true);
-    if (request?.status === "under_review") setIsUnderReview(true);
+    if (request?.status === "underReview") setIsUnderReview(true);
     if (request?.status === "approved") setIsApproved(true);
     if (request?.status === "attended") setIsAttend(true);
   }, [user, request]);
@@ -88,7 +88,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const handleChangeStatus = async (newStatus: string) => {
     if (!request) return;
     try {
-      await updateRequestStatus(`${requestApi}/${request.request_id}/status`, "PATCH", { status: newStatus });
+      await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: newStatus });
       navigate(0);
     } catch (err) {
       console.error("Error al cambiar estado:", err);
@@ -99,8 +99,8 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const handleReviewed = async () => {
     try {
       const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
-        request_id: Number(request_id),
-        responder_user_id: Number(user.user_id),
+        requestId: Number(requestId),
+        responder_userId: Number(user.userId),
         description: "Solicitud revisada por administración.",
       });
 
@@ -108,20 +108,20 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
       for (const elementRequest of request.elementRequests || []) {
         const acceptedQuantity =
-          elementRequest.element_request_id !== undefined
-            ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
-            : elementRequest.quantity_requested;
+          elementRequest.elementRequestId !== undefined
+            ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
+            : elementRequest.quantityRequested;
 
-        if (elementRequest.element_request_id !== undefined) {
+        if (elementRequest.elementRequestId !== undefined) {
           await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
-            element_request_id: elementRequest.element_request_id,
+            elementRequestId: elementRequest.elementRequestId,
             quantity_accepted: acceptedQuantity,
-            request_response_id: response.data.request_response_id,
+            requestResponseId: response.data.requestResponseId,
           });
         }
       }
 
-      handleChangeStatus("under_review");
+      handleChangeStatus("underReview");
       setOpenSaveModal(true);
     } catch (error) {
       console.error("Error al revisar la solicitud:", error);
@@ -132,37 +132,37 @@ export default function RequestView({ request_id }: RequestViewProps) {
   const handleApproved = async () => {
     try {
       // Buscar la respuesta existente
-      const response = await fetch(`${requestResponseApi}/request/${request_id}`).then((r) => r.json());
+      const response = await fetch(`${requestResponseApi}/request/${requestId}`).then((r) => r.json());
 
       if (!request || !response?.data) return;
 
       for (const elementRequest of request.elementRequests || []) {
         const acceptedQuantity =
-          elementRequest.element_request_id !== undefined
-            ? acceptedQuantities[elementRequest.element_request_id] ?? elementRequest.quantity_requested
-            : elementRequest.quantity_requested;
+          elementRequest.elementRequestId !== undefined
+            ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
+            : elementRequest.quantityRequested;
 
         // ✅ Validar que elementRequestResponses exista y tenga elementos
         if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
           await updateElementRequestResponse(
-            `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].element_request_response_id}`,
+            `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
             "PATCH",
             {
-              element_request_id: elementRequest.element_request_id,
+              elementRequestId: elementRequest.elementRequestId,
               quantity_accepted: acceptedQuantity,
-              request_response_id: response.data.request_response_id,
+              requestResponseId: response.data.requestResponseId,
             }
           );
         } else {
           console.warn(
-            `No se encontró ElementRequestResponse para elementRequest_id: ${elementRequest.element_request_id}`
+            `No se encontró ElementRequestResponse para elementRequestId: ${elementRequest.elementRequestId}`
           );
         }
       }
 
-      await updateRequestResponse(`${requestResponseApi}/${response.data.request_response_id}`, "PATCH", {
-        request_id: response.data.request_id,
-        responder_user_id: Number(user.user_id),
+      await updateRequestResponse(`${requestResponseApi}/${response.data.requestResponseId}`, "PATCH", {
+        requestId: response.data.requestId,
+        responder_userId: Number(user.userId),
         description: descriptionResponse,
       });
 
@@ -181,14 +181,15 @@ export default function RequestView({ request_id }: RequestViewProps) {
       <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start w-full h-full p-10 text-gray-800 gap-8">
         <div className="flex flex-col items-start justify-start w-full lg:w-[814px] xl:w-[900px] gap-4 text-gray-800">
           <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
-            <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {request_id}</h1>
+            <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {requestId}</h1>
             <div>
               <Button
                 icon={<FaArrowLeft />}
                 label="Regresar"
-                onClick={() => navigate("/admin/requests")}
+                onClick={() => {}}
                 bgColor={"#000"}
                 bgHoverColor={"#1f1f1f"}
+                href="/admin/requests"
               />
             </div>
           </div>
@@ -205,7 +206,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
               </div>
               {isInProgress && (
                 <div className="flex flex-row flex-wrap items-center gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" />
+                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" href="#" />
                 </div>
               )}
             </>
@@ -229,8 +230,8 @@ export default function RequestView({ request_id }: RequestViewProps) {
               ></textarea>
               {isUnderReview && (
                 <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" />
-                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" />
+                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" href="#" />
+                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" href="#" />
                 </div>
               )}
             </>
@@ -247,7 +248,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
               </div>
               {isApproved && (
                 <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" />
+                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" href="#" />
                 </div>
               )}
             </>
@@ -255,7 +256,7 @@ export default function RequestView({ request_id }: RequestViewProps) {
 
           {isEmployee && isAttend && (
             <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" />
+              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" href="#" />
             </div>
           )}
         </div>

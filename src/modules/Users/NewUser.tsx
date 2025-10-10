@@ -8,6 +8,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { UserType } from "../../data/types";
 import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
+import UserTypeCreateModal from "./components/UserTypeCreateModal";
 
 interface UserResponse {
   userId: number;
@@ -30,10 +31,14 @@ export default function NewUser() {
   const [error, setError] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
+  const [openUserTypesModal, setOpenUserTypesModal] = useState(false);
+
+  const [reloadUserTypes, setReloadUserTypes] = useState(0);
+
   const navigate = useNavigate();
 
   // 🔹 fetch roles
-  const { data: userTypes, loading: loadingRoles, error: errorRoles } = useFetch<UserType[]>(userTypeApi);
+    const { data: userTypes, loading: loadingRoles, error: errorRoles } = useFetch<UserType[]>(userTypeApi, [reloadUserTypes]);
 
   // 🔹 acción POST
   const { execute, loading: saving } = useApiAction<UserResponse>();
@@ -97,7 +102,9 @@ export default function NewUser() {
             value={userTypeId}
             onChange={(value) => setUserTypeId(Number(value))}
             options={userTypes ? userTypes.map((role) => ({ value: role.userTypeId, label: role.name })) : []}
-          />
+          >
+          <p className="text-[14px] font-bold underline cursor-pointer" onClick={() => setOpenUserTypesModal(true)}>¿Añadir un rol?</p>  
+          </SelectForm>
         )}
 
         <ButtonContainer>
@@ -105,6 +112,19 @@ export default function NewUser() {
           <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
         </ButtonContainer>
       </Form>
+
+      <UserTypeCreateModal
+        open={openUserTypesModal}
+        onClose={() => setOpenUserTypesModal(false)}
+        onCreated={(created) => {
+          // 1) refrescar la lista
+          setReloadUserTypes((n) => n + 1);
+          // 2) opcional: seleccionar el nuevo rol
+          if (created?.userTypeId) setUserTypeId(created.userTypeId);
+        }}
+      />
+
+
       {openSaveModal && (
         <SaveModal onOk={onOk} message={successMessage} error={error} />
       )}

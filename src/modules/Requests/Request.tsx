@@ -8,9 +8,9 @@ import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
 import ErrorMessage from "../../common/error/ErrorMessage";
 
 export default function Request() {
-  const { id: request_id } = useParams<{ id: string }>();
+  const { id: requestId } = useParams<{ id: string }>();
 
-  const { data: request, loading, error } = useFetch<RequestType>(`${requestApi}${request_id}`);
+  const { data: request, loading, error } = useFetch<RequestType>(`${requestApi}${requestId}`);
 
   if (loading) {
     return <LoadingSkeletonForm numberRows={4} />;
@@ -27,9 +27,9 @@ export default function Request() {
   return (
     <>
       {request.status === "draft" ? (
-        <RequestDraft request_id={Number(request_id)} />
+        <RequestDraft requestId={Number(requestId)} />
       ) : (
-        <RequestView request_id={Number(request_id)} />
+        <RequestView requestId={Number(requestId)} />
       )}
     </>
   );

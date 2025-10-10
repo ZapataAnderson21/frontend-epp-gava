@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router';
+import { motion } from "motion/react"
 
 interface ButtonProps {
   icon?: React.ReactNode;
@@ -13,7 +14,11 @@ interface ButtonProps {
 function Button({ icon, label, onClick, href, bgColor, bgHoverColor }: ButtonProps) {
   return (
     <Link className="w-full" to={href}>
-      <button
+      <motion.button 
+        initial={{ scale: 0.8 }} 
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={onClick}
         style={{
           backgroundColor: bgColor,
@@ -25,7 +30,7 @@ function Button({ icon, label, onClick, href, bgColor, bgHoverColor }: ButtonPro
       >
         {icon && icon}
         <span>{label}</span>
-      </button>
+      </motion.button>
     </Link>
   );
 }

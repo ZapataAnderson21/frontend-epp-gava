@@ -16,7 +16,7 @@ export default function InputForm({ label, name, type, value, onChange, error, o
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2">
         <div className="flex flex-row justify-between">
-          <label htmlFor={name} className="font-semibold">
+          <label htmlFor={name} className="font-semibold text-nowrap">
             {label} {optional && <span className="text-[10px] font-bold">(opcional)</span>}
           </label>
           {children}

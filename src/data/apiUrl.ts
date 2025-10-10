@@ -23,5 +23,4 @@ export const resourceApi = `${root}resource/`;
 
 export const categoryResourceApi = `${root}category-resource/`;
 
-
 export const supplierApi = `${root}supplier/`;

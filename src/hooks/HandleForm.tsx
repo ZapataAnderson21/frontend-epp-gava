@@ -53,7 +53,11 @@ export function useHandleForm() {
     const response = await createRequest(`${requestApi}`, "POST", requestData);
     if (!response || response.statusCode !== 201) {
       console.error("Error creating request:", response?.message || "Unknown error");
-      return null;
+      return {
+        loading: false,
+        error: response?.message || "Unknown error",
+        data: null,
+      };
     }
 
     const requestId = response.data.requestId;
@@ -67,14 +71,29 @@ export function useHandleForm() {
 
     const elementResponses = await Promise.all(
       elementRequests.map((el) => createElementRequest(`${elementRequestApi}`, "POST", el))
-    );
+    ).catch((error) => {
+      console.error("Error creating element requests:", error);
+      return {
+        loading: false,
+        error: error.message || "Unknown error",
+        data: null,
+      };
+    });
 
     localStorage.removeItem("selectedElements");
     localStorage.removeItem("selectedElementRequest");
 
+    console.log("Request: ")
+    console.log(response.data)
+    console.log("Elements: ")
+    console.log(Array.isArray(elementResponses) && elementResponses[0]?.data)
     return {
-      request: response.data,
-      elements: elementResponses,
+      loading: false,
+      error: false,
+      data: {
+        request: response.data,
+        elements: Array.isArray(elementResponses) && elementResponses.length > 0 ? elementResponses[0].data : null,
+      },
     };
   };
 
@@ -104,11 +123,11 @@ export function useHandleForm() {
     }
 
     const result = await handleSave(projectId, deliveryDueDate, description);
-    if (!result) {
+    if (!result?.data) {
       throw new Error("Error al guardar la solicitud.");
     }
 
-    return await handleSend(result.request.requestId, passwordCPanel);
+    return await handleSend(result.data.request.requestId, passwordCPanel);
   };
 
   // Actualizar solicitud existente

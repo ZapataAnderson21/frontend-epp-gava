@@ -18,7 +18,7 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
   }, [error, message]);
 
   return (
-    <div className={`${hidden} absolute overflow-hidden z-50 inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center transition-all duration-300`}>
+    <div className={`${hidden} fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>
       {loading ? (
         <Loading />
       ) : (

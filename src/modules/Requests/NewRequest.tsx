@@ -87,15 +87,17 @@ export default function NewRequest() {
   };
 
   const handleSaveRequest = async () => {
+    setOpenSaveModal(true);
+
     if (projectId === 0) {
       alert("Por favor, selecciona un proyecto.");
       return;
     }
 
     const result = await handleSave(projectId, deliveryDueDate, description);
-    if (result) {
-      setOpenSaveModal(true);
-      setSuccessMessage("Solicitud guardada correctamente.");
+    if (result?.data && !result?.loading && !result?.error) {
+      setSuccessMessage(result?.data.request.message || "Solicitud guardada exitosamente.");
+      setError(false);
       setOnOk(() => navigateToRequests);
       setElements([]);
       setElementRequests([]);
