@@ -12,6 +12,9 @@ import { IoWarning } from "react-icons/io5";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction, useHandleForm } from "../../hooks";
 import { projectApi, requestApi, elementRequestApi } from "../../data/apiUrl";
+import { ErrorMessage } from "../../common/error";
+import { useNavigate } from "react-router-dom";
+import { SaveModal } from "../../common/form";
 
 interface RequestDraftProps {
   requestId: number;
@@ -31,12 +34,29 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
   const [openWarning, setOpenWarning] = useState<boolean>(false);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
 
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [onOk, setOnOk] = useState<() => void>(() => () => {});
+  const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+
   // ✅ hooks nuevos
   const { execute: deleteElementRequest } = useApiAction<any>();
   const { data: fetchedRequest } = useFetch<RequestType>(`${requestApi}${requestId}`, [requestId]);
   const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(`${elementRequestApi}request/${requestId}`, [requestId]);
 
+  const navigate = useNavigate();
+
   const { handleUpdate, handleUpdateAndSend } = useHandleForm();
+
+  const closeModalAndReset = () => {
+    setOpenSaveModal(false);
+    setError(false);
+  };
+
+  const navigateToRequest = () => {
+    navigate(`/admin/requests/${requestId}`);
+  };
+
 
   useEffect(() => {
     if (fetchedRequest) {
@@ -87,8 +107,54 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
     );
   };
 
+  const handleUpdateRequest = async () => {
+
+    setOpenSaveModal(true);
+
+    if (projectId === 0) {
+      alert("Por favor, selecciona un proyecto.");
+      return;
+    }
+
+    const result = await handleUpdate(Number(requestId), projectId, elementRequests, description);
+
+    if (result) {
+      setSuccessMessage("Solicitud guardada exitosamente.");
+      setError(false);
+      setOnOk(() => navigateToRequest);
+    } else {
+      setError(true);
+      setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
+      setOnOk(() => closeModalAndReset);
+    }
+  }
+
+  const handleUpdateAndSendRequest = async () => {
+
+    setOpenPasswordModal(false);
+    setOpenSaveModal(true);
+
+    if (projectId === 0) {
+      alert("Por favor, selecciona un proyecto.");
+      return;
+    }
+
+    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, description);
+
+    if (result) {
+      setSuccessMessage("Solicitud enviada exitosamente.");
+      setError(false);
+      setOnOk(() => navigateToRequest);
+    } else {
+      setError(true);
+      setSuccessMessage("Error al enviar la solicitud. Por favor, intenta nuevamente.");
+      setOnOk(() => closeModalAndReset);
+    }
+  }
+
+
   if (!projects) {
-    return null;
+    return <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente más tarde." />;
   }
 
   return (
@@ -194,7 +260,7 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
                     <button
                       className="w-full flex flex-row gap-2 items-center justify-center bg-[#0047a3] px-4 py-2 rounded-md shadow-sm transition-colors 
                                 hover:bg-[#003a80] cursor-pointer text-white font-semibold mt-1"
-                      onClick={() => handleUpdate(Number(requestId), projectId, elementRequests, description)}
+                      onClick={() => handleUpdateRequest()}
                     >
                       <FaSave /> Guardar
                     </button>
@@ -238,10 +304,7 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
               </button>
               <button
                 className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
-                onClick={() => {
-                  handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, description);
-                  setOpenPasswordModal(false);
-                }}
+                onClick={() => { handleUpdateAndSendRequest(); }}
               >
                 Enviar
               </button>
@@ -249,6 +312,12 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
           </div>
         </div>
       )}
+
+      {
+        openSaveModal && (
+          <SaveModal onOk={onOk} message={successMessage} error={error} />
+        )
+      }
     </>
   );
 }

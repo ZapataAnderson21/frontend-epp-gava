@@ -45,8 +45,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   }, [isOpen, isMobile, setIsOpen]);
 
   // base para delays
-  const baseDelay = 0.05;     // s
-  const perItemDelay = 0.06;  // s
+  const baseDelay = 0.1;     // s
+  const perItemDelay = 0.075;  // s
 
   return (
     <section

@@ -78,7 +78,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
     if (["ADMINISTRADORA"].includes(userType)) setIsAdmin(true);
     if (!["GERENTE", "ADMINISTRADORA", "LOGISTICA"].includes(userType)) setIsEmployee(true);
 
-    if (request?.status === "in_progress") setIsInProgress(true);
+    if (request?.status === "inProgress") setIsInProgress(true);
     if (request?.status === "underReview") setIsUnderReview(true);
     if (request?.status === "approved") setIsApproved(true);
     if (request?.status === "attended") setIsAttend(true);

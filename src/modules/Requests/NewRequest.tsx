@@ -4,21 +4,21 @@ import { IoWarning } from "react-icons/io5";
 import { RiQuestionFill } from "react-icons/ri";
 import { MdAttachEmail } from "react-icons/md";
 import { FaHelmetSafety } from "react-icons/fa6";
-import { FaSave, FaTools } from "react-icons/fa";
+import { FaTools } from "react-icons/fa";
 import { TiArrowBack } from "react-icons/ti";
 
 import RequestTypeCard from "./components/RequestTypeCard";
 import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal, ButtonContainer } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal, ButtonContainer, Form, ButtonSubmit } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
 import { Button } from "../../components";
 
 export default function NewRequest() {
-  const [projectId, setProjectId] = useState<number>(localStorage.getItem("projectId") ? Number(localStorage.getItem("projectId")) : 0);
+  const [projectId, setProjectId] = useState<number>(0);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
   const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
   const selectedElementRequest: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
@@ -86,14 +86,16 @@ export default function NewRequest() {
     localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
   };
 
-  const handleSaveRequest = async () => {
+  const handleSaveRequest = async (e : React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setOpenSaveModal(true);
 
     if (projectId === 0) {
-      alert("Por favor, selecciona un proyecto.");
-      return;
-    }
-
+      await setError(true);
+      await setSuccessMessage("Por favor, selecciona un proyecto.");
+      await setOnOk(() => closeModalAndReset);
+    } 
+    
     const result = await handleSave(projectId, deliveryDueDate, description);
     if (result?.data && !result?.loading && !result?.error) {
       setSuccessMessage(result?.data.request.message || "Solicitud guardada exitosamente.");
@@ -109,33 +111,36 @@ export default function NewRequest() {
       setError(true);
       setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
       setOnOk(() => closeModalAndReset);
-      setOpenSaveModal(true);
     }
   };
 
   const handleSaveAndSendRequest = async () => {
-    if (projectId === 0) {
-      alert("Por favor, selecciona un proyecto.");
-      return;
-    }
 
-    try {
-      const result = await handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel);
-      if (result) {
-        setOpenPasswordModal(false);
-        setOpenSaveModal(true);
-        setElements([]);
-        setElementRequests([]);
-        localStorage.removeItem("projectId");
-        localStorage.removeItem("deliveryDueDate");
-        localStorage.removeItem("selectedElements");
-        localStorage.removeItem("selectedElementRequest");
-      } else {
-        alert("Error al guardar y enviar la solicitud.");
-      }
-    } catch (error) {
-      console.error("Error al guardar y enviar la solicitud:", error);
-      alert("Ocurrió un error al guardar y enviar la solicitud.");
+    setOpenPasswordModal(false);
+    setOpenSaveModal(true);
+
+    if (projectId === 0) {
+      await setError(true);
+      await setSuccessMessage("Por favor, selecciona un proyecto.");
+      await setOnOk(() => closeModalAndReset);
+    } 
+
+    const result = await handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel);
+    if (result) {
+      setSuccessMessage("Solicitud guardada y enviada exitosamente.");
+      setError(false);
+      setOnOk(() => navigateToRequests);
+      setElements([]);
+      setElementRequests([]);
+      localStorage.removeItem("projectId");
+      localStorage.removeItem("deliveryDueDate");
+      localStorage.removeItem("selectedElements");
+      localStorage.removeItem("selectedElementRequest");
+    } else {
+      setError(true);
+      setSuccessMessage("Error al guardar y enviar la solicitud. Por favor, intenta nuevamente.");
+      setOnOk(() => closeModalAndReset);
+      setOpenSaveModal(true);
     }
   }
 
@@ -145,10 +150,7 @@ export default function NewRequest() {
 
   return (
     <>
-      <div className="flex flex-col items-start justify-start w-full h-full text-gray-700 p-10">
-        <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-          <h1 className="text-2xl font-bold mb-4">REGISTRAR SOLICITUD</h1>
-        </div>
+      <Form name="REGISTRAR SOLICITUD" handleSubmit={handleSaveRequest} >
 
         <div className="flex flex-col items-start justify-start gap-4 w-full max-w-2xl h-full">
           
@@ -216,14 +218,11 @@ export default function NewRequest() {
                     optional={true}
                   />
 
-                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full mt-4">
-                    <Button
+                  <ButtonContainer>
+                    <ButtonSubmit
                       label="Guardar"
-                      href="#"
-                      onClick={handleSaveRequest}
-                      bgColor="#0047a3"
-                      bgHoverColor="#003a80"
-                      icon={<FaSave />}
+                      loading={false}
+                      loadingLabel="Guardando"
                     />
                     <Button
                       label="Guardar y Enviar"
@@ -233,7 +232,7 @@ export default function NewRequest() {
                       bgHoverColor="gray-900"
                       icon={<MdAttachEmail />}
                     />
-                  </div>
+                  </ButtonContainer>
                 </>
               ) : (
                 <div className="flex flex-col gap-2 w-full mb-4">
@@ -246,7 +245,7 @@ export default function NewRequest() {
             <RedButton href="/admin/requests" name="Regresar" />
           </div>
         </div>
-      </div>
+      </Form>
       {
         openPasswordModal && (
           <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>

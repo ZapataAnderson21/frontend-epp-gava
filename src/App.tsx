@@ -13,7 +13,7 @@ import Projects from './modules/Projects/Projects.tsx';
 import NewElement from './modules/Elements/NewElement.tsx';
 import Elements from './modules/Elements/Elements.tsx';
 import NewRole from './modules/Users/NewRole.tsx';
-import Project from './modules/Projects/Project.tsx';
+import EditProject from './modules/Projects/EditProject.tsx';
 import ResetPassword from './ResetPassword.tsx';
 import Element from './modules/Elements/Element.tsx';
 import Request from './modules/Requests/Request.tsx';
@@ -26,6 +26,7 @@ import Resource from './modules/Resources/Resource.tsx';
 import Suppliers from './modules/Suppliers/Suppliers.tsx';
 import NewSupplier from './modules/Suppliers/NewSupplier.tsx';
 import Supplier from './modules/Suppliers/Supplier.tsx';
+import Project from './modules/Projects/Project.tsx';
 
 export default function App() {
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route path='' element={<AppHome />} />
           <Route path='projects' element={<Projects />} />
           <Route path='projects/:id' element={<Project />} />
+          <Route path='projects/edit/:id' element={<EditProject />} />
           <Route path='projects/new' element={<NewProject />} />
           <Route path='requests' element={<Requests />} />
           <Route path='requests/:id' element={<Request />} />

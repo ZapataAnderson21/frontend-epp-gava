@@ -1,186 +1,83 @@
-import { useState, useEffect } from "react";
-import RedButton from "../../common/form/RedButton";
-import { useParams, useNavigate } from "react-router-dom";
-import SaveModal from "../../common/form/SaveModal";
-import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
-import { projectApi } from "../../data/apiUrl";
-import { useFetch } from "../../hooks/useFetch";
-import { useApiAction } from "../../hooks/useApiAction";
+import { useParams } from "react-router-dom";
+import { HeaderPanel, Panel } from "../../common/panel";
+import { useFetch } from "../../hooks";
 import type { ProjectType } from "../../data/types";
-import ErrorWithButton from "../../common/error/ErrorWithButton";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, TextAreaForm } from "../../common/form";
+import { projectApi } from "../../data/apiUrl";
+import { ButtonContainer } from "../../common/form";
+import { Button } from "../../components";
+import { FaArrowLeft, FaEye, FaPencil } from "react-icons/fa6";
+import { motion } from "framer-motion";
 
 export default function Project() {
+
   const { id: projectId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
 
-  const { data: project, loading, error } = useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
-  const { execute: updateProject, loading: updating, response, error: errorUpdate } = useApiAction<ProjectType>();
-  const { execute: updateStatus } = useApiAction<ProjectType>();
+  const {data: project, loading, error } = useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
 
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [location, setLocation] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("active");
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
-  useEffect(() => {
-    if (project) {
-      setName(project.name);
-      setCode(project.code);
-      setDescription(project.description ?? "");
-      setStatus(project.status);
-      setLocation(project.location ?? "");
-      setStartDate(project.startDate ? project.startDate.split('T')[0] : "");
-      setEndDate(project.endDate ? project.endDate.split('T')[0] : "");
-    }
-  }, [project]);
-
-  const changeStatus =
-    status === "active"
-      ? { label: "INACTIVO", value: "inactive" }
-      : { label: "ACTIVO", value: "active" };
-
-  const handleChangeStatus = () => {
-    updateStatus(`${projectApi}${projectId}/status`, "PATCH", {
-      status: changeStatus.value,
-    }).then(() => {
-      setStatus(changeStatus.value);
-    });
-  };
-
-  const handleUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    setOpenSaveModal(true);
-
-    updateProject(`${projectApi}${projectId}`, "PATCH", {
-      name,
-      description,
-      code,
-      status,
-      location,
-      startDate: startDate ? new Date(startDate + 'T00:00:00.000Z').toISOString() : null,
-      endDate: endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null,
-    }).then((res) => {
-      if (res?.statusCode === 200) {
-        setOnOk(() => () => navigate("/admin/projects"));
-      } else {
-        setOnOk(() => () => setOpenSaveModal(false));
-      }
-    });
-  };
-
-  if (loading) {
-    return <LoadingSkeletonForm numberRows={4} />;
-  }
-
-  if (error) {
-    return (
-      <ErrorWithButton errorMessage={error} href="/admin/projects" />
-    );
-  }
 
   return (
-    <>
-      <Form name={`PROYECTO ${projectId}`} handleSubmit={handleUpdate}>
-        <InputForm
-          label="Nombre"
-          name="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          optional={false}
-        />
-        <InputForm
-          label="Código"
-          name="code"
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          optional={false}
-        />
-
-        <InputForm
-          label="Ubicación"
-          name="location"
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          optional={false}
-        />
-
-        <InputForm
-          label="Fecha de inicio"
-          name="startDate"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          optional={true}
-        />
-
-        <InputForm
-          label="Fecha de fin"
-          name="endDate"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          optional={true}
-        />
-
-        <TextAreaForm
-          label="Descripción"
-          name="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          optional={true}
-        />
-
-        <InputForm
-          label="Estado"
-          name="status"
-          type="text"
-          value={status === "active" ? "ACTIVO" : "INACTIVO"}
-          onChange={() => {}}
-          optional={false}
-          disabled={true}
-        >
-          <div className="flex flex-row w-full justify-end items-end gap-1">
-            <span className="text-[14px] text-right">Cambiar estado a: </span>
-            <span
-              onClick={handleChangeStatus}
-              className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
-            >
-              {changeStatus.label}
-            </span>
-          </div>
-        </InputForm>
-        
+    <Panel>
+      <HeaderPanel name={`${project ? project?.name : ''}`} >
         <ButtonContainer>
-          <RedButton 
+          <Button
+            icon={<FaArrowLeft />}
+            label="Regresar"
             href="/admin/projects"
-            name="Regresar"
+            onClick={() => {}}
+            bgColor="#FF0000"
+            bgHoverColor="#CC0000"
           />
-          <ButtonSubmit 
-            loading={updating}
-            label="Actualizar"
-            loadingLabel="Actualizando..."
+          <Button
+            icon={<FaPencil />}
+            label="Editar"
+            href={`/admin/projects/edit/${projectId}`}
+            onClick={() => {}}
+            bgColor="#2563EB"
+            bgHoverColor="#1D4ED8"
           />
         </ButtonContainer>
-      </Form>
-        
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={response?.message || ""}
-          error={!!errorUpdate}
-        />
-      )}
-    </>
+      </HeaderPanel>
+
+      <div className="w-full">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-xl font-extrabold">Órdenes de compra</h1>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileHover={{ scale: 1.015}}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="border border-gray-300 shadow-xs text-xl p-4 rounded-xl col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="font-bold">Ver Órdenes de compra:</h4>
+              <div className="flex flex-row justify-between gap-4">
+                <p className="text-4xl font-extrabold">{project?.purchaseOrders?.length ?? 0}</p>
+                <motion.div className="flex justify-center items-center border p-3 rounded-xl border-gray-300 bg-gray-50 w-fit hover:scale-[105%] hover:bg-sky-50 duration-300 cursor-pointer">
+                  <FaEye />
+                </motion.div>
+              </div>
+            </motion.div>
+            <div className="border text-xl border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
+              <h4 className="font-bold">Ingresos:</h4>
+              <div className="flex flex-row gap-4">
+                <p className="font-bold">Soles: <span>S/. 2400</span></p>
+                <p className="font-bold">Dólares: <span>$ 1200</span></p>
+              </div>
+            </div>
+            <div className="border text-lg border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
+              <h4 className="text-2xl">Egresos:</h4>
+              <p className="font-bold">Soles: <span>S/. 2100</span></p>
+              <p className="font-bold">Dólares: <span>$ 800</span></p>
+            </div>
+            <div className="border text-lg border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
+              <h4 className="text-2xl">Utilidades:</h4>
+              <p className="font-bold">Soles: <span>S/. 300</span></p>
+              <p className="font-bold">Dólares: <span>$ 400</span></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </Panel>
   );
 }
-

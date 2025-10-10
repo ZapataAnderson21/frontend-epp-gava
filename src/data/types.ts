@@ -106,6 +106,7 @@ export interface ProjectType {
   endDate?: string;
   status: string;
   createdAt: string;
+  purchaseOrders?: PurchaseOrderType[];
 }
 
 export interface CreateProjectDto {
@@ -239,4 +240,24 @@ export interface Supplier {
   currency: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PurchaseOrderType {
+  purchaseOrderId: number;
+  code: string;
+  destination: string;
+  paymentConditions: string;
+  generalConditions?: string;
+  qualityConditions?: string;
+  paymentMethod: string;
+  saleAmount: number;
+  purchaseAmount: number;
+  status: string;
+  carePerson: string;
+  dniCarePerson: string;
+  observations?: string;
+  projectId: number;
+  supplierId: number;
+  quotation?: string;
+  purchaseOrderType: PurchaseOrderType;
 }

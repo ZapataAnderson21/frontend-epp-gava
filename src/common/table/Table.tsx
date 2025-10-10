@@ -19,10 +19,10 @@ export default function Table<T>({
 }: TableProps<T>) {
 
   const rowVariants = {
-    hidden: { opacity: 0, y: 8 },
+    hidden: { opacity: 0, y: 1 },
     visible: (i: number) => ({
       opacity: 1, y: 0,
-      transition: { duration: 0.25, delay: (baseDelayMs + i * perRowDelayMs) / 1000 }
+      transition: { duration: 0.2, delay: (baseDelayMs + i * perRowDelayMs) / 1000 }
     })
   };
 

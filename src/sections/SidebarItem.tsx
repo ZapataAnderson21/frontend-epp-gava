@@ -19,11 +19,11 @@ interface SidebarItemProps {
 }
 
 const rowVariants = {
-  hidden: { opacity: 0, x: -12 },
+  hidden: { opacity: 0, x: -2.5 },
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.22, delay: i }
+    transition: { duration: 0.1, delay: i }
   }),
 };
 
