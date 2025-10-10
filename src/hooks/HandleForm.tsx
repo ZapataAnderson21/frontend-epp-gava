@@ -104,7 +104,7 @@ export function useHandleForm() {
     }
 
     const response = await sendRequestToLogistics(
-      `${requestApi}send-to-logistics`,
+      `${requestApi}sendLogistics`,
       "POST",
       { requestId, passwordCPanel }
     );
@@ -126,6 +126,8 @@ export function useHandleForm() {
     if (!result?.data) {
       throw new Error("Error al guardar la solicitud.");
     }
+
+    console.log("Result data: ", result.data.request.requestId);
 
     return await handleSend(result.data.request.requestId, passwordCPanel);
   };
@@ -151,7 +153,7 @@ export function useHandleForm() {
       type: getTypeFromElements(selectedElements),
     };
 
-    const response = await updateRequest(`${requestApi}/${requestId}`, "PATCH", requestData);
+    const response = await updateRequest(`${requestApi}${requestId}`, "PATCH", requestData);
     if (!response || response.statusCode !== 200) {
       console.error("Error updating request:", response?.message || "Unknown error");
       return null;
@@ -170,9 +172,15 @@ export function useHandleForm() {
         .filter((el) => el.elementRequestId !== undefined)
         .map((el) =>
           updateElementRequest(
-            `${elementRequestApi}/${el.elementRequestId}`,
+            `${elementRequestApi}${el.elementRequestId}`,
             "PATCH",
-            el
+            {
+              quantityRequested: el.quantityRequested,
+              unit: el.unit,
+              elementId: el.elementId,
+              requestId,
+            }
+
           )
         )
     );

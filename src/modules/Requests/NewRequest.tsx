@@ -11,7 +11,7 @@ import RequestTypeCard from "./components/RequestTypeCard";
 import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal, ButtonContainer } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
@@ -249,7 +249,7 @@ export default function NewRequest() {
       </div>
       {
         openPasswordModal && (
-          <div className={`fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center`}>
+          <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
               <h2 className="text-xl font-semibold mb-4">Contraseña del Sistema de Correos</h2>
               <InputForm
@@ -260,7 +260,7 @@ export default function NewRequest() {
                 onChange={(e) => setPasswordCPanel(e.target.value)}
                 optional={false}
               />
-              <div className="flex justify-between">
+              <ButtonContainer>
                 <Button
                   label="Cancelar"
                   href="#"
@@ -277,7 +277,7 @@ export default function NewRequest() {
                   bgHoverColor="#003a80"
                   icon={<MdAttachEmail />}
                 />
-              </div>
+              </ButtonContainer>
             </div>
           </div>
         )
