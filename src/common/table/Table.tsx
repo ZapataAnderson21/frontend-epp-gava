@@ -29,7 +29,7 @@ export default function Table<T>({
   return (
     <div className="w-full text-nowrap">
       <div className="overflow-auto">
-        <div className="table w-full border border-gray-200 text-gray-700 rounded-lg">
+        <div className="table w-full border border-gray-100 text-gray-700 rounded-lg">
           <div className="table-header-group bg-gray-100 font-semibold">
             <div className="table-row">
               {columns.map((col) => (

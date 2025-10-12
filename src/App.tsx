@@ -37,26 +37,38 @@ export default function App() {
         <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/admin' element={<Home />} >
           <Route path='' element={<AppHome />} />
+          {/* Projects routes */}
           <Route path='projects' element={<Projects />} />
           <Route path='projects/:id' element={<Project />} />
           <Route path='projects/edit/:id' element={<EditProject />} />
           <Route path='projects/new' element={<NewProject />} />
+          {/* End projects routes */}
+          {/* Requests routes */}
           <Route path='requests' element={<Requests />} />
           <Route path='requests/:id' element={<Request />} />
           <Route path='requests/new' element={<NewRequest />} />
+          {/* End requests routes */}
+          {/* Elements routes */}
           <Route path='elements/type/:type' element={<Elements />} />
           <Route path='elements/:id' element={<Element />} />
           <Route path='elements/new' element={<NewElement />} />
+          {/* End elements routes */}
+          {/* Users routes */}
           <Route path='users' element={<Users />} />
           <Route path='users/:id' element={<User />} />
           <Route path='users/new' element={<NewUser />} />
           <Route path='users/role/new' element={<NewRole />} />
+          {/* End users routes */}
+          {/* Emergencies routes */}
           <Route path='emergencies' element={<Emergencies />} />
           <Route path='emergencies/:id' element={<Emergency />} />
           <Route path='emergencies/new' element={<NewEmergency />} />
+          {/* End emergencies routes */}
+          {/* Resources routes */}
           <Route path='resources/new' element={<NewResource />} />
           <Route path='resources/:id' element={<Resource />} />
           <Route path='resources' element={<Resources />} />
+          {/* End resources routes */}
           {/* Suppliers routes */}
           <Route path='suppliers' element={<Suppliers />} />
           <Route path='suppliers/new' element={<NewSupplier />} />

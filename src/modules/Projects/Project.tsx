@@ -1,83 +1,104 @@
+import React from "react";
 import { useParams } from "react-router-dom";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { useFetch } from "../../hooks";
 import type { ProjectType } from "../../data/types";
 import { projectApi } from "../../data/apiUrl";
-import { ButtonContainer } from "../../common/form";
-import { Button } from "../../components";
-import { FaArrowLeft, FaEye, FaPencil } from "react-icons/fa6";
-import { motion } from "framer-motion";
+
+import SectionProjectSummary from "./sections/SectionProjectSummary";
+import CountCard from "./components/CountCard";
+import MoneyTrendCard, { DEFAULT_RATES } from "./components/MoneyTrendCard";
+import HeaderActions from "./sections/HeaderActions";
+import CurrencyFilter, { type Currency } from "./components/CurrencyFilter";
 
 export default function Project() {
-
   const { id: projectId } = useParams<{ id: string }>();
 
-  const {data: project, loading, error } = useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
+  const { data: project, loading, error } = useFetch<ProjectType>(
+    `${projectApi}${projectId}`,
+    [projectId]
+  );
 
+  const [currency, setCurrency] = React.useState<Currency>("PEN");
+  const [rates] = React.useState(DEFAULT_RATES); // podrías traer esto del backend
 
   return (
     <Panel>
-      <HeaderPanel name={`${project ? project?.name : ''}`} >
-        <ButtonContainer>
-          <Button
-            icon={<FaArrowLeft />}
-            label="Regresar"
-            href="/admin/projects"
-            onClick={() => {}}
-            bgColor="#FF0000"
-            bgHoverColor="#CC0000"
+      <HeaderPanel name={`${project ? project?.name : ""}`}>
+        {projectId && (
+          <HeaderActions
+            projectId={projectId}
           />
-          <Button
-            icon={<FaPencil />}
-            label="Editar"
-            href={`/admin/projects/edit/${projectId}`}
-            onClick={() => {}}
-            bgColor="#2563EB"
-            bgHoverColor="#1D4ED8"
-          />
-        </ButtonContainer>
+        )}
       </HeaderPanel>
 
-      <div className="w-full">
-        <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-extrabold">Órdenes de compra</h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mt-4">
-            <motion.div 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              whileHover={{ scale: 1.015}}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="border border-gray-300 shadow-xs text-xl p-4 rounded-xl col-span-1 flex flex-col gap-2"
-            >
-              <h4 className="font-bold">Ver Órdenes de compra:</h4>
-              <div className="flex flex-row justify-between gap-4">
-                <p className="text-4xl font-extrabold">{project?.purchaseOrders?.length ?? 0}</p>
-                <motion.div className="flex justify-center items-center border p-3 rounded-xl border-gray-300 bg-gray-50 w-fit hover:scale-[105%] hover:bg-sky-50 duration-300 cursor-pointer">
-                  <FaEye />
-                </motion.div>
-              </div>
-            </motion.div>
-            <div className="border text-xl border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
-              <h4 className="font-bold">Ingresos:</h4>
-              <div className="flex flex-row gap-4">
-                <p className="font-bold">Soles: <span>S/. 2400</span></p>
-                <p className="font-bold">Dólares: <span>$ 1200</span></p>
-              </div>
-            </div>
-            <div className="border text-lg border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
-              <h4 className="text-2xl">Egresos:</h4>
-              <p className="font-bold">Soles: <span>S/. 2100</span></p>
-              <p className="font-bold">Dólares: <span>$ 800</span></p>
-            </div>
-            <div className="border text-lg border-gray-300 font-extrabold p-4 rounded-md col-span-1 flex flex-col gap-2">
-              <h4 className="text-2xl">Utilidades:</h4>
-              <p className="font-bold">Soles: <span>S/. 300</span></p>
-              <p className="font-bold">Dólares: <span>$ 400</span></p>
-            </div>
+      <div className="flex flex-col w-full gap-4">
+        {/* Resumen */}
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
+            <CountCard
+              title="Órdenes de Compra"
+              count={project?.purchaseOrders?.length ?? 0}
+              to={`/admin/purchase-orders?projectId=${projectId}`}
+            />
+            <CountCard
+              title="Requerimientos"
+              count={project?.requests?.length ?? 0}
+              to={`/admin/requests?projectId=${projectId}`}
+            />
+            <CountCard
+              title="Caja Chica"
+              count={project?.pettyCashes?.length ?? 0}
+              to={`/admin/petty-cash?projectId=${projectId}`}
+            />
+            <CountCard
+              title="Servicios"
+              count={project?.serviceSales?.length ?? 0}
+              to={`/admin/service-sales?projectId=${projectId}`}
+            />
+            <CountCard
+              title="Emergencias"
+              count={project?.emergencies?.length ?? 0}
+              to={`/admin/emergencies?projectId=${projectId}`}
+            />
           </div>
         </div>
 
+        <hr className="border-t border-gray-200" />
+
+        <div className="flex w-full justify-between items-center">
+          <h2 className="text-2xl font-extrabold">Resumen económico</h2>
+          <CurrencyFilter currency={currency} onChange={setCurrency} />
+        </div>
+
+        {/* Ingresos */}
+        <SectionProjectSummary title="Ingresos">
+          <MoneyTrendCard
+            title="Órdenes de Compra"
+            amountPen={88888}
+            trend="up"
+            currency={currency}
+            rates={rates}
+          />
+        </SectionProjectSummary>
+
+        {/* Gastos */}
+        <SectionProjectSummary title="Gastos">
+          <MoneyTrendCard title="Órdenes de Compra" amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard title="Planillas"        amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard title="Servicios"        amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard title="Caja Chica"       amountPen={88888} trend="down" currency={currency} rates={rates} />
+        </SectionProjectSummary>
+
+        {/* Utilidades */}
+        <SectionProjectSummary title="Utilidades">
+          <MoneyTrendCard title={currency} amountPen={88888} trend="flat" currency={currency} rates={rates} />
+        </SectionProjectSummary>
       </div>
+
+      {/* Loading / Error lightweight inline states */}
+      {loading && <div className="text-sm text-gray-500">Cargando información del proyecto…</div>}
+      {error &&   <div className="text-sm text-red-600">Ocurrió un error al cargar el proyecto.</div>}
     </Panel>
   );
 }

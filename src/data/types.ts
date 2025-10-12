@@ -107,6 +107,10 @@ export interface ProjectType {
   status: string;
   createdAt: string;
   purchaseOrders?: PurchaseOrderType[];
+  requests?: RequestType[];
+  pettyCashes?: PettyCashType[];
+  emergencies?: EmergencyType[];
+  serviceSales?: ServiceSaleType[];
 }
 
 export interface CreateProjectDto {
@@ -261,3 +265,25 @@ export interface PurchaseOrderType {
   quotation?: string;
   purchaseOrderType: PurchaseOrderType;
 }
+
+export interface PettyCashType {
+  pettyCashId: number;
+  projectId: number;
+  resourceName: string;
+  amount: number;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ServiceSaleType {
+  serviceSaleId: number;
+  projectId: number;
+  serviceName: string;
+  amount: number;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type Currency = "PEN" | "USD" | "EUR";
