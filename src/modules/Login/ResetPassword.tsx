@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { userApi } from "./data/apiUrl";
-import { useApiAction } from "./hooks/useApiAction";
+import { userApi } from "../../data/apiUrl";
+import { useApiAction } from "../../hooks/useApiAction";
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");

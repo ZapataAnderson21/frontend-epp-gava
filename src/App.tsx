@@ -1,32 +1,17 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Login from './modules/Login/Login.tsx';
 
-import Requests from './modules/Requests/Requests.tsx';
-import Users from './modules/Users/Users.tsx';
-import User from './modules/Users/User.tsx';
 import Home from './sections/Home.tsx';
 import AppHome from './App-Home.tsx';
-import NewUser from './modules/Users/NewUser.tsx';
-import NewRequest from './modules/Requests/NewRequest.tsx';
-import NewProject from './modules/Projects/NewProject.tsx';
-import Projects from './modules/Projects/Projects.tsx';
-import NewElement from './modules/Elements/NewElement.tsx';
-import Elements from './modules/Elements/Elements.tsx';
-import NewRole from './modules/Users/NewRole.tsx';
-import EditProject from './modules/Projects/EditProject.tsx';
-import ResetPassword from './ResetPassword.tsx';
-import Element from './modules/Elements/Element.tsx';
-import Request from './modules/Requests/Request.tsx';
-import Emergencies from './modules/Emergencies/Emergencies.tsx';
-import NewEmergency from './modules/Emergencies/NewEmergency.tsx';
-import Emergency from './modules/Emergencies/Emergency.tsx';
-import Resources from './modules/Resources/Resources.tsx';
-import NewResource from './modules/Resources/NewResource.tsx';
-import Resource from './modules/Resources/Resource.tsx';
-import Suppliers from './modules/Suppliers/Suppliers.tsx';
-import NewSupplier from './modules/Suppliers/NewSupplier.tsx';
-import Supplier from './modules/Suppliers/Supplier.tsx';
-import Project from './modules/Projects/Project.tsx';
+
+import { Login, ResetPassword } from './modules/Login';
+import { Users, User, NewUser} from './modules/Users';
+import { Elements, Element, NewElement } from './modules/Elements';
+import { Projects, Project, NewProject, EditProject } from './modules/Projects';
+import { Requests, Request, NewRequest } from './modules/Requests';
+import { PurchaseOrders, PurchaseOrder, NewPurchaseOrder } from './modules/Projects/PurchaseOrders';
+import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
+import { Resources, Resource, NewResource } from './modules/Resources';
+import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
 
 export default function App() {
 
@@ -57,7 +42,6 @@ export default function App() {
           <Route path='users' element={<Users />} />
           <Route path='users/:id' element={<User />} />
           <Route path='users/new' element={<NewUser />} />
-          <Route path='users/role/new' element={<NewRole />} />
           {/* End users routes */}
           {/* Emergencies routes */}
           <Route path='emergencies' element={<Emergencies />} />
@@ -74,6 +58,10 @@ export default function App() {
           <Route path='suppliers/new' element={<NewSupplier />} />
           <Route path='suppliers/:id' element={<Supplier />} />
           {/* End suppliers routes */}
+          {/* End purchaseOrders routes */}
+          <Route path='purchase-orders' element={<PurchaseOrders />} />
+          <Route path='purchase-orders/' element={<PurchaseOrder />} />
+          <Route path='purchase-orders/new' element={<NewPurchaseOrder />} />
         </Route>
       </Routes>
     </BrowserRouter>
