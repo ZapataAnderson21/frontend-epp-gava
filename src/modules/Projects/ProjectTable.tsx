@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -11,6 +12,9 @@ interface ProjectTableProps {
 
 export default function ProjectTable({ filter }: ProjectTableProps) {
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [permission, setPermission] = useState(false);
+
   const { data: projects, loading, error } = useFetch<ProjectType[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
 
   const columns = [
@@ -20,6 +24,18 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     { key: "status", label: "Estado", width: "12rem" },
     { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
   ] as const;
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(user.userType)) {
+      setPermission(true);
+    }
+  }, [user]);
+
+  if (!user) {
+    return <div className="text-red-500">Iniciar sesión.</div>;
+  }
 
   if (loading) {
     return <LoadingSkeletonTable />;
@@ -46,7 +62,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     <Table<ProjectType>
       data={processedProjects}
       columns={columns}
-      getHref={(p) => `/admin/projects/${p.projectId}`}
+      getHref={(project) => permission ? `/admin/projects/${project.projectId}` : "#"}
     />
   );
 }

@@ -24,3 +24,11 @@ export const resourceApi = `${root}resource/`;
 export const categoryResourceApi = `${root}category-resource/`;
 
 export const supplierApi = `${root}supplier/`;
+
+export const purchaseOrderApi = `${root}purchase-order/`;
+
+export const resourcePurchaseOrderApi = `${root}resource-purchase-order/`;
+
+export const pettyCashApi = `${root}petty-cash/`;
+
+export const serviceSaleApi = `${root}service-sale/`;

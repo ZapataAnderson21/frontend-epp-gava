@@ -10,6 +10,7 @@ import CountCard from "./components/CountCard";
 import MoneyTrendCard, { DEFAULT_RATES } from "./components/MoneyTrendCard";
 import HeaderActions from "./sections/HeaderActions";
 import CurrencyFilter, { type Currency } from "./components/CurrencyFilter";
+import { ErrorMessage } from "../../common/error";
 
 export default function Project() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -20,11 +21,15 @@ export default function Project() {
   );
 
   const [currency, setCurrency] = React.useState<Currency>("PEN");
-  const [rates] = React.useState(DEFAULT_RATES); // podrías traer esto del backend
+  const [rates] = React.useState(DEFAULT_RATES);
+
+  if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
     <Panel>
-      <HeaderPanel name={`${project ? project?.name : ""}`}>
+      <HeaderPanel 
+        loading={loading}
+        name={`${project ? project?.name : ""}`}>
         {projectId && (
           <HeaderActions
             projectId={projectId}
@@ -37,26 +42,31 @@ export default function Project() {
         <div className="flex flex-col gap-4 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
             <CountCard
+              loading = {loading}
               title="Órdenes de Compra"
               count={project?.purchaseOrders?.length ?? 0}
               to={`/admin/purchase-orders?projectId=${projectId}`}
             />
             <CountCard
+              loading = {loading}
               title="Requerimientos"
               count={project?.requests?.length ?? 0}
               to={`/admin/requests?projectId=${projectId}`}
             />
             <CountCard
+              loading = {loading}
               title="Caja Chica"
               count={project?.pettyCashes?.length ?? 0}
               to={`/admin/petty-cash?projectId=${projectId}`}
             />
             <CountCard
+              loading = {loading}
               title="Servicios"
               count={project?.serviceSales?.length ?? 0}
               to={`/admin/service-sales?projectId=${projectId}`}
             />
             <CountCard
+              loading = {loading}
               title="Emergencias"
               count={project?.emergencies?.length ?? 0}
               to={`/admin/emergencies?projectId=${projectId}`}
@@ -74,6 +84,7 @@ export default function Project() {
         {/* Ingresos */}
         <SectionProjectSummary title="Ingresos">
           <MoneyTrendCard
+            loading={loading}
             title="Órdenes de Compra"
             amountPen={88888}
             trend="up"
@@ -84,21 +95,17 @@ export default function Project() {
 
         {/* Gastos */}
         <SectionProjectSummary title="Gastos">
-          <MoneyTrendCard title="Órdenes de Compra" amountPen={88888} trend="down" currency={currency} rates={rates} />
-          <MoneyTrendCard title="Planillas"        amountPen={88888} trend="down" currency={currency} rates={rates} />
-          <MoneyTrendCard title="Servicios"        amountPen={88888} trend="down" currency={currency} rates={rates} />
-          <MoneyTrendCard title="Caja Chica"       amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard loading={loading} title="Órdenes de Compra" amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard loading={loading} title="Planillas"        amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard loading={loading} title="Servicios"        amountPen={88888} trend="down" currency={currency} rates={rates} />
+          <MoneyTrendCard loading={loading} title="Caja Chica"       amountPen={88888} trend="down" currency={currency} rates={rates} />
         </SectionProjectSummary>
 
         {/* Utilidades */}
         <SectionProjectSummary title="Utilidades">
-          <MoneyTrendCard title={currency} amountPen={88888} trend="flat" currency={currency} rates={rates} />
+          <MoneyTrendCard loading={loading} title={currency} amountPen={88888} trend="flat" currency={currency} rates={rates} />
         </SectionProjectSummary>
       </div>
-
-      {/* Loading / Error lightweight inline states */}
-      {loading && <div className="text-sm text-gray-500">Cargando información del proyecto…</div>}
-      {error &&   <div className="text-sm text-red-600">Ocurrió un error al cargar el proyecto.</div>}
     </Panel>
   );
 }

@@ -7,9 +7,12 @@ import RequestTable from "./RequestTable";
 
 const options = [
   { value: "all", label: "Todas" },
-  { value: "pending", label: "Pendientes" },
+  { value: "inProgress", label: "En Progreso" },
+  { value: "reviewed", label: "Revisadas" },
   { value: "approved", label: "Aprobadas" },
   { value: "rejected", label: "Rechazadas" },
+  { value: "addressed", label: "Atendidas" },
+  { value: "completed", label: "Completadas" },
 ];
 
 export default function Requests() {

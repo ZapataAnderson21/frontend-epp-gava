@@ -162,7 +162,7 @@ export default function EditProject() {
         
         <ButtonContainer>
           <RedButton 
-            href="/admin/projects"
+            href={`/admin/projects/${projectId}`}
             name="Regresar"
           />
           <ButtonSubmit 

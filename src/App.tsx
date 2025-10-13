@@ -12,6 +12,7 @@ import { PurchaseOrders, PurchaseOrder, NewPurchaseOrder } from './modules/Proje
 import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
+import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
 
 export default function App() {
 
@@ -58,10 +59,14 @@ export default function App() {
           <Route path='suppliers/new' element={<NewSupplier />} />
           <Route path='suppliers/:id' element={<Supplier />} />
           {/* End suppliers routes */}
-          {/* End purchaseOrders routes */}
+          {/* PurchaseOrders routes */}
           <Route path='purchase-orders' element={<PurchaseOrders />} />
-          <Route path='purchase-orders/' element={<PurchaseOrder />} />
+          <Route path='purchase-orders/:id' element={<PurchaseOrder />} />
           <Route path='purchase-orders/new' element={<NewPurchaseOrder />} />
+          {/* End purchaseOrders routes */}
+          {/* PettyCash routes */}
+          <Route path='petty-cash' element={<PettyCashes />} />
+          {/* End pettyCash routes */}
         </Route>
       </Routes>
     </BrowserRouter>

@@ -3,7 +3,7 @@ interface InputFormProps {
   label: string;
   name: string;
   type: string;
-  value: string;
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   optional?: boolean;
@@ -25,14 +25,14 @@ export default function InputForm({ label, name, type, value, onChange, error, o
           id={name}
           name={name}
           type={type}
-          className="border border-gray-400 p-2 rounded-sm w-full focus:outline-[#0047a3]"
+          className={`border ${error ? "border-red-600" : "border-gray-400"} p-2 rounded-sm w-full focus:outline-[#0047a3]`}
           value={value}
           onChange={onChange}
           required={!optional}
           disabled={disabled}
         />
       </div>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-xs">{error}</p>}
     </div>
   )
 }

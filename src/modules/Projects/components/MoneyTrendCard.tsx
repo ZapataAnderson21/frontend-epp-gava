@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { CgSpinner } from "react-icons/cg";
 import { FaArrowRightArrowLeft, FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 
 export type Currency = "PEN" | "USD" | "EUR";
@@ -36,6 +37,7 @@ const cardShadow = {
 };
 
 interface Props {
+  loading: boolean;
   title: string;
   amountPen: number; // base en PEN
   trend: "up" | "down" | "flat";
@@ -44,6 +46,7 @@ interface Props {
 }
 
 export default function MoneyTrendCard({
+  loading,
   title,
   amountPen,
   trend,
@@ -73,7 +76,7 @@ export default function MoneyTrendCard({
         {title}
       </h4>
       <div className="flex flex-row flex-wrap text-nowrap justify-between gap-4 items-center">
-        <p className="flex-1 text-2xl font-extrabold">{displayAmount}</p>
+        <p className="flex-1 text-2xl font-extrabold">{ loading ? <CgSpinner className="animate-spin" /> : displayAmount}</p>
         {TrendIcon}
       </div>
     </motion.div>
