@@ -32,3 +32,7 @@ export const resourcePurchaseOrderApi = `${root}resource-purchase-order/`;
 export const pettyCashApi = `${root}petty-cash/`;
 
 export const serviceSaleApi = `${root}service-sale/`;
+
+export const workerApi = `${root}worker/`;
+
+export const workerGroupApi = `${root}worker-group/`;

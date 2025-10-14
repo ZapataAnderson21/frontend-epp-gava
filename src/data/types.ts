@@ -290,3 +290,27 @@ export interface ServiceSaleType {
 }
 
 export type Currency = "PEN" | "USD" | "EUR";
+
+export interface Worker {
+  workerId: number
+  fullName: string
+  dni: string
+  phone?: string
+  address?: string
+  workerGroupId: number
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
+  workerGroup?: WorkerGroup
+  workerGroupName?: string
+}
+
+export interface WorkerGroup {
+  workerGroupId: number
+  name: string
+  description?: string
+  parentGroupId?: number
+  createdAt: string
+  updatedAt: string
+  parentGroup?: WorkerGroup
+}

@@ -15,6 +15,7 @@ import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
 import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
 import ServiceSales from './modules/Projects/ServiceSales/ServiceSales.tsx';
 import RequireAuth from './RequireAuth.tsx';
+import Workers from './modules/Workers/Workers.tsx';
 
 export default function App() {
 
@@ -72,6 +73,9 @@ export default function App() {
           {/* ServiceSales routes */}
           <Route path='service-sale' element={<ServiceSales />} />
           {/* End serviceSales routes */}
+          {/* Workers routes */}
+          <Route path='workers' element={<Workers />} />
+          {/* End workers routes */}
         </Route>
       </Routes>
     </BrowserRouter>

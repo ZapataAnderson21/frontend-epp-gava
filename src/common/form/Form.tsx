@@ -35,7 +35,7 @@ export default function Form({
   };
 
   return (
-    <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
+    <motion.div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
       <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
         <motion.h1
           className="text-2xl font-bold mb-4"
@@ -70,6 +70,6 @@ export default function Form({
           }
         </motion.form>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

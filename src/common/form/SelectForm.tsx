@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 type Primitive = string | number;
 
-interface Option<T extends Primitive = string> {
+export interface Option<T extends Primitive = string> {
   value: T;
   label: string;
 }

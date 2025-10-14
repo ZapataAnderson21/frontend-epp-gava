@@ -9,6 +9,7 @@ import { RiAlertFill } from "react-icons/ri";
 import { useApiAction } from "../hooks/useApiAction";
 import { userApi } from "../data/apiUrl";
 import { AnimatePresence, motion } from "framer-motion";
+import { GrUserWorker } from "react-icons/gr";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -142,6 +143,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <SidebarItem icon={<FaBoxOpen />} label="Recursos"   href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           <SidebarItem icon={<FaUsers />}   label="Usuarios"   href="/admin/users"     index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<GrUserWorker />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} />
         </div>
 
         <div className="flex flex-col gap-4 border-t border-gray-300 py-4 px-6">
