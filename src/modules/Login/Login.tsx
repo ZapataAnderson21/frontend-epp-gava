@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks/useApiAction";
 import { userApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
@@ -15,12 +15,21 @@ interface LoginResponse {
   };
 }
 
-export default function Login() {
+interface LoginProps {
+  url? : string;
+}
+
+export default function Login({ url }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [openModal, setOpenModal] = useState(false);
+  
   const navigate = useNavigate();
+  
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect");
 
   const {
     execute: loginAction,
@@ -48,7 +57,7 @@ export default function Login() {
     if (response.statusCode === 200) {
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate("/admin");
+      navigate(redirect || "/admin", { replace: true });
     } else {
       setError(response.message || "Error desconocido");
     }

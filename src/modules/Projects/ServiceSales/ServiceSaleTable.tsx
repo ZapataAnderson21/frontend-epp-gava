@@ -2,33 +2,33 @@ import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../../common/error";
 import { LoadingSkeletonTable } from "../../../common/loading";
 import { Table } from "../../../common/table";
-import { pettyCashApi } from "../../../data/apiUrl";
-import { type PettyCashType } from "../../../data/types";
+import { serviceSaleApi } from "../../../data/apiUrl";
+import { type ServiceSaleType } from "../../../data/types";
 import { useFetch } from "../../../hooks";
 import SeeButton from "../../../common/SeeButton";
 
 interface ProjectTableProps {
   projectId: number;
   reFetch: number;
-  onSee: (pettyCashId: number) => void;
+  onSee: (serviceSaleId: number) => void;
 }
 
-export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTableProps) {
+export default function ServiceSaleTable( {projectId, reFetch, onSee} : ProjectTableProps) {
 
-  const { data: pettyCashes, loading, error } = useFetch<PettyCashType[]>(`${pettyCashApi}project/${projectId}`, [projectId, reFetch]);
+  const { data: serviceSales, loading, error } = useFetch<ServiceSaleType[]>(`${serviceSaleApi}project/${projectId}`, [projectId, reFetch]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [permission, setPermission] = useState(false);
 
   const columns = [
-    { key: "resourceName", label: "Recurso comprado", width: "12rem" },
+    { key: "serviceName", label: "Servicio contratado", width: "12rem" },
     { key: "amount", label: "Monto", width: "12rem" },
     { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
     {
       label: "Acciones",
       width: "8rem",
-      render: (row: PettyCashType) => (
-        <SeeButton onClick={() => onSee(row.pettyCashId)} />
+      render: (row: ServiceSaleType) => (
+        <SeeButton onClick={() => onSee(row.serviceSaleId)} />
       ),
     },
   ] as const;
@@ -53,13 +53,13 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
     return <ErrorMessage errorMessage={error} />;
   }
 
-  if (!pettyCashes || pettyCashes.length === 0) {
+  if (!serviceSales || serviceSales.length === 0) {
     return <div className="text-center text-gray-500">No hay salidas de caja chica.</div>;
   }
 
-  const processedPettyCashes = pettyCashes?.map(pettyCash => ({
-    ...pettyCash,
-    createdAt: new Date(pettyCash.createdAt).toLocaleDateString("es-ES", {
+  const processedServiceSales = serviceSales?.map(serviceSale => ({
+    ...serviceSale,
+    createdAt: new Date(serviceSale.createdAt).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "numeric",
       day: "numeric"
@@ -67,8 +67,8 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
   }));
 
   return (
-    <Table<PettyCashType>
-      data={processedPettyCashes}
+    <Table<ServiceSaleType>
+      data={processedServiceSales}
       columns={columns}
     />
   );

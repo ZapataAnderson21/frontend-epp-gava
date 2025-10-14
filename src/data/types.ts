@@ -285,7 +285,7 @@ export interface ServiceSaleType {
   serviceName: string;
   amount: number;
   description: string;
-  createdAt: Date;
+  createdAt: string;
   updatedAt: Date;
 }
 

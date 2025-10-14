@@ -1,6 +1,6 @@
 import getAuthHeaders from "./getAuthHeaders";
-
 import { useEffect, useState } from "react";
+import { redirectToLoginPreservingURL } from "../auth-redirect";
 
 interface ApiResponse<T> {
   statusCode: number;
@@ -19,14 +19,20 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(url, {
-          headers: getAuthHeaders(),
-        });
-        const json: ApiResponse<T> = await res.json();
+        const res = await fetch(url, { headers: getAuthHeaders() });
 
+        if (res.status === 401) {
+          redirectToLoginPreservingURL();
+          return;
+        }
+
+        const json: ApiResponse<T> = await res.json();
         if (!active) return;
 
-        console.log("Fetch URL:", url, "Response:", json.data);
+        if (json.statusCode === 401) {
+          redirectToLoginPreservingURL();
+          return;
+        }
 
         if (json.statusCode === 200) {
           setData(json.data);
@@ -46,7 +52,7 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     return () => {
       active = false;
     };
-  }, [url, ...extraDeps]);  // 👈 el url siempre se incluye en deps
+  }, [url, ...extraDeps]);
 
   return { data, loading, error };
 }

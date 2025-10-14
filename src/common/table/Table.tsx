@@ -1,15 +1,24 @@
+// common/table/index.tsx
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MotionLink = motion(Link);
 
-interface Column<T> { key: keyof T; label: string; width?: string; truncate?: boolean; }
+type Column<T> = {
+  key?: keyof T;                 // ahora opcional si usas render
+  label: string;
+  width?: string;
+  truncate?: boolean;
+  render?: (row: T) => React.ReactNode;  // 👈 render por fila
+  align?: "left" | "center" | "right";
+};
+
 interface TableProps<T> {
   data: T[];
   columns: readonly Column<T>[];
-  getHref?: (item: T) => string;
-  baseDelayMs?: number;     // delay inicial
-  perRowDelayMs?: number;   // delay extra por fila
+  getHref?: (item: T) => string | undefined;
+  baseDelayMs?: number;
+  perRowDelayMs?: number;
 }
 
 export default function Table<T>({
@@ -26,14 +35,21 @@ export default function Table<T>({
     })
   };
 
+  const cellAlign = (align?: "left"|"center"|"right") =>
+    align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
+
   return (
     <div className="w-full text-nowrap">
       <div className="overflow-auto">
         <div className="table w-full border border-gray-100 text-gray-700 rounded-lg">
           <div className="table-header-group bg-gray-100 font-semibold">
             <div className="table-row">
-              {columns.map((col) => (
-                <div key={String(col.key)} className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`} style={{ width: col.width }}>
+              {columns.map((col, i) => (
+                <div
+                  key={String(col.key ?? `col-${i}`)}
+                  className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""} ${cellAlign(col.align)}`}
+                  style={{ width: col.width }}
+                >
                   {col.label}
                 </div>
               ))}
@@ -47,14 +63,19 @@ export default function Table<T>({
                 const rowClasses = `table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
                 const cells = (
                   <>
-                    {columns.map((col) => (
-                      <div key={String(col.key)} className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""}`} style={{ width: col.width }}>
-                        {String(item[col.key] ?? "")}
+                    {columns.map((col, i) => (
+                      <div
+                        key={String(col.key ?? `c-${i}`)}
+                        className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""} ${cellAlign(col.align)}`}
+                        style={{ width: col.width }}
+                      >
+                        {col.render ? col.render(item) : String(item[col.key as keyof T] ?? "")}
                       </div>
                     ))}
                   </>
                 );
 
+                // Si NO quieres que la fila entera navegue, no pases getHref
                 return href ? (
                   <MotionLink
                     key={idx}
@@ -64,7 +85,7 @@ export default function Table<T>({
                     initial="hidden"
                     animate="visible"
                     exit={{ opacity: 0 }}
-                    custom={idx}         // ← pasa el índice al variant
+                    custom={idx}
                   >
                     {cells}
                   </MotionLink>

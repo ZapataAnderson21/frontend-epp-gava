@@ -1,3 +1,4 @@
+// components/MoneyTrendCard.tsx
 import { motion } from "framer-motion";
 import { CgSpinner } from "react-icons/cg";
 import { FaArrowRightArrowLeft, FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
@@ -9,17 +10,6 @@ const CURRENCY_SYMBOL: Record<Currency, string> = {
   USD: "$",
   EUR: "€",
 };
-
-// Tasas respecto a PEN (placeholder). Reemplaza con tasas reales del backend si aplica.
-export const DEFAULT_RATES: Record<Currency, number> = {
-  PEN: 1,
-  USD: 0.27,
-  EUR: 0.25,
-};
-
-function convertFromBase(amountInPen: number, target: Currency, rates: Record<Currency, number>) {
-  return amountInPen * (rates[target] ?? 1);
-}
 
 function formatMoney(value: number, currency: Currency) {
   return `${CURRENCY_SYMBOL[currency]} ${value.toLocaleString(undefined, {
@@ -39,19 +29,19 @@ const cardShadow = {
 interface Props {
   loading: boolean;
   title: string;
-  amountPen: number; // base en PEN
   trend: "up" | "down" | "flat";
+  /** Montos por moneda, sin conversiones */
+  amountsByCurrency: Record<Currency, number>; // { PEN, USD, EUR }
+  /** Moneda seleccionada por el filtro superior */
   currency: Currency;
-  rates?: Record<Currency, number>;
 }
 
 export default function MoneyTrendCard({
   loading,
   title,
-  amountPen,
   trend,
+  amountsByCurrency,
   currency,
-  rates = DEFAULT_RATES,
 }: Props) {
   const TrendIcon =
     trend === "up" ? (
@@ -62,7 +52,8 @@ export default function MoneyTrendCard({
       <FaArrowRightArrowLeft className="text-4xl text-blue-600" />
     );
 
-  const displayAmount = formatMoney(convertFromBase(amountPen, currency, rates), currency);
+  const value = amountsByCurrency[currency] ?? 0;
+  const displayAmount = formatMoney(value, currency);
 
   return (
     <motion.div 
@@ -76,7 +67,9 @@ export default function MoneyTrendCard({
         {title}
       </h4>
       <div className="flex flex-row flex-wrap text-nowrap justify-between gap-4 items-center">
-        <p className="flex-1 text-2xl font-extrabold">{ loading ? <CgSpinner className="animate-spin" /> : displayAmount}</p>
+        <p className="flex-1 text-2xl font-extrabold">
+          {loading ? <CgSpinner className="animate-spin" /> : displayAmount}
+        </p>
         {TrendIcon}
       </div>
     </motion.div>

@@ -37,8 +37,8 @@ export default function HeaderActions({ projectId }: { projectId: string }) {
           label="Editar"
           href={`/admin/projects/edit/${projectId}`}
           onClick={() => {}}
-          bgColor="#2563EB"
-          bgHoverColor="#1D4ED8"
+          bgColor="#1d293d"
+          bgHoverColor="#000000"
         />
         }
       </ButtonContainer>

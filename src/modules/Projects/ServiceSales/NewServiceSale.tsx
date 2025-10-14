@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { ButtonSubmit, Form, InputForm, SaveModal, TextAreaForm } from "../../../common/form";
-import type { PettyCashType } from "../../../data/types";
+import type { ServiceSaleType } from "../../../data/types";
 import { useApiAction } from "../../../hooks";
-import { pettyCashApi } from "../../../data/apiUrl";
+import { serviceSaleApi } from "../../../data/apiUrl";
 
-interface NewPettyCashProps {
+interface NewServiceSaleProps {
   projectId: number;
   successAction: () => void;
 }
 
-export default function NewPettyCash({ projectId, successAction }: NewPettyCashProps) {
+export default function NewServiceSale({ projectId, successAction }: NewServiceSaleProps) {
 
-  const [resourceName, setResourceName] = useState("");
+  const [serviceName, setServiceName] = useState("");
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
-  const [resourceNameError, setResourceNameError] = useState("");
+  const [serviceNameError, setServiceNameError] = useState("");
   const [amountError, setAmountError] = useState("");
 
-  const { execute, loading, response, error } = useApiAction<PettyCashType>()
+  const { execute, loading, response, error } = useApiAction<ServiceSaleType>()
 
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
@@ -27,8 +27,8 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
     setOpenSaveModal(true);
 
     // validaciones...
-    if (!resourceName || resourceName.trim() === "") {
-      setResourceNameError("El nombre del recurso es obligatorio.");
+    if (!serviceName || serviceName.trim() === "") {
+      setServiceNameError("El nombre del servicio es obligatorio.");
       return;
     }
     if (amount <= 0) {
@@ -36,17 +36,17 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
       return;
     }
 
-    const body = { projectId, resourceName, amount, description };
-    const result = await execute(pettyCashApi, "POST", body);
+    const body = { projectId, serviceName, amount, description };
+    const result = await execute(serviceSaleApi, "POST", body);
 
     if (result.statusCode === 201) {
       successAction();
 
       // Limpia el formulario
       setDescription("");
-      setResourceName("");
+      setServiceName("");
       setAmount(0);
-      setResourceNameError("");
+      setServiceNameError("");
       setAmountError("");
 
       // Que el botón OK solo cierre el modal
@@ -59,15 +59,15 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
 
   return (
     <>
-      <Form name= "Nuevo gasto de caja chica" handleSubmit={handleSubmit} >
+      <Form name= "Nuevo servicio contratado" handleSubmit={handleSubmit} >
         <InputForm
-          label="Nombre del Recurso"
-          value={resourceName}
-          onChange={(e) => { setResourceName(e.target.value);}}
-          name="resourceName"
+          label="Nombre del Servicio"
+          value={serviceName}
+          onChange={(e) => { setServiceName(e.target.value);}}
+          name="serviceName"
           type="text"
           optional={false}
-          error={resourceNameError}
+          error={serviceNameError}
         />
         <InputForm
           label="Monto"

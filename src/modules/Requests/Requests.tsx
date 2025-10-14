@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { FaPlus } from "react-icons/fa6";
+import { FaArrowLeft, FaPlus } from "react-icons/fa6";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import { Button } from "../../components";
 import RequestTable from "./RequestTable";
+import { useSearchParams } from "react-router-dom";
 
 const options = [
   { value: "all", label: "Todas" },
@@ -22,6 +23,9 @@ export default function Requests() {
     setFilter(option);
   };
 
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
+
   return (
 
     <Panel>
@@ -39,6 +43,17 @@ export default function Requests() {
           options={options}
           directionRow={true}
         />
+
+        {projectId && (
+          <Button
+          icon={<FaArrowLeft />}
+          label="Regresar"
+          href={`/admin/projects/${projectId}`}
+          bgColor="#d80027"
+          bgHoverColor="#c80008"
+          onClick={() => {}}
+        />
+        )}
 
         <Button
           icon={<FaPlus />}

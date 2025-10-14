@@ -13,6 +13,8 @@ import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
 import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
+import ServiceSales from './modules/Projects/ServiceSales/ServiceSales.tsx';
+import RequireAuth from './RequireAuth.tsx';
 
 export default function App() {
 
@@ -21,7 +23,7 @@ export default function App() {
       <Routes>
         <Route path='/' element={<Login />} />
         <Route path='/reset-password' element={<ResetPassword />} />
-        <Route path='/admin' element={<Home />} >
+        <Route path='/admin' element={<RequireAuth><Home /></RequireAuth>}>
           <Route path='' element={<AppHome />} />
           {/* Projects routes */}
           <Route path='projects' element={<Projects />} />
@@ -67,6 +69,9 @@ export default function App() {
           {/* PettyCash routes */}
           <Route path='petty-cash' element={<PettyCashes />} />
           {/* End pettyCash routes */}
+          {/* ServiceSales routes */}
+          <Route path='service-sale' element={<ServiceSales />} />
+          {/* End serviceSales routes */}
         </Route>
       </Routes>
     </BrowserRouter>
