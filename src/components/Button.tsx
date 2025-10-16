@@ -7,7 +7,7 @@ interface ButtonProps {
   icon?: React.ReactNode;
   label: string;
   onClick?: () => void;
-  href?: string;                 // 👈 opcional
+  href?: string;
   bgColor: string;
   bgHoverColor: string;
 }
@@ -24,7 +24,7 @@ function Button({ icon, label, onClick, href, bgColor, bgHoverColor }: ButtonPro
       style={{ backgroundColor: bgColor }}
       onMouseOver={(e) => (e.currentTarget.style.backgroundColor = bgHoverColor)}
       onMouseOut={(e) => (e.currentTarget.style.backgroundColor = bgColor)}
-      className="cursor-pointer px-4 py-2 rounded-md shadow-sm transition-colors font-bold flex flex-row gap-2 items-center text-white"
+      className="cursor-pointer px-4 py-2 rounded-md shadow-sm transition-colors font-bold flex flex-row gap-2 items-center text-white text-nowrap"
     >
       {icon}
       <span>{label}</span>

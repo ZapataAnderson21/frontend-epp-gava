@@ -2,30 +2,39 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoWarning } from "react-icons/io5";
 import { RiQuestionFill } from "react-icons/ri";
-import { MdAttachEmail } from "react-icons/md";
-import { FaHelmetSafety } from "react-icons/fa6";
+import { MdAttachEmail, MdEngineering } from "react-icons/md";
+import { FaArrowLeft, FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
 import { FaTools } from "react-icons/fa";
 import { TiArrowBack } from "react-icons/ti";
 
-import RequestTypeCard from "./components/RequestTypeCard";
-import type { ElementRequestType, ProjectType, ElementType } from "../../data/types";
+import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
+import type { ElementRequestType, ProjectType, ElementType, Worker, RequestWorker } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, RedButton, SaveModal, ButtonContainer, Form, ButtonSubmit } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer, Form, ButtonSubmit } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
 import { Button } from "../../components";
+import WorkerSelectCard from "./components/ModalWorkers/WorkerSelectCard";
+import HeaderWorkers from "./components/HeaderWorkers";
+import RowRequestWorker from "./components/RowRequestWorker";
 
 export default function NewRequest() {
   const [projectId, setProjectId] = useState<number>(0);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
   const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
   const selectedElementRequest: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+  const selectedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
+  const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
+
   const [description, setDescription] = useState<string>("");
 
   const [elements, setElements] = useState<ElementType[]>(selectedElements);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(selectedElementRequest);
+
+  const [workers, setWorkers] = useState<Worker[]>(selectedWorkers);
+  const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>(selectedRequestWorkers);
 
   const { data: projects } = useFetch<ProjectType[]>(`${projectApi}status/active`, []);
 
@@ -44,6 +53,25 @@ export default function NewRequest() {
   // ✅ usar useHandleForm
   const { handleSave, handleSaveAndSend } = useHandleForm();
 
+  const handleSelectionElementsUpdate = (
+    nextElements: ElementType[],
+    nextElementRequests: ElementRequestType[]
+  ) => {
+    setElements(nextElements);
+    setElementRequests(nextElementRequests);
+    localStorage.setItem("selectedElements", JSON.stringify(nextElements));
+    localStorage.setItem("selectedElementRequest", JSON.stringify(nextElementRequests));
+  };
+
+  const handleSelectionWorkersUpdate = (
+    nextWorkers: Worker[],
+    nextRequestWorkers: RequestWorker[]
+  ) => {
+    setWorkers(nextWorkers);
+    setRequestWorkers(nextRequestWorkers);
+    localStorage.setItem("selectedWorkers", JSON.stringify(nextWorkers));
+    localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
+  };
 
   const closeModalAndReset = () => {
     setOpenSaveModal(false);
@@ -58,14 +86,18 @@ export default function NewRequest() {
     const handleStorageChange = () => {
       const updatedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
       setElements(updatedElements);
+
+      // ✅ también workers
+      const updatedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
+      const updatedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
+      setWorkers(updatedWorkers);
+      setRequestWorkers(updatedRequestWorkers);
     };
 
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
 
   const handleRemoveElement = (element: ElementType) => {
     const updatedElements = elements.filter((elem) => elem.elementId !== element.elementId);
@@ -86,6 +118,18 @@ export default function NewRequest() {
     localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
   };
 
+  const handleChangeRequestWorker = (
+    workerId: number,
+    field: keyof Pick<RequestWorker, "shirtSize" | "pantsSize" | "shoeSize">,
+    value: string
+  ) => {
+    const updated = requestWorkers.map((rw) =>
+      rw.workerId === workerId ? { ...rw, [field]: value } : rw
+    );
+    setRequestWorkers(updated);
+    localStorage.setItem("selectedRequestWorkers", JSON.stringify(updated));
+  };
+
   const handleSaveRequest = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setOpenSaveModal(true);
@@ -103,10 +147,14 @@ export default function NewRequest() {
       setOnOk(() => navigateToRequests);
       setElements([]);
       setElementRequests([]);
+      setWorkers([]);
+      setRequestWorkers([]);
       localStorage.removeItem("projectId");
       localStorage.removeItem("deliveryDueDate");
       localStorage.removeItem("selectedElements");
       localStorage.removeItem("selectedElementRequest");
+      localStorage.removeItem("selectedWorkers");
+      localStorage.removeItem("selectedRequestWorkers");
     } else {
       setError(true);
       setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
@@ -132,6 +180,10 @@ export default function NewRequest() {
       setOnOk(() => navigateToRequests);
       setElements([]);
       setElementRequests([]);
+      setWorkers([]);
+      setRequestWorkers([]);
+      localStorage.removeItem("selectedWorkers");
+      localStorage.removeItem("selectedRequestWorkers");
       localStorage.removeItem("projectId");
       localStorage.removeItem("deliveryDueDate");
       localStorage.removeItem("selectedElements");
@@ -143,6 +195,19 @@ export default function NewRequest() {
       setOpenSaveModal(true);
     }
   }
+
+  const handleRemoveWorker = (worker: Worker) => {
+    const nextWorkers = workers.filter(w => w.workerId !== worker.workerId);
+    const nextReqWorkers = requestWorkers.filter(rw => rw.workerId !== worker.workerId);
+
+    setWorkers(nextWorkers);
+    setRequestWorkers(nextReqWorkers);
+
+    localStorage.setItem("selectedWorkers", JSON.stringify(nextWorkers));
+    localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextReqWorkers));
+  };
+
+
 
   if (!projects) {
     return <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente más tarde." />;
@@ -189,8 +254,8 @@ export default function NewRequest() {
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
           <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
-            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="epp" />
-            <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" />
+            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="epp" onSelected={handleSelectionElementsUpdate} />
+            <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" onSelected={handleSelectionElementsUpdate} />
           </div>
           <div className="flex flex-col items-start gap-2 justify-start w-full">
             {
@@ -209,30 +274,6 @@ export default function NewRequest() {
                       handleChangeElementRequest={handleChangeElementRequest}
                     />
                   ))}
-
-                  <TextAreaForm
-                    label="Descripción"
-                    name="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    optional={true}
-                  />
-
-                  <ButtonContainer>
-                    <ButtonSubmit
-                      label="Guardar"
-                      loading={false}
-                      loadingLabel="Guardando"
-                    />
-                    <Button
-                      label="Guardar y Enviar"
-                      href="#"
-                      onClick={() => setOpenPasswordModal(true)}
-                      bgColor="black"
-                      bgHoverColor="gray-900"
-                      icon={<MdAttachEmail />}
-                    />
-                  </ButtonContainer>
                 </>
               ) : (
                 <div className="flex flex-col gap-2 w-full mb-4">
@@ -242,8 +283,81 @@ export default function NewRequest() {
                 </div>
               )
             }
-            <RedButton href="/admin/requests" name="Regresar" />
           </div>
+
+          <span className="font-semibold">Busca los trabajadores que vas a seleccionar:</span>
+          <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
+            <WorkerSelectCard icon={<FaPersonDigging className="size-16" />} title="Obreros" groupId={5} onSelected={handleSelectionWorkersUpdate} />
+            <WorkerSelectCard icon={<MdEngineering className="size-16" />} title="Técnicos" groupId={6} onSelected={handleSelectionWorkersUpdate} />
+          </div>
+
+          {/* Trabajadores seleccionados (editable) */}
+          <div className="flex flex-col items-start gap-2 justify-start w-full">
+            {workers.length > 0 ? (
+              <>
+                <span className="font-semibold pt-2 pb-2">Trabajadores seleccionados:</span>
+                <HeaderWorkers />
+                {workers.map((w) => {
+                  const rw =
+                    requestWorkers.find((x) => x.workerId === w.workerId) ||
+                    {
+                      requestWorkerId: 0,
+                      requestId: 0,
+                      workerId: w.workerId!,
+                      shirtSize: "",
+                      pantsSize: "",
+                      shoeSize: "",
+                      worker: w,
+                    };
+                  return (
+                    <RowRequestWorker
+                      key={w.workerId}
+                      requestWorker={rw}
+                      onRemove={handleRemoveWorker}
+                      onChange={handleChangeRequestWorker}
+                    />
+                  );
+                })}
+              </>
+            ) : (
+              <div className="flex flex-col gap-2 w-full mb-4">
+                <div className="flex w-full border border-gray-100"></div>
+                <ErrorMessage errorMessage="No hay trabajadores seleccionados." />
+                <div className="flex w-full border border-gray-100"></div>
+              </div>
+            )}
+          </div>
+
+
+          <TextAreaForm
+            label="Descripción"
+            name="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            optional={true}
+          />
+
+          <ButtonContainer>
+            <Button 
+              icon={<FaArrowLeft />}
+              href="/admin/requests"
+              label="Regresar"
+              bgColor="#d80027"
+              bgHoverColor="#c80008"
+            />
+            <ButtonSubmit
+              label="Guardar"
+              loading={false}
+              loadingLabel="Guardando"
+            />
+            <Button
+              icon={<MdAttachEmail />}
+              label="Guardar y Enviar"
+              onClick={() => setOpenPasswordModal(true)}
+              bgColor="black"
+              bgHoverColor="gray-900"
+            />
+          </ButtonContainer>
         </div>
       </Form>
       {

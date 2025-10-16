@@ -4,17 +4,21 @@ import type {
   CreateElementRequestDto,
   ElementRequestType,
   UpdateElementRequestDto,
+  Worker,
+  RequestWorker,
 } from "../data/types";
 import {
   requestApi,
   elementRequestApi,
+  workerApi,
+  requestWorkerApi,
 } from "../data/apiUrl";
 
 function getTypeFromElements(elements: any[]) {
   console.log("getTypeFromElements: elements ->", elements);
   const types = elements.map((el: any) => el.type);
-  const hasSecurity = types.includes("epp");
-  const hasOperative = types.includes("operative");
+  const hasSecurity = types.includes("EPP");
+  const hasOperative = types.includes("Operativo");
 
   console.log("getTypeFromElements: hasSecurity =", hasSecurity, ", hasOperative =", hasOperative);
 
@@ -32,6 +36,7 @@ export function useHandleForm() {
   const { execute: sendRequestToLogistics } = useApiAction<any>();
   const { execute: createElementRequest } = useApiAction<any>();
   const { execute: updateElementRequest } = useApiAction<any>();
+  const { execute: createRequestWorker } = useApiAction<any>();
 
   // 🟩 Guardar nueva solicitud
   const handleSave = async (projectId: number, deliveryDueDate: string, description?: string) => {
@@ -40,6 +45,8 @@ export function useHandleForm() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
     const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+    const selectedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
+  const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
 
     console.log("handleSave: user =", user);
     console.log("handleSave: selectedElements =", selectedElements);
@@ -93,8 +100,37 @@ export function useHandleForm() {
 
     console.log("handleSave: elementResponses =", elementResponses);
 
+
+    const requestWorkerPayloads = (selectedRequestWorkers || []).map((rw) => ({
+      requestId,
+      workerId: rw.workerId,
+      shoeSize: rw.shoeSize ?? null,
+      pantsSize: rw.pantsSize ?? null,
+      shirtSize: rw.shirtSize ?? null,
+    }));
+
+    let requestWorkerResponses: any[] = [];
+    if (requestWorkerPayloads.length > 0) {
+      try {
+        requestWorkerResponses = await Promise.all(
+          requestWorkerPayloads.map((payload) =>
+            createRequestWorker(`${requestWorkerApi}`, "POST", payload)
+          )
+        );
+      } catch (err: any) {
+        console.error("handleSave: Error creating request workers:", err);
+        return {
+          loading: false,
+          error: err?.message || "Unknown error",
+          data: null,
+        };
+      }
+    }
+
     localStorage.removeItem("selectedElements");
     localStorage.removeItem("selectedElementRequest");
+    localStorage.removeItem("selectedWorkers");
+    localStorage.removeItem("selectedRequestWorkers");
     console.log("handleSave: LocalStorage cleaned up");
 
     console.log("handleSave: SUCCESS", {
@@ -107,7 +143,14 @@ export function useHandleForm() {
       error: false,
       data: {
         request: response.data,
-        elements: Array.isArray(elementResponses) && elementResponses.length > 0 ? elementResponses[0].data : null,
+        elements:
+          Array.isArray(elementResponses) && elementResponses.length > 0
+            ? elementResponses[0].data
+            : null,
+        workers:
+          Array.isArray(requestWorkerResponses) && requestWorkerResponses.length > 0
+            ? requestWorkerResponses.map((r) => r.data)
+            : [],
       },
     };
   };

@@ -36,3 +36,5 @@ export const serviceSaleApi = `${root}service-sale/`;
 export const workerApi = `${root}worker/`;
 
 export const workerGroupApi = `${root}worker-group/`;
+
+export const requestWorkerApi = `${root}request-worker/`;

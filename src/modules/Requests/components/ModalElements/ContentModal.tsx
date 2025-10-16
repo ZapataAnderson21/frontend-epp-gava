@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import BlueButton from "../../../../components/BlueButton";
 import { type ElementType, type ElementRequestType } from "../../../../data/types";
 import HeaderModal from "./HeaderModal";
@@ -11,9 +11,11 @@ import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
 
 interface ContentModalProps {
   typeElement: string;
+  onSelected: (els: ElementType[], reqs: ElementRequestType[]) => void;
+  onClose: () => void;
 }
 
-export default function ContentModal({ typeElement }: ContentModalProps) {
+export default function ContentModal({ typeElement, onSelected, onClose }: ContentModalProps) {
   const [elements, setElements] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [originalIds, setOriginalIds] = useState<number[]>([]);
@@ -31,7 +33,6 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   const { id } = useParams();
   const location = useLocation();
   const isNewRequest = location.pathname.endsWith("/new");
-  const navigate = useNavigate();
 
   // ✅ Hooks para API
   const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(`${elementApi}type/${typeElement}`, [typeElement]);
@@ -76,8 +77,9 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
   // ✅ Guardar selección
   const onClick = async () => {
     if (isNewRequest) {
+      // construir arrays actualizados
       const selectedElements = elements.filter(
-        (item) => item.elementId !== undefined && selectedIds.includes(item.elementId)
+        (item) => item.elementId !== undefined && selectedIds.includes(item.elementId!)
       );
 
       const prevSelected = localStorage.getItem("selectedElementRequest");
@@ -85,6 +87,7 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
 
       if (prevSelected) {
         const parsed: any[] = JSON.parse(prevSelected);
+        // elimina los que pertenecen a este tipo, para no duplicar
         const filtered = parsed.filter(
           (item) => !elements.some((e) => e.elementId === item.elementId)
         );
@@ -93,33 +96,37 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
 
       const selectedElementRequest = selectedElements.map((item) => ({
         unit: "",
-        quantity: 0,
+        quantityRequested: 0,               // ⚠️ usa tu nombre de campo real
         requestId: 0,
         elementId: item.elementId as number,
         element: item,
       }));
 
-      const updated = [...combined, ...selectedElementRequest];
+      const updatedReqs = [...combined, ...selectedElementRequest] as ElementRequestType[];
+      const updatedEls = updatedReqs.map(r => r.element).filter((el): el is ElementType => el !== undefined);
 
-      localStorage.setItem("selectedElements", JSON.stringify(updated.map((e) => e.element)));
-      localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
-      navigate(0);
-    } else if (id) {
+      // ✅ actualiza estado arriba SIN recargar
+      onSelected(updatedEls, updatedReqs);
+
+      // opcional: cerrar modal
+      onClose();
+      return;
+    }
+
+    // --------- Caso edición (hay id) ----------
+    if (id) {
       const requestId = Number(id);
       const added = selectedIds.filter((sid) => !originalIds.includes(sid));
       const removed = originalIds.filter((oid) => !selectedIds.includes(oid));
 
-      // ✅ Crear nuevos
       for (const addId of added) {
         await createElementRequest(`${elementRequestApi}`, "POST", {
           elementId: addId,
           quantity_requested: 0,
           unit: " ",
-          requestId: requestId,
+          requestId,
         });
       }
-
-      // ✅ Eliminar removidos
       if (fetchedElementRequests) {
         for (const removeId of removed) {
           const itemToDelete = fetchedElementRequests.find((e) => e.elementId === removeId);
@@ -129,7 +136,14 @@ export default function ContentModal({ typeElement }: ContentModalProps) {
         }
       }
 
-      navigate(0);
+      // ✅ si quieres reflejar el cambio en pantalla sin reload:
+      const nextOriginal = selectedIds;
+      setOriginalIds(nextOriginal);
+
+      // (opcional) si este modal también debe reflejarse en una vista padre en modo edición,
+      // expón otro callback onAfterPersist() y llámalo aquí.
+
+      onClose();
     }
   };
 

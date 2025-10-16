@@ -1,15 +1,14 @@
-// common/table/index.tsx
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MotionLink = motion(Link);
 
 type Column<T> = {
-  key?: keyof T;                 // ahora opcional si usas render
+  key?: keyof T;
   label: string;
   width?: string;
   truncate?: boolean;
-  render?: (row: T) => React.ReactNode;  // 👈 render por fila
+  render?: (row: T) => React.ReactNode;
   align?: "left" | "center" | "right";
 };
 

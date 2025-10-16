@@ -314,3 +314,17 @@ export interface WorkerGroup {
   updatedAt: string
   parentGroup?: WorkerGroup
 }
+
+export interface RequestWorker {
+  requestWorkerId: number
+  requestId: number
+  shoeSize?: string | null
+  pantsSize?: string | null
+  shirtSize?: string | null
+  workerId: number
+  createdAt?: string
+  updatedAt?: string
+  worker?: Worker
+  workerName?: string
+  request?: RequestType
+}
