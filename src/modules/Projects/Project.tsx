@@ -52,9 +52,7 @@ export default function Project() {
         loading={loading}
         name={`${project ? project?.name : ""}`}>
         {projectId && (
-          <HeaderActions
-            projectId={projectId}
-          />
+          <HeaderActions />
         )}
       </HeaderPanel>
 

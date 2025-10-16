@@ -5,6 +5,11 @@ import { Table } from "../../common/table";
 import { projectApi } from "../../data/apiUrl";
 import { type ProjectType } from "../../data/types";
 import { useFetch } from "../../hooks";
+import SeeButton from "../../common/SeeButton";
+import { ButtonContainer } from "../../common/form";
+import { FaPencil } from "react-icons/fa6";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 interface ProjectTableProps {
   filter: string;
@@ -22,7 +27,23 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "code", label: "Código", width: "12rem" },
     { key: "status", label: "Estado", width: "12rem" },
-    { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
+    {
+      label: "Acciones",
+      width: "8rem",
+      render: (row: ProjectType) => (
+        <ButtonContainer>
+          <SeeButton to={`/admin/projects/${row.projectId}`} />
+          {
+            permission &&
+            <Link to={`/admin/projects/edit/${row.projectId}`} aria-label="Edit" title="Edit">
+              <motion.button type="button" className={"cursor-pointer flex gap-2 justify-center items-center border p-3 rounded-xl border-gray-100 bg-amber-400 hover:bg-amber-400 text-white w-fit hover:scale-[105%] duration-300 disabled:opacity-60"}>
+                <FaPencil />
+              </motion.button>
+            </Link>
+          }
+        </ButtonContainer>
+      )
+    },
   ] as const;
 
   useEffect(() => {
