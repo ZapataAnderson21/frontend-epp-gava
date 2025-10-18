@@ -1,7 +1,5 @@
 import { HeaderPanel, Panel } from "../../common/panel";
 import WorkerTable from "./WorkerTable";
-import { Button } from "../../components";
-import { FaPlus } from "react-icons/fa6";
 import NewWorker from "./NewWorker";
 import { useState } from "react";
 import Worker from "./Worker";

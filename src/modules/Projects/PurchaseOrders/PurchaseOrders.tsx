@@ -3,8 +3,6 @@ import type { ProjectType } from "../../../data/types";
 import { useFetch } from "../../../hooks";
 import { projectApi } from "../../../data/apiUrl";
 import { HeaderPanel, Panel } from "../../../common/panel";
-import { Button } from "../../../components";
-import { FaArrowLeft, FaPlus } from "react-icons/fa6";
 import PurchaseOrderTable from "./PurchaseOrderTable";
 import { ErrorMessage } from "../../../common/error";
 import { ReturnButton } from "../../../common/button";

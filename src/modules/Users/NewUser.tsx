@@ -6,7 +6,7 @@ import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { UserType } from "../../data/types";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form";
 import UserTypeCreateModal from "./components/UserTypeCreateModal";
 import ReturnButton from "../../common/button/ReturnButton";
 import { SaveButton } from "../../common/button";

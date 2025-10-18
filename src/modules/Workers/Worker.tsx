@@ -4,8 +4,6 @@ import type { Option } from "../../common/form/SelectForm";
 import { workerApi, workerGroupApi } from "../../data/apiUrl";
 import type { Worker, WorkerGroup } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
-import { Button } from "../../components";
-import { IoClose } from "react-icons/io5";
 import { ReturnButton } from "../../common/button";
 
 interface WorkerProps {
