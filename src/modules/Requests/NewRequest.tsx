@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoWarning } from "react-icons/io5";
 import { RiQuestionFill } from "react-icons/ri";
 import { MdAttachEmail, MdEngineering } from "react-icons/md";
-import { FaArrowLeft, FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
+import { FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
 import { FaTools } from "react-icons/fa";
 import { TiArrowBack } from "react-icons/ti";
 
@@ -11,7 +11,7 @@ import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
 import type { ElementRequestType, ProjectType, ElementType, Worker, RequestWorker } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer, Form, ButtonSubmit } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer, Form } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
@@ -19,9 +19,13 @@ import { Button } from "../../components";
 import WorkerSelectCard from "./components/ModalWorkers/WorkerSelectCard";
 import HeaderWorkers from "./components/HeaderWorkers";
 import RowRequestWorker from "./components/RowRequestWorker";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function NewRequest() {
-  const [projectId, setProjectId] = useState<number>(0);
+  const [searchParams] = useSearchParams();
+  const projectIdParam = searchParams.get("projectId");
+  
+  const [projectId, setProjectId] = useState<number>(projectIdParam ? Number(projectIdParam) : 0);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
   const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
   const selectedElementRequest: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
@@ -78,8 +82,12 @@ export default function NewRequest() {
     setError(false);
   };
 
-  const navigateToRequests = () => {
-    navigate("/admin/requests");
+  const navigateToBack = () => {
+    if (projectIdParam) {
+      navigate(`/admin/requests?projectId=${projectIdParam}`);
+    } else {
+      navigate(`/admin/requests`);
+    }
   };
 
   useEffect(() => {
@@ -144,7 +152,7 @@ export default function NewRequest() {
     if (result?.data && !result?.loading && !result?.error) {
       setSuccessMessage(result?.data.request.message || "Solicitud guardada exitosamente.");
       setError(false);
-      setOnOk(() => navigateToRequests);
+      setOnOk(() => navigateToBack);
       setElements([]);
       setElementRequests([]);
       setWorkers([]);
@@ -177,7 +185,7 @@ export default function NewRequest() {
     if (result) {
       setSuccessMessage("Solicitud guardada y enviada exitosamente.");
       setError(false);
-      setOnOk(() => navigateToRequests);
+      setOnOk(() => navigateToBack);
       setElements([]);
       setElementRequests([]);
       setWorkers([]);
@@ -225,7 +233,6 @@ export default function NewRequest() {
             value={projectId}
             onChange={(value) => setProjectId(Number(value))}
             options={[
-              { value: 0, label: "Selecciona un proyecto" },
               ...projects.map((project) => ({
                 value: project.projectId,
                 label: project.name,
@@ -338,19 +345,10 @@ export default function NewRequest() {
           />
 
           <ButtonContainer>
-            <Button 
-              icon={<FaArrowLeft />}
-              href="/admin/requests"
-              label="Regresar"
-              bgColor="#d80027"
-              bgHoverColor="#c80008"
-            />
-            <ButtonSubmit
-              label="Guardar"
-              loading={false}
-              loadingLabel="Guardando"
-            />
+            <ReturnButton onClick={() => navigateToBack()} />
+            <SaveButton loading={openSaveModal} />
             <Button
+              type="button"
               icon={<MdAttachEmail />}
               label="Guardar y Enviar"
               onClick={() => setOpenPasswordModal(true)}
@@ -375,16 +373,16 @@ export default function NewRequest() {
               />
               <ButtonContainer>
                 <Button
+                  type="button"
                   label="Cancelar"
-                  href="#"
                   onClick={() => setOpenPasswordModal(false)}
                   bgColor="red"
                   bgHoverColor="darkred"
                   icon={<TiArrowBack />}
                 />
                 <Button
+                  type="button"
                   label="Enviar"
-                  href="#"
                   onClick={handleSaveAndSendRequest}
                   bgColor="#0047a3"
                   bgHoverColor="#003a80"

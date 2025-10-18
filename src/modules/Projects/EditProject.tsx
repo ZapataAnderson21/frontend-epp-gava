@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import RedButton from "../../common/form/RedButton";
 import { useParams, useNavigate } from "react-router-dom";
 import SaveModal from "../../common/form/SaveModal";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
@@ -8,7 +7,8 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { ProjectType } from "../../data/types";
 import ErrorWithButton from "../../common/error/ErrorWithButton";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, TextAreaForm } from "../../common/form";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function EditProject() {
   const { id: projectId } = useParams<{ id: string }>();
@@ -34,17 +34,22 @@ export default function EditProject() {
       setName(project.name);
       setCode(project.code);
       setDescription(project.description ?? "");
-      setStatus(project.status);
       setLocation(project.location ?? "");
       setStartDate(project.startDate ? project.startDate.split('T')[0] : "");
       setEndDate(project.endDate ? project.endDate.split('T')[0] : "");
+
+      const normalizedStatus = project.status === "Activo" ? "active" :
+                               project.status === "Inactivo" ? "inactive" :
+                               project.status;
+
+      setStatus(normalizedStatus);
     }
   }, [project]);
 
   const changeStatus =
     status === "active"
-      ? { label: "INACTIVO", value: "inactive" }
-      : { label: "ACTIVO", value: "active" };
+      ? { label: "Inactivo", value: "inactive" }
+      : { label: "Activo", value: "active" };
 
   const handleChangeStatus = () => {
     updateStatus(`${projectApi}${projectId}/status`, "PATCH", {
@@ -144,7 +149,7 @@ export default function EditProject() {
           label="Estado"
           name="status"
           type="text"
-          value={status === "active" ? "ACTIVO" : "INACTIVO"}
+          value={status === "active" ? "Activo" : "Inactivo"}
           onChange={() => {}}
           optional={false}
           disabled={true}
@@ -161,15 +166,8 @@ export default function EditProject() {
         </InputForm>
         
         <ButtonContainer>
-          <RedButton 
-            href="/admin/projects/"
-            name="Regresar"
-          />
-          <ButtonSubmit 
-            loading={updating}
-            label="Actualizar"
-            loadingLabel="Actualizando..."
-          />
+          <ReturnButton onClick={() => navigate("/admin/projects")} />
+          <SaveButton loading={updating} />
         </ButtonContainer>
       </Form>
         

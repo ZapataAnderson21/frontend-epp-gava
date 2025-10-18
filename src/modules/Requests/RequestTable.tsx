@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -6,10 +6,23 @@ import { requestApi } from "../../data/apiUrl";
 import type { RequestType } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { useMemo, useEffect } from "react";
+import { FaPencil } from "react-icons/fa6";
+import { motion } from "framer-motion";
+import SeeButton from "../../common/button/SeeButton";
 
 interface RequestTableProps {
   filter: string;
 }
+
+const bgStatusColor = {
+  "Borrador": "#9ca3af", // gray-400
+  "En progreso": "#d97706", // amber-600
+  "Revisada": "#fbbf24", // yellow-600
+  "Aprobada": "#4ade80", // green-500
+  "Rechazada": "#ef4444", // red-500
+  "Atendida": "#06b6d4", // cyan-500
+  "Completada": "#3b82f6", // purple-500
+};
 
 type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 
@@ -45,20 +58,52 @@ export default function RequestTable({ filter }: RequestTableProps) {
     return qs ? `${requestApi}?${qs}` : requestApi;
   }, [filter, projectId, effectiveUserId]);
 
-  // Debug opcional para verificar que no se mande userId en GERENTE/ADMINISTRADORA
+  const { data: requests, loading, error } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
+
   useEffect(() => {
     console.log("role:", role, "isManager:", isManager, "effectiveUserId:", effectiveUserId);
     console.log("Fetch URL:", urlFetch);
-  }, [role, isManager, effectiveUserId, urlFetch]);
-
-  const { data: requests, loading, error } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
+    console.log("Requests:", requests);
+  }, [role, isManager, effectiveUserId, urlFetch, requests]);
 
   const columns = [
     { key: "requestId", label: "Id", width: "4rem" },
-    { key: "createdAt", label: "F y H de Registro", width: "9rem" },
-    { key: "userName", label: "Solicitante", width: "9rem" },
-    { key: "deliveryDueDate", label: "F y H de Entrega", width: "9rem" },
-    { key: "status", label: "Estado", width: "9rem" },
+    { key: "createdAt", label: "F y H de Registro", width: "8rem" },
+    { key: "userName", label: "Solicitante", width: "8rem" },
+    { key: "deliveryDueDate", label: "F y H de Entrega", width: "8rem" },
+    { 
+      label: "Estado",
+      width: "8rem",
+      render: (row: RequestType) => {
+        return (
+        <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
+              style={{ backgroundColor: bgStatusColor[row.status as keyof typeof bgStatusColor] || '#9ca3af' }}>
+                {row.status.toUpperCase()}
+        </span>);
+     }
+    },
+    {
+      label: "Acciones",
+      width: "12rem",
+      render: (row: RequestType) => {
+        return (
+          <div className="flex gap-2">
+            {
+              (row.status === "Borrador") ? (
+              <Link to={`/admin/requests/edit/${row.requestId}`} aria-label="Edit" title="Edit">
+                <motion.button 
+                  type="button"
+                  className="cursor-pointer flex gap-2 justify-center items-center border p-3 rounded-xl border-gray-100 bg-amber-500 hover:bg-amber-600 text-white w-fit hover:scale-[105%] duration-300 disabled:opacity-60"
+                >
+                  <FaPencil />
+                </motion.button>
+              </Link>
+              ) : <SeeButton to={`/admin/requests/${row.requestId}`} />
+            }
+          </div>
+        );
+      }
+    }
   ] as const;
 
   if (loading) return <LoadingSkeletonTable />;
@@ -81,7 +126,6 @@ export default function RequestTable({ filter }: RequestTableProps) {
     <Table<RequestType>
       data={processedRequests}
       columns={columns}
-      getHref={(p) => `/admin/requests/${p.requestId}`}
     />
   );
 }

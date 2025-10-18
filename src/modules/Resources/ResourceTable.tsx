@@ -4,6 +4,8 @@ import { Table } from "../../common/table";
 import { resourceApi } from "../../data/apiUrl";
 import type { Resource } from "../../data/types";
 import { useFetch } from "../../hooks";
+import { EditButton } from "../../common/button";
+import { useNavigate } from "react-router-dom";
 
 export default function ResourceTable() {
   const { data: resources, loading, error } = useFetch<Resource[]>(resourceApi);
@@ -13,11 +15,20 @@ export default function ResourceTable() {
     categoryName: res.categoryResource ? res.categoryResource.name : "Sin categoría",
   }));
 
+  const navigate = useNavigate();
+
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "description", label: "Descripción", width: "20rem" },
     { key: "categoryName", label: "Categoría", width: "12rem" },
     { key: "unit", label: "Unidad", width: "8rem" },
+    {
+      label: "Acciones",
+      width: "8rem",
+      render: (row: Resource) => {
+        return <EditButton onClick={() => navigate(`/admin/resources/${row.resourceId}`)} />;
+      }
+    }
   ] as const;
 
   if (loading) {
@@ -35,8 +46,7 @@ export default function ResourceTable() {
   return (
     <Table<Resource>
       data={processedResources || []}
-      columns={columns} 
-      getHref={(resource) => `/admin/resources/${resource.resourceId}`}
+      columns={columns}
     />
   );
 }

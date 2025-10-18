@@ -1,12 +1,11 @@
 import { useState } from "react";
-import RedButton from "../../common/form/RedButton";
 import { useNavigate } from "react-router-dom";
+import { ReturnButton, SaveButton } from "../../common/button"
 import SaveModal from "../../common/form/SaveModal";
 import { useApiAction } from "../../hooks/useApiAction";
 import { projectApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
 import TextAreaForm from "../../common/form/TextAreaForm";
-import ButtonSubmit from "../../common/form/ButtonSubmit";
 import ButtonContainer from "../../common/form/ButtonContainer";
 import { Form } from "../../common/form";
 
@@ -113,15 +112,8 @@ export default function NewProject() {
         />
 
         <ButtonContainer>
-          <RedButton 
-            href="/admin/projects"
-            name="Cancelar"
-          />
-          <ButtonSubmit 
-            loading={loading}
-            label="Registrar"
-            loadingLabel="Guardando..."
-          />
+          <ReturnButton onClick={() => navigateToProjects()} />
+          <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, RedButton, SaveModal, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SaveModal, TextAreaForm } from "../../common/form";
 import { useNavigate } from "react-router-dom";
 import { useApiAction, useFetch } from "../../hooks";
 import { resourceApi } from "../../data/apiUrl";
@@ -7,6 +7,7 @@ import type { CategoryResource, Resource } from "../../data/types";
 import CategoryPickerModal from "./Category/CategoryPickerModal";
 import { LoadingSkeletonForm } from "../../common/loading";
 import { ErrorMessage } from "../../common/error";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 
 interface ResourceResponse {
@@ -111,8 +112,8 @@ export default function Resource() {
         </div>
 
         <ButtonContainer>
-          <RedButton href="/admin/resources" name="Cancelar" />
-          <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
+          <ReturnButton onClick={() => navigateToResources()} />
+          <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
 

@@ -1,20 +1,15 @@
-import { FaPlus } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
 import { HeaderPanel, Panel } from "../../common/panel";
-import { Button } from "../../components";
 import SupplierTable from "./SupplierTable";
+import AddButton from "../../common/button/AddButton";
 
 export default function Suppliers() {
+
+  const navigate = useNavigate();
   return (
     <Panel>
       <HeaderPanel name={`PROVEEDORES`} >
-        <Button
-          icon={<FaPlus />}
-          label="Añadir"
-          href="/admin/suppliers/new"
-          onClick={() => {}}
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-        />
+        <AddButton onClick={() => navigate(`/admin/suppliers/new`)} />
       </HeaderPanel>
 
       <SupplierTable />

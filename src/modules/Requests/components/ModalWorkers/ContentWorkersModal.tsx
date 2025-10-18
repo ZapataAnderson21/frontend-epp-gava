@@ -6,7 +6,8 @@ import { useLocation, useParams } from "react-router-dom";
 import { LoadingSkeletonTable } from "../../../../common/loading";
 import { FaDeleteLeft } from "react-icons/fa6";
 import HeaderModal from "../ModalElements/HeaderModal";
-import { BlueButton } from "../../../../components";
+import { Button } from "../../../../components";
+import { FaSave } from "react-icons/fa";
 
 interface ContentWorkersModalProps {
   groupId: number;
@@ -36,7 +37,7 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
   // ✅ Hooks para API
   const {data: fetchedWorkers, error, loading} = useFetch<Worker[]>(`${workerApi}group/${groupId}`, [groupId]);
   const { data: fetchedRequestWorkers } = useFetch<RequestWorker[]>(id ? `${requestWorkerApi}request/${id}` : "", [id]);
-  
+
   const { execute: createRequestWorker } = useApiAction<any>();
   const { execute: deleteRequestWorker } = useApiAction<any>();
 
@@ -208,7 +209,14 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
             </div>
           ))}
         </div>
-        <BlueButton href="#" name="Guardar" onClick={handleSave} />
+        <Button
+          icon={<FaSave />}
+          label="Guardar"
+          type="submit"
+          bgColor="#0047a3" 
+          bgHoverColor="#003366"
+          onClick={handleSave}
+        />
       </div>
     </>
   );

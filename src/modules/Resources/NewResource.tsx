@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, RedButton, SaveModal, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SaveModal, TextAreaForm } from "../../common/form";
 import { useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks";
 import { resourceApi } from "../../data/apiUrl";
 import type { CategoryResource } from "../../data/types";
 import CategoryPickerModal from "./Category/CategoryPickerModal";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 
 interface ResourceResponse {
@@ -89,8 +90,8 @@ export default function NewResource() {
         </div>
 
         <ButtonContainer>
-          <RedButton href="/admin/resources" name="Cancelar" />
-          <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
+          <ReturnButton onClick={() => navigateToResources()} />
+          <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
 

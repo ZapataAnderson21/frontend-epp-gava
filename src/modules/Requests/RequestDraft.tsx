@@ -5,7 +5,7 @@ import { FaSave, FaTools } from "react-icons/fa";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { MdAttachEmail } from "react-icons/md";
-import RedButton from "../../common/form/RedButton";
+import { ReturnButton } from "../../common/button";
 import type { RequestType, ElementRequestType, ProjectType } from "../../data/types";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";
@@ -222,8 +222,8 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
 
           <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
           <div className="flex flex-row items-center justify-around gap-4 w-full">
-            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="security" />
-            <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" />
+            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="security" onSelected={() => {}} />
+            <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" onSelected={() => {}} />
           </div>
 
           <div className="flex flex-col items-start gap-2 justify-start w-full">
@@ -279,7 +279,7 @@ export default function RequestDraft({ requestId }: RequestDraftProps) {
                 No hay elementos seleccionados.
               </span>
             )}
-            <RedButton href="/admin/requests" name="Regresar" />
+            <ReturnButton onClick={() => navigate("/admin/requests")} />
           </div>
         </div>
       </div>

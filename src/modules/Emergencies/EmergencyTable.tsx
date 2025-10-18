@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMemo } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
@@ -6,6 +6,19 @@ import { Table } from "../../common/table";
 import { emergencyApi } from "../../data/apiUrl";
 import type { EmergencyType } from "../../data/types";
 import { useFetch } from "../../hooks";
+import SeeButton from "../../common/button/SeeButton";
+
+const labelStatus: Record<string, string> = {
+  "pending" : "PENDIENTE",
+  "addressed" : "ATENDIDA",
+  "rejected" : "RECHAZADA"
+};
+
+const bgStatusColor: Record<string, string> = {
+  "pending" : "#d97706", // amber-500
+  "addressed" : "#228b22", // green
+  "rejected" : "#c53030" // red-600
+};
 
 type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 
@@ -46,14 +59,32 @@ export default function EmergencyTable() {
   // (Opcional) debug
   // useEffect(() => console.log("Emergency URL:", urlFetch), [urlFetch]);
 
+  const navigate = useNavigate();
+
   const { data: emergencies, loading, error } =
     useFetch<EmergencyType[]>(urlFetch, [urlFetch]);
 
   const columns = [
-    { key: "emergencyId", label: "Id", width: "4rem" },
     { key: "title", label: "Asunto", width: "12rem" },
     { key: "projectName", label: "Proyecto", width: "12rem" },
-    { key: "userName", label: "Responsable", width: "12rem" },
+    {label: "Estado",
+      width: "8rem",
+      render: (row: EmergencyType) => {
+        return (
+          <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
+                style={{ backgroundColor: bgStatusColor[row.status as keyof typeof bgStatusColor] || '#9ca3af' }}>
+                  {labelStatus[row.status as keyof typeof labelStatus]}
+          </span>
+        );
+      }
+    },
+    {
+      "label": "Acciones",
+      width: "8rem",
+      render: (row: EmergencyType) => {
+        return <SeeButton onClick={() => navigate(`/admin/emergencies/${row.emergencyId}`)} />;
+      }
+    }
   ] as const;
 
   if (loading) return <LoadingSkeletonTable />;
@@ -70,7 +101,6 @@ export default function EmergencyTable() {
     <Table<EmergencyType>
       data={processedEmergencies}
       columns={columns}
-      getHref={(e) => `/admin/emergencies/${e.emergencyId}`}
     />
   );
 }

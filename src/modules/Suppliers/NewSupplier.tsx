@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, RedButton, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
 import { useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks";
 import { supplierApi } from "../../data/apiUrl";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 
 interface ResourceResponse {
@@ -99,8 +100,8 @@ export default function NewSupplier() {
 
 
         <ButtonContainer>
-          <RedButton href="/admin/suppliers" name="Cancelar" />
-          <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
+          <ReturnButton onClick={() => navigateToSuppliers()} />
+          <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
 

@@ -5,6 +5,7 @@ import { FaPlus } from "react-icons/fa6";
 import NewWorker from "./NewWorker";
 import { useState } from "react";
 import Worker from "./Worker";
+import AddButton from "../../common/button/AddButton";
 
 export default function Workers() {
 
@@ -27,13 +28,7 @@ export default function Workers() {
   return (
     <Panel>
       <HeaderPanel name={"Trabajadores"}>
-        <Button
-          icon={<FaPlus />}
-          label="Agregar"
-          onClick={() => setShowRightPanel("new")}
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-        />
+        <AddButton onClick={() => setShowRightPanel("new")} />
       </HeaderPanel>
 
       <section className="flex flex-row flex-wrap w-full gap-4">

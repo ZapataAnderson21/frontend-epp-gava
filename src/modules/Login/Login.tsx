@@ -4,7 +4,9 @@ import { useApiAction } from "../../hooks/useApiAction";
 import { userApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
-import ButtonSubmit from "../../common/form/ButtonSubmit";
+import { Button } from "../../components";
+import { AiOutlineLoading } from "react-icons/ai";
+import { FiLogIn } from "react-icons/fi";
 
 interface LoginResponse {
   accessToken: string;
@@ -15,11 +17,7 @@ interface LoginResponse {
   };
 }
 
-interface LoginProps {
-  url? : string;
-}
-
-export default function Login({ url }: LoginProps) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
@@ -114,10 +112,12 @@ export default function Login({ url }: LoginProps) {
           />
 
           <div className="flex flex-row gap-4 items-end justify-between w-full">
-            <ButtonSubmit 
-              loading={loadingLogin}
-              label="Iniciar sesión"
-              loadingLabel="Ingresando..."
+            <Button
+              icon={loadingLogin ? <AiOutlineLoading className="animate-spin" /> : <FiLogIn />}
+              label={loadingLogin ? "Ingresando..." : "Iniciar Sesión"}
+              type="submit"
+              bgColor="#0047a3" 
+              bgHoverColor="#003366"
             />
             <a
               onClick={handleForgotPassword}

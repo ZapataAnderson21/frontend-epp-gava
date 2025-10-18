@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RedButton from "../../common/form/RedButton";
 import type { UserType, UpdateUserDto } from "../../data/types";
 import { userApi, userTypeApi } from "../../data/apiUrl";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
@@ -8,7 +7,9 @@ import SaveModal from "../../common/form/SaveModal";
 import ErrorWithButton from "../../common/error/ErrorWithButton";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form";
+import ReturnButton from "../../common/button/ReturnButton";
+import { SaveButton } from "../../common/button";
 
 export default function User() {
   const userId = Number(window.location.pathname.split("/").pop());
@@ -66,7 +67,7 @@ export default function User() {
 
     const updatedData: UpdateUserDto = {
       name,
-      last_name: lastname,
+      lastName: lastname,
       email,
       password,
     };
@@ -158,8 +159,8 @@ export default function User() {
           />
         )}
         <ButtonContainer >
-          <RedButton href="/admin/users" name="Regresar" />
-          <ButtonSubmit label="Actualizar" loading={updating} loadingLabel="Actualizando..." />
+          <ReturnButton onClick={() => navigateToUsers()} />
+          <SaveButton loading={updating} />
         </ButtonContainer>
       </Form>
       {openSaveModal && (

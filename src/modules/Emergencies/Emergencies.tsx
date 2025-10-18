@@ -1,35 +1,31 @@
-import { FaArrowLeft, FaPlus } from "react-icons/fa6";
+import { ReturnButton } from "../../common/button";
+import AddButton from "../../common/button/AddButton";
 import { HeaderPanel, Panel } from "../../common/panel";
-import { Button } from "../../components";
 import EmergencyTable from "./EmergencyTable";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Emergencies() {
 
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
 
+  const navigate = useNavigate();
+
+  const navigateToNewProject = () => {
+    if (projectId) {
+      navigate(`/admin/emergencies/new?projectId=${projectId}`);
+    } else {
+      navigate(`/admin/emergencies/new`);
+    }
+  };
+
   return (
     <Panel>
       <HeaderPanel name={`EMERGENCIAS`}>
-        {projectId && (
-          <Button
-          icon={<FaArrowLeft />}
-          label="Regresar"
-          href={`/admin/projects/${projectId}`}
-          bgColor="#d80027"
-          bgHoverColor="#c80008"
-          onClick={() => {}}
-        />
-        )}
+        {projectId && <ReturnButton onClick={() => navigate(`/admin/projects/${projectId}`)} /> }
 
-        <Button
-          icon={<FaPlus />}
-          label="Añadir"
-          href="/admin/emergencies/new"
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-          onClick={() => {}}
+        <AddButton
+          onClick={navigateToNewProject}
         />
       </HeaderPanel>
       

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
-import Play from "../icons/Play";
+import { IoMenu } from "react-icons/io5";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,17 +32,11 @@ export default function Home() {
 
         {isMobile && (
           <div
-            className={`absolute top-80 
-                      ${isOpen ? "left-[188px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-40 flex items-center justify-center bg-[#0047a3] w-8 h-10 text-white text-4xl cursor-pointer transition-all duration-300`}
+            className={`fixed top-22
+                      ${isOpen ? "left-[180px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-40 flex items-center justify-center bg-[#0047a3] size-10 text-white text-2xl cursor-pointer transition-all duration-300`}
             onClick={toggleSidebar}
           >
-            {isOpen ? (
-              <div className="rotate-180">
-                <Play />
-              </div>
-            ) : (
-              <Play />
-            )}
+            <IoMenu />
           </div>
         )}
         <div

@@ -6,6 +6,7 @@ import type { Worker, WorkerGroup } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
 import { Button } from "../../components";
 import { IoClose } from "react-icons/io5";
+import { ReturnButton } from "../../common/button";
 
 interface WorkerProps {
   workerId: number;
@@ -156,13 +157,7 @@ export default function Worker({ workerId, successAction, closeAction }: WorkerP
             loading={saving}
             loadingLabel="Guardando..."  
           />
-          <Button
-              icon={<IoClose className="text-xl" />}
-              label="Cancelar"
-              bgColor = "#d80027"
-              bgHoverColor = "#c80008"
-              onClick={closeAction}
-            />
+          <ReturnButton onClick={closeAction} />
         </ButtonContainer>
       </Form>
       {openSaveModal && (

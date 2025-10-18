@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import BlueButton from "../../../../components/BlueButton";
 import { type ElementType, type ElementRequestType } from "../../../../data/types";
 import HeaderModal from "./HeaderModal";
 import { FaDeleteLeft } from "react-icons/fa6";
@@ -8,6 +7,8 @@ import LoadingSkeletonTable from "../../../../common/loading/LoadingSkeletonTabl
 import { useFetch } from "../../../../hooks/useFetch";
 import { useApiAction } from "../../../../hooks/useApiAction";
 import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
+import Button from "../../../../components/Button";
+import { FaSave } from "react-icons/fa";
 
 interface ContentModalProps {
   typeElement: string;
@@ -197,7 +198,14 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
             </div>
           ))}
         </div>
-        <BlueButton href="#" name="Guardar" onClick={onClick} />
+        <Button
+          icon={<FaSave />}
+          label="Guardar"
+          type="button"
+          bgColor="#0047a3" 
+          bgHoverColor="#003366"
+          onClick={onClick}
+        />
       </div>
     </>
   );

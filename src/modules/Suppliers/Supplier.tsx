@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, RedButton, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
 import { useNavigate } from "react-router-dom";
 import { useApiAction, useFetch } from "../../hooks";
 import { supplierApi } from "../../data/apiUrl";
 import type { Supplier } from "../../data/types";
 import { LoadingSkeletonForm } from "../../common/loading";
 import { ErrorMessage } from "../../common/error";
+import { ReturnButton } from "../../common/button";
 
 
 interface ResourceResponse {
@@ -125,7 +126,7 @@ export default function Supplier() {
 
 
         <ButtonContainer>
-          <RedButton href="/admin/suppliers" name="Cancelar" />
+          <ReturnButton onClick={() => navigateToSuppliers()} />
           <ButtonSubmit label="Actualizar" loading={saving} loadingLabel="Guardando..." />
         </ButtonContainer>
       </Form>

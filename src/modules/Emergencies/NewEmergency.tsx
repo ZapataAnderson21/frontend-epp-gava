@@ -7,7 +7,8 @@ import { emergencyApi, projectApi } from "../../data/apiUrl";
 
 import type { ProjectType } from "../../data/types";
 
-import { RedButton, SaveModal, ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { SaveModal, ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function NewEmergency() {
   const navigate = useNavigate();
@@ -99,8 +100,8 @@ export default function NewEmergency() {
           />
         </div>
         <ButtonContainer>
-          <RedButton href="/admin/emergencies" name="Cancelar" />
-          <ButtonSubmit label="Registrar" loadingLabel="Guardando..." loading={loading} />
+          <ReturnButton onClick={() => navigateToEmergencies()} />
+          <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
 

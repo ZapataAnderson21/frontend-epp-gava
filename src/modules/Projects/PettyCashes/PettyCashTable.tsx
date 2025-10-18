@@ -5,7 +5,7 @@ import { Table } from "../../../common/table";
 import { pettyCashApi } from "../../../data/apiUrl";
 import { type PettyCashType } from "../../../data/types";
 import { useFetch } from "../../../hooks";
-import SeeButton from "../../../common/SeeButton";
+import SeeButton from "../../../common/button/SeeButton";
 
 interface ProjectTableProps {
   projectId: number;

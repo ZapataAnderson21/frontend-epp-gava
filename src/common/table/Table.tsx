@@ -1,7 +1,4 @@
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
-const MotionLink = motion(Link);
 
 type Column<T> = {
   key?: keyof T;
@@ -15,16 +12,12 @@ type Column<T> = {
 interface TableProps<T> {
   data: T[];
   columns: readonly Column<T>[];
-  getHref?: (item: T) => string | undefined;
-  baseDelayMs?: number;
-  perRowDelayMs?: number;
 }
 
-export default function Table<T>({
-  data, columns, getHref,
-  baseDelayMs = 0,
-  perRowDelayMs = 60
-}: TableProps<T>) {
+export default function Table<T>({ data, columns }: TableProps<T>) {
+
+  const baseDelayMs = 0;
+  const perRowDelayMs = 60;
 
   const rowVariants = {
     hidden: { opacity: 0, y: 1 },
@@ -58,8 +51,7 @@ export default function Table<T>({
           <div className="table-row-group">
             <AnimatePresence>
               {data.map((item, idx) => {
-                const href = getHref?.(item);
-                const rowClasses = `table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
+                const rowClasses = `cursor-pointer hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
                 const cells = (
                   <>
                     {columns.map((col, i) => (
@@ -75,20 +67,7 @@ export default function Table<T>({
                 );
 
                 // Si NO quieres que la fila entera navegue, no pases getHref
-                return href ? (
-                  <MotionLink
-                    key={idx}
-                    to={href}
-                    className={`${rowClasses} hover:bg-[#eff2ff] cursor-pointer`}
-                    variants={rowVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit={{ opacity: 0 }}
-                    custom={idx}
-                  >
-                    {cells}
-                  </MotionLink>
-                ) : (
+                return (
                   <motion.div
                     key={idx}
                     className={rowClasses}

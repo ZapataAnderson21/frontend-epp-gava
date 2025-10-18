@@ -1,5 +1,4 @@
 import { useState } from "react";
-import RedButton from "../../common/form/RedButton";
 import { userApi } from "../../data/apiUrl";
 import { userTypeApi } from "../../data/apiUrl";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +8,8 @@ import { useApiAction } from "../../hooks/useApiAction";
 import type { UserType } from "../../data/types";
 import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
 import UserTypeCreateModal from "./components/UserTypeCreateModal";
+import ReturnButton from "../../common/button/ReturnButton";
+import { SaveButton } from "../../common/button";
 
 interface UserResponse {
   userId: number;
@@ -108,8 +109,8 @@ export default function NewUser() {
         )}
 
         <ButtonContainer>
-          <RedButton href="/admin/users" name="Cancelar" />
-          <ButtonSubmit label="Registrar" loading={saving} loadingLabel="Guardando..." />
+          <ReturnButton onClick={() => navigateToUsers()} />
+          <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
 

@@ -1,13 +1,16 @@
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
-import SeeButton from "../../common/SeeButton";
 import { Table } from "../../common/table";
 import { supplierApi } from "../../data/apiUrl";
 import type { Supplier } from "../../data/types";
 import { useFetch } from "../../hooks";
+import { useNavigate } from "react-router-dom";
+import { EditButton } from "../../common/button";
 
 export default function SupplierTable() {
   const { data: suppliers, loading, error } = useFetch<Supplier[]>(supplierApi);
+
+  const navigate = useNavigate();
 
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
@@ -18,7 +21,7 @@ export default function SupplierTable() {
       label: "Acciones",
       width: "8rem",
       render: (row: Supplier) => (
-          <SeeButton to={`/admin/suppliers/${row.supplierId}`} />
+          <EditButton onClick={() => navigate(`/admin/suppliers/${row.supplierId}`)} />
       )
     }
   ] as const;
@@ -39,7 +42,6 @@ export default function SupplierTable() {
     <Table<Supplier>
       data={suppliers || []}
       columns={columns}
-      getHref={(supplier) => `/admin/suppliers/${supplier.supplierId}`}
     />
   );
 }

@@ -1,14 +1,12 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CgSpinner } from "react-icons/cg";
-import { FaArrowLeft } from "react-icons/fa6";
-
-import { Button } from "../../../components";
 import { ErrorMessage } from "../../../common/error";
-import { ButtonContainer, ButtonSubmit } from "../../../common/form";
+import { ButtonContainer } from "../../../common/form";
 import SaveModal from "../../../common/form/SaveModal";
 
 import { usePurchaseOrderForm } from "../../../hooks/usePurchaseOrderForm";
 import { PurchaseOrderHeader, SupplierSelectCard, DeliveryInfoCard, PaymentConditionsCard, ItemsTable, ConditionsSection, SignaturesTable } from "./components";
+import { ReturnButton, SaveButton } from "../../../common/button";
 
 export default function NewPurchaseOrder() {
   const [searchParams] = useSearchParams();
@@ -55,6 +53,10 @@ export default function NewPurchaseOrder() {
     openSaveModal, onOk, successMessage, errorFlag,
   } = usePurchaseOrderForm({ projectId, navigate });
 
+  const navigateToPurchaseOrders = () => {
+    navigate(`/admin/purchase-orders?projectId=${projectId}`);
+  }
+
   if (projectLoading || suppliersLoading || resourcesLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -62,6 +64,7 @@ export default function NewPurchaseOrder() {
       </div>
     );
   }
+
   if (projectError) return <ErrorMessage errorMessage={projectError} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
   if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
@@ -69,14 +72,7 @@ export default function NewPurchaseOrder() {
   return (
     <>
       <div className="flex flex-col p-4">
-        <Button
-          icon={<FaArrowLeft />}
-          label="Regresar"
-          href={`/admin/purchase-orders?projectId=${projectId}`}
-          onClick={() => {}}
-          bgColor="#d80027"
-          bgHoverColor="#c80008"
-        />
+        <ReturnButton onClick={navigateToPurchaseOrders} />
 
         <div className="w-full flex flex-col items-center justify-center">
           <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
@@ -185,15 +181,8 @@ export default function NewPurchaseOrder() {
             </div>
 
             <ButtonContainer>
-              <Button
-                icon={<FaArrowLeft />}
-                label="Regresar"
-                bgColor="#d80027"
-                bgHoverColor="#c80008"
-                href={`/admin/projects/${projectId}`}
-                onClick={() => {}}
-              />
-              <ButtonSubmit label="Guardar" loading={saving} loadingLabel="Guardando..." />
+              <ReturnButton onClick={navigateToPurchaseOrders} />
+              <SaveButton loading={saving} />
             </ButtonContainer>
           </form>
         </div>

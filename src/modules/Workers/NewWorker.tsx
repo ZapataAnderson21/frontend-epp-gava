@@ -6,6 +6,7 @@ import { workerApi, workerGroupApi } from "../../data/apiUrl";
 import type { Option } from "../../common/form/SelectForm";
 import { Button } from "../../components";
 import { IoClose } from "react-icons/io5";
+import { ReturnButton } from "../../common/button";
 
 interface NewPettyCashProps {
   successAction: () => void;
@@ -143,13 +144,7 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
             loading={saving}
             loadingLabel="Guardando..."  
           />
-          <Button
-            icon={<IoClose className="text-xl" />}
-            label="Cancelar"
-            bgColor = "#d80027"
-            bgHoverColor = "#c80008"
-            onClick={closeAction}
-          />
+          <ReturnButton onClick={closeAction} />
         </ButtonContainer>
       </Form>
       {openSaveModal && (

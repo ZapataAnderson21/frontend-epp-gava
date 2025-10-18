@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { FaPlus } from "react-icons/fa6";
-import { Button } from "../../components";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
 import ProjectTable from "./ProjectTable";
+import AddButton from "../../common/button/AddButton";
+import { useNavigate } from "react-router-dom";
 
 const options = [
   { value: "all", label: "Todos" },
@@ -16,6 +16,8 @@ export default function Projects() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [permission, setPermission] = useState(false);
   const [filter , setFilter] = useState("all");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -46,16 +48,7 @@ export default function Projects() {
           directionRow={true}
         />
 
-        { permission && 
-        <Button
-          icon={<FaPlus />}
-          label="Añadir"
-          href = "/admin/projects/new"
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-          onClick={() => {}}
-        />
-        }
+        { permission && <AddButton onClick={() => {navigate("/admin/projects/new")}} /> }
       </HeaderPanel>
 
       <ProjectTable filter={filter} />

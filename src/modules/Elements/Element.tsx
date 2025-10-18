@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import RedButton from "../../common/form/RedButton";
 import { type UpdateElementDto, type ElementType } from "../../data/types";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
@@ -7,7 +6,8 @@ import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { elementApi } from "../../data/apiUrl";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function Element() {
   const elementId = Number(useParams<{ id: string }>().id ?? 0);
@@ -100,8 +100,8 @@ export default function Element() {
         />
         
          <ButtonContainer>
-          <RedButton href={`/admin/elements/type/${type}`} name="Regresar" />
-          <ButtonSubmit loading={updating} label="Actualizar" loadingLabel="Actualizando..." />
+          <ReturnButton onClick={() => navigate(`/admin/elements/type/${type}`)} />
+          <SaveButton loading={updating} />
         </ButtonContainer>
       </Form>
 

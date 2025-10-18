@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { elementApi } from "../../data/apiUrl";
 import { useApiAction } from "../../hooks";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm, RedButton, SaveModal } from "../../common/form";
+import { ReturnButton, SaveButton } from "../../common/button";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm, SaveModal } from "../../common/form";
 
 interface ElementResponse {
   name: string;
@@ -85,8 +86,8 @@ export default function NewEpp() {
         />
 
         <ButtonContainer>
-          <RedButton href={`/admin/elements/type/${type}`} name="Cancelar" />
-          <ButtonSubmit loading={loading} label="Registrar" loadingLabel="Guardando..." />
+          <ReturnButton onClick={() => navigate(`/admin/elements/type/${type}`)} />
+          <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
 
