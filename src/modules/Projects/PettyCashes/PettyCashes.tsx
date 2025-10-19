@@ -1,22 +1,22 @@
-import { useSearchParams } from "react-router-dom";
-import { HeaderPanel, Panel } from "../../../common/panel";
-import PettyCashTable from "./PettyCashTable";
-import { useFetch } from "../../../hooks";
-import { type ProjectType } from "../../../data/types";
-import { projectApi } from "../../../data/apiUrl";
-import { Button } from "../../../components";
-import { FaArrowLeft, FaPlus } from "react-icons/fa6";
-import NewPettyCash from "./NewPettyCash";
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCurrentUser, useFetch } from "../../../hooks";
+import { type Project } from "../../../data/types";
+import { projectApi } from "../../../data/apiUrl";
+import { ReturnButton, AddButton } from "../../../common/button";
+import { HeaderPanel, Panel } from "../../../common/panel";
 import { ErrorMessage } from "../../../common/error";
-import PettyCash from "./PettyCash";
+import { adminTypes } from "../../../utils";
+import { PettyCash, NewPettyCash, PettyCashTable }  from "./";
+import Permission from "../../../common/auth/Permission";
 
 export default function PettyCashes() {
+  const { user } = useCurrentUser();
 
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
 
-  const {data: project, loading} = useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
+  const {data: project, loading} = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
   const [reFetch, setReFetch] = useState(0);
   const [showRightPanel, setShowRightPanel] = useState("");
   const [selectedPettyCashId, setSelectedPettyCashId] = useState<number | null>(null);
@@ -30,43 +30,33 @@ export default function PettyCashes() {
     setShowRightPanel("detail");
   };
 
+  const navigate = useNavigate();
+
   return (
-    <Panel>
-      <HeaderPanel name={project ? `Caja Chica de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
-        <Button
-          icon={<FaArrowLeft />}
-          label="Regresar"
-          href={`/admin/projects/${projectId}`}
-          bgColor="#d80027"
-          bgHoverColor="#c80008"
-          onClick={() => {}}
-        />
+    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta seccióne." />}>
+      <Panel>
+        <HeaderPanel name={project ? `Caja Chica de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
+          <ReturnButton onClick={() => {navigate(`admin/projects/${projectId}`)}} />
+          <AddButton onClick={() => setShowRightPanel("new")} />
+        </HeaderPanel>
 
-        <Button
-          icon={<FaPlus />}
-          label="Agregar"
-          onClick={() => setShowRightPanel("new")}
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-        />
-      </HeaderPanel>
+        <section className="flex flex-row flex-wrap w-full gap-4">
 
-      <section className="flex flex-row flex-wrap w-full gap-4">
-
-        <div className="flex-1">
-          <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
-        </div>
-        {showRightPanel === "new" && (
-          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
-            <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} />
-          </div>  
-        )}
-        {showRightPanel === "detail" && selectedPettyCashId && (
-          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
-            <PettyCash pettyCashId={selectedPettyCashId}  />
+          <div className="flex-1">
+            <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
           </div>
-        )}
-      </section>
-    </Panel>
+          {showRightPanel === "new" && (
+            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
+              <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} />
+            </div>  
+          )}
+          {showRightPanel === "detail" && selectedPettyCashId && (
+            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
+              <PettyCash pettyCashId={selectedPettyCashId}  />
+            </div>
+          )}
+        </section>
+      </Panel>
+    </Permission>
   );
 }

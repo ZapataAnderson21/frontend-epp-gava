@@ -25,7 +25,7 @@ export default function App() {
         <Route path='/' element={<Login />} />
         <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/admin' element={<RequireAuth><Home /></RequireAuth>}>
-          <Route path='' element={<AppHome />} />
+          <Route path='' element={<Projects />} />
           {/* Projects routes */}
           <Route path='projects' element={<Projects />} />
           <Route path='projects/:id' element={<Project />} />

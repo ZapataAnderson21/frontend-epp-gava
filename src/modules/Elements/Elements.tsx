@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa6';
-import { Button } from '../../components';
+import { useNavigate, useParams } from 'react-router-dom';
 import { SelectForm } from '../../common/form';
 import { HeaderPanel, Panel } from '../../common/panel';
 import ElementTable from './ElementTable';
+import AddButton from '../../common/button/AddButton';
 
 const options = [
   { value: "all", label: "Todos" },
@@ -28,6 +27,8 @@ export default function Elements() {
     setSelected(options.find(option => option.value === elementType) || options[0]);
   }, [elementType]);
 
+  const navigate = useNavigate();
+
   return (
     <Panel>
       <HeaderPanel name={`ELEMENTOS ${selected.label.toUpperCase()}`}>
@@ -47,14 +48,7 @@ export default function Elements() {
             directionRow={true}
           />
 
-          <Button
-              icon={<FaPlus />}
-              label="Añadir"
-              href={`/admin/elements/new?type=${filter}`}
-              bgColor="#0047a3"
-              bgHoverColor="#003a80"
-              onClick={() => {}}
-            />  
+          <AddButton onClick={() => {navigate(`/admin/elements/new?type=${filter}`)}} />  
         </HeaderPanel>
 
         <ElementTable filter={filter} />

@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { HeaderPanel, Panel } from "../../common/panel";
 import WorkerTable from "./WorkerTable";
 import NewWorker from "./NewWorker";
-import { useState } from "react";
 import Worker from "./Worker";
 import AddButton from "../../common/button/AddButton";
+import { logisticsTypes } from "../../utils/userUtils";
+import { useCurrentUser } from "../../hooks";
+import Permission from "../../common/auth/Permission";
 
 export default function Workers() {
+  const { user } = useCurrentUser();
 
   const [reFetch, setReFetch] = useState(0);
   const [showRightPanel, setShowRightPanel] = useState("");
@@ -26,7 +30,9 @@ export default function Workers() {
   return (
     <Panel>
       <HeaderPanel name={"Trabajadores"}>
-        <AddButton onClick={() => setShowRightPanel("new")} />
+        <Permission user={user} allow={logisticsTypes}>
+          <AddButton onClick={() => setShowRightPanel("new")} />
+          </Permission>
       </HeaderPanel>
 
       <section className="flex flex-row flex-wrap w-full gap-4">

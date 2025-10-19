@@ -1,16 +1,17 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { HeaderPanel, Panel } from "../../common/panel";
-import { useFetch } from "../../hooks";
-import type { ProjectType } from "../../data/types";
+import toast, { Toaster } from "react-hot-toast";
+import { MdOutlineContentCopy } from "react-icons/md";
+import { IoIosArrowUp } from "react-icons/io";
+import { useCurrentUser, useFetch } from "../../hooks";
+import type { Project } from "../../data/types";
 import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi } from "../../data/apiUrl";
-
-import SectionProjectSummary from "./sections/SectionProjectSummary";
-import CountCard from "./components/CountCard";
-import MoneyTrendCard from "./components/MoneyTrendCard";
-import HeaderActions from "./sections/HeaderActions";
-import CurrencyFilter, { type Currency } from "./components/CurrencyFilter";
+import { SectionProjectSummary, HeaderActions, HeaderSection } from "./sections";
+import { type Currency, CurrencyFilter, MoneyTrendCard, CountCard, InfoCard } from "./components";
+import { HeaderPanel, Panel } from "../../common/panel";
 import { ErrorMessage } from "../../common/error";
+import { formatDate, adminTypes } from "../../utils";
+import Permission from "../../common/auth/Permission";
 
 interface PurchaseOrderAmounts {
   totalPEN: number;
@@ -20,10 +21,19 @@ interface PurchaseOrderAmounts {
 
 export default function Project() {
   const { id: projectId } = useParams<{ id: string }>();
+  const { user } = useCurrentUser();
 
   const [currency, setCurrency] = React.useState<Currency>("PEN");
 
-  const { data: project, loading, error } = useFetch<ProjectType>( `${projectApi}${projectId}`, [projectId]);
+  const [collapsed, setCollapsed] = React.useState<{ info: boolean; regs: boolean }>({
+    info: false,
+    regs: false,
+  });
+
+  const toggleSection = (key: "info" | "regs") =>
+    setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const { data: project, loading, error } = useFetch<Project>( `${projectApi}${projectId}`, [projectId]);
   const { data: pettyCashPEN, loading: pettyCashLoading } = useFetch<number>(`${pettyCashApi}sum/${projectId}`, [projectId]);
   const { data: servicesTotalsPEN, loading: servicesTotalsLoading } = useFetch<number>(`${serviceSaleApi}sum/${projectId}`, [projectId]);
   const { data: purchaseOrderSaleAmounts, loading: purchaseOrderSaleLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}saleAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
@@ -44,85 +54,144 @@ export default function Project() {
     EUR: purchaseOrderPurchaseAmounts?.totalEUR ?? 0,
   };
 
+  const copyCode = () => {
+    if (project?.code) {
+      navigator.clipboard.writeText(project.code);
+      toast.success('¡Código copiado al portapapeles!');
+    }
+  };
+
   if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
     <Panel>
-      <HeaderPanel 
-        loading={loading}
-        name={`${project ? project?.name : ""}`}>
-        {projectId && (
-          <HeaderActions />
-        )}
+      <Toaster position="top-center" reverseOrder={false} />
+
+      <HeaderPanel loading={loading} name={`${project ? project?.name : ""}`}>
+        {projectId && <HeaderActions />}
       </HeaderPanel>
 
+      <div className="flex flex-col w-full">
+        {project?.description && (
+          <p><span className="font-bold">Descripción: </span>{project?.description}</p>
+        )}
+      </div>
+
       <div className="flex flex-col w-full gap-4">
-        {/* Resumen */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
-            <CountCard
-              loading = {loading}
-              title="Órdenes de Compra"
-              count={project?.purchaseOrders?.length ?? 0}
-              to={`/admin/purchase-orders?projectId=${projectId}`}
+        {/* ===== Información del proyecto ===== */}
+        <HeaderSection title="Información del proyecto">
+          <button
+            type="button"
+            onClick={() => toggleSection("info")}
+            aria-expanded={!collapsed.info}
+            aria-controls="section-info"
+            className="flex items-center gap-2 p-1 rounded hover:bg-gray-100"
+            title={collapsed.info ? "Mostrar sección" : "Ocultar sección"}
+          >
+            <IoIosArrowUp
+              className={`transition-transform duration-200 ${collapsed.info ? "-rotate-180" : "rotate-0"}`}
+              aria-hidden="true"
             />
-            <CountCard
-              loading = {loading}
-              title="Requerimientos"
-              count={project?.requests?.length ?? 0}
-              to={`/admin/requests?projectId=${projectId}`}
-            />
-            <CountCard
-              loading = {loading}
-              title="Caja Chica"
-              count={project?.pettyCashes?.length ?? 0}
-              to={`/admin/petty-cash?projectId=${projectId}`}
-            />
-            <CountCard
-              loading = {loading}
-              title="Servicios"
-              count={project?.serviceSales?.length ?? 0}
-              to={`/admin/service-sale?projectId=${projectId}`}
-            />
-            <CountCard
-              loading = {loading}
-              title="Emergencias"
-              count={project?.emergencies?.length ?? 0}
-              to={`/admin/emergencies?projectId=${projectId}`}
-            />
+          </button>
+        </HeaderSection>
+
+        {!collapsed.info && (
+          <div id="section-info" className="flex flex-col gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
+              <InfoCard loading={loading} title="Código" info={project?.code || "N/A"}>
+                <button
+                  type="button"
+                  onClick={copyCode}
+                  className="flex items-center justify-center border border-gray-300 rounded-md p-2 bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                  title="Copiar código"
+                >
+                  <MdOutlineContentCopy className="flex" />
+                </button>
+              </InfoCard>
+
+              <InfoCard loading={loading} title="Ubicación" info={project?.location || ""} />
+
+              <InfoCard loading={loading} title="Estado" info={project?.status || ""}>
+                <div
+                  style={{ backgroundColor: project?.status === "Activo" ? "green" : "red" }}
+                  className="size-4 aspect-square rounded-full"
+                />
+              </InfoCard>
+
+              <InfoCard loading={loading} title="Fecha de Inicio" info={formatDate(project?.startDate) || "--"} />
+              <InfoCard loading={loading} title="Fecha de Fin" info={formatDate(project?.endDate) || "--"} />
+              <InfoCard loading={loading} title="Fecha de Registro" info={formatDate(project?.createdAt) || "--"} />
+              <InfoCard loading={loading} title="Última Actualización" info={formatDate(project?.updatedAt) || "--"} />
+            </div>
           </div>
-        </div>
+        )}
 
-        <hr className="border-t border-gray-200" />
+        {
+          <Permission user={user} allow={adminTypes}>
+            <>
+              <hr className="border-t border-gray-200" />
+              {/* ===== Resumen de registros ===== */}
+              <HeaderSection title="Resumen de registros">
+                <button
+                  type="button"
+                  onClick={() => toggleSection("regs")}
+                  aria-expanded={!collapsed.regs}
+                  aria-controls="section-regs"
+                  className="flex items-center gap-2 p-1 rounded hover:bg-gray-100"
+                  title={collapsed.regs ? "Mostrar sección" : "Ocultar sección"}
+                >
+                  <IoIosArrowUp
+                    className={`transition-transform duration-200 ${collapsed.regs ? "-rotate-180" : "rotate-0"}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              </HeaderSection>
 
-        <div className="flex w-full justify-between items-center">
-          <h2 className="text-2xl font-extrabold">Resumen económico</h2>
-          <CurrencyFilter currency={currency} onChange={setCurrency} />
-        </div>
+              {!collapsed.regs && (
+                <div id="section-regs" className="flex flex-col gap-4 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
+                    <CountCard loading={loading} title="Órdenes de Compra" count={project?.purchaseOrders?.length ?? 0} to={`/admin/purchase-orders?projectId=${projectId}`} />
+                    <CountCard loading={loading} title="Requerimientos"   count={project?.requests?.length ?? 0}       to={`/admin/requests?projectId=${projectId}`} />
+                    <CountCard loading={loading} title="Caja Chica"       count={project?.pettyCashes?.length ?? 0}    to={`/admin/petty-cash?projectId=${projectId}`} />
+                    <CountCard loading={loading} title="Servicios"        count={project?.serviceSales?.length ?? 0}   to={`/admin/service-sale?projectId=${projectId}`} />
+                    <CountCard loading={loading} title="Emergencias"      count={project?.emergencies?.length ?? 0}    to={`/admin/emergencies?projectId=${projectId}`} />
+                  </div>
+                </div>
+              )}
 
-        {/* Ingresos */}
-        <SectionProjectSummary title="Ingresos">
-          <MoneyTrendCard
-            loading={purchaseOrderSaleLoading}
-            title="Órdenes de Compra"
-            trend="up"
-            currency={currency}
-            amountsByCurrency={purchaseOrdersSaleTotals}
-          />
-        </SectionProjectSummary>
+              <hr className="border-t border-gray-200" />
 
-        {/* Gastos */}
-        <SectionProjectSummary title="Gastos">
-          <MoneyTrendCard loading={purchaseOrderPurchaseLoading} title="Órdenes de Compra" trend="down" currency={currency} amountsByCurrency={purchaseOrdersPurchaseTotals} />
-          <MoneyTrendCard loading={loading} title="Planillas"        trend="down" currency={currency} amountsByCurrency={payrollTotals} />
-          <MoneyTrendCard loading={servicesTotalsLoading} title="Servicios"        trend="down" currency={currency} amountsByCurrency={servicesTotals} />
-          <MoneyTrendCard loading={pettyCashLoading} title="Caja Chica"       trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
-        </SectionProjectSummary>
+              {/* ===== Resumen económico ===== */}
+              <HeaderSection title="Resumen económico">
+                <CurrencyFilter currency={currency} onChange={setCurrency} />
+              </HeaderSection>
 
-        {/* Utilidades */}
-        <SectionProjectSummary title="Utilidades">
-          <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={{ PEN: 0, USD: 0, EUR: 0 }} />
-        </SectionProjectSummary>
+              {/* Ingresos */}
+              <SectionProjectSummary title="Ingresos">
+                <MoneyTrendCard
+                  loading={purchaseOrderSaleLoading}
+                  title="Órdenes de Compra"
+                  trend="up"
+                  currency={currency}
+                  amountsByCurrency={purchaseOrdersSaleTotals}
+                />
+              </SectionProjectSummary>
+
+              {/* Gastos */}
+              <SectionProjectSummary title="Gastos">
+                <MoneyTrendCard loading={purchaseOrderPurchaseLoading} title="Órdenes de Compra" trend="down" currency={currency} amountsByCurrency={purchaseOrdersPurchaseTotals} />
+                <MoneyTrendCard loading={loading}                 title="Planillas"        trend="down" currency={currency} amountsByCurrency={payrollTotals} />
+                <MoneyTrendCard loading={servicesTotalsLoading}   title="Servicios"        trend="down" currency={currency} amountsByCurrency={servicesTotals} />
+                <MoneyTrendCard loading={pettyCashLoading}        title="Caja Chica"       trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
+              </SectionProjectSummary>
+
+              {/* Utilidades */}
+              <SectionProjectSummary title="Utilidades">
+                <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={{ PEN: 0, USD: 0, EUR: 0 }} />
+              </SectionProjectSummary>
+            </>
+          </Permission>
+        }
       </div>
     </Panel>
   );

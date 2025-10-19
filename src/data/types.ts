@@ -73,7 +73,7 @@ export interface EmergencyType {
   createdAt: string;
   status: string;
   user?: User;
-  project?: ProjectType;
+  project?: Project;
   userName?: string;
   projectName?: string;
 }
@@ -96,20 +96,23 @@ export interface UpdateEmergencyDto {
   status?: string;
 }
 
-export interface ProjectType {
+export interface Project {
   projectId: number;
   name: string;
-  description: string;
   code: string;
-  location?: string;
+  description: string;
+  status: string;
+  location: string;
   startDate?: string;
   endDate?: string;
-  status: string;
   createdAt: string;
-  purchaseOrders?: PurchaseOrderType[];
+  updatedAt?: string;
+  deletedAt?: string;
+
   requests?: RequestType[];
-  pettyCashes?: PettyCashType[];
   emergencies?: EmergencyType[];
+  purchaseOrders?: PurchaseOrderType[];
+  pettyCashes?: PettyCashType[];
   serviceSales?: ServiceSaleType[];
 }
 
@@ -136,7 +139,7 @@ export interface RequestType {
   userId: number
   type: string
   user?: User
-  project?: ProjectType
+  project?: Project
   elementRequests?: ElementRequestType[]
   userName?: string
 }

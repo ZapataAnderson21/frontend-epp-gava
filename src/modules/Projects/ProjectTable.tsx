@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { ErrorMessage } from "../../common/error";
+import { useNavigate } from "react-router-dom";
+import { useCurrentUser, useFetch } from "../../hooks";
+
 import { LoadingSkeletonTable } from "../../common/loading";
+import { SeeButton, EditButton } from "../../common/button";
+import { ErrorMessage } from "../../common/error";
 import { Table } from "../../common/table";
+
+import { adminTypes } from "../../utils";
+import { type Project } from "../../data/types";
 import { projectApi } from "../../data/apiUrl";
-import { type ProjectType } from "../../data/types";
-import { useFetch } from "../../hooks";
-import SeeButton from "../../common/button/SeeButton";
-import { FaPencil } from "react-icons/fa6";
-import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import Permission from "../../common/auth/Permission";
 
 interface ProjectTableProps {
   filter: string;
@@ -20,13 +21,10 @@ const statusColor = {
 }
 
 export default function ProjectTable({ filter }: ProjectTableProps) {
-
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [permission, setPermission] = useState(false);
-
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
 
-  const { data: projects, loading, error } = useFetch<ProjectType[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
+  const { data: projects, loading, error } = useFetch<Project[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
 
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
@@ -34,7 +32,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     { 
       label: "Estado",
       width: "8rem",
-      render: (row: ProjectType) => {
+      render: (row: Project) => {
         return (
           <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
                 style={{ backgroundColor: statusColor[row.status as keyof typeof statusColor] || '#9ca3af' }}>
@@ -46,33 +44,16 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     {
       label: "Acciones",
       width: "8rem",
-      render: (row: ProjectType) => (
+      render: (row: Project) => (
         <div className="flex gap-2">
           <SeeButton onClick={() => navigate(`/admin/projects/${row.projectId}`)} />
-          {
-            permission &&
-            <Link to={`/admin/projects/edit/${row.projectId}`} aria-label="Edit" title="Edit">
-              <motion.button type="button" className={"cursor-pointer flex gap-2 justify-center items-center border p-3 rounded-xl border-gray-100 bg-amber-500 hover:bg-amber-600 text-white w-fit hover:scale-[105%] duration-300 disabled:opacity-60"}>
-                <FaPencil />
-              </motion.button>
-            </Link>
-          }
+          <Permission user={user} allow={adminTypes}>
+            <EditButton onClick={() => navigate(`/admin/projects/edit/${row.projectId}`)} />
+          </Permission>
         </div>
       )
     },
   ] as const;
-
-  useEffect(() => {
-    if (!user) return;
-
-    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(user.userType)) {
-      setPermission(true);
-    }
-  }, [user]);
-
-  if (!user) {
-    return <div className="text-red-500">Iniciar sesión.</div>;
-  }
 
   if (loading) {
     return <LoadingSkeletonTable />;
@@ -96,7 +77,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   }));
 
   return (
-    <Table<ProjectType>
+    <Table<Project>
       data={processedProjects}
       columns={columns}
     />

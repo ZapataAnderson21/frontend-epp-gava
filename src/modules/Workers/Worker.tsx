@@ -3,8 +3,10 @@ import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm }
 import type { Option } from "../../common/form/SelectForm";
 import { workerApi, workerGroupApi } from "../../data/apiUrl";
 import type { Worker, WorkerGroup } from "../../data/types";
-import { useApiAction, useFetch } from "../../hooks";
+import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton } from "../../common/button";
+import { logisticsTypes } from "../../utils";
+import Permission from "../../common/auth/Permission";
 
 interface WorkerProps {
   workerId: number;
@@ -14,6 +16,7 @@ interface WorkerProps {
 
 
 export default function Worker({ workerId, successAction, closeAction }: WorkerProps) {
+  const { user } = useCurrentUser();
 
   const [fullName, setFullName] = useState("");
   const [dni, setDni] = useState("");
@@ -150,11 +153,13 @@ export default function Worker({ workerId, successAction, closeAction }: WorkerP
         )}
 
         <ButtonContainer>
-          <ButtonSubmit 
-            label="Guardar"
-            loading={saving}
-            loadingLabel="Guardando..."  
-          />
+          <Permission user={user} allow={logisticsTypes}> 
+            <ButtonSubmit 
+              label="Guardar"
+              loading={saving}
+              loadingLabel="Guardando..."  
+            />
+          </Permission>
           <ReturnButton onClick={closeAction} />
         </ButtonContainer>
       </Form>

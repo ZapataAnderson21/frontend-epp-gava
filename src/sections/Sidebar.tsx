@@ -1,5 +1,5 @@
 import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie } from "react-icons/fa6";
-import { FaHome, FaProjectDiagram, FaTools } from "react-icons/fa";
+import { FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
 import { useState, useRef, useEffect } from "react";
@@ -67,7 +67,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <img src="/logo-gava.png" alt="Logo" className="h-14" />
           </motion.div>
 
-          <SidebarItem icon={<FaHome />}           label="Inicio"         href="/admin/"                 index={0} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           <SidebarItem icon={<FaProjectDiagram />} label="Proyectos"      href="/admin/projects"         index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           <SidebarItem icon={<FaTruck />}          label="Proveedores"    href="/admin/suppliers"        index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           <SidebarItem icon={<FaFileLines />}      label="Requerimientos" href="/admin/requests"         index={3} baseDelay={baseDelay} perItemDelay={perItemDelay} />
