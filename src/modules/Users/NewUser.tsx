@@ -10,6 +10,10 @@ import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form"
 import UserTypeCreateModal from "./components/UserTypeCreateModal";
 import ReturnButton from "../../common/button/ReturnButton";
 import { SaveButton } from "../../common/button";
+import { useCurrentUser } from "../../hooks";
+import { adminTypes } from "../../utils";
+import Permission from "../../common/auth/Permission";
+import { ErrorMessage } from "../../common/error";
 
 interface UserResponse {
   userId: number;
@@ -20,6 +24,8 @@ interface UserResponse {
 }
 
 export default function NewUser() {
+  const { user } = useCurrentUser();
+
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,7 +86,7 @@ export default function NewUser() {
   };
 
   return (
-    <>
+    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />}>
       <Form name="REGISTRAR USUARIO" handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <InputForm label="Apellido" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} optional={false} />
@@ -110,7 +116,9 @@ export default function NewUser() {
 
         <ButtonContainer>
           <ReturnButton onClick={() => navigateToUsers()} />
-          <SaveButton loading={saving} />
+          <Permission user={user} allow={adminTypes}>
+            <SaveButton loading={saving} />
+          </Permission>
         </ButtonContainer>
       </Form>
 
@@ -129,6 +137,6 @@ export default function NewUser() {
       {openSaveModal && (
         <SaveModal onOk={onOk} message={successMessage} error={error} />
       )}
-    </>
+    </Permission>
   );
 }

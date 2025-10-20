@@ -2,20 +2,23 @@ import { Panel, HeaderPanel } from "../../common/panel";
 import UserTable from "./UserTable";
 import { useNavigate } from "react-router-dom";
 import AddButton from "../../common/button/AddButton";
+import { useCurrentUser } from "../../hooks";
+import Permission from "../../common/auth/Permission";
+import { adminTypes } from "../../utils";
+import { ErrorMessage } from "../../common/error";
 
 export default function Users() {
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const isManager = ["GERENTE", "ADMINISTRADORA"].includes(user.userType);
+  const { user } = useCurrentUser();
 
   const navigate = useNavigate();
 
   return (
     <Panel>
       <HeaderPanel name={`USUARIOS`}>
-      { isManager && (
-        <AddButton onClick={() => navigate("/admin/users/new")} />
-      )}
+        <Permission user={user} allow={adminTypes}>
+          <AddButton onClick={() => navigate("/admin/users/new")} />
+        </Permission>
       </HeaderPanel>
 
       <UserTable />

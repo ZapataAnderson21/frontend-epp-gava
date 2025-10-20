@@ -73,7 +73,7 @@ export default function User() {
     };
 
     try {
-      const res = await updateUser(`${userApi}/${userId}`, "PATCH", updatedData);
+      const res = await updateUser(`${userApi}${userId}`, "PATCH", updatedData);
 
       setSuccessMessage(res.message);
 
@@ -135,6 +135,7 @@ export default function User() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          optional={true}
         />
         <InputForm
           label="Nueva contraseña"
@@ -142,6 +143,7 @@ export default function User() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          optional={true}
         />
 
         {loadingRoles && <span className="text-sm text-gray-500">Cargando roles...</span>}

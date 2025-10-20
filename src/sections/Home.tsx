@@ -32,8 +32,8 @@ export default function Home() {
 
         {isMobile && (
           <div
-            className={`fixed top-22
-                      ${isOpen ? "left-[180px] rounded-tl-md rounded-bl-md" : "left-0 rounded-tr-md rounded-br-md"} z-40 flex items-center justify-center bg-[#0047a3] size-10 text-white text-2xl cursor-pointer transition-all duration-300`}
+            className={`fixed top-12 rounded-tr-md rounded-br-md
+                      ${isOpen ? "left-[220px]" : "left-0"} z-40 flex items-center justify-center bg-[#0047a3] size-10 text-white text-2xl cursor-pointer transition-all duration-300`}
             onClick={toggleSidebar}
           >
             <IoMenu />

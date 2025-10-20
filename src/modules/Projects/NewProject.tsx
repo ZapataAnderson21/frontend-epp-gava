@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { ReturnButton, SaveButton } from "../../common/button"
 import SaveModal from "../../common/form/SaveModal";
-import { useApiAction } from "../../hooks/useApiAction";
+import { useApiAction, useCurrentUser } from "../../hooks/";
 import { projectApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
 import TextAreaForm from "../../common/form/TextAreaForm";
 import ButtonContainer from "../../common/form/ButtonContainer";
 import { Form } from "../../common/form";
+import { adminTypes } from "../../utils";
+import Permission from "../../common/auth/Permission";
+import { ErrorMessage } from "../../common/error";
 
 interface Project {
   project_id: number;
@@ -17,6 +20,8 @@ interface Project {
 }
 
 export default function NewProject() {
+  const { user } = useCurrentUser();
+
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [location, setLocation] = useState("");
@@ -57,7 +62,7 @@ export default function NewProject() {
   };
 
   return (
-    <>
+    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />}>
       <Form name="REGISTRAR PROYECTO" handleSubmit={handleSubmit}>
         <InputForm
           label="Nombre"
@@ -124,6 +129,6 @@ export default function NewProject() {
           error={!!error || response?.statusCode !== 201}
         />
       )}
-    </>
+    </Permission>
   );
 }

@@ -300,6 +300,8 @@ export interface Worker {
   dni: string
   phone?: string
   address?: string
+  personalEmail?: string
+  birthDate?: string
   workerGroupId: number
   createdAt: string
   updatedAt: string

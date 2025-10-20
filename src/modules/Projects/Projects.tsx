@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCurrentUser } from "../../hooks";
+import { adminTypes } from "../../utils";
+import Permission from "../../common/auth/Permission";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { SelectForm } from "../../common/form";
+import { AddButton } from "../../common/button";
 import ProjectTable from "./ProjectTable";
-import AddButton from "../../common/button/AddButton";
-import { useNavigate } from "react-router-dom";
 
 const options = [
   { value: "all", label: "Todos" },
@@ -13,24 +16,11 @@ const options = [
 
 export default function Projects() {
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [permission, setPermission] = useState(false);
+  const { user } = useCurrentUser();
   const [filter , setFilter] = useState("all");
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) return;
-
-    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(user.userType)) {
-      setPermission(true);
-    }
-  }, [user]);
-
-  if (!user) {
-    return <div className="text-red-500">Iniciar sesión.</div>;
-  }
-  
   return (
     <Panel>
       <HeaderPanel name={`PROYECTOS`}>
@@ -48,7 +38,9 @@ export default function Projects() {
           directionRow={true}
         />
 
-        { permission && <AddButton onClick={() => {navigate("/admin/projects/new")}} /> }
+        <Permission user={user} allow={adminTypes}>
+          <AddButton onClick={() => {navigate("/admin/projects/new")}} />
+        </Permission>
       </HeaderPanel>
 
       <ProjectTable filter={filter} />

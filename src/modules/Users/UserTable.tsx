@@ -6,8 +6,19 @@ import { userApi } from "../../data/apiUrl";
 import type { User } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { useNavigate } from "react-router-dom";
+import { useCurrentUser } from "../../hooks";
+import { adminTypes } from "../../utils";
+import { EditButton } from "../../common/button";
 
 export default function UserTable() {
+
+  const { user } = useCurrentUser();
+
+  let isAdmin: boolean = false;
+
+  if(user) {
+    isAdmin = adminTypes.includes(user.userType);
+  }
 
   const { data: users, loading, error } = useFetch<User[]>(userApi)
 
@@ -17,12 +28,13 @@ export default function UserTable() {
     { label: "Nombre", width: "16rem", render : (user: User) => `${user.name} ${user.lastName}` },
     { key: "email", label: "Correo", width: "16rem" },
     { key: "userType", label: "Rol", width: "20rem" },
-    { label: "Acciones", 
+    ...(isAdmin ? [{ 
+      label: "Acciones", 
       width: "6rem",  
       render: (user: User) => (
-        <SeeButton onClick={() => navigate(`/admin/users/${user.userId}`)} />
+        <EditButton onClick={() => navigate(`/admin/users/${user.userId}`)} />
       )
-    },
+    }] : []),
   ] as const;
 
   if(loading) {
