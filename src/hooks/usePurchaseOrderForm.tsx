@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFetch, useApiAction } from "../hooks";
-import type { ProjectType, Resource, Supplier } from "../data/types";
+import type { Project, Resource, Supplier } from "../data/types";
 import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
 
-type ItemRow = {
+export type ItemRow = {
   resourceId: number;
   description: string;
   unit: string;
@@ -41,7 +41,7 @@ interface Params {
 export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   // --- fetch ---
   const { data: project, loading: projectLoading, error: projectError } =
-    useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
+    useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
 
   const { data: suppliers, loading: suppliersLoading, error: suppliersError } =
     useFetch<Supplier[]>(supplierApi, []);
@@ -240,6 +240,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setOpenSaveModal(true);
+    setErrorFlag(false);
 
     // VALIDACIÓN granular
     const { valid, errors: found, messages } = validateAll();
@@ -273,12 +274,13 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     };
 
     const ocResp = await execute(`${purchaseOrderApi}`, "POST", body);
-    setSuccessMessage(ocResp.message || "Orden creada correctamente.");
 
     if (ocResp.statusCode !== 201) {
       setErrorFlag(true);
       setOnOk(() => () => closeSaveModal());
       return;
+    } else {
+      setErrorFlag(false);
     }
 
     const purchaseOrderId = Number(ocResp.data.purchaseOrderId);
@@ -300,7 +302,10 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         setErrorFlag(true);
         return;
       }
+
+      setErrorFlag(false);
     }
+    setSuccessMessage(ocResp.message);
   };
 
   return {

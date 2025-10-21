@@ -7,8 +7,12 @@ import SaveModal from "../../../common/form/SaveModal";
 import { usePurchaseOrderForm } from "../../../hooks/usePurchaseOrderForm";
 import { PurchaseOrderHeader, SupplierSelectCard, DeliveryInfoCard, PaymentConditionsCard, ItemsTable, ConditionsSection, SignaturesTable } from "./components";
 import { ReturnButton, SaveButton } from "../../../common/button";
+import Permission from "../../../common/auth/Permission";
+import { adminTypes } from "../../../utils";
+import { useCurrentUser } from "../../../hooks";
 
 export default function NewPurchaseOrder() {
+  const { user } = useCurrentUser();
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId") ?? "";
   const navigate = useNavigate();
@@ -64,15 +68,17 @@ export default function NewPurchaseOrder() {
       </div>
     );
   }
-
+  
   if (projectError) return <ErrorMessage errorMessage={projectError} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
   if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
-    <>
+    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <div className="flex flex-col p-4">
-        <ReturnButton onClick={navigateToPurchaseOrders} />
+        <div className="w-fit">
+          <ReturnButton onClick={navigateToPurchaseOrders} />
+        </div>
 
         <div className="w-full flex flex-col items-center justify-center">
           <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
@@ -195,6 +201,6 @@ export default function NewPurchaseOrder() {
           error={errorFlag}
       />
       )}
-    </>
+    </Permission>
   );
 }

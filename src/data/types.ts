@@ -111,7 +111,7 @@ export interface Project {
 
   requests?: RequestType[];
   emergencies?: EmergencyType[];
-  purchaseOrders?: PurchaseOrderType[];
+  purchaseOrders?: PurchaseOrder[];
   pettyCashes?: PettyCashType[];
   serviceSales?: ServiceSaleType[];
 }
@@ -249,9 +249,10 @@ export interface Supplier {
   updatedAt: string;
 }
 
-export interface PurchaseOrderType {
+export interface PurchaseOrder {
   purchaseOrderId: number;
   code: string;
+  deliveryLocation: string;
   destination: string;
   paymentConditions: string;
   generalConditions?: string;
@@ -267,9 +268,10 @@ export interface PurchaseOrderType {
   supplierId: number;
   quotation?: string;
   createdAt: string;
-  purchaseOrderType: PurchaseOrderType;
+  purchaseOrderType: string;
   supplier?: Supplier;
   supplierName?: string;
+  project?: Project;
 }
 
 export interface PettyCashType {
@@ -332,4 +334,18 @@ export interface RequestWorker {
   worker?: Worker
   workerName?: string
   request?: RequestType
+}
+
+export interface ResourcePurchaseOrder {
+  resourcePurchaseOrderId: number;
+  purchaseOrderId: number;
+  resourceId: number;
+  quantity: number;
+  unitSalesPrice: number;
+  unitPurchasePrice: number;
+  totalPrice: number;
+  createdAt: string;
+  updatedAt?: string;
+  resource?: Resource;
+  purchaseOrder?: PurchaseOrder;
 }

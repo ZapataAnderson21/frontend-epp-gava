@@ -46,7 +46,7 @@ export function useHandleForm() {
     const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
     const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
     const selectedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
-  const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
+    const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
 
     console.log("handleSave: user =", user);
     console.log("handleSave: selectedElements =", selectedElements);

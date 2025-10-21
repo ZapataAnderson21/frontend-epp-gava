@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Home from './sections/Home.tsx';
-import AppHome from './App-Home.tsx';
 
 import { Login, ResetPassword } from './modules/Login';
 import { Users, User, NewUser} from './modules/Users';
@@ -16,6 +15,7 @@ import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
 import ServiceSales from './modules/Projects/ServiceSales/ServiceSales.tsx';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
+import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
 
 export default function App() {
 
@@ -66,6 +66,7 @@ export default function App() {
           <Route path='purchase-orders' element={<PurchaseOrders />} />
           <Route path='purchase-orders/:id' element={<PurchaseOrder />} />
           <Route path='purchase-orders/new' element={<NewPurchaseOrder />} />
+          <Route path='purchase-orders/edit/:id' element={<EditPurchaseOrder />} />
           {/* End purchaseOrders routes */}
           {/* PettyCash routes */}
           <Route path='petty-cash' element={<PettyCashes />} />

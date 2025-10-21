@@ -8,7 +8,7 @@ import { FaTools } from "react-icons/fa";
 import { TiArrowBack } from "react-icons/ti";
 
 import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
-import type { ElementRequestType, ProjectType, ElementType, Worker, RequestWorker } from "../../data/types";
+import type { ElementRequestType, Project, ElementType, Worker, RequestWorker } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer, Form } from "../../common/form";
@@ -40,7 +40,7 @@ export default function NewRequest() {
   const [workers, setWorkers] = useState<Worker[]>(selectedWorkers);
   const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>(selectedRequestWorkers);
 
-  const { data: projects } = useFetch<ProjectType[]>(`${projectApi}status/active`, []);
+  const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`, []);
 
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
