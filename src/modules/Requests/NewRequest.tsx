@@ -11,7 +11,7 @@ import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
 import type { ElementRequestType, Project, ElementType, Worker, RequestWorker } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer, Form } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer } from "../../common/form";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
@@ -95,7 +95,9 @@ export default function NewRequest() {
       const updatedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
       setElements(updatedElements);
 
-      // ✅ también workers
+      const updatedElementRequests: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+      setElementRequests(updatedElementRequests);
+
       const updatedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
       const updatedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
       setWorkers(updatedWorkers);
@@ -105,8 +107,7 @@ export default function NewRequest() {
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
-
-
+  
   const handleRemoveElement = (element: ElementType) => {
     const updatedElements = elements.filter((elem) => elem.elementId !== element.elementId);
     const updatedElementRequests = elementRequests.filter((req) => req.elementId !== element.elementId);
@@ -141,6 +142,7 @@ export default function NewRequest() {
   const handleSaveRequest = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setOpenSaveModal(true);
+    setError(false);
 
     if (projectId === 0) {
       await setError(true);
@@ -223,116 +225,129 @@ export default function NewRequest() {
 
   return (
     <>
-      <Form name="REGISTRAR SOLICITUD" handleSubmit={handleSaveRequest} >
+      <form onSubmit={handleSaveRequest} className="p-10 max-w-7xl text-gray-800 " >
 
-        <div className="flex flex-col items-start justify-start gap-4 w-full max-w-2xl h-full">
+        <h1 className="text-2xl font-bold mb-4">REGISTRAR SOLICITUD</h1>
+
+        <div className="flex flex-col items-start justify-start gap-4 w-full h-full">
           
-          <SelectForm
-            label="Proyecto"
-            name="projectId"
-            value={projectId}
-            onChange={(value) => setProjectId(Number(value))}
-            options={[
-              ...projects.map((project) => ({
-                value: project.projectId,
-                label: project.name,
-              })),
-            ]}
-          />
+          <div className="flex flex-col lg:flex-row w-full gap-4">
+            <SelectForm
+              label="Proyecto"
+              name="projectId"
+              value={projectId}
+              onChange={(value) => setProjectId(Number(value))}
+              options={[
+                ...projects.map((project) => ({
+                  value: project.projectId,
+                  label: project.name,
+                })),
+              ]}
+            />
 
-          <InputForm
-            label="Fecha y Hora de Entrega"
-            name="deliveryDueDate"
-            type="datetime-local"
-            value={deliveryDueDate}
-            onChange={(e) => {setDeliveryDueDate(e.target.value);
-            }}>
-            <div className="relative flex w-full justify-end">
-              <RiQuestionFill className="inline-flex text-amber-500 cursor-pointer size-5" onClick={() => setOpenWarning(!openWarning)} />
-              { 
-                openWarning && (
-                <p className="absolute bg-amber-500 p-2 rounded-md text-white font-semibold inline-flex w-78 right-0 top-6 gap-1 mb-1">
-                  <IoWarning className="w-8 mt-1" /> 
-                  Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
-                </p>
-              )}
-            </div>
-          </InputForm>
-
-          <span className="font-semibold">Busca los elementos que vas a seleccionar:</span>
-          <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
-            <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="epp" onSelected={handleSelectionElementsUpdate} />
-            <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" onSelected={handleSelectionElementsUpdate} />
-          </div>
-          <div className="flex flex-col items-start gap-2 justify-start w-full">
-            {
-              selectedElements.length > 0 ? (
-                <>
-                <span className="font-semibold pt-2 pb-4">Elementos seleccionados:</span>
-                <HeaderNewRequest />
-                  {elements.map((element) => (
-                    <RowElementRequest 
-                      key={element.elementId}
-                      elementRequest={
-                        elementRequests.find(req => req.elementId === element.elementId) || 
-                        { unit: "", quantityRequested: 0, elementId: element.elementId!, requestId: 0, element: element }
-                      }
-                      handleRemoveElement={handleRemoveElement}
-                      handleChangeElementRequest={handleChangeElementRequest}
-                    />
-                  ))}
-                </>
-              ) : (
-                <div className="flex flex-col gap-2 w-full mb-4">
-                  <div className="flex w-full border border-gray-100"></div>
-                  <ErrorMessage errorMessage="No hay elementos seleccionados." />
-                  <div className="flex w-full border border-gray-100"></div>
-                </div>
-              )
-            }
-          </div>
-
-          <span className="font-semibold">Busca los trabajadores que vas a seleccionar:</span>
-          <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
-            <WorkerSelectCard icon={<FaPersonDigging className="size-16" />} title="Obreros" groupId={5} onSelected={handleSelectionWorkersUpdate} />
-            <WorkerSelectCard icon={<MdEngineering className="size-16" />} title="Técnicos" groupId={6} onSelected={handleSelectionWorkersUpdate} />
-          </div>
-
-          {/* Trabajadores seleccionados (editable) */}
-          <div className="flex flex-col items-start gap-2 justify-start w-full">
-            {workers.length > 0 ? (
-              <>
-                <span className="font-semibold pt-2 pb-2">Trabajadores seleccionados:</span>
-                <HeaderWorkers />
-                {workers.map((w) => {
-                  const rw =
-                    requestWorkers.find((x) => x.workerId === w.workerId) ||
-                    {
-                      requestWorkerId: 0,
-                      requestId: 0,
-                      workerId: w.workerId!,
-                      shirtSize: "",
-                      pantsSize: "",
-                      shoeSize: "",
-                      worker: w,
-                    };
-                  return (
-                    <RowRequestWorker
-                      key={w.workerId}
-                      requestWorker={rw}
-                      onRemove={handleRemoveWorker}
-                      onChange={handleChangeRequestWorker}
-                    />
-                  );
-                })}
-              </>
-            ) : (
-              <div className="flex flex-col gap-2 w-full mb-4">
-                <div className="flex w-full border border-gray-100"></div>
-                <ErrorMessage errorMessage="No hay trabajadores seleccionados." />
-                <div className="flex w-full border border-gray-100"></div>
+            <InputForm
+              label="Fecha y Hora de Entrega"
+              name="deliveryDueDate"
+              type="datetime-local"
+              value={deliveryDueDate}
+              onChange={(e) => {setDeliveryDueDate(e.target.value);
+              }}>
+              <div className="relative flex w-full justify-end">
+                <RiQuestionFill className="inline-flex text-amber-500 cursor-pointer size-5" onClick={() => setOpenWarning(!openWarning)} />
+                { 
+                  openWarning && (
+                  <p className="absolute bg-amber-500 p-2 rounded-md text-white font-semibold inline-flex w-78 right-0 top-6 gap-1 mb-1">
+                    <IoWarning className="w-8 mt-1" /> 
+                    Recuerda que si el requerimiento es para mañana, la hora límite para pedirlo es 1 PM. Si es para pasado mañana, el límite es 5 PM.
+                  </p>
+                )}
               </div>
-            )}
+            </InputForm>
+          </div>
+
+          <div className="flex flex-col w-full gap-4">
+            <div className="flex flex-col w-full gap-4">
+              <span className="font-semibold mt-4">Busca los elementos que vas a seleccionar:</span>
+              <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
+                <RequestTypeCard icon={<FaHelmetSafety className="size-16" />} title="Seguridad" typeElement="epp" onSelected={handleSelectionElementsUpdate} />
+                <RequestTypeCard icon={<FaTools className="size-16" />} title="Operativo" typeElement="operative" onSelected={handleSelectionElementsUpdate} />
+              </div>
+              <div className="flex flex-col items-start gap-2 justify-start overflow-x-auto">
+                {
+                  elements.length > 0 ? (
+                    <div className="min-w-xl w-full">
+                    <span className="font-semibold pt-2 pb-4">Elementos seleccionados:</span>
+                    <HeaderNewRequest />
+                      {elements.map((element) => (
+                        <RowElementRequest 
+                          key={element.elementId}
+                          elementRequest={
+                            elementRequests.find(req => req.elementId === element.elementId) || 
+                            { unit: "", quantityRequested: 0, elementId: element.elementId!, requestId: 0, element: element }
+                          }
+                          handleRemoveElement={handleRemoveElement}
+                          handleChangeElementRequest={handleChangeElementRequest}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 w-full mb-4">
+                      <div className="flex w-full border border-gray-100"></div>
+                      <ErrorMessage errorMessage="No hay elementos seleccionados." />
+                      <div className="flex w-full border border-gray-100"></div>
+                    </div>
+                  )
+                }
+              </div>
+            </div>
+
+            <div className="flex flex-row w-full gap-4">
+              <div className="flex flex-col w-full gap-4">
+                <span className="font-semibold mt-4">Busca los trabajadores que vas a seleccionar:</span>
+                <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
+                  <WorkerSelectCard icon={<FaPersonDigging className="size-16" />} title="Obreros" groupId={5} onSelected={handleSelectionWorkersUpdate} />
+                  <WorkerSelectCard icon={<MdEngineering className="size-16" />} title="Técnicos" groupId={6} onSelected={handleSelectionWorkersUpdate} />
+                </div>
+
+                {/* Trabajadores seleccionados (editable) */}
+                <div className="flex flex-col items-start gap-2 justify-start w-full overflow-x-auto">
+                  {workers.length > 0 ? (
+                    <div className="min-w-xl w-full">
+                      <span className="font-semibold pt-2 pb-2">Trabajadores seleccionados:</span>
+                      <HeaderWorkers />
+                      {workers.map((w) => {
+                        const rw =
+                          requestWorkers.find((x) => x.workerId === w.workerId) ||
+                          {
+                            requestWorkerId: 0,
+                            requestId: 0,
+                            workerId: w.workerId!,
+                            shirtSize: "",
+                            pantsSize: "",
+                            shoeSize: "",
+                            worker: w,
+                          };
+                        return (
+                          <RowRequestWorker
+                            key={w.workerId}
+                            requestWorker={rw}
+                            onRemove={handleRemoveWorker}
+                            onChange={handleChangeRequestWorker}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 w-full mb-4">
+                      <div className="flex w-full border border-gray-100"></div>
+                      <ErrorMessage errorMessage="No hay trabajadores seleccionados." />
+                      <div className="flex w-full border border-gray-100"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
 
 
@@ -357,7 +372,7 @@ export default function NewRequest() {
             />
           </ButtonContainer>
         </div>
-      </Form>
+      </form>
       {
         openPasswordModal && (
           <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>

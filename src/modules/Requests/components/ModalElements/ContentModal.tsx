@@ -75,51 +75,64 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
     );
   };
 
-  // ✅ Guardar selección
   const onClick = async () => {
     if (isNewRequest) {
-      // construir arrays actualizados
+      // ---------- NUEVA SOLICITUD (sin id en la URL) ----------
+      // 1) Lo que ya había guardado
+      const prevReqs: ElementRequestType[] = JSON.parse(
+        localStorage.getItem("selectedElementRequest") || "[]"
+      );
+
+      // 2) Mapa para buscar rápido por elementId (para conservar cantidad/unidad)
+      const prevReqsMap = new Map(prevReqs.map(r => [r.elementId, r]));
+
+      // 3) Elementos que quedaron seleccionados en este modal (checkboxes)
       const selectedElements = elements.filter(
         (item) => item.elementId !== undefined && selectedIds.includes(item.elementId!)
       );
 
-      const prevSelected = localStorage.getItem("selectedElementRequest");
-      let combined: any[] = [];
+      // 4) Mantener requests de elementos que NO pertenecen a este modal (otros grupos)
+      const keepFromOtherGroups = prevReqs.filter(
+        (r) => !elements.some((e) => e.elementId === r.elementId)
+      );
 
-      if (prevSelected) {
-        const parsed: any[] = JSON.parse(prevSelected);
-        // elimina los que pertenecen a este tipo, para no duplicar
-        const filtered = parsed.filter(
-          (item) => !elements.some((e) => e.elementId === item.elementId)
-        );
-        combined = [...filtered];
-      }
+      // 5) Para los elementos de ESTE modal seleccionados:
+      //    si ya existían en prevReqs, los mergeamos para NO perder quantityRequested/unit.
+      const mergedForThisGroup = selectedElements.map((el) => {
+        const existing = prevReqsMap.get(el.elementId!);
+        return {
+          ...(existing ?? {}),
+          elementId: el.elementId!,                 // asegura id
+          requestId: existing?.requestId ?? 0,     // preserva si existía
+          unit: existing?.unit ?? "",              // NO pisar si ya había valor
+          quantityRequested: existing?.quantityRequested ?? 0,
+          element: el,                             // referencia al elemento
+        } as ElementRequestType;
+      });
 
-      const selectedElementRequest = selectedElements.map((item) => ({
-        unit: "",
-        quantityRequested: 0,               // ⚠️ usa tu nombre de campo real
-        requestId: 0,
-        elementId: item.elementId as number,
-        element: item,
-      }));
+      // 6) Resultado final
+      const updatedReqs = [
+        ...keepFromOtherGroups,
+        ...mergedForThisGroup,
+      ] as ElementRequestType[];
 
-      const updatedReqs = [...combined, ...selectedElementRequest] as ElementRequestType[];
-      const updatedEls = updatedReqs.map(r => r.element).filter((el): el is ElementType => el !== undefined);
+      const updatedEls = updatedReqs
+        .map((r) => r.element)
+        .filter((el): el is ElementType => el !== undefined);
 
-      // ✅ actualiza estado arriba SIN recargar
+      // 7) Sube al padre (él actualiza estado y localStorage) y cierra
       onSelected(updatedEls, updatedReqs);
-
-      // opcional: cerrar modal
       onClose();
       return;
     }
 
-    // --------- Caso edición (hay id) ----------
+    // ---------- EDICIÓN (hay id en la URL) ----------
     if (id) {
       const requestId = Number(id);
       const added = selectedIds.filter((sid) => !originalIds.includes(sid));
       const removed = originalIds.filter((oid) => !selectedIds.includes(oid));
 
+      // Crear los nuevos
       for (const addId of added) {
         await createElementRequest(`${elementRequestApi}`, "POST", {
           elementId: addId,
@@ -128,6 +141,8 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
           requestId,
         });
       }
+
+      // Borrar los quitados
       if (fetchedElementRequests) {
         for (const removeId of removed) {
           const itemToDelete = fetchedElementRequests.find((e) => e.elementId === removeId);
@@ -137,16 +152,14 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
         }
       }
 
-      // ✅ si quieres reflejar el cambio en pantalla sin reload:
+      // Reflejar selección persistida en el modal sin recargar
       const nextOriginal = selectedIds;
       setOriginalIds(nextOriginal);
-
-      // (opcional) si este modal también debe reflejarse en una vista padre en modo edición,
-      // expón otro callback onAfterPersist() y llámalo aquí.
 
       onClose();
     }
   };
+
 
   if (loading) return <LoadingSkeletonTable />;
   if (error)

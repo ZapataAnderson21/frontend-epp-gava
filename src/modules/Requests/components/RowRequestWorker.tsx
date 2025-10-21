@@ -14,12 +14,12 @@ interface RowRequestWorkerProps {
 export default function RowRequestWorker({ requestWorker, onRemove, onChange }: RowRequestWorkerProps) {
   const worker = requestWorker.worker!;
   return (
-    <div className="flex flex-row items-center justify-between w-full p-4 border-b border-gray-200 gap-4 hover:rounded-lg hover:bg-[#eff2ff]">
-      <span className="flex items-start justify-start w-36">{worker.fullName}</span>
+    <div className="flex flex-row items-center justify-between w-full p-2 border-b border-gray-200 gap-4 hover:rounded-lg hover:bg-[#eff2ff]">
+      <span className="flex items-start justify-start w-48">{worker.fullName}</span>
 
       <input
         type="text"
-        className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Camisa"
         value={requestWorker.shirtSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "shirtSize", e.target.value)}
@@ -27,7 +27,7 @@ export default function RowRequestWorker({ requestWorker, onRemove, onChange }: 
 
       <input
         type="text"
-        className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Pantalón"
         value={requestWorker.pantsSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "pantsSize", e.target.value)}
@@ -35,7 +35,7 @@ export default function RowRequestWorker({ requestWorker, onRemove, onChange }: 
 
       <input
         type="text"
-        className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Calzado"
         value={requestWorker.shoeSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "shoeSize", e.target.value)}

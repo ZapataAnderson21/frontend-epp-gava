@@ -9,13 +9,13 @@ interface RowElementRequestProps {
 
 export default function RowElementRequest({ elementRequest, handleRemoveElement, handleChangeElementRequest }: RowElementRequestProps) {
   return (
-    <div className="flex flex-row items-center justify-between w-full p-4 border-b border-gray-200 
+    <div className="flex flex-row items-center justify-between w-full p-2 border-b border-gray-200 
                     gap-4 hover:rounded-lg hover:bg-[#eff2ff] cursor-pointer">
-      <span className="flex items-start justify-start w-36">{elementRequest.element?.name}</span>
+      <span className="flex items-start justify-start w-48">{elementRequest.element?.name}</span>
 
       <input
         type="text"
-        className="flex items-start justify-start w-20 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-18 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Unidad"
         value={elementRequest.unit ?? ""}
         onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "unit", e.target.value)}
@@ -23,7 +23,7 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
 
       <input
         type="number"
-        className="flex items-start justify-start w-12 sm:w-24 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-18 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Cantidad"
         value={elementRequest.quantityRequested ?? 0}
         onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "quantityRequested", Number(e.target.value))}

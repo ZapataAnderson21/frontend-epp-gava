@@ -42,23 +42,25 @@ export default function Requests() {
 
     <Panel>
       <HeaderPanel name={`REQUERIMIENTOS`}>
-        <SelectForm
-          label="Filtrar por"
-          name="filter"
-          value={filter.value}
-          onChange={(value) => {
-            const option = options.find(opt => opt.value === value);
-            if (option) {
-              handleSelect(option);
-            }
-          }}
-          options={options}
-          directionRow={true}
-        />
-
-        { projectId &&  <ReturnButton onClick={navigateToProject} /> }
-        <AddButton onClick={navigateToNewRequest} />
-
+        <div className="flex flex-row flex-wrap gap-4">
+          { projectId &&  <div><ReturnButton onClick={navigateToProject} /></div> }
+          <div><AddButton onClick={navigateToNewRequest} /></div>
+          <div>
+            <SelectForm
+              label="Filtrar por"
+              name="filter"
+              value={filter.value}
+              onChange={(value) => {
+                const option = options.find(opt => opt.value === value);
+                if (option) {
+                  handleSelect(option);
+                }
+              }}
+              options={options}
+              directionRow={true}
+            />
+          </div>
+        </div>
       </HeaderPanel>
 
       <RequestTable filter={filter.value} />
