@@ -141,6 +141,12 @@ export default function EditPurchaseOrder() {
     // Handle quality condition change logic here
   }
 
+  const handleAuthorize = () => {
+    execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", {
+      status: "authorized"
+    })
+  }
+
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <div className="flex flex-col p-4">
@@ -256,7 +262,7 @@ export default function EditPurchaseOrder() {
                 bgColor="#EF9521"
                 bgHoverColor="#C97816"
                 type="button"
-                onClick={() => {}}
+                onClick={handleAuthorize}
               />
             </ButtonContainer>
           </form>

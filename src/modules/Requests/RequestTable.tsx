@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -9,6 +9,7 @@ import { useMemo, useEffect } from "react";
 import { FaPencil } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import SeeButton from "../../common/button/SeeButton";
+import { EditButton } from "../../common/button";
 
 interface RequestTableProps {
   filter: string;
@@ -66,6 +67,16 @@ export default function RequestTable({ filter }: RequestTableProps) {
     console.log("Requests:", requests);
   }, [role, isManager, effectiveUserId, urlFetch, requests]);
 
+  const navigate = useNavigate();
+
+  const navigateToRequest = (requestId: number) => {
+    navigate(`/admin/requests/${requestId}`);
+  }
+
+  const navigateToEditRequest = (requestId: number) => {
+    navigate(`/admin/requests/edit/${requestId}`);
+  }
+
   const columns = [
     { key: "requestId", label: "Id", width: "4rem" },
     { key: "createdAt", label: "F y H de Registro", width: "8rem" },
@@ -89,16 +100,10 @@ export default function RequestTable({ filter }: RequestTableProps) {
         return (
           <div className="flex gap-2">
             {
-              (row.status === "Borrador") ? (
-              <Link to={`/admin/requests/edit/${row.requestId}`} aria-label="Edit" title="Edit">
-                <motion.button 
-                  type="button"
-                  className="cursor-pointer flex gap-2 justify-center items-center border p-3 rounded-xl border-gray-100 bg-amber-500 hover:bg-amber-600 text-white w-fit hover:scale-[105%] duration-300 disabled:opacity-60"
-                >
-                  <FaPencil />
-                </motion.button>
-              </Link>
-              ) : <SeeButton to={`/admin/requests/${row.requestId}`} />
+              (row.status === "Borrador") ? 
+                <EditButton onClick={() => navigateToEditRequest(row.requestId)} /> 
+                : 
+                <SeeButton onClick={() => navigateToRequest(row.requestId)} />
             }
           </div>
         );
