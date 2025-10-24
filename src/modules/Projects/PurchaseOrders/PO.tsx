@@ -6,13 +6,11 @@ import { logisticsTypes } from "../../../utils";
 import { ReturnButton } from "../../../common/button";
 import { purchaseOrderApi } from "../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../data/types";
-import { SignaturesTable } from "./components";
 import { FaRegFilePdf } from "react-icons/fa6";
 import { Button } from "../../../components";
 import { useState } from "react";
-import TableViewPO from "./components/Table/TableViewPO";
 
-export default function PurchaseOrder() {
+export default function PO() {
   
   const { user } = useCurrentUser();
 
@@ -20,43 +18,15 @@ export default function PurchaseOrder() {
   
   const { data: purchaseOrder } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
 
-  const [seePurchasePrices, setSeePurchasePrices] = useState<boolean>(false);
-
   const navigate = useNavigate();
 
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/purchase-orders?projectId=${purchaseOrder?.project?.projectId}`);
   }
 
-  const handleDownloadPDF = async () => {
-    if (!purchaseOrderId) return;
-
-    try {
-      const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${purchaseOrderApi}pdf/${purchaseOrderId}`, {
-        method: 'GET',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (!res.ok) throw new Error('No se pudo generar el PDF');
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `orden-compra-${purchaseOrderId}.pdf`; // el mismo nombre que en el backend
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  const subtotalVenta = purchaseOrder?.resources?.reduce((total, item) => {
+    return total + (item.unitSalesPrice * item.quantity);
+  }, 0);
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
@@ -72,10 +42,10 @@ export default function PurchaseOrder() {
               bgColor="oklch(27.9% 0.041 260.031)"
               bgHoverColor="#000000"
               type="button"
-              onClick={handleDownloadPDF}
             />
             </div>
         </div>
+        {/* Desde acá empieza el PDF */}
         <div className="w-full flex flex-col items-center justify-center">
           <div className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
             <div className="flex flex-col gap-8 text-center">
@@ -148,20 +118,67 @@ export default function PurchaseOrder() {
                 <p className="text-nowrap"><span className="font-bold">Señores: </span>{purchaseOrder?.supplier?.name}</p>
                 <p>Sírvase a suministrarnos los {purchaseOrder?.purchaseOrderType} solicitados siguientes:</p>
 
-                <div className="flex items-center justify-end text-[13px] font-semibold">
-                  <p 
-                    className="cursor-pointer hover:scale-[101%] transition-transform duration-300 border rounded-lg py-1 px-2 bg-slate-700 text-white"
-                    onClick={() => setSeePurchasePrices(!seePurchasePrices)}
-                  >
-                    {seePurchasePrices ? 'OCULTAR PRECIOS DE COMPRA' : 'MOSTRAR PRECIOS DE COMPRA'}
-                  </p>
-                </div>
-
-                { purchaseOrder && <TableViewPO purchaseOrder={purchaseOrder} seePurchasePrices={seePurchasePrices} /> }
+                { purchaseOrder && 
+                  <div className='overflow-x-auto'>
+                    <table className='text-center w-full'>
+                      <thead className='bg-[#14519d] border-1 border-[#14519d] text-white'>
+                        <tr>
+                          <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>ID</th>
+                          <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>DESCRIPCIÓN</th>
+                          <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>UND</th>
+                          <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>CANT</th>
+                          <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>PR UNIT </th>
+                          <th className='p-2 text-nowrap'>PR PARC</th>
+                        </tr>
+                      </thead>
+                      <tbody className='border-1 border-gray-400'>
+                        {purchaseOrder?.resources?.map((item, index) => (
+                          <tr key={index}>
+                            <td className='p-2 border-1 border-gray-400'>{index+1}</td>
+                            <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>
+                            <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
+                            <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
+                            <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
+                            <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.quantity*item.unitSalesPrice}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan={7} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
+                          <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta?.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={7} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
+                          <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 0.18).toFixed(2) : 0}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={7} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
+                          <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 1.18).toFixed(2) : 0}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                }
 
               </div>
               
-              <SignaturesTable />
+              <table className="text-center border-1">
+                <thead className="bg-[#14519d] border-1 border-[#14519d] text-white">
+                  <tr>
+                    <th className="p-2 border-r-1 border-gray-100">Elaboración</th>
+                    <th className="p-2 border-r-1 border-gray-100">Autorización</th>
+                    <th className="p-2 border-gray-100">Seguimiento y Control</th>
+                  </tr>
+                </thead>
+                <tbody className="border-1 border-gray-400">
+                  <tr>
+                    <td className="p-2 border-1 border-gray-400">Angi Gonzales Cotrina</td>
+                    <td className="p-2 border-1 border-gray-400">Henrry Gayoso Valdera</td>
+                    <td className="p-2 border-1 border-gray-400">Morayma Lloja Fernandez</td>
+                  </tr>
+                </tbody>
+              </table>
 
               <h3 className="text-lg font-bold">CONDICIONES COMERCIALES</h3>
               <ol className="list-decimal list-inside">
@@ -181,6 +198,7 @@ export default function PurchaseOrder() {
 
           </div>
         </div>
+        {/* Fin del PDF */}
       </div>
     </Permission>
   )

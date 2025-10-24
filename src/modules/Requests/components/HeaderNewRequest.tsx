@@ -4,10 +4,10 @@ export default function HeaderNewRequest() {
       <span className="flex items-start justify-start w-48">
         <a href="#">ELEMENTO</a>
       </span>
-      <span className="flex items-start justify-start w-18">
+      <span className="flex items-start justify-start w-28">
         <a href="#">UNIDAD</a>
       </span>
-      <span className="flex items-start justify-start w-18">
+      <span className="flex items-start justify-start w-28">
         <a href="#">CANTIDAD</a>
       </span>
       <span className="flex items-start justify-start w-6">

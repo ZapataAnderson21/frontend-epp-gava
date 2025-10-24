@@ -19,7 +19,7 @@ export default function RowRequestWorker({ requestWorker, onRemove, onChange }: 
 
       <input
         type="text"
-        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-28 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Camisa"
         value={requestWorker.shirtSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "shirtSize", e.target.value)}
@@ -27,7 +27,7 @@ export default function RowRequestWorker({ requestWorker, onRemove, onChange }: 
 
       <input
         type="text"
-        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-28 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Pantalón"
         value={requestWorker.pantsSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "pantsSize", e.target.value)}
@@ -35,7 +35,7 @@ export default function RowRequestWorker({ requestWorker, onRemove, onChange }: 
 
       <input
         type="text"
-        className="flex items-start justify-start w-16 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-28 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Calzado"
         value={requestWorker.shoeSize ?? ""}
         onChange={(e) => onChange(worker.workerId!, "shoeSize", e.target.value)}

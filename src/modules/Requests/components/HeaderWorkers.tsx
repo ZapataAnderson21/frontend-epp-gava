@@ -4,13 +4,13 @@ export default function HeaderWorkers() {
       <span className="flex items-start justify-start w-48">
         <a href="#">TRABAJADOR</a>
       </span>
-      <span className="flex items-start justify-start w-16">
+      <span className="flex items-start justify-start w-28">
         <a href="#">CAMISA</a>
       </span>
-      <span className="flex items-start justify-start w-16">
+      <span className="flex items-start justify-start w-28">
         <a href="#">PANTALÓN</a>
       </span>
-      <span className="flex items-start justify-start w-16">
+      <span className="flex items-start justify-start w-28">
         <a href="#">CALZADO</a>
       </span>
       <span className="flex items-start justify-start w-6">

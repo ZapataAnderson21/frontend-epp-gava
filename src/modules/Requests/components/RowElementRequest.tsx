@@ -15,7 +15,7 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
 
       <input
         type="text"
-        className="flex items-start justify-start w-18 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-28 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Unidad"
         value={elementRequest.unit ?? ""}
         onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "unit", e.target.value)}
@@ -23,7 +23,7 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
 
       <input
         type="number"
-        className="flex items-start justify-start w-18 border border-gray-300 rounded-md px-2 py-1"
+        className="flex items-start justify-start w-28 border border-gray-300 rounded-md px-2 py-1"
         placeholder="Cantidad"
         value={elementRequest.quantityRequested ?? 0}
         onChange={(e) => handleChangeElementRequest(elementRequest.elementId, "quantityRequested", Number(e.target.value))}

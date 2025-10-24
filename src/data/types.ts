@@ -272,6 +272,7 @@ export interface PurchaseOrder {
   supplier?: Supplier;
   supplierName?: string;
   project?: Project;
+  resources?: ResourcePurchaseOrder[];
 }
 
 export interface PettyCashType {
