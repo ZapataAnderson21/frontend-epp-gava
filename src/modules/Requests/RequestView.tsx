@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import type { RequestType } from "../../data/types";
 
-import { FaArrowLeft, FaArrowRight, FaCheck } from "react-icons/fa6";
+import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
@@ -14,6 +14,7 @@ import ErrorMessage from "../../common/error/ErrorMessage";
 import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
+import { ReturnButton } from "../../common/button";
 
 interface RequestViewProps {
   requestId: number;
@@ -33,6 +34,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get("projectId");
 
   const navigate = useNavigate();
 
@@ -128,6 +132,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
     }
   };
 
+  const returnAction = () => {
+    navigate(`/admin/requests${projectId ? `?projectId=${projectId}` : ""}`);
+  }
+
   // Aprobado
   const handleApproved = async () => {
     try {
@@ -183,14 +191,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
           <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
             <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {requestId}</h1>
             <div>
-              <Button
-                icon={<FaArrowLeft />}
-                label="Regresar"
-                onClick={() => {}}
-                bgColor={"#000"}
-                bgHoverColor={"#1f1f1f"}
-                href="/admin/requests"
-              />
+              <ReturnButton onClick={returnAction} />
             </div>
           </div>
 
@@ -206,7 +207,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               </div>
               {isInProgress && (
                 <div className="flex flex-row flex-wrap items-center gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" href="#" />
+                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" type="button" />
                 </div>
               )}
             </>
@@ -230,8 +231,8 @@ export default function RequestView({ requestId }: RequestViewProps) {
               ></textarea>
               {isUnderReview && (
                 <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" href="#" />
-                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" href="#" />
+                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" type="button" />
+                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" type="button" />
                 </div>
               )}
             </>
@@ -248,7 +249,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               </div>
               {isApproved && (
                 <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" href="#" />
+                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" type="button" />
                 </div>
               )}
             </>
@@ -256,7 +257,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
           {isEmployee && isAttend && (
             <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" href="#" />
+              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" type="button" />
             </div>
           )}
         </div>

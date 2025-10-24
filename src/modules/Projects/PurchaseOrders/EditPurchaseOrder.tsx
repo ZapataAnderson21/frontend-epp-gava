@@ -12,10 +12,12 @@ import type { ItemRow } from "../../../hooks/usePurchaseOrderForm";
 import { ButtonContainer, SaveModal } from "../../../common/form";
 import { Button } from "../../../components";
 import { TiStarOutline } from "react-icons/ti";
+import { Loading } from "../../../common/loading";
 
 export default function EditPurchaseOrder() {
   const { id: purchaseOrderId } = useParams<{ id: string }>();
 
+  // ---- estado de formulario ----
   const [code, setCode] = useState<string>("");
   const [supplierId, setSupplierId] = useState<number>(0);
   const [quotation, setQuotation] = useState<string>("");
@@ -28,124 +30,358 @@ export default function EditPurchaseOrder() {
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [paymentConditions1, setPaymentConditions1] = useState<string>("");
   const [paymentConditions, setPaymentConditions] = useState<string>("");
-  const [purchaseOrderType, setPurchaseOrderType] = useState<string>();
-  const [items, setItems] = useState<ItemRow[]>([]);
-  const [generalConditions, setGeneralConditions] = useState<string[]>([]);
-  const [qualityConditions, setQualityConditions] = useState<string[]>([]);
+  const [purchaseOrderType, setPurchaseOrderType] = useState<string>("");
 
+  const [items, setItems] = useState<ItemRow[]>([]);
+  // rpoIds[i] = id del resourcePurchaseOrder asociado a la fila i (o null si es nuevo)
+  const [rpoIds, setRpoIds] = useState<(number | null)[]>([]);
+
+  const [generalConditions, setGeneralConditions] = useState<string[]>([""]);
+  const [qualityConditions, setQualityConditions] = useState<string[]>([""]);
+
+  // ---- errores ----
   const [errorDni, setErrorDni] = useState<string | undefined>(undefined);
   const [errorSupplier, setErrorSupplier] = useState<string | undefined>(undefined);
   const [errorPaymentMethod, setErrorPaymentMethod] = useState<string | undefined>(undefined);
   const [errorPaymentConditions, setErrorPaymentConditions] = useState<string | undefined>(undefined);
   const [errorPurchaseOrderType, setErrorPurchaseOrderType] = useState<string | undefined>(undefined);
 
+  // ---- datos remotos ----
   const { user } = useCurrentUser();
   const { data: purchaseOrder, loading, error } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
   const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useFetch<Supplier[]>(`${supplierApi}`);
   const { data: resourcePurchaseOrders, loading: resourcePuchaseOrdersLoading, error: resourcePurchaseOrdersError } = useFetch<ResourcePurchaseOrder[]>(`${resourcePurchaseOrderApi}purchase-order/${purchaseOrderId}`);
   const { data: resources, loading: resourcesLoading, error: resourcesError } = useFetch<Resource[]>(`${resourceApi}`);
 
-  const { execute, loading: saving } = useApiAction();
+  const { execute, loading: saving } = useApiAction<any>();
 
+  // ---- modal ----
   const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [errorFlag, setErrorFlag] = useState<boolean>(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
+  const closeSaveModal = () => setOpenSaveModal(false);
 
   const navigate = useNavigate();
 
+  // ---- hidratar el formulario al cargar ----
   useEffect(() => {
-    if (purchaseOrder) {
-      setCode(purchaseOrder.code);
-      setSupplierId(purchaseOrder.supplierId);
-      setQuotation(purchaseOrder.quotation ?? "");
-      setSupplier(purchaseOrder.supplier);
-      setDestination(purchaseOrder.destination);
-      setDeliveryLocation(purchaseOrder.deliveryLocation);
-      setCarePerson(purchaseOrder.carePerson);
-      setDniCarePerson(purchaseOrder.dniCarePerson);
-      setObservations(purchaseOrder.observations ?? "");
-      setPaymentMethod(purchaseOrder.paymentMethod);
-      setPaymentConditions1(purchaseOrder.paymentConditions);
-      setPaymentConditions(purchaseOrder.paymentConditions);
-      setPurchaseOrderType(purchaseOrder.purchaseOrderType);
-      if (resourcePurchaseOrders) {
-        const itemRows: ItemRow[] = resourcePurchaseOrders.map(rpo => ({
-          resourceId: rpo.resourceId,
-          description: rpo.resource?.description || "",
-          unit: rpo.resource?.unit || "",
-          quantity: rpo.quantity.toString(),
-          unitSalesPrice: rpo.unitSalesPrice.toString(),
-          unitPurchasePrice: rpo.unitPurchasePrice.toString(),
-          subtotal: rpo.quantity * rpo.unitPurchasePrice,
-        }));
-        setItems(itemRows);
-      }
-      setGeneralConditions(purchaseOrder.generalConditions ? purchaseOrder.generalConditions.split("|") : []);
-      setQualityConditions(purchaseOrder.qualityConditions ? purchaseOrder.qualityConditions.split("|") : []);
-    }
+    if (!purchaseOrder) return;
+
+    setCode(purchaseOrder.code);
+    setSupplierId(purchaseOrder.supplierId);
+    setQuotation(purchaseOrder.quotation ?? "");
+    setSupplier(purchaseOrder.supplier);
+    setDestination(purchaseOrder.destination);
+    setDeliveryLocation(purchaseOrder.deliveryLocation);
+    setCarePerson(purchaseOrder.carePerson);
+    setDniCarePerson(purchaseOrder.dniCarePerson);
+    setObservations(purchaseOrder.observations ?? "");
+    setPaymentMethod(purchaseOrder.paymentMethod);
+    setPaymentConditions1(purchaseOrder.paymentConditions);
+    setPaymentConditions(purchaseOrder.paymentConditions);
+    setPurchaseOrderType(purchaseOrder.purchaseOrderType);
+
+    const gc = purchaseOrder.generalConditions ? purchaseOrder.generalConditions.split("|") : [""];
+    const qc = purchaseOrder.qualityConditions ? purchaseOrder.qualityConditions.split("|") : [""];
+    setGeneralConditions(gc.length ? gc.map(s => s.trim()) : [""]);
+    setQualityConditions(qc.length ? qc.map(s => s.trim()) : [""]);
   }, [purchaseOrder]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Submit logic here
-  }
+  useEffect(() => {
+    if (!resourcePurchaseOrders) return;
+    // Mapear filas + ids
+    const itemRows: ItemRow[] = resourcePurchaseOrders.map(rpo => ({
+      resourceId: rpo.resourceId,
+      description: rpo.resource?.description || "",
+      unit: rpo.resource?.unit || "",
+      quantity: String(rpo.quantity ?? ""),
+      unitSalesPrice: String(rpo.unitSalesPrice ?? ""),
+      unitPurchasePrice: String(rpo.unitPurchasePrice ?? ""),
+      subtotal: (rpo.quantity || 0) * (rpo.unitPurchasePrice || 0),
+    }));
+    setItems(itemRows);
+    setRpoIds(resourcePurchaseOrders.map(r => r.resourcePurchaseOrderId));
+  }, [resourcePurchaseOrders]);
 
+  // ---- navegación ----
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/purchase-orders?projectId=${purchaseOrder?.projectId}`);
-  }
+  };
 
+  // ---- helpers de items ----
   const handleItemChange = (index: number, field: string, value: any) => {
-    // Handle item change logic here
-  }
+    setItems(prev => {
+      const next = [...prev];
+      if (field === "resourceId") {
+        const selected = resources?.find(r => r.resourceId === Number(value));
+        if (selected) {
+          next[index] = {
+            ...next[index],
+            resourceId: selected.resourceId,
+            description: selected.description,
+            unit: selected.unit,
+          };
+        } else {
+          next[index] = { ...next[index], resourceId: 0, description: "", unit: "" };
+        }
+      } else {
+        (next[index] as any)[field] = value;
+      }
 
-  const addItem = () => {
-    // Add item logic here
-  }
+      const qty = Number(next[index].quantity) || 0;
+      const up = Number(next[index].unitPurchasePrice) || 0;
+      next[index].subtotal = qty * up;
+      return next;
+    });
+  };
+
+  const addItem = (rowIndex?: number) => {
+    const newRow: ItemRow = {
+      resourceId: 0,
+      description: "",
+      unit: "",
+      quantity: "",
+      unitPurchasePrice: "",
+      unitSalesPrice: "",
+      subtotal: 0,
+    };
+    setItems(prev => {
+      if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
+        return [...prev, newRow];
+      }
+      const next = [...prev];
+      next.splice(rowIndex + 1, 0, newRow);
+      return next;
+    });
+    setRpoIds(prev => {
+      if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
+        return [...prev, null];
+      }
+      const next = [...prev];
+      next.splice(rowIndex + 1, 0, null);
+      return next;
+    });
+  };
 
   const removeItem = (index: number) => {
-    // Remove item logic here
+    setItems(prev => {
+      if (prev.length === 1) return [{ resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
+    setRpoIds(prev => {
+      if (prev.length === 1) return [null];
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  // ---- montos ----
+  const sale_amount = useMemo(
+    () => items.reduce((acc, it) => acc + (Number(it.unitSalesPrice) || 0) * (Number(it.quantity) || 0), 0),
+    [items]
+  );
+
+  const purchase_amount = useMemo(
+    () => items.reduce((acc, it) => acc + ((Number(it.unitPurchasePrice) || 0) * (Number(it.quantity) || 0)), 0),
+    [items]
+  );
+
+  // ---- helpers condiciones ----
+  const addGeneralCondition = () => setGeneralConditions(p => [...p, ""]);
+  const removeGeneralCondition = (idx: number) => setGeneralConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
+  const handleGeneralChange = (idx: number, value: string) => setGeneralConditions(p => p.map((v, i) => (i === idx ? value : v)));
+
+  const addQualityCondition = () => setQualityConditions(p => [...p, ""]);
+  const removeQualityCondition = (idx: number) => setQualityConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
+  const handleQualityChange = (idx: number, value: string) => setQualityConditions(p => p.map((v, i) => (i === idx ? value : v)));
+
+  // Mantener paymentConditions coherente si editas la primera parte
+  useEffect(() => {
+    if (!paymentConditions1) {
+      setPaymentConditions("");
+    }
+  }, [paymentConditions1]);
+
+  // ---- validación ----
+  const validateAll = () => {
+    let ok = true;
+
+    setErrorSupplier(undefined);
+    setErrorPaymentMethod(undefined);
+    setErrorPaymentConditions(undefined);
+    setErrorPurchaseOrderType(undefined);
+    setErrorDni(undefined);
+
+    if (!supplierId) {
+      setErrorSupplier("Seleccione un proveedor.");
+      ok = false;
+    }
+    if (!paymentMethod) {
+      setErrorPaymentMethod("Seleccione un método de pago.");
+      ok = false;
+    }
+    if (!paymentConditions) {
+      setErrorPaymentConditions("Defina las condiciones de pago.");
+      ok = false;
+    }
+    if (!purchaseOrderType) {
+      setErrorPurchaseOrderType("Seleccione materiales o servicios.");
+      ok = false;
+    }
+    if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
+      setErrorDni("El DNI debe tener 8 dígitos.");
+      ok = false;
+    }
+
+    // Validación de ítems
+    const hasValidItem = items.some(r =>
+      r.resourceId > 0 &&
+      Number(r.quantity) > 0 &&
+      Number(r.unitPurchasePrice) >= 0 &&
+      Number(r.unitSalesPrice) >= 0
+    );
+    if (!hasValidItem) ok = false;
+
+    return ok;
+  };
+
+  // ---- submit ----
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOpenSaveModal(true);
+    setErrorFlag(false);
+    setSuccessMessage("");
+    setOnOk(() => () => closeSaveModal());
+
+    if (!validateAll()) {
+      setErrorFlag(true);
+      setSuccessMessage([
+        "Falta completar:",
+        errorSupplier ? "• Selecciona un proveedor." : "",
+        errorPaymentMethod ? "• Selecciona el método de pago." : "",
+        errorPaymentConditions ? "• Define las condiciones de pago." : "",
+        errorPurchaseOrderType ? "• Elige el tipo de pedido (materiales o servicios)." : "",
+        errorDni ? "• El DNI de atención debe tener 8 dígitos." : "",
+        "• Agrega al menos un ítem válido."
+      ].filter(Boolean).join("\n"));
+      return;
+    }
+
+    try {
+      // 1) Actualizar cabecera OC
+      const body = {
+        code,
+        deliveryLocation,
+        destination,
+        paymentConditions,
+        generalConditions: generalConditions.join("| "),
+        qualityConditions: qualityConditions.join("| "),
+        paymentMethod,
+        saleAmount: sale_amount * 1.18,
+        purchaseAmount: purchase_amount,
+        carePerson,
+        dniCarePerson,
+        observations,
+        supplierId: Number(supplierId),
+        quotation,
+        purchaseOrderType,
+      };
+
+      const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", body);
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        setErrorFlag(true);
+        setSuccessMessage(resp.message || "No se pudo actualizar la orden de compra.");
+        return;
+      }
+
+      // 2) Sincronizar ítems (POST/PATCH/DELETE)
+      // Conjunto de ids originales
+      const originalIds = new Set<number>((resourcePurchaseOrders || []).map(r => r.resourcePurchaseOrderId));
+      const keptIds = new Set<number>();
+
+      // Crear/actualizar los actuales
+      for (let i = 0; i < items.length; i++) {
+        const row = items[i];
+        const id = rpoIds[i] ?? null;
+
+        const payload = {
+          resourceId: Number(row.resourceId),
+          purchaseOrderId: Number(purchaseOrderId),
+          quantity: Number(row.quantity) || 0,
+          unitSalesPrice: Number(row.unitSalesPrice) || 0,
+          unitPurchasePrice: Number(row.unitPurchasePrice) || 0,
+        };
+
+        if (id) {
+          // PATCH existente
+          const upd = await execute(`${resourcePurchaseOrderApi}${id}`, "PATCH", payload);
+          if (upd.statusCode >= 200 && upd.statusCode < 300) {
+            keptIds.add(id);
+          } else {
+            setErrorFlag(true);
+            setSuccessMessage("Hubo errores al actualizar algunos ítems.");
+          }
+        } else {
+          // POST nuevo
+          const crt = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
+          if (crt.statusCode >= 200 && crt.statusCode < 300) {
+            // opcional: refrescar id en memoria si quieres
+          } else {
+            setErrorFlag(true);
+            setSuccessMessage("Hubo errores al crear algunos ítems.");
+          }
+        }
+      }
+
+      // Eliminar los que ya no existen en el formulario
+      for (const oid of originalIds) {
+        if (!keptIds.has(oid)) {
+          await execute(`${resourcePurchaseOrderApi}${oid}`, "DELETE");
+        }
+      }
+
+      setErrorFlag(false);
+      setSuccessMessage("Orden de compra actualizada exitosamente.");
+      setOnOk(() => () => navigateToPurchaseOrders());
+    } catch (err: any) {
+      setErrorFlag(true);
+      setSuccessMessage(err?.message || "Error desconocido al actualizar.");
+    }
+  };
+
+  const handleAuthorize = async () => {
+    await handleSubmit(new Event("submit") as unknown as React.FormEvent);
+    if (errorFlag) return;
+
+    setOpenSaveModal(true);
+    setErrorFlag(false);
+    setSuccessMessage("");
+    setOnOk(() => () => closeSaveModal());
+
+    const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", {
+      status: "authorized",
+    });
+
+    if (resp.statusCode === 200) {
+      setSuccessMessage("Orden de compra autorizada.");
+      setOnOk(() => () => navigateToPurchaseOrders());
+    } else {
+      setErrorFlag(true);
+      setSuccessMessage(resp.message || "No se pudo autorizar la orden.");
+    }
+  };
+
+  if (loading || suppliersLoading || resourcePuchaseOrdersLoading || resourcesLoading) {
+    return <Loading />;
   }
-
-  const sale_amount = useMemo(() => {
-    // Calculate sale amount logic here
-    return 0;
-  }, [/* dependencies */]);
-
-  const purchase_amount = useMemo(() => {
-    // Calculate purchase amount logic here
-    return 0;
-  }, [/* dependencies */]);
-
-  const addGeneralCondition = () => {
-    // Add general condition logic here
-  }
-
-  const removeGeneralCondition = (index: number) => {
-    // Remove general condition logic here
-  }
-
-  const handleGeneralChange = (index: number, value: string) => {
-    // Handle general condition change logic here
-  }
-
-  const addQualityCondition = () => {
-    // Add quality condition logic here
-  }
-
-  const removeQualityCondition = (index: number) => {
-    // Remove quality condition logic here
-  }
-
-  const handleQualityChange = (index: number, value: string) => {
-    // Handle quality condition change logic here
-  }
-
-  const handleAuthorize = () => {
-    execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", {
-      status: "authorized"
-    })
-  }
+  if (error) return <ErrorMessage errorMessage={error} />;
+  if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
+  if (resourcePurchaseOrdersError) return <ErrorMessage errorMessage={resourcePurchaseOrdersError} />;
+  if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
@@ -160,6 +396,7 @@ export default function EditPurchaseOrder() {
               code={code}
               onChangeCode={setCode}
             />
+
             <div className="flex flex-col gap-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <SupplierSelectCard
@@ -171,6 +408,7 @@ export default function EditPurchaseOrder() {
                   setQuotation={setQuotation}
                   errorSupplier={errorSupplier}
                 />
+
                 <DeliveryInfoCard
                   destination={destination}
                   setDestination={setDestination}
@@ -185,6 +423,7 @@ export default function EditPurchaseOrder() {
                   dniError={errorDni}
                 />
               </div>
+
               <PaymentConditionsCard
                 paymentConditions1={paymentConditions1}
                 setPaymentConditions1={setPaymentConditions1}
@@ -225,7 +464,7 @@ export default function EditPurchaseOrder() {
                 items={items ?? []}
                 resources={resources ?? []}
                 onChange={handleItemChange}
-                onAddRow={addItem}
+                onAddRow={() => addItem()}
                 onRemoveRow={removeItem}
                 supplierCurrency={supplier?.currency}
                 saleAmount={sale_amount}
@@ -234,7 +473,7 @@ export default function EditPurchaseOrder() {
 
               <SignaturesTable />
 
-               <ConditionsSection
+              <ConditionsSection
                 title="CONDICIONES COMERCIALES"
                 values={generalConditions}
                 onAdd={addGeneralCondition}
@@ -268,6 +507,7 @@ export default function EditPurchaseOrder() {
           </form>
         </div>
       </div>
+
       {openSaveModal && (
         <SaveModal
           onOk={onOk}

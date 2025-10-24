@@ -6,7 +6,7 @@ import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import { MdAttachEmail } from "react-icons/md";
 import { ReturnButton } from "../../common/button";
-import type { RequestType, ElementRequestType, ProjectType } from "../../data/types";
+import type { RequestType, ElementRequestType, Project } from "../../data/types";
 import { RiQuestionFill } from "react-icons/ri";
 import { IoWarning } from "react-icons/io5";
 import { useFetch } from "../../hooks/useFetch";
@@ -16,15 +16,13 @@ import { ErrorMessage } from "../../common/error";
 import { useNavigate } from "react-router-dom";
 import { SaveModal } from "../../common/form";
 
-interface RequestDraftProps {
-  requestId: number;
-}
+export default function RequestDraft() {
+  const requestId = window.location.pathname.split("/").pop() || "";
 
-export default function RequestDraft({ requestId }: RequestDraftProps) {
   const [request, setRequest] = useState<RequestType | null>(null);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
   const [projectId, setProjectId] = useState<number>(0);
-  const { data: projects } = useFetch<ProjectType[]>(`${projectApi}status/active`);
+  const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`);
   const [description, setDescription] = useState<string>("");
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);

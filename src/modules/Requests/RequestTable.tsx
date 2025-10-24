@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -6,8 +6,6 @@ import { requestApi } from "../../data/apiUrl";
 import type { RequestType } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { useMemo, useEffect } from "react";
-import { FaPencil } from "react-icons/fa6";
-import { motion } from "framer-motion";
 import SeeButton from "../../common/button/SeeButton";
 import { EditButton } from "../../common/button";
 
@@ -70,11 +68,11 @@ export default function RequestTable({ filter }: RequestTableProps) {
   const navigate = useNavigate();
 
   const navigateToRequest = (requestId: number) => {
-    navigate(`/admin/requests/${requestId}`);
+    navigate(`/admin/requests/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
   }
 
   const navigateToEditRequest = (requestId: number) => {
-    navigate(`/admin/requests/edit/${requestId}`);
+    navigate(`/admin/requests/edit/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
   }
 
   const columns = [

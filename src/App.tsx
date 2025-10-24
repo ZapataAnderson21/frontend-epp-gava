@@ -16,6 +16,7 @@ import ServiceSales from './modules/Projects/ServiceSales/ServiceSales.tsx';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
 import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
+import RequestDraft from './modules/Requests/RequestDraft.tsx';
 
 export default function App() {
 
@@ -36,6 +37,7 @@ export default function App() {
           <Route path='requests' element={<Requests />} />
           <Route path='requests/:id' element={<Request />} />
           <Route path='requests/new' element={<NewRequest />} />
+          <Route path='requests/edit/:id' element={<RequestDraft />} />
           {/* End requests routes */}
           {/* Elements routes */}
           <Route path='elements/type/:type' element={<Elements />} />
