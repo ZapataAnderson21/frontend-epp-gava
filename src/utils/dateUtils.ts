@@ -48,3 +48,25 @@ export function formatYMD(date: string | undefined): string {
 
   return format(parsedDate, "yyyy-MM-dd");
 }
+
+
+export function toDatetimeLocalValue(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (v: number) => String(v).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const HH = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  // formato requerido por <input type="datetime-local">
+  return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
+}
+
+
+export function localDatetimeToIso(datetimeLocal?: string): string | null {
+  if (!datetimeLocal) return null;
+  const d = new Date(datetimeLocal); // interpreta como hora local
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString(); // => "YYYY-MM-DDTHH:mm:ss.sssZ"
+}

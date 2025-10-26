@@ -212,7 +212,7 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
         <Button
           icon={<FaSave />}
           label="Guardar"
-          type="submit"
+          type="button"
           bgColor="#0047a3" 
           bgHoverColor="#003366"
           onClick={handleSave}

@@ -19,6 +19,7 @@ import WorkerSelectCard from "./components/ModalWorkers/WorkerSelectCard";
 import RowRequestWorker from "./components/RowRequestWorker";
 import { Button } from "../../components";
 import HeaderWorkers from "./components/HeaderWorkers";
+import { localDatetimeToIso, toDatetimeLocalValue } from "../../utils";
 
 export default function RequestDraft() {
 
@@ -33,7 +34,7 @@ export default function RequestDraft() {
   const [description, setDescription] = useState<string>("");
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
-  const [elements, setElements] = useState<any[]>([]);
+  const [elements, setElements] = useState<ElementType[]>([]);
   const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequestType[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [selectedRequestWorkers, setSelectedRequestWorkers] = useState<RequestWorker[]>([]);
@@ -74,7 +75,8 @@ export default function RequestDraft() {
     if (fetchedRequest) {
       setProjectId(fetchedRequest.projectId);
       setDescription(fetchedRequest.description || "");
-      setDeliveryDueDate(fetchedRequest.deliveryDueDate ? fetchedRequest.deliveryDueDate.slice(0, 16) : "");
+      setDeliveryDueDate(
+      fetchedRequest.deliveryDueDate ? toDatetimeLocalValue(fetchedRequest.deliveryDueDate) : "");
     }
 
     if (fetchedElementRequests) {
@@ -88,9 +90,9 @@ export default function RequestDraft() {
       setRequestWorkers(fetchedRequestWorkers);
       setSelectedRequestWorkers(fetchedRequestWorkers);
       const wrks = fetchedRequestWorkers.map((w) => w.worker).filter((e) => e !== undefined);
-      setElements(wrks);
+      setWorkers(wrks);
     }
-  }, [fetchedRequest, fetchedElementRequests]);
+  }, [fetchedRequest, fetchedElementRequests, fetchedRequestWorkers]);
 
   const handleRemoveElement = async (element: ElementType) => {
     try {
@@ -127,9 +129,10 @@ export default function RequestDraft() {
     );
   };
 
-  const handleUpdateRequest = async (e: React.FormEvent) => {
+  const handleUpdateRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    setError(false);
     setOpenSaveModal(true);
 
     if (projectId === 0) {
@@ -137,7 +140,15 @@ export default function RequestDraft() {
       return;
     }
 
-    const result = await handleUpdate(Number(requestId), projectId, elementRequests, description);
+    const deliveryDueDateIso = localDatetimeToIso(deliveryDueDate);
+    if (!deliveryDueDateIso) {
+      setError(true);
+      setSuccessMessage("Fecha/hora de entrega inválida.");
+      setOnOk(() => closeModalAndReset);
+      return;
+    }
+
+    const result = await handleUpdate(Number(requestId), projectId, elementRequests, deliveryDueDateIso, description, requestWorkers);
 
     if (result) {
       setSuccessMessage("Solicitud guardada exitosamente.");
@@ -160,7 +171,7 @@ export default function RequestDraft() {
       return;
     }
 
-    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, description);
+    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, deliveryDueDate, description, requestWorkers);
 
     if (result) {
       setSuccessMessage("Solicitud enviada exitosamente.");
@@ -255,16 +266,16 @@ export default function RequestDraft() {
               </div>
               <div className="flex flex-col items-start gap-2 justify-start overflow-x-auto">
                 {
-                  elements.length > 0 ? (
+                  elementRequests.length > 0 ? (
                     <div className="min-w-xl w-full">
                     <span className="font-semibold pt-2 pb-4">Elementos seleccionados:</span>
                     <HeaderNewRequest />
-                      {elements.map((element) => (
+                      {elementRequests.map((elementRequest) => (
                         <RowElementRequest 
-                          key={element.elementId}
+                          key={elementRequest.elementRequestId}
                           elementRequest={
-                            elementRequests.find(req => req.elementId === element.elementId) || 
-                            { unit: "", quantityRequested: 0, elementId: element.elementId!, requestId: 0, element: element }
+                            elementRequests.find(req => req.elementRequestId === elementRequest.elementRequestId) || 
+                            { unit: "", quantityRequested: 0, elementId: elementRequest.elementRequestId!, requestId: 0, element: elementRequest.element }
                           }
                           handleRemoveElement={handleRemoveElement}
                           handleChangeElementRequest={handleChangeElementRequest}

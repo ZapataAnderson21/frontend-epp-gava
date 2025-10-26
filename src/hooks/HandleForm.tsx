@@ -12,13 +12,10 @@ import {
   requestWorkerApi,
 } from "../data/apiUrl";
 
-function getTypeFromElements(elements: any[]) {
-  console.log("getTypeFromElements: elements ->", elements);
-  const types = elements.map((el: any) => el.type);
-  const hasSecurity = types.includes("EPP");
-  const hasOperative = types.includes("Operativo");
-
-  console.log("getTypeFromElements: hasSecurity =", hasSecurity, ", hasOperative =", hasOperative);
+function getTypeFromElements(elements: ElementType[]) {
+  const types = elements.map((el: ElementType) => el.type);
+  const hasSecurity = types.includes("EPP") || types.includes("epp");
+  const hasOperative = types.includes("Operativo") || types.includes("operative");
 
   if (hasSecurity && hasOperative) return "eppAndOperative";
   if (hasSecurity) return "epp";
@@ -27,26 +24,24 @@ function getTypeFromElements(elements: any[]) {
 }
 
 export function useHandleForm() {
-  console.log("useHandleForm: Hook initialized");
-
   const { execute: createRequest } = useApiAction<any>();
   const { execute: updateRequest } = useApiAction<any>();
   const { execute: sendRequestToLogistics } = useApiAction<any>();
   const { execute: createElementRequest } = useApiAction<any>();
   const { execute: updateElementRequest } = useApiAction<any>();
   const { execute: createRequestWorker } = useApiAction<any>();
+  const { execute: updateRequestWorker } = useApiAction<any>();
+  const { execute: deleteElementRequest } = useApiAction<any>(); // por si lo necesitas externamente
+  const { execute: deleteRequestWorker } = useApiAction<any>();  // por si lo necesitas externamente
 
-  // 🟩 Guardar nueva solicitud
+  // 🟩 Guardar nueva solicitud (sin cambios)
   const handleSave = async (projectId: number, deliveryDueDate: string, description?: string) => {
-    console.log("handleSave: START", { projectId, deliveryDueDate, description });
-
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
     const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
     const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
 
     const type = getTypeFromElements(selectedElements);
-    console.log("handleSave: computed type =", type);
 
     const requestData = {
       userId: Number(user.userId),
@@ -55,13 +50,9 @@ export function useHandleForm() {
       description,
       type,
     };
-    console.log("handleSave: requestData =", requestData);
 
     const response = await createRequest(`${requestApi}`, "POST", requestData);
-    console.log("handleSave: createRequest response =", response);
-
     if (!response || response.statusCode !== 201) {
-      console.error("handleSave: Error creating request:", response?.message || "Unknown error");
       return {
         loading: false,
         error: response?.message || "Unknown error",
@@ -70,7 +61,6 @@ export function useHandleForm() {
     }
 
     const requestId = response.data.requestId;
-    console.log("handleSave: requestId =", requestId);
 
     const elementRequests: CreateElementRequestDto[] = selectedElementRequest.map((el: any) => ({
       quantityRequested: el.quantityRequested,
@@ -78,21 +68,16 @@ export function useHandleForm() {
       elementId: el.elementId,
       requestId,
     }));
-    console.log("handleSave: elementRequests to create =", elementRequests);
 
     const elementResponses = await Promise.all(
       elementRequests.map((el) => createElementRequest(`${elementRequestApi}`, "POST", el))
     ).catch((error) => {
-      console.error("handleSave: Error creating element requests:", error);
       return {
         loading: false,
         error: error.message || "Unknown error",
         data: null,
       };
     });
-
-    console.log("handleSave: elementResponses =", elementResponses);
-
 
     const requestWorkerPayloads = (selectedRequestWorkers || []).map((rw) => ({
       requestId,
@@ -111,7 +96,6 @@ export function useHandleForm() {
           )
         );
       } catch (err: any) {
-        console.error("handleSave: Error creating request workers:", err);
         return {
           loading: false,
           error: err?.message || "Unknown error",
@@ -124,12 +108,6 @@ export function useHandleForm() {
     localStorage.removeItem("selectedElementRequest");
     localStorage.removeItem("selectedWorkers");
     localStorage.removeItem("selectedRequestWorkers");
-    console.log("handleSave: LocalStorage cleaned up");
-
-    console.log("handleSave: SUCCESS", {
-      request: response.data,
-      elements: Array.isArray(elementResponses) && elementResponses[0]?.data,
-    });
 
     return {
       loading: false,
@@ -148,12 +126,9 @@ export function useHandleForm() {
     };
   };
 
-  // 🟩 Enviar a logística
+  // 🟩 Enviar a logística (sin cambios)
   const handleSend = async (requestId: number, passwordCPanel: string) => {
-    console.log("handleSend: START", { requestId, passwordCPanel });
-
     if (!passwordCPanel) {
-      console.warn("handleSend: Missing passwordCPanel");
       throw new Error("La contraseña del panel de control es requerida.");
     }
 
@@ -163,149 +138,151 @@ export function useHandleForm() {
       { requestId, passwordCPanel }
     );
 
-    console.log("handleSend: response =", response);
-
     if (response.statusCode !== 200) {
-      console.error("handleSend: Failed with message:", response.message);
       throw new Error(response.message);
     }
 
-    console.log("handleSend: SUCCESS", response.data);
     return response.data;
   };
 
-  // 🟩 Guardar y enviar
+  // 🟩 Guardar y enviar (sin cambios)
   const handleSaveAndSend = async (
     projectId: number,
     deliveryDueDate: string,
     description?: string,
     passwordCPanel?: string
   ) => {
-    console.log("handleSaveAndSend: START", { projectId, deliveryDueDate, description, passwordCPanel });
-
     if (!passwordCPanel) {
-      console.warn("handleSaveAndSend: Missing passwordCPanel");
       throw new Error("La contraseña del panel de control es requerida.");
     }
 
     const result = await handleSave(projectId, deliveryDueDate, description);
-    console.log("handleSaveAndSend: handleSave result =", result);
-
     if (!result?.data) {
-      console.error("handleSaveAndSend: Error saving request");
       throw new Error("Error al guardar la solicitud.");
     }
 
-    console.log("handleSaveAndSend: Sending to logistics with requestId =", result.data.request.requestId);
     const sendResult = await handleSend(result.data.request.requestId, passwordCPanel);
-
-    console.log("handleSaveAndSend: SUCCESS", sendResult);
     return sendResult;
   };
 
-  // 🟩 Actualizar solicitud existente
+  // 🟩 Actualizar solicitud existente (CREA/ACTUALIZA ElementRequest y RequestWorker)
   const handleUpdate = async (
     requestId: number,
     projectId: number,
     selectedElementRequests: ElementRequestType[],
-    description?: string
+    deliveryDueDate: string,
+    description: string,
+    selectedRequestWorkers: RequestWorker[] = []   // ⬅️ NUEVO parámetro opcional
   ) => {
-    console.log("handleUpdate: START", { requestId, projectId, description });
-    console.log("handleUpdate: selectedElementRequests =", selectedElementRequests);
-
+    // 1) Actualizar la cabecera de la solicitud
     const selectedElements: ElementType[] = selectedElementRequests
-      .map((el: ElementRequestType) => el.element)
+      .map((elReq: ElementRequestType) => elReq.element)
       .filter((el): el is ElementType => el !== undefined);
-    console.log("handleUpdate: selectedElements =", selectedElements);
+
+    console.log("Elementos seleccionados para determinar el tipo:", selectedElements);
+    console.log("Tipo determinado:", getTypeFromElements(selectedElements));
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    console.log("handleUpdate: user =", user);
 
     const requestData = {
       userId: Number(user.userId),
       projectId,
       description,
+      deliveryDueDate,
       status: "draft",
       type: getTypeFromElements(selectedElements),
     };
-    console.log("handleUpdate: requestData =", requestData);
 
     const response = await updateRequest(`${requestApi}${requestId}`, "PATCH", requestData);
-    console.log("handleUpdate: updateRequest response =", response);
-
+    
+    console.log("Respuesta de actualización de solicitud:", response);
+    
     if (!response || response.statusCode !== 200) {
-      console.error("handleUpdate: Error updating request:", response?.message || "Unknown error");
       return null;
     }
 
-    const elementRequests: UpdateElementRequestDto[] = selectedElementRequests.map((el: ElementRequestType) => ({
-      elementRequestId: el.elementRequestId,
-      quantityRequested: el.quantityRequested,
-      unit: el.unit,
-      elementId: el.elementId,
-      requestId,
-    }));
-    console.log("handleUpdate: elementRequests to update =", elementRequests);
+    // 2) ElementRequest: PATCH si existe, POST si no existe
+    const elementUpdateOrCreatePromises = selectedElementRequests.map((er) => {
+      const payload: UpdateElementRequestDto = {
+        quantityRequested: er.quantityRequested,
+        unit: er.unit,
+        elementId: er.elementId,
+        requestId,
+      };
 
-    const elementResponses = await Promise.all(
-      elementRequests
-        .filter((el) => el.elementRequestId !== undefined)
-        .map((el) =>
-          updateElementRequest(
-            `${elementRequestApi}${el.elementRequestId}`,
-            "PATCH",
-            {
-              quantityRequested: el.quantityRequested,
-              unit: el.unit,
-              elementId: el.elementId,
-              requestId,
-            }
-          )
-        )
-    );
-
-    console.log("handleUpdate: elementResponses =", elementResponses);
-
-    localStorage.removeItem("selectedElements");
-    localStorage.removeItem("selectedElementRequest");
-    console.log("handleUpdate: LocalStorage cleaned up");
-
-    console.log("handleUpdate: SUCCESS", {
-      request: response.data,
-      elements: elementResponses,
+      if (er.elementRequestId) {
+        // actualizar
+        return updateElementRequest(`${elementRequestApi}${er.elementRequestId}`, "PATCH", payload);
+      } else {
+        // crear
+        const createPayload: CreateElementRequestDto = {
+          quantityRequested: er.quantityRequested ?? 0,
+          unit: er.unit ?? "",
+          elementId: er.elementId,
+          requestId,
+        };
+        return createElementRequest(`${elementRequestApi}`, "POST", createPayload);
+      }
     });
 
+    const elementResponses = await Promise.all(elementUpdateOrCreatePromises);
+
+    // 3) RequestWorker: PATCH si existe, POST si no existe
+    const workerUpdateOrCreatePromises = (selectedRequestWorkers || []).map((rw) => {
+      const body = {
+        requestId,
+        workerId: rw.workerId,
+        shoeSize: rw.shoeSize ?? null,
+        pantsSize: rw.pantsSize ?? null,
+        shirtSize: rw.shirtSize ?? null,
+      };
+
+      if (rw.requestWorkerId) {
+        return updateRequestWorker(`${requestWorkerApi}${rw.requestWorkerId}`, "PATCH", body);
+      } else {
+        return createRequestWorker(`${requestWorkerApi}`, "POST", body);
+      }
+    });
+
+    const workerResponses = await Promise.all(workerUpdateOrCreatePromises);
+
+    // Nota: los borrados (DELETE) no se manejan aquí; se recomienda hacerlos al “quitar” desde la UI.
+
     return {
-      request: response.data,
-      elements: elementResponses,
+      loading: false,
+      error: false,
+      data: {
+        request: response.data,
+        elements: elementResponses,
+        workers: workerResponses,
+      },
     };
   };
 
-  // 🟩 Actualizar y enviar
+  // 🟩 Actualizar y enviar (acepta workers opcional)
   const handleUpdateAndSend = async (
     requestId: number,
     projectId: number,
     selectedElementRequests: ElementRequestType[],
     passwordCPanel: string,
-    description?: string
+    deliveryDueDate: string,
+    description: string,
+    selectedRequestWorkers: RequestWorker[] = []    // ⬅️ NUEVO parámetro opcional
   ) => {
-    console.log("handleUpdateAndSend: START", {
+    const updateResult = await handleUpdate(
       requestId,
       projectId,
+      selectedElementRequests,
       description,
-      passwordCPanel,
-    });
-
-    const updateResult = await handleUpdate(requestId, projectId, selectedElementRequests, description);
-    console.log("handleUpdateAndSend: handleUpdate result =", updateResult);
+      deliveryDueDate,
+      selectedRequestWorkers
+    );
 
     if (!updateResult) {
-      console.error("handleUpdateAndSend: Error updating request");
       throw new Error("Error al actualizar la solicitud.");
     }
 
     const sendResult = await handleSend(requestId, passwordCPanel);
-    console.log("handleUpdateAndSend: SUCCESS", sendResult);
     return sendResult;
   };
 
