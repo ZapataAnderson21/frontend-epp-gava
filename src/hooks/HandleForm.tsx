@@ -4,13 +4,11 @@ import type {
   CreateElementRequestDto,
   ElementRequestType,
   UpdateElementRequestDto,
-  Worker,
   RequestWorker,
 } from "../data/types";
 import {
   requestApi,
   elementRequestApi,
-  workerApi,
   requestWorkerApi,
 } from "../data/apiUrl";
 
@@ -45,12 +43,7 @@ export function useHandleForm() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
     const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
-    const selectedWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
     const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
-
-    console.log("handleSave: user =", user);
-    console.log("handleSave: selectedElements =", selectedElements);
-    console.log("handleSave: selectedElementRequest =", selectedElementRequest);
 
     const type = getTypeFromElements(selectedElements);
     console.log("handleSave: computed type =", type);
