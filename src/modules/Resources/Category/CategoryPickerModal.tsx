@@ -3,6 +3,7 @@ import { FiChevronRight, FiChevronDown, FiPlus, FiX, FiSearch } from "react-icon
 import { useApiAction, useFetch } from "../../../hooks"; // ajusta el path si es necesario
 import { categoryResourceApi } from "../../../data/apiUrl";
 import type { CategoryResource } from "../../../data/types";
+import { AddButton } from "../../../common/button";
 
 type TreeNode = CategoryResource & { children: TreeNode[] };
 
@@ -176,13 +177,9 @@ export default function CategoryPickerModal({ open, onClose, onSelect }: Categor
               value={drafts["root"] ?? ""}
               onChange={(e) => setDraft("root", e.target.value)}
             />
-            <button
+            <AddButton
               onClick={() => handleCreate(null)}
-              disabled={creating}
-              className="h-9 px-3 rounded-md border bg-white hover:bg-gray-50 disabled:opacity-60 flex items-center gap-1"
-            >
-              <FiPlus /> Añadir
-            </button>
+            />
           </div>
         </div>
       </div>

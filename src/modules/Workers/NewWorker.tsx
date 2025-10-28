@@ -86,7 +86,7 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
 
 
   return (
-    <div className="bg-white rounded-xl w-xl">
+    <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
       <Form name={"Nuevo Trabajador"} handleSubmit={handleSubmit} >
         <InputForm
           label="Nombre Completo"

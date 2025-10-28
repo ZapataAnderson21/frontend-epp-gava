@@ -40,6 +40,7 @@ export default function EditPurchaseOrder() {
   const [qualityConditions, setQualityConditions] = useState<string[]>([""]);
 
   // ---- errores ----
+  const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
   const [errorDni, setErrorDni] = useState<string | undefined>(undefined);
   const [errorSupplier, setErrorSupplier] = useState<string | undefined>(undefined);
   const [errorPaymentMethod, setErrorPaymentMethod] = useState<string | undefined>(undefined);
@@ -209,7 +210,7 @@ export default function EditPurchaseOrder() {
   // ---- validación ----
   const validateAll = () => {
     let ok = true;
-
+    setErrorCode(undefined);
     setErrorSupplier(undefined);
     setErrorPaymentMethod(undefined);
     setErrorPaymentConditions(undefined);
@@ -237,6 +238,11 @@ export default function EditPurchaseOrder() {
       ok = false;
     }
 
+    if (code.trim() === "") {
+      setErrorCode("El código no puede estar vacío.");
+      ok = false;
+    }
+
     // Validación de ítems
     const hasValidItem = items.some(r =>
       r.resourceId > 0 &&
@@ -249,27 +255,86 @@ export default function EditPurchaseOrder() {
     return ok;
   };
 
-  // ---- submit ----
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOpenSaveModal(true);
-    setErrorFlag(false);
-    setSuccessMessage("");
-    setOnOk(() => () => closeSaveModal());
+  // 1) Nueva función que valida y DEVUELVE mensajes + errores de campo
+  const validateAndCollect = () => {
+    const msgs: string[] = [];
+    const fieldErrors = {
+      code: undefined as string | undefined,
+      supplier: undefined as string | undefined,
+      paymentMethod: undefined as string | undefined,
+      paymentConditions: undefined as string | undefined,
+      purchaseOrderType: undefined as string | undefined,
+      dni: undefined as string | undefined,
+    };
 
-    if (!validateAll()) {
-      setErrorFlag(true);
-      setSuccessMessage([
-        "Falta completar:",
-        errorSupplier ? "• Selecciona un proveedor." : "",
-        errorPaymentMethod ? "• Selecciona el método de pago." : "",
-        errorPaymentConditions ? "• Define las condiciones de pago." : "",
-        errorPurchaseOrderType ? "• Elige el tipo de pedido (materiales o servicios)." : "",
-        errorDni ? "• El DNI de atención debe tener 8 dígitos." : "",
-        "• Agrega al menos un ítem válido."
-      ].filter(Boolean).join("\n"));
-      return;
+    if (!supplierId) {
+      fieldErrors.supplier = "Seleccione un proveedor.";
+      msgs.push("• Selecciona un proveedor.");
     }
+    if (!paymentMethod) {
+      fieldErrors.paymentMethod = "Seleccione un método de pago.";
+      msgs.push("• Selecciona el método de pago.");
+    }
+    if (!paymentConditions) {
+      fieldErrors.paymentConditions = "Defina las condiciones de pago.";
+      msgs.push("• Define las condiciones de pago.");
+    }
+    if (!purchaseOrderType) {
+      fieldErrors.purchaseOrderType = "Seleccione materiales o servicios.";
+      msgs.push("• Elige el tipo de pedido (materiales o servicios).");
+    }
+    if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
+      fieldErrors.dni = "El DNI debe tener 8 dígitos.";
+      msgs.push("• El DNI de atención debe tener 8 dígitos.");
+    }
+    if (code.trim() === "") {
+      fieldErrors.code = "El código no puede estar vacío.";
+      msgs.push("• El código de la orden de compra no puede estar vacío.");
+    }
+
+    const hasValidItem = items.some(r =>
+      r.resourceId > 0 &&
+      Number(r.quantity) > 0 &&
+      Number(r.unitPurchasePrice) >= 0 &&
+      Number(r.unitSalesPrice) >= 0
+    );
+    if (!hasValidItem) {
+      msgs.push("• Agrega al menos un ítem válido.");
+    }
+
+    return { ok: msgs.length === 0, msgs, fieldErrors };
+  };
+
+  // ---- submit ----
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<boolean> => {
+    
+    e.preventDefault();
+
+    // 2) Usar la validación local
+    const { ok, msgs, fieldErrors } = validateAndCollect();
+
+    // 3) Sincronizar errores a los inputs (estado React)
+    setErrorCode(fieldErrors.code);
+    setErrorSupplier(fieldErrors.supplier);
+    setErrorPaymentMethod(fieldErrors.paymentMethod);
+    setErrorPaymentConditions(fieldErrors.paymentConditions);
+    setErrorPurchaseOrderType(fieldErrors.purchaseOrderType);
+    setErrorDni(fieldErrors.dni);
+
+    if (!ok) {
+      // 4) Construir mensaje y RECIÉN abrir modal
+      setErrorFlag(true);
+      setSuccessMessage(["Falta completar:", ...msgs].join("\n"));
+      setOnOk(() => () => setOpenSaveModal(false));
+      setOpenSaveModal(true);
+      return false;
+    }
+
+    // Si todo ok, puedes mostrar “Procesando…” y seguir con el guardado
+    setErrorFlag(false);
+    setSuccessMessage("Procesando…");
+    setOnOk(() => () => setOpenSaveModal(false));
+    setOpenSaveModal(true);
 
     try {
       // 1) Actualizar cabecera OC
@@ -295,7 +360,7 @@ export default function EditPurchaseOrder() {
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         setErrorFlag(true);
         setSuccessMessage(resp.message || "No se pudo actualizar la orden de compra.");
-        return;
+        return false;
       }
 
       // 2) Sincronizar ítems (POST/PATCH/DELETE)
@@ -347,14 +412,18 @@ export default function EditPurchaseOrder() {
       setErrorFlag(false);
       setSuccessMessage("Orden de compra actualizada exitosamente.");
       setOnOk(() => () => navigateToPurchaseOrders());
+      return true;
     } catch (err: any) {
       setErrorFlag(true);
       setSuccessMessage(err?.message || "Error desconocido al actualizar.");
+      setOnOk(() => () => setOpenSaveModal(false));
+      return false;
     }
   };
 
   const handleAuthorize = async () => {
-    await handleSubmit(new Event("submit") as unknown as React.FormEvent);
+    const saved = await handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
+    if (!saved) return;
     if (errorFlag) return;
 
     setOpenSaveModal(true);

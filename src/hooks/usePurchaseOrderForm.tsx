@@ -283,18 +283,19 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
       setErrorFlag(false);
     }
 
-    const purchaseOrderId = Number(ocResp.data.purchaseOrderId);
+    const purchaseOrderId = await Number(ocResp.data.purchaseOrderId);
 
     for (const it of items) {
       const payload = {
         resourceId: Number(it.resourceId),
-        purchaseOrderId,
+        purchaseOrderId: Number(purchaseOrderId),
         quantity: Number(it.quantity),
         unitSalesPrice: Number(it.unitSalesPrice),
         unitPurchasePrice: Number(it.unitPurchasePrice),
       };
 
       const itemResp = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
+
       setSuccessMessage(itemResp.message);
       setOnOk(() => () => navigateToList());
 

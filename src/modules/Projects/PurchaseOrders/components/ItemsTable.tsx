@@ -34,7 +34,7 @@ export default function ItemsTable({
   items, resources, onChange, onAddRow, onRemoveRow,
   supplierCurrency, saleAmount, purchaseAmount, itemErrors
 }: Props) {
-  const sym = supplierCurrency?.toUpperCase() === "SOLES" ? "S/." : "$";
+  const sym = supplierCurrency?.toUpperCase() === "PEN" ? "S/." : "$";
 
   const inputCls = (hasError?: boolean) =>
     `w-full p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400"}`;

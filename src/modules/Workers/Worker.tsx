@@ -18,7 +18,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   if (error) return <ErrorMessage errorMessage="Error al cargar el trabajador" />;
 
   return (
-    <div className="relative bg-white rounded-xl w-xl p-8 text-gray-900">
+    <div className="relative bg-white rounded-xl w-xl p-8 text-gray-900 overflow-auto max-h-full">
       <h1 className="text-2xl font-extrabold mb-4">DETALLE DEL TRABAJADOR {worker?.workerId}</h1>
 
       <div className="flex flex-col gap-4 w-full max-w-2xl">

@@ -15,16 +15,10 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
 
   useEffect(() => {
     setVisible(true);
-
-    if (!message) {
-      setLoading(true);
-      return;
-    }
-    
     setLoading(true);
     const id = setTimeout(() => setLoading(false), 150);
     return () => clearTimeout(id);
-  }, [message]);
+  }, [message, error]);
 
 
   const handleOk = () => {
@@ -59,7 +53,7 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
                 <FaCheckCircle className="w-16 h-16 text-[#003a80]" />
               )}
               <h1 className="text-2xl text-center">
-                {message}
+                {message || (error ? "Ocurrió un error" : "Procesando…")}
               </h1>
               <button
                 className={`${

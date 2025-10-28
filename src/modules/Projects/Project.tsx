@@ -12,7 +12,7 @@ import { HeaderPanel, Panel } from "../../common/panel";
 import { ErrorMessage } from "../../common/error";
 import { formatDate, adminTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
-import { TbCalendarCheck, TbCalendarOff, TbCalendarPlus, TbCalendarUp, TbLocation } from "react-icons/tb";
+import { TbCalendarCheck, TbCalendarOff, TbLocation } from "react-icons/tb";
 
 interface PurchaseOrderAmounts {
   totalPEN: number;
@@ -126,12 +126,6 @@ export default function Project() {
               </InfoCard>
               <InfoCard loading={loading} title="Fecha de Fin" info={formatDate(project?.endDate) || "--"}>
                 <TbCalendarOff className="text-2xl" />
-              </InfoCard>
-              <InfoCard loading={loading} title="Fecha de Registro" info={formatDate(project?.createdAt) || "--"} >
-                <TbCalendarPlus className="text-2xl" />
-              </InfoCard>
-              <InfoCard loading={loading} title="Última Actualización" info={formatDate(project?.updatedAt) || "--"} >
-                <TbCalendarUp className="text-2xl" />
               </InfoCard>
             </div>
           </div>

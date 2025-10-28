@@ -2,19 +2,16 @@ import { FaPlus } from "react-icons/fa6";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { Button } from "../../components";
 import ResourceTable from "./ResourceTable";
+import { useNavigate } from "react-router-dom";
+import { AddButton } from "../../common/button";
 
 export default function Resources() {
+  const navigate = useNavigate();
+
   return (
     <Panel>
       <HeaderPanel name={`RECURSOS`} >
-        <Button
-          icon={<FaPlus />}
-          label="Añadir"
-          href="/admin/resources/new"
-          onClick={() => {}}
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-        />
+        <AddButton onClick={() => navigate("/admin/resources/new")} />
       </HeaderPanel>
 
       <ResourceTable />

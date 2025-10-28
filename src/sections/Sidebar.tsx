@@ -144,10 +144,10 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
 
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaBoxOpen />} label="Recursos"   href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+            <SidebarItem icon={<FaBoxOpen />} label="Recursos (O-C)" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           </Permission>
           
-          <SidebarItem icon={<FaUserTie />}   label="Usuarios"   href="/admin/users"     index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} />
 
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} />
           

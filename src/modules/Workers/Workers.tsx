@@ -8,6 +8,7 @@ import { logisticsTypes } from "../../utils/userUtils";
 import { useCurrentUser } from "../../hooks";
 import Permission from "../../common/auth/Permission";
 import EditWorker from "./Editworker";
+import { s } from "motion/react-client";
 
 export default function Workers() {
   const { user } = useCurrentUser();
@@ -48,21 +49,19 @@ export default function Workers() {
       </HeaderPanel>
         <WorkerTable reFetch={reFetch} onSee={handleSeeDetail} isAdmin={hasPermission} />
         
-        {showRightPanel === "new" && (
-          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="fixed inset-0 z-50 bg-black/40 p-4 flex items-center justify-center">
-            <NewWorker successAction={successAction} closeAction={closeRightPanel} />
-          </div>  
-        )}
-        {showRightPanel === "edit" && selectedWorkerId && (
-          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="fixed inset-0 z-50 bg-black/40 p-4 flex items-center justify-center">
-            <EditWorker workerId={selectedWorkerId} successAction={successAction} closeAction={closeRightPanel} />
+        { showRightPanel &&
+          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+            {showRightPanel === "new" && (
+              <NewWorker successAction={successAction} closeAction={closeRightPanel} />  
+            )}
+            {showRightPanel === "edit" && selectedWorkerId && (
+              <EditWorker workerId={selectedWorkerId} successAction={successAction} closeAction={closeRightPanel} />
+            )}
+            {showRightPanel === "detail" && selectedWorkerId && (
+              <Worker workerId={selectedWorkerId} closeAction={closeRightPanel} />
+            )}
           </div>
-        )}
-        {showRightPanel === "detail" && selectedWorkerId && (
-          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="fixed inset-0 z-50 bg-black/40 p-4 flex items-center justify-center">
-            <Worker workerId={selectedWorkerId} closeAction={closeRightPanel} />
-          </div>
-        )}
+        }
     </Panel>
   );
 }

@@ -41,26 +41,26 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.unitPurchasePrice}</td>}
-              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.quantity*item.unitPurchasePrice}</td>}
-              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'}{item.quantity*item.unitSalesPrice}</td>
+              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitPurchasePrice}</td>}
+              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
+              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitPurchasePrice}</td>}
+              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitSalesPrice}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
             <td colSpan={seePurchasePrices ? colSpan(6) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
-            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalCompra?.toFixed(2)}</td>}
-            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta?.toFixed(2)}</td>
+            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalCompra?.toFixed(2)}</td>}
+            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta?.toFixed(2)}</td>
           </tr>
           <tr>
             <td colSpan={colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
-            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 0.18).toFixed(2) : 0}</td>
+            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 0.18).toFixed(2) : 0}</td>
           </tr>
           <tr>
             <td colSpan={colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
-            <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'SOLES' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 1.18).toFixed(2) : 0}</td>
+            <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 1.18).toFixed(2) : 0}</td>
           </tr>
         </tfoot>
       </table>

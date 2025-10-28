@@ -80,7 +80,6 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       setErrorDni("");
       setErrorPhone("");
 
-      // Que el botón OK solo cierre el modal
       setOnOk(() => () => {
         setOpenSaveModal(false);
         closeAction();
@@ -104,7 +103,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
 
   return (
     <Permission user={user} allow={logisticsTypes}>
-      <div className="bg-white rounded-xl w-xl">
+      <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
         <Form name={worker ? `Detalle del trabajador ${worker.workerId}` : loading ? "Cargando..." : error ? "Error" : "Salida de caja chica no encontrada"} handleSubmit={handleSubmit} >
           <InputForm
             label="Nombre completo"
@@ -113,42 +112,48 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             type="text"
             onChange={(e) => setFullName(e.target.value)}
           />
-          <InputForm
-            label="DNI"
-            name="dni"
-            value={worker ? worker.dni : ""}
-            type="text"
-            onChange={(e) => setDni(e.target.value)}
-            error={errorDni}
-          />
-
-          <InputForm
-            label="Fecha de nacimiento"
-            name="birthDate"
-            value={birthDate}
-            type="date"
-            onChange={(e) => setBirthDate(e.target.value)}
-            optional={true}
-          />
           
-          <InputForm
-            label="Email Personal"
-            name="personalEmail"
-            value={personalEmail}
-            type="email"
-            onChange={(e) => setPersonalEmail(e.target.value)}
-            optional={true}
-          />
+          <div className="flex gap-4">
+            <InputForm
+              label="DNI"
+              name="dni"
+              value={worker ? worker.dni : ""}
+              type="text"
+              onChange={(e) => setDni(e.target.value)}
+              error={errorDni}
+            />
 
-          <InputForm
-            label="Teléfono"
-            name="phone"
-            value={phone}
-            type="text"
-            onChange={(e) => setPhone(e.target.value)}
-            optional={true}
-            error={errorPhone}
-          />
+            <InputForm
+              label="Fecha de nacimiento"
+              name="birthDate"
+              value={birthDate}
+              type="date"
+              onChange={(e) => setBirthDate(e.target.value)}
+              optional={true}
+            />
+          </div>
+          
+          <div className="flex gap-4">
+            <InputForm
+              label="Email Personal"
+              name="personalEmail"
+              value={personalEmail}
+              type="email"
+              onChange={(e) => setPersonalEmail(e.target.value)}
+              optional={true}
+            />
+
+            <InputForm
+              label="Teléfono"
+              name="phone"
+              value={phone}
+              type="text"
+              onChange={(e) => setPhone(e.target.value)}
+              optional={true}
+              error={errorPhone}
+            />
+          </div>
+
           <InputForm
             label="Dirección"
             name="address"
