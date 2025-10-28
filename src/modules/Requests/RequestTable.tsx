@@ -36,6 +36,7 @@ export default function RequestTable({ filter }: RequestTableProps) {
 
   const role = String(stored.userType ?? stored.type ?? "").toUpperCase().trim();
   const isManager = role === "GERENTE" || role === "ADMINISTRADORA";
+  const myUserId = Number(stored.userId);
 
   const effectiveUserId = useMemo(() => {
     const idNum = Number(stored.userId);
@@ -50,12 +51,25 @@ export default function RequestTable({ filter }: RequestTableProps) {
 
   const urlFetch = useMemo(() => {
     const params = new URLSearchParams();
+
     if (filter && filter !== "all") params.set("status", filter);
     if (projectId) params.set("projectId", String(projectId));
-    if (effectiveUserId !== undefined) params.set("userId", String(effectiveUserId));
+
+    // Usuarios normales: filtra por su userId
+    if (!isManager && Number.isFinite(myUserId)) {
+      params.set("userId", String(myUserId));
+    }
+
+    // SIEMPRE pasar viewerId (clave para ocultar borradores ajenos en el backend)
+    if (Number.isFinite(myUserId)) {
+      params.set("viewerId", String(myUserId));
+    }
+
     const qs = params.toString();
     return qs ? `${requestApi}?${qs}` : requestApi;
-  }, [filter, projectId, effectiveUserId]);
+    // 👇 DEPENDENCIAS REALES USADAS ADENTRO
+  }, [filter, projectId, isManager, myUserId]);
+
 
   const { data: requests, loading, error } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
 

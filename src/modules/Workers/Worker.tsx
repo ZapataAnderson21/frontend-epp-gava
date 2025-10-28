@@ -18,10 +18,10 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   if (error) return <ErrorMessage errorMessage="Error al cargar el trabajador" />;
 
   return (
-    <div className="relative bg-white rounded-xl w-xl p-8">
-      <h1 className="text-2xl font-bold mb-4">Detalle del trabajador {worker?.workerId}</h1>
+    <div className="relative bg-white rounded-xl w-xl p-8 text-gray-900">
+      <h1 className="text-2xl font-extrabold mb-4">DETALLE DEL TRABAJADOR {worker?.workerId}</h1>
 
-      <div className="flex flex-col gap-4 w-full max-w-2xl text-lg">
+      <div className="flex flex-col gap-4 w-full max-w-2xl">
         <div className="flex flex-col w-full gap-4">
           <h2 className="text-xl font-bold">Información Personal</h2>
           <div className="flex flex-row gap-2">
@@ -36,7 +36,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             <label className="font-semibold text-nowrap">Fecha de nacimiento:</label>
             <span>{formatDate(worker?.birthDate)}</span>
           </div>
-          <h2 className="text-xl font-bold mt-4">Información de Contacto</h2>
+          <h2 className="text-xl font-bold mt-4">Información de contacto</h2>
           <div className="flex flex-row gap-2">
               <label className="font-semibold text-nowrap">Correo:</label>
               <span>{worker?.personalEmail}</span>
@@ -49,7 +49,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             <label className="font-semibold text-nowrap">Dirección:</label>
             <span>{worker?.address}</span>
           </div>
-          <h2 className="text-xl font-bold mt-4">Información de perfil laboral</h2>
+          <h2 className="text-xl font-bold mt-4">Información laboral</h2>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Grupo de trabajador:</label>
             <span>{worker?.workerGroupId}</span>

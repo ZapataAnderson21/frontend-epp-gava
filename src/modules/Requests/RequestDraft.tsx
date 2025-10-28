@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
-import { FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
+import { FaArrowLeft, FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
 import { FaTools } from "react-icons/fa";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
@@ -140,7 +140,7 @@ export default function RequestDraft() {
       return;
     }
 
-    const deliveryDueDateIso = localDatetimeToIso(deliveryDueDate);
+    const deliveryDueDateIso = await localDatetimeToIso(deliveryDueDate);
     if (!deliveryDueDateIso) {
       setError(true);
       setSuccessMessage("Fecha/hora de entrega inválida.");
@@ -162,7 +162,7 @@ export default function RequestDraft() {
   }
 
   const handleUpdateAndSendRequest = async () => {
-
+    setError(false);
     setOpenPasswordModal(false);
     setOpenSaveModal(true);
 
@@ -171,7 +171,17 @@ export default function RequestDraft() {
       return;
     }
 
-    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, deliveryDueDate, description, requestWorkers);
+    const deliveryDueDateIso = await localDatetimeToIso(deliveryDueDate);
+    if (!deliveryDueDateIso) {
+      setError(true);
+      setSuccessMessage("Fecha/hora de entrega inválida.");
+      setOnOk(() => closeModalAndReset);
+      return;
+    }
+
+    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, deliveryDueDateIso, description, requestWorkers);
+
+    console.log("Resultado de handleUpdateAndSend:", result);
 
     if (result) {
       setSuccessMessage("Solicitud enviada exitosamente.");
@@ -270,13 +280,10 @@ export default function RequestDraft() {
                     <div className="min-w-xl w-full">
                     <span className="font-semibold pt-2 pb-4">Elementos seleccionados:</span>
                     <HeaderNewRequest />
-                      {elementRequests.map((elementRequest) => (
-                        <RowElementRequest 
-                          key={elementRequest.elementRequestId}
-                          elementRequest={
-                            elementRequests.find(req => req.elementRequestId === elementRequest.elementRequestId) || 
-                            { unit: "", quantityRequested: 0, elementId: elementRequest.elementRequestId!, requestId: 0, element: elementRequest.element }
-                          }
+                      {elementRequests.map((er: ElementRequestType) => (
+                        <RowElementRequest
+                          key={er.elementRequestId ?? `temp-${er.elementId}`}
+                          elementRequest={er}
                           handleRemoveElement={handleRemoveElement}
                           handleChangeElementRequest={handleChangeElementRequest}
                         />
@@ -307,17 +314,20 @@ export default function RequestDraft() {
                       <span className="font-semibold pt-2 pb-2">Trabajadores seleccionados:</span>
                       <HeaderWorkers />
                       {workers.map((w) => {
-                        const rw =
-                          requestWorkers.find((x) => x.workerId === w.workerId) ||
-                          {
-                            requestWorkerId: 0,
-                            requestId: 0,
-                            workerId: w.workerId!,
-                            shirtSize: "",
-                            pantsSize: "",
-                            shoeSize: "",
-                            worker: w,
-                          };
+                        const found = requestWorkers.find((x) => x.workerId === w.workerId);
+                        
+                        const rw: RequestWorker = found
+                          ? { ...found, worker: found.worker ?? w }
+                          : {
+                              requestWorkerId: 0,
+                              requestId: Number(requestId),
+                              workerId: w.workerId!,
+                              shirtSize: "",
+                              pantsSize: "",
+                              shoeSize: "",
+                              worker: w,
+                            };
+
                         return (
                           <RowRequestWorker
                             key={w.workerId}
@@ -365,30 +375,35 @@ export default function RequestDraft() {
       </form>
 
       {openPasswordModal && (
-        <div className={`fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center`}>
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Contraseña del Panel de Control</h2>
-            <input
-              type="password"
-              className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3] w-full mb-4"
-              placeholder="Ingresa la contraseña"
-              value={passwordCPanel}
-              onChange={(e) => setPasswordCPanel(e.target.value)}
-            />
-            <div className="flex justify-between">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-400 transition-colors cursor-pointer"
-                onClick={() => setOpenPasswordModal(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003a80] transition-colors cursor-pointer"
-                onClick={() => { handleUpdateAndSendRequest(); }}
-              >
-                Enviar
-              </button>
-            </div>
+         <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Contraseña del Sistema de Correos</h2>
+              <InputForm
+                label="Contraseña"
+                name="passwordCPanel"
+                type="password"
+                value={passwordCPanel}
+                onChange={(e) => setPasswordCPanel(e.target.value)}
+                optional={false}
+              />
+              <ButtonContainer>
+                <Button
+                  type="button"
+                  label="Cancelar"
+                  onClick={() => setOpenPasswordModal(false)}
+                  bgColor="red"
+                  bgHoverColor="darkred"
+                  icon={<FaArrowLeft/>}
+                />
+                <Button
+                  type="button"
+                  label="Enviar"
+                  onClick={handleUpdateAndSendRequest}
+                  bgColor="#0047a3"
+                  bgHoverColor="#003a80"
+                  icon={<MdAttachEmail />}
+                />
+              </ButtonContainer>
           </div>
         </div>
       )}

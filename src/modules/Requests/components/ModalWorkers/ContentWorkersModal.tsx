@@ -1,7 +1,7 @@
 import { useApiAction, useFetch } from "../../../../hooks";
 import type { Worker, RequestWorker } from "../../../../data/types";
 import { requestWorkerApi, workerApi } from "../../../../data/apiUrl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { LoadingSkeletonTable } from "../../../../common/loading";
 import { FaDeleteLeft } from "react-icons/fa6";
@@ -26,17 +26,25 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
   const itemsPerPage = 5;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentWorkers = workers
-    .filter((item) => item.fullName?.toLowerCase().includes(searchItem.toLowerCase()))
-    .slice(indexOfFirstItem, indexOfLastItem);
+
+  const currentWorkers = useMemo(
+    () =>
+      workers
+        .filter((w) => w.fullName?.toLowerCase().includes(searchItem.toLowerCase()))
+        .slice(indexOfFirstItem, indexOfLastItem),
+    [workers, searchItem, indexOfFirstItem, indexOfLastItem]
+  );
 
   const { id } = useParams();
   const location = useLocation();
   const isNewRequest = location.pathname.endsWith("/new");
 
-  // ✅ Hooks para API
-  const {data: fetchedWorkers, error, loading} = useFetch<Worker[]>(`${workerApi}group/${groupId}`, [groupId]);
-  const { data: fetchedRequestWorkers } = useFetch<RequestWorker[]>(id ? `${requestWorkerApi}request/${id}` : "", [id]);
+  // API
+  const { data: fetchedWorkers, error, loading } = useFetch<Worker[]>(`${workerApi}group/${groupId}`, [groupId]);
+  const { data: fetchedRequestWorkers } = useFetch<RequestWorker[]>(
+    id ? `${requestWorkerApi}request/${id}` : "",
+    [id]
+  );
 
   const { execute: createRequestWorker } = useApiAction<any>();
   const { execute: deleteRequestWorker } = useApiAction<any>();
@@ -53,119 +61,161 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
       const saved = localStorage.getItem("selectedWorkers");
       if (saved) {
         const parsed: Worker[] = JSON.parse(saved);
-        setSelectedIds(
-          parsed.map((item) => item.workerId).filter((id): id is number => id !== undefined)
-        );
+        // (opcional) podrías filtrar por group aquí también
+        setSelectedIds(parsed.map((w) => w.workerId).filter(Boolean));
       }
     } else if (fetchedRequestWorkers) {
-      const ids = fetchedRequestWorkers.map((er) => er.workerId);
+      // ⚠️ FILTRA por el grupo actual
+      const ids = fetchedRequestWorkers
+        .filter((rw) => rw.worker?.workerGroupId === groupId)
+        .map((rw) => rw.workerId);
       setSelectedIds(ids);
       setOriginalIds(ids);
     }
-  }, [isNewRequest, fetchedRequestWorkers]);
+  }, [isNewRequest, fetchedRequestWorkers, groupId]);
 
-  const handleCheckboxChange = ( workerId: number) => {
-    if( workerId === undefined) return;
-    setSelectedIds((prev) =>
-      prev.includes( workerId) ? prev.filter((x) => x !==  workerId) : [...prev,  workerId]
-    );
+  const handleCheckboxChange = (workerId: number) => {
+    setSelectedIds((prev) => (prev.includes(workerId) ? prev.filter((x) => x !== workerId) : [...prev, workerId]));
   };
 
   const handleSave = async () => {
-    // 🧮 IDs seleccionados de este modal
     const selectedWorkersInThisModal = workers.filter(
       (w) => w.workerId !== undefined && selectedIds.includes(w.workerId)
     );
 
     if (isNewRequest) {
-      // --------- NUEVO REQUERIMIENTO (localStorage + levantar estado) ----------
+      // ---------- NUEVA SOLICITUD ----------
+      const prevWorkers: Worker[] = JSON.parse(localStorage.getItem("selectedWorkers") || "[]");
+      const prevReqWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
 
-      // 1) Traer lo previamente guardado
-      const prevWorkersRaw = localStorage.getItem("selectedWorkers");
-      const prevReqWorkersRaw = localStorage.getItem("selectedRequestWorkers");
-      const prevWorkers: Worker[] = prevWorkersRaw ? JSON.parse(prevWorkersRaw) : [];
-      const prevReqWorkers: RequestWorker[] = prevReqWorkersRaw ? JSON.parse(prevReqWorkersRaw) : [];
+      // quitar del previo los que pertenecen a este grupo (sobrescribimos este grupo)
+      const currentGroupIds = new Set(workers.map((w) => w.workerId).filter(Boolean) as number[]);
+      const keptPrevReqWorkers = prevReqWorkers.filter((rw) => !currentGroupIds.has(rw.workerId));
+      const keptPrevWorkers = prevWorkers.filter((w) => !currentGroupIds.has(w.workerId));
 
-      // 2) Evitar duplicar con lo ya guardado de **otros grupos**:
-      //    - Quitamos del previo a los que pertenecen al grupo actual que estamos sobrescribiendo
-      const currentGroupWorkerIds = new Set(workers.map((w) => w.workerId).filter(Boolean) as number[]);
-      const filteredPrevReqWorkers = prevReqWorkers.filter((rw) => !currentGroupWorkerIds.has(rw.workerId));
-      const filteredPrevWorkers = prevWorkers.filter((w) => !currentGroupWorkerIds.has(w.workerId!));
+      // preservar tallas si ya existían en prevReqWorkers (por workerId)
+      const prevByWorker = new Map<number, RequestWorker>(keptPrevReqWorkers.map((rw) => [rw.workerId, rw]));
 
-      // 3) Construir nuevos RequestWorker "básicos" para los elegidos en este modal
-      const newReqWorkers: RequestWorker[] = selectedWorkersInThisModal.map((w) => ({
-        // requestWorkerId aún no existe en "new", lo proveerá el backend al crear la Request
-        requestWorkerId: 0, // opcional: placeholder
-        requestId: 0,       // en "new" aún no hay ID real
-        workerId: w.workerId!,
-        shoeSize: null,
-        pantsSize: null,
-        shirtSize: null,
-        worker: w,
-      }));
-
-      // 4) Resultado final (previo de otros grupos + nuevos de este grupo)
-      const nextReqWorkers = [...filteredPrevReqWorkers, ...newReqWorkers];
-
-      // A nivel de "Workers" simples, deduplicamos por workerId
-      const nextWorkersMap = new Map<number, Worker>();
-      [...filteredPrevWorkers, ...selectedWorkersInThisModal].forEach((w) => {
-        if (w.workerId) nextWorkersMap.set(w.workerId, w);
+      const newReqWorkers: RequestWorker[] = selectedWorkersInThisModal.map((w) => {
+        const prev = prevByWorker.get(w.workerId!); // preserva tallas si había
+        return {
+          requestWorkerId: prev?.requestWorkerId ?? 0,
+          requestId: prev?.requestId ?? (isNewRequest ? 0 : Number(id)),
+          workerId: w.workerId!,
+          shoeSize: prev?.shoeSize ?? null,
+          pantsSize: prev?.pantsSize ?? null,
+          shirtSize: prev?.shirtSize ?? null,
+          worker: w, // <-- ¡siempre setear!
+        };
       });
+
+      const nextReqWorkers = [...keptPrevReqWorkers, ...newReqWorkers];
+      const nextWorkersMap = new Map<number, Worker>();
+      [...keptPrevWorkers, ...selectedWorkersInThisModal].forEach((w) => nextWorkersMap.set(w.workerId, w));
       const nextWorkers = Array.from(nextWorkersMap.values());
 
-      // 5) Persistir y subir al padre
       localStorage.setItem("selectedWorkers", JSON.stringify(nextWorkers));
       localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextReqWorkers));
-      onSelected(nextWorkers, nextReqWorkers);
 
-      // 6) Cerrar modal
+      onSelected(nextWorkers, nextReqWorkers);
       onClose();
       return;
     }
 
-    // --------- EDICIÓN (hay requestId) ----------
-    if (id) {
-      const requestId = Number(id);
+    // ---------- EDICIÓN ----------
+    if (!id) return;
+    const requestId = Number(id);
 
-      // a) Calcular agregados y removidos
-      const toAdd = selectedIds.filter((sid) => !originalIds.includes(sid));
-      const toRemove = originalIds.filter((oid) => !selectedIds.includes(oid));
+    const toAdd = selectedIds.filter((sid) => !originalIds.includes(sid));
+    const toRemove = originalIds.filter((oid) => !selectedIds.includes(oid));
 
-      // b) Crear los nuevos
-      for (const workerId of toAdd) {
-        await createRequestWorker(`${requestWorkerApi}`, "POST", {
+    // 1) Crear nuevos
+    const createdResponses: RequestWorker[] = [];
+    for (const workerId of toAdd) {
+
+      const resp = await createRequestWorker(`${requestWorkerApi}`, "POST", {
+        requestId,
+        workerId,
+        shoeSize: null,
+        pantsSize: null,
+        shirtSize: null,
+      });
+
+      // si resp.data no trae worker embebido, lo rellenamos localmente
+      const w = workers.find((x) => x.workerId === workerId);
+      createdResponses.push({
+        ...(resp?.data ?? {}),
+        workerId,
+        requestId,
+        shoeSize: resp?.data?.shoeSize ?? null,
+        pantsSize: resp?.data?.pantsSize ?? null,
+        shirtSize: resp?.data?.shirtSize ?? null,
+        worker: resp?.data?.worker ?? w, // <-- completar
+      });
+
+      // resp.data es el RequestWorker creado
+      if (resp?.data) {
+        createdResponses.push(resp.data as RequestWorker);
+      } else {
+        // fallback local por si el backend no trae worker
+        const w = workers.find((x) => x.workerId === workerId);
+        createdResponses.push({
+          requestWorkerId: 0, // se actualizará al próximo fetch, sirve para pintar de inmediato
           requestId,
           workerId,
           shoeSize: null,
           pantsSize: null,
           shirtSize: null,
+          worker: w,
         });
       }
+    }
 
-      // c) Eliminar los removidos
-      // necesitamos requestWorkerId -> viene en fetchedRequestWorkers
-      // Nota: fetchedRequestWorkers ya lo tienes del useFetch arriba
-      if (fetchedRequestWorkers && fetchedRequestWorkers.length) {
-        for (const workerId of toRemove) {
-          const rw = fetchedRequestWorkers.find((x) => x.workerId === workerId);
-          if (rw?.requestWorkerId) {
-            await deleteRequestWorker(`${requestWorkerApi}/${rw.requestWorkerId}`, "DELETE");
-          }
+    // 2) Eliminar removidos
+    if (fetchedRequestWorkers) {
+      for (const workerId of toRemove) {
+        const rw = fetchedRequestWorkers.find((x) => x.workerId === workerId);
+        if (rw?.requestWorkerId) {
+          await deleteRequestWorker(`${requestWorkerApi}${rw.requestWorkerId}`, "DELETE"); // ojo: sin '/'
         }
       }
-
-      // d) Refrescar referencia local en el modal (opcional)
-      setOriginalIds(selectedIds);
-
-      // e) Cerrar modal
-      onClose();
     }
+
+    // 3) Reconstruir “nextReqWorkers”
+    const keptExisting =
+      (fetchedRequestWorkers || []).filter((rw) => !toRemove.includes(rw.workerId));
+
+    const existingByWorker = new Map<number, RequestWorker>(
+      keptExisting.map((rw) => [rw.workerId, rw])
+    );
+
+    // Unimos con los creados
+    const merged = [...keptExisting];
+    for (const created of createdResponses) {
+      const already = existingByWorker.get(created.workerId);
+      if (!already) merged.push(created);
+    }
+
+    // ✅ DEDUPE FINAL SIN FILTRAR POR selectedSet
+    const nextReqWorkers = Array.from(
+      new Map(merged.map((rw) => [rw.workerId, rw])).values()
+    );
+
+    // ✅ Workers para pintar: TODOS los resultantes
+    const nextWorkers = nextReqWorkers
+      .map((rw) => rw.worker)
+      .filter((w): w is Worker => Boolean(w));
+
+    // ✅ Enviar al padre arrays COMPLETOS (todos los grupos)
+    onSelected(nextWorkers, nextReqWorkers);
+
+    setOriginalIds(selectedIds);
+    onClose();
+
   };
 
-
-  if(loading) return <LoadingSkeletonTable />
-  if(error) return <div className="flex items-center justify-center w-full h-full">{error}</div>
+  if (loading) return <LoadingSkeletonTable />;
+  if (error) return <div className="flex items-center justify-center w-full h-full">{error}</div>;
 
   return (
     <>
@@ -178,10 +228,7 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
             value={searchItem}
             onChange={(e) => setSearchItem(e.target.value)}
           />
-          <FaDeleteLeft
-            className="size-6 hover:scale-110 cursor-pointer"
-            onClick={() => setSearchItem("")}
-          />
+          <FaDeleteLeft className="size-6 hover:scale-110 cursor-pointer" onClick={() => setSearchItem("")} />
         </div>
       </div>
       <HeaderModal />
@@ -193,7 +240,7 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
             <input
               type="checkbox"
               className="p-2 size-4"
-              checked={worker.workerId !== undefined && selectedIds.includes(worker.workerId)}
+              checked={selectedIds.includes(worker.workerId)}
               onChange={() => handleCheckboxChange(worker.workerId)}
             />
           </div>
@@ -202,21 +249,16 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
           {Array.from({ length: pages }, (_, i) => (
             <div
               key={i}
-              className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${currentPage === i + 1 ? "bg-gray-300" : ""}`}
+              className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${
+                currentPage === i + 1 ? "bg-gray-300" : ""
+              }`}
               onClick={() => setCurrentPage(i + 1)}
             >
               {i + 1}
             </div>
           ))}
         </div>
-        <Button
-          icon={<FaSave />}
-          label="Guardar"
-          type="button"
-          bgColor="#0047a3" 
-          bgHoverColor="#003366"
-          onClick={handleSave}
-        />
+        <Button icon={<FaSave />} label="Guardar" type="button" bgColor="#0047a3" bgHoverColor="#003366" onClick={handleSave} />
       </div>
     </>
   );

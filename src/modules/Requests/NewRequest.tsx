@@ -181,6 +181,7 @@ export default function NewRequest() {
       await setError(true);
       await setSuccessMessage("Por favor, selecciona un proyecto.");
       await setOnOk(() => closeModalAndReset);
+      return;
     } 
 
     const result = await handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel);

@@ -273,8 +273,8 @@ export function useHandleForm() {
       requestId,
       projectId,
       selectedElementRequests,
-      description,
       deliveryDueDate,
+      description,
       selectedRequestWorkers
     );
 

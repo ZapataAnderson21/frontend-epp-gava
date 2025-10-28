@@ -13,18 +13,23 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Al cambiar message/error, mostramos el modal y aseguramos que NO quede en loading.
   useEffect(() => {
     setVisible(true);
+
+    if (!message) {
+      setLoading(true);
+      return;
+    }
+    
     setLoading(true);
-    const id = setTimeout(() => setLoading(false), 150); // breve flash
+    const id = setTimeout(() => setLoading(false), 150);
     return () => clearTimeout(id);
-  }, [error, message]);
+  }, [message]);
+
 
   const handleOk = () => {
-    // Animación de salida y luego ejecuta onOk
     setVisible(false);
-    setTimeout(() => onOk(), 200); // igual al transition.duration del overlay
+    setTimeout(() => onOk(), 200);
   };
 
   return (
@@ -54,7 +59,7 @@ export default function SaveModal({ onOk, message, error }: SaveModalProps) {
                 <FaCheckCircle className="w-16 h-16 text-[#003a80]" />
               )}
               <h1 className="text-2xl text-center">
-                {message || "Error al guardar"}
+                {message}
               </h1>
               <button
                 className={`${

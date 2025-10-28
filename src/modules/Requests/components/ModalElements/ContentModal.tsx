@@ -132,29 +132,46 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
       const added = selectedIds.filter((sid) => !originalIds.includes(sid));
       const removed = originalIds.filter((oid) => !selectedIds.includes(oid));
 
-      // Crear los nuevos
+      // 1) Crear los nuevos (payload correcto camelCase)
+      const createdResponses: ElementRequestType[] = [];
       for (const addId of added) {
-        await createElementRequest(`${elementRequestApi}`, "POST", {
+        const res = await createElementRequest(`${elementRequestApi}`, "POST", {
           elementId: addId,
-          quantity_requested: 0,
-          unit: " ",
+          quantityRequested: 0,
+          unit: "",
           requestId,
         });
+
+        console.log("Created ElementRequest:", res);
+
+        if (res?.statusCode === 201) {
+          createdResponses.push(res.data);
+        }
       }
 
-      // Borrar los quitados
+      // 2) Borrar los quitados (URL sin doble slash)
       if (fetchedElementRequests) {
         for (const removeId of removed) {
           const itemToDelete = fetchedElementRequests.find((e) => e.elementId === removeId);
           if (itemToDelete?.elementRequestId !== undefined) {
-            await deleteElementRequest(`${elementRequestApi}/${itemToDelete.elementRequestId}`, "DELETE");
+            await deleteElementRequest(`${elementRequestApi}${itemToDelete.elementRequestId}`, "DELETE");
           }
         }
       }
 
-      // Reflejar selección persistida en el modal sin recargar
-      const nextOriginal = selectedIds;
-      setOriginalIds(nextOriginal);
+      // 3) Construir la lista final y ENVIARLA AL PADRE
+      const base = (fetchedElementRequests || []).filter(er => !removed.includes(er.elementId));
+      const nextReqs = [...base, ...createdResponses] as ElementRequestType[];
+
+      const nextEls = nextReqs
+        .map((r) => r.element)
+        .filter((el): el is ElementType => el !== undefined);
+
+      // <- ESTA LLAMADA ES LA CLAVE para que RequestDraft se re-renderice
+      onSelected(nextEls, nextReqs);
+
+      // Actualiza referencia local del modal para próximos guardados
+      setOriginalIds(selectedIds);
 
       onClose();
     }
