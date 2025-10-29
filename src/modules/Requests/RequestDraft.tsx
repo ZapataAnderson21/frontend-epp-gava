@@ -34,10 +34,10 @@ export default function RequestDraft() {
   const [description, setDescription] = useState<string>("");
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
-  const [elements, setElements] = useState<ElementType[]>([]);
-  const [selectedElementRequest, setSelectedElementRequest] = useState<ElementRequestType[]>([]);
+  const [, setElements] = useState<ElementType[]>([]);
+  const [, setSelectedElementRequest] = useState<ElementRequestType[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
-  const [selectedRequestWorkers, setSelectedRequestWorkers] = useState<RequestWorker[]>([]);
+  const [, setSelectedRequestWorkers] = useState<RequestWorker[]>([]);
   const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>([]);
 
   const [openWarning, setOpenWarning] = useState<boolean>(false);

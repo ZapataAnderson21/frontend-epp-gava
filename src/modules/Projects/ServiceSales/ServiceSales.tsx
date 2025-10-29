@@ -1,22 +1,21 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { HeaderPanel, Panel } from "../../../common/panel";
 import ServiceSaleTable from "./ServiceSaleTable";
 import { useFetch } from "../../../hooks";
-import { type ProjectType } from "../../../data/types";
+import { type Project } from "../../../data/types";
 import { projectApi } from "../../../data/apiUrl";
-import { Button } from "../../../components";
-import { FaArrowLeft, FaPlus } from "react-icons/fa6";
 import NewServiceSale from "./NewServiceSale";
 import { useState } from "react";
 import { ErrorMessage } from "../../../common/error";
 import ServiceSale from "./ServiceSale";
+import { AddButton, ReturnButton } from "../../../common/button";
 
 export default function ServiceSales() {
 
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
 
-  const {data: project, loading} = useFetch<ProjectType>(`${projectApi}${projectId}`, [projectId]);
+  const {data: project, loading} = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
   const [reFetch, setReFetch] = useState(0);
   const [showRightPanel, setShowRightPanel] = useState("");
   const [selectedServiceSaleId, setSelectedServiceSaleId] = useState<number | null>(null);
@@ -30,25 +29,17 @@ export default function ServiceSales() {
     setShowRightPanel("detail");
   };
 
+  const navigate = useNavigate();
+
+  const handleReturn = () => {
+    navigate(`/admin/projects/${projectId}`);
+  };
+
   return (
     <Panel>
       <HeaderPanel name={project ? `Servicios contratados de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
-        <Button
-          icon={<FaArrowLeft />}
-          label="Regresar"
-          href={`/admin/projects/${projectId}`}
-          bgColor="#d80027"
-          bgHoverColor="#c80008"
-          onClick={() => {}}
-        />
-
-        <Button
-          icon={<FaPlus />}
-          label="Agregar"
-          onClick={() => setShowRightPanel("new")}
-          bgColor="#0047a3"
-          bgHoverColor="#003a80"
-        />
+        <ReturnButton onClick={handleReturn} />
+        <AddButton onClick={() => setShowRightPanel("new")} />
       </HeaderPanel>
 
       <section className="flex flex-row flex-wrap w-full gap-4">

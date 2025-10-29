@@ -37,7 +37,6 @@ export default function NewPurchaseOrder() {
     purchaseOrderType, setPurchaseOrderType,
     paymentMethod, setPaymentMethod,
     paymentConditions1, setPaymentConditions1,
-    paymentConditions,
 
     //validate errors
     errors,
@@ -123,7 +122,6 @@ export default function NewPurchaseOrder() {
                 supplier={supplier || undefined}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
-                paymentConditions={paymentConditions}
                 setPaymentConditions={setPaymentConditions}
                 errorPaymentMethod={errors.paymentMethod}
                 errorPaymentConditions={errors.paymentConditions}

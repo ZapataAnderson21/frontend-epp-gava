@@ -40,7 +40,6 @@ export default function EditPurchaseOrder() {
   const [qualityConditions, setQualityConditions] = useState<string[]>([""]);
 
   // ---- errores ----
-  const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
   const [errorDni, setErrorDni] = useState<string | undefined>(undefined);
   const [errorSupplier, setErrorSupplier] = useState<string | undefined>(undefined);
   const [errorPaymentMethod, setErrorPaymentMethod] = useState<string | undefined>(undefined);
@@ -266,7 +265,6 @@ export default function EditPurchaseOrder() {
     const { ok, msgs, fieldErrors } = validateAndCollect();
 
     // 3) Sincronizar errores a los inputs (estado React)
-    setErrorCode(fieldErrors.code);
     setErrorSupplier(fieldErrors.supplier);
     setErrorPaymentMethod(fieldErrors.paymentMethod);
     setErrorPaymentConditions(fieldErrors.paymentConditions);
@@ -451,7 +449,6 @@ export default function EditPurchaseOrder() {
                 supplier={supplier}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
-                paymentConditions={paymentConditions}
                 setPaymentConditions={setPaymentConditions}
                 errorPaymentMethod={errorPaymentMethod}
                 errorPaymentConditions={errorPaymentConditions}

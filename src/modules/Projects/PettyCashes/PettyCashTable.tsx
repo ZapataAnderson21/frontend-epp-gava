@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../../common/error";
 import { LoadingSkeletonTable } from "../../../common/loading";
 import { Table } from "../../../common/table";
@@ -18,7 +17,6 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
   const { data: pettyCashes, loading, error } = useFetch<PettyCashType[]>(`${pettyCashApi}project/${projectId}`, [projectId, reFetch]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [permission, setPermission] = useState(false);
 
   const columns = [
     { key: "resourceName", label: "Recurso comprado", width: "12rem" },
@@ -32,14 +30,6 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
       ),
     },
   ] as const;
-
-  useEffect(() => {
-    if (!user) return;
-
-    if (["GERENTE", "ADMINISTRADORA", "SISTEMAS"].includes(user.userType)) {
-      setPermission(true);
-    }
-  }, [user]);
 
   if (!user) {
     return <div className="text-red-500">Iniciar sesión.</div>;

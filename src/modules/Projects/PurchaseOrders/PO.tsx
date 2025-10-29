@@ -8,7 +8,6 @@ import { purchaseOrderApi } from "../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../data/types";
 import { FaRegFilePdf } from "react-icons/fa6";
 import { Button } from "../../../components";
-import { useState } from "react";
 
 export default function PO() {
   

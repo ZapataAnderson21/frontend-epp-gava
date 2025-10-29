@@ -7,7 +7,6 @@ interface Props {
   supplier?: Supplier;
   paymentMethod: string;
   setPaymentMethod: (v: string) => void;
-  paymentConditions: string;
   setPaymentConditions: (v: string) => void;  // 👈 nuevo
   errorPaymentMethod?: string;                // 👈 nuevo
   errorPaymentConditions?: string;            // 👈 nuevo
@@ -17,7 +16,7 @@ export default function PaymentConditionsCard({...props}: Props) {
   const {
     paymentConditions1, setPaymentConditions1,
     supplier, paymentMethod, setPaymentMethod,
-    paymentConditions, setPaymentConditions,
+    setPaymentConditions,
     errorPaymentMethod, errorPaymentConditions,
   } = props;
 
