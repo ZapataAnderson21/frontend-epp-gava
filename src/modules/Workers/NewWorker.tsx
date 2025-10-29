@@ -77,6 +77,10 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       setAddress("");
       setWorkerGroupId(0);
 
+      // Limpia los errores
+      setErrorDni("");
+      setErrorPhone("");
+
       // Que el botón OK solo cierre el modal
       setOnOk(() => () => setOpenSaveModal(false));
     } else {

@@ -52,6 +52,7 @@ export default function NewSupplier() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(false);
     setOpenSaveModal(true);
 
     const payload = {
