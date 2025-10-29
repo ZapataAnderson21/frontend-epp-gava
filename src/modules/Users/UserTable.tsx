@@ -1,6 +1,5 @@
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
-import SeeButton from "../../common/button/SeeButton";
 import { Table } from "../../common/table";
 import { userApi } from "../../data/apiUrl";
 import type { User } from "../../data/types";

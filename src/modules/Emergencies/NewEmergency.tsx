@@ -5,7 +5,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useFormDataAction } from "../../hooks/useFormDataAction";
 import { emergencyApi, projectApi } from "../../data/apiUrl";
 
-import type { ProjectType } from "../../data/types";
+import type { Project } from "../../data/types";
 
 import { SaveModal, ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 import { ReturnButton, SaveButton } from "../../common/button";
@@ -22,7 +22,7 @@ export default function NewEmergency() {
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
-  const { data: projects, loading: loadingProjects, error: errorProjects } = useFetch<ProjectType[]>(`${projectApi}status/active`);
+  const { data: projects, loading: loadingProjects, error: errorProjects } = useFetch<Project[]>(`${projectApi}status/active`);
   
   const { execute, response, error, loading } = useFormDataAction<any>();
 

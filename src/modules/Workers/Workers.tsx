@@ -8,7 +8,6 @@ import { logisticsTypes } from "../../utils/userUtils";
 import { useCurrentUser } from "../../hooks";
 import Permission from "../../common/auth/Permission";
 import EditWorker from "./Editworker";
-import { s } from "motion/react-client";
 
 export default function Workers() {
   const { user } = useCurrentUser();

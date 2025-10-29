@@ -5,7 +5,6 @@ import AddButton from "../../common/button/AddButton";
 import { useCurrentUser } from "../../hooks";
 import Permission from "../../common/auth/Permission";
 import { adminTypes } from "../../utils";
-import { ErrorMessage } from "../../common/error";
 
 export default function Users() {
 

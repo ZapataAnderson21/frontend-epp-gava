@@ -160,19 +160,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     () => items.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0),
     [items]
   );
-
-  // --- VALIDATION ---
-  const isPositive = (v: string) => Number(v) > 0;
-  const isNonNegative = (v: string) => Number(v) >= 0;
-  const hasAtLeastOneCompleteItem = (rows: ItemRow[]) =>
-    rows.some(
-      (r) =>
-        r.resourceId > 0 &&
-        isPositive(r.quantity) &&
-        isNonNegative(r.unitPurchasePrice) &&
-        isNonNegative(r.unitSalesPrice)
-    );
-
+  
   // --- VALIDATION ---
   function validateAll(): { valid: boolean; errors: FormErrors; messages: string[] } {
     const nextErrors: FormErrors = {};

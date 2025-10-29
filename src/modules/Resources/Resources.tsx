@@ -1,6 +1,4 @@
-import { FaPlus } from "react-icons/fa6";
 import { HeaderPanel, Panel } from "../../common/panel";
-import { Button } from "../../components";
 import ResourceTable from "./ResourceTable";
 import { useNavigate } from "react-router-dom";
 import { AddButton } from "../../common/button";

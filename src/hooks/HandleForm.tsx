@@ -31,8 +31,6 @@ export function useHandleForm() {
   const { execute: updateElementRequest } = useApiAction<any>();
   const { execute: createRequestWorker } = useApiAction<any>();
   const { execute: updateRequestWorker } = useApiAction<any>();
-  const { execute: deleteElementRequest } = useApiAction<any>(); // por si lo necesitas externamente
-  const { execute: deleteRequestWorker } = useApiAction<any>();  // por si lo necesitas externamente
 
   // 🟩 Guardar nueva solicitud (sin cambios)
   const handleSave = async (projectId: number, deliveryDueDate: string, description?: string) => {

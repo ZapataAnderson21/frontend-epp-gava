@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { emergencyApi } from "../../data/apiUrl";
-import type { User, ProjectType } from "../../data/types";
+import type { User, Project } from "../../data/types";
 import Loading from "../../common/loading/Loading";
 import ErrorMessage from "../../common/error/ErrorMessage";
 import { ButtonContainer } from "../../common/form";
@@ -14,7 +14,7 @@ interface EmergencyType {
   title: string;
   description: string;
   status: string;
-  project?: ProjectType;
+  project?: Project;
   user?: User;
   image: string;
 }
