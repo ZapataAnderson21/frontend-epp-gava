@@ -87,6 +87,7 @@ export default function NewPurchaseOrder() {
               projectName={project?.name ?? ""}
               code={code}
               onChangeCode={setCode}
+              errorCode={errors.code}
             />
 
             <div className="flex flex-col gap-8">

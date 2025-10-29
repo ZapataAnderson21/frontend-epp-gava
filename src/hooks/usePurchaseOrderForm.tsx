@@ -20,12 +20,13 @@ type ItemErrors = Partial<{
   unitSalesPrice: string;
 }>;
 
+// --- TYPES ---
 type FormErrors = Partial<{
   supplierId: string;
   paymentMethod: string;
   paymentConditions: string;
   purchaseOrderType: string;
-  code: string;
+  code: string;                 // <-- NUEVO
   destination: string;
   deliveryLocation: string;
   carePerson: string;
@@ -172,55 +173,69 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         isNonNegative(r.unitSalesPrice)
     );
 
+  // --- VALIDATION ---
   function validateAll(): { valid: boolean; errors: FormErrors; messages: string[] } {
     const nextErrors: FormErrors = {};
     const msgs: string[] = [];
 
-    // Campos de cabecera
+    // code
+    if (!code.trim()) {
+      nextErrors.code = "Ingrese un código.";
+      msgs.push("Ingresa el código de la orden.");
+    }
+
+    // proveedor
     if (!selectSupplierId) {
       nextErrors.supplierId = "Seleccione un proveedor.";
       msgs.push("Selecciona un proveedor.");
     }
 
-    // Opcional: habilita/inhabilita reglas extras
-    // if (!code.trim()) { nextErrors.code = "Ingrese un código."; msgs.push("Ingresa el código de la orden."); }
-
+    // método de pago
     if (!paymentMethod) {
-      nextErrors.paymentMethod = "Seleccione un método de pago. ";
-      msgs.push("Selecciona el método de pago. ");
+      nextErrors.paymentMethod = "Seleccione un método de pago.";
+      msgs.push("Selecciona el método de pago.");
     }
 
+    // condiciones de pago
     if (!paymentConditions) {
-      nextErrors.paymentConditions = "Defina las condiciones de pago. ";
-      msgs.push("Define las condiciones de pago. ");
+      nextErrors.paymentConditions = "Defina las condiciones de pago.";
+      msgs.push("Define las condiciones de pago.");
     }
 
-    if (purchaseOrderType === "") {
-      nextErrors.purchaseOrderType = "Seleccione materiales o servicios. ";
-      msgs.push("Elige el tipo de pedido (materiales o servicios). ");
+    // tipo (materiales/servicios)
+    if (!purchaseOrderType) {
+      nextErrors.purchaseOrderType = "Seleccione materiales o servicios.";
+      msgs.push("Elige el tipo de pedido (materiales o servicios).");
     }
 
+    // DNI
     if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
-      nextErrors.dniCarePerson = "El DNI debe tener 8 dígitos. ";
-      msgs.push("El DNI de atención debe tener 8 dígitos. ");
+      nextErrors.dniCarePerson = "El DNI debe tener 8 dígitos.";
+      msgs.push("El DNI de atención debe tener 8 dígitos.");
     }
 
-    // Items por fila
+    // Ítems
     const itemErrors: ItemErrors[] = items.map((row) => {
       const ie: ItemErrors = {};
-      if (!row.resourceId) ie.resourceId = "Requerido. ";
-      if (!isPositive(row.quantity)) ie.quantity = "Mayor a 0. ";
-      if (!isNonNegative(row.unitPurchasePrice)) ie.unitPurchasePrice = "No negativo. ";
-      if (!isNonNegative(row.unitSalesPrice)) ie.unitSalesPrice = "No negativo. ";
+      if (!row.resourceId) ie.resourceId = "Requerido.";
+      if (!(Number(row.quantity) > 0)) ie.quantity = "Mayor a 0.";
+      if (!(Number(row.unitPurchasePrice) >= 0)) ie.unitPurchasePrice = "No negativo.";
+      if (!(Number(row.unitSalesPrice) >= 0)) ie.unitSalesPrice = "No negativo.";
       return ie;
     });
 
-    // Si ninguna fila completa
-    if (!hasAtLeastOneCompleteItem(items)) {
-      msgs.push("Agrega al menos un ítem con recurso, cantidad mayor a 0 y precios mayor o igual a 0. ");
+    const hasValidItem = items.some(
+      (r) =>
+        r.resourceId > 0 &&
+        Number(r.quantity) > 0 &&
+        Number(r.unitPurchasePrice) >= 0 &&
+        Number(r.unitSalesPrice) >= 0
+    );
+
+    if (!hasValidItem) {
+      msgs.push("Agrega al menos un ítem con recurso, cantidad > 0 y precios ≥ 0.");
     }
 
-    // Si existe alguna fila con errores, los añadimos al form
     if (itemErrors.some((ie) => Object.keys(ie).length > 0)) {
       nextErrors.items = itemErrors;
     }

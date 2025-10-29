@@ -207,54 +207,6 @@ export default function EditPurchaseOrder() {
     }
   }, [paymentConditions1]);
 
-  // ---- validación ----
-  const validateAll = () => {
-    let ok = true;
-    setErrorCode(undefined);
-    setErrorSupplier(undefined);
-    setErrorPaymentMethod(undefined);
-    setErrorPaymentConditions(undefined);
-    setErrorPurchaseOrderType(undefined);
-    setErrorDni(undefined);
-
-    if (!supplierId) {
-      setErrorSupplier("Seleccione un proveedor.");
-      ok = false;
-    }
-    if (!paymentMethod) {
-      setErrorPaymentMethod("Seleccione un método de pago.");
-      ok = false;
-    }
-    if (!paymentConditions) {
-      setErrorPaymentConditions("Defina las condiciones de pago.");
-      ok = false;
-    }
-    if (!purchaseOrderType) {
-      setErrorPurchaseOrderType("Seleccione materiales o servicios.");
-      ok = false;
-    }
-    if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
-      setErrorDni("El DNI debe tener 8 dígitos.");
-      ok = false;
-    }
-
-    if (code.trim() === "") {
-      setErrorCode("El código no puede estar vacío.");
-      ok = false;
-    }
-
-    // Validación de ítems
-    const hasValidItem = items.some(r =>
-      r.resourceId > 0 &&
-      Number(r.quantity) > 0 &&
-      Number(r.unitPurchasePrice) >= 0 &&
-      Number(r.unitSalesPrice) >= 0
-    );
-    if (!hasValidItem) ok = false;
-
-    return ok;
-  };
-
   // 1) Nueva función que valida y DEVUELVE mensajes + errores de campo
   const validateAndCollect = () => {
     const msgs: string[] = [];
@@ -268,28 +220,28 @@ export default function EditPurchaseOrder() {
     };
 
     if (!supplierId) {
-      fieldErrors.supplier = "Seleccione un proveedor.";
-      msgs.push("• Selecciona un proveedor.");
+      fieldErrors.supplier = "Seleccione un proveedor. ";
+      msgs.push("Selecciona un proveedor." );
     }
     if (!paymentMethod) {
-      fieldErrors.paymentMethod = "Seleccione un método de pago.";
-      msgs.push("• Selecciona el método de pago.");
+      fieldErrors.paymentMethod = "Seleccione un método de pago. ";
+      msgs.push("Selecciona el método de pago." );
     }
     if (!paymentConditions) {
-      fieldErrors.paymentConditions = "Defina las condiciones de pago.";
-      msgs.push("• Define las condiciones de pago.");
+      fieldErrors.paymentConditions = "Defina las condiciones de pago. ";
+      msgs.push("Define las condiciones de pago." );
     }
     if (!purchaseOrderType) {
-      fieldErrors.purchaseOrderType = "Seleccione materiales o servicios.";
-      msgs.push("• Elige el tipo de pedido (materiales o servicios).");
+      fieldErrors.purchaseOrderType = "Seleccione materiales o servicios. ";
+      msgs.push("Elige el tipo de pedido (materiales o servicios)." );
     }
     if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
-      fieldErrors.dni = "El DNI debe tener 8 dígitos.";
-      msgs.push("• El DNI de atención debe tener 8 dígitos.");
+      fieldErrors.dni = "El DNI debe tener 8 dígitos. ";
+      msgs.push("El DNI de atención debe tener 8 dígitos." );
     }
     if (code.trim() === "") {
-      fieldErrors.code = "El código no puede estar vacío.";
-      msgs.push("• El código de la orden de compra no puede estar vacío.");
+      fieldErrors.code = "El código no puede estar vacío. ";
+      msgs.push("El código de la orden de compra no puede estar vacío." );
     }
 
     const hasValidItem = items.some(r =>
@@ -299,7 +251,7 @@ export default function EditPurchaseOrder() {
       Number(r.unitSalesPrice) >= 0
     );
     if (!hasValidItem) {
-      msgs.push("• Agrega al menos un ítem válido.");
+      msgs.push("Agrega al menos un ítem válido." );
     }
 
     return { ok: msgs.length === 0, msgs, fieldErrors };
@@ -324,7 +276,7 @@ export default function EditPurchaseOrder() {
     if (!ok) {
       // 4) Construir mensaje y RECIÉN abrir modal
       setErrorFlag(true);
-      setSuccessMessage(["Falta completar:", ...msgs].join("\n"));
+      setSuccessMessage([msgs].join(" "));
       setOnOk(() => () => setOpenSaveModal(false));
       setOpenSaveModal(true);
       return false;
@@ -359,7 +311,7 @@ export default function EditPurchaseOrder() {
       const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", body);
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         setErrorFlag(true);
-        setSuccessMessage(resp.message || "No se pudo actualizar la orden de compra.");
+        setSuccessMessage(resp.message || "No se pudo actualizar la orden de compra." );
         return false;
       }
 
@@ -388,7 +340,7 @@ export default function EditPurchaseOrder() {
             keptIds.add(id);
           } else {
             setErrorFlag(true);
-            setSuccessMessage("Hubo errores al actualizar algunos ítems.");
+            setSuccessMessage("Hubo errores al actualizar algunos ítems." );
           }
         } else {
           // POST nuevo
@@ -397,7 +349,7 @@ export default function EditPurchaseOrder() {
             // opcional: refrescar id en memoria si quieres
           } else {
             setErrorFlag(true);
-            setSuccessMessage("Hubo errores al crear algunos ítems.");
+            setSuccessMessage("Hubo errores al crear algunos ítems." );
           }
         }
       }
@@ -410,12 +362,12 @@ export default function EditPurchaseOrder() {
       }
 
       setErrorFlag(false);
-      setSuccessMessage("Orden de compra actualizada exitosamente.");
+      setSuccessMessage("Orden de compra actualizada exitosamente." );
       setOnOk(() => () => navigateToPurchaseOrders());
       return true;
     } catch (err: any) {
       setErrorFlag(true);
-      setSuccessMessage(err?.message || "Error desconocido al actualizar.");
+      setSuccessMessage(err?.message || "Error desconocido al actualizar." );
       setOnOk(() => () => setOpenSaveModal(false));
       return false;
     }
@@ -436,11 +388,11 @@ export default function EditPurchaseOrder() {
     });
 
     if (resp.statusCode === 200) {
-      setSuccessMessage("Orden de compra autorizada.");
+      setSuccessMessage("Orden de compra autorizada." );
       setOnOk(() => () => navigateToPurchaseOrders());
     } else {
       setErrorFlag(true);
-      setSuccessMessage(resp.message || "No se pudo autorizar la orden.");
+      setSuccessMessage(resp.message || "No se pudo autorizar la orden." );
     }
   };
 

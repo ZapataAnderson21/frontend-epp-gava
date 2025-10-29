@@ -2,9 +2,13 @@ interface Props {
   projectName: string;
   code: string;
   onChangeCode: (v: string) => void;
+  errorCode?: string; // <-- nuevo (opcional)
 }
 
-export default function PurchaseOrderHeader({ projectName, code, onChangeCode }: Props) {
+export default function PurchaseOrderHeader({ projectName, code, onChangeCode, errorCode }: Props) {
+  const hasError = Boolean(errorCode);
+  const errorId = "po-code-error";
+
   return (
     <div className="flex flex-col gap-8 text-center">
       <div className="flex flex-row flex-wrap items-center justify-center md:justify-between gap-8">
@@ -18,14 +22,29 @@ export default function PurchaseOrderHeader({ projectName, code, onChangeCode }:
 
       <div className="flex flex-col gap-4">
         <h1 className="font-extrabold text-xl">{projectName}</h1>
+
         <div className="flex flex-col lg:flex-row items-center justify-center gap-2 bg-[#14519d] text-white p-4 text-2xl font-bold">
           <h1>CODIGO DE ORDEN DE COMPRA</h1>
           <input
-            className="cursor-text bg-gray-50 border border-gray-400 text-gray-900 text-xl rounded-md focus-visible:ring-2 focus-visible:ring-gray-600 focus:outline-none block max-w-80 p-2.5"
+            className={[
+              "cursor-text bg-gray-50 border text-gray-900 text-xl rounded-md focus-visible:ring-2 focus:outline-none block max-w-80 p-2.5",
+              hasError
+                ? "border-red-500 focus-visible:ring-red-600"
+                : "border-gray-400 focus-visible:ring-gray-600"
+            ].join(" ")}
             value={code}
             onChange={(e) => onChangeCode(e.target.value)}
+            aria-invalid={hasError}
+            aria-describedby={hasError ? errorId : undefined}
           />
         </div>
+
+        {hasError && (
+          <p id={errorId} role="alert" className="text-left text-sm text-red-600 mt-1">
+            {errorCode}
+          </p>
+        )}
+
         <p className="self-end">
           <span className="font-bold">Fecha:</span> {new Date().toLocaleDateString()}
         </p>
