@@ -42,7 +42,7 @@ export default function PettyCashes() {
   const navigate = useNavigate();
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta seccióne." />}>
+    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
       <Panel>
         <HeaderPanel name={project ? `Caja Chica de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
           <ReturnButton onClick={() => {navigate(`/admin/projects/${projectId}`)}} />
@@ -159,16 +159,16 @@ export default function PettyCashes() {
 
         <section className="flex flex-row flex-wrap w-full gap-4">
 
-          <div className="flex-1">
+          
             <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
-          </div>
+          
           {showRightPanel === "new" && (
-            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
+            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full xl:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
               <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} />
             </div>  
           )}
           {showRightPanel === "detail" && selectedPettyCashId && (
-            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full md:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
+            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full xl:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
               <PettyCash pettyCashId={selectedPettyCashId}  />
             </div>
           )}

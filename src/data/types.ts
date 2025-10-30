@@ -281,6 +281,9 @@ export interface PettyCashType {
   resourceName: string;
   amount: number;
   description: string;
+  invoiceNumber: string;
+  expenseDate: string;
+  expenseType: string;
   createdAt: string;
   updatedAt: Date;
 }

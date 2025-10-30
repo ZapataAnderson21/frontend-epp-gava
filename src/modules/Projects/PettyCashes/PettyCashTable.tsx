@@ -19,9 +19,13 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const columns = [
-    { key: "resourceName", label: "Recurso comprado", width: "12rem" },
-    { key: "amount", label: "Monto", width: "12rem" },
-    { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
+    { key: "expenseDate", label: "Fecha", width: "12rem" },
+    { key: "resourceName", label: "Nombre del gasto", width: "12rem" },
+    { key: "expenseType", label: "Tipo", width: "12rem" },
+    { label: "Monto (S/. )", 
+      width: "12rem",
+      render: (row: PettyCashType) => (<span className="flex max-w-[6rem] justify-end">S/ {Number(row.amount).toFixed(2)}</span>),
+    },
     {
       label: "Acciones",
       width: "8rem",
