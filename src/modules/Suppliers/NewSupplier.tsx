@@ -95,7 +95,7 @@ export default function NewSupplier() {
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
         <TextAreaForm label="Dirección" name="address" value={address} onChange={(e) => setAddress(e.target.value)} optional={true} />
         <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => setRuc(e.target.value)} optional={false} />
-        <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} optional={false} />
+        <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.trim())} optional={false} />
         <InputForm label="Banco" name="bank" type="text" value={bank} onChange={(e) => setBank(e.target.value)} optional={false} />
         <SelectForm label="Moneda" name="currency" options={currencyOptions} value={currency} onChange={(value) => setCurrency(value)} />
 

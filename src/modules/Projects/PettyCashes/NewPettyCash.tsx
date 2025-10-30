@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ButtonSubmit, Form, InputForm, SaveModal, TextAreaForm } from "../../../common/form";
+import { ButtonSubmit, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction } from "../../../hooks";
 import { pettyCashApi } from "../../../data/apiUrl";
@@ -14,6 +14,10 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
   const [resourceName, setResourceName] = useState("");
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
+  const [expenseType, setExpenseType] = useState("");
+  const [expenseDate, setExpenseDate] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+
   const [resourceNameError, setResourceNameError] = useState("");
   const [amountError, setAmountError] = useState("");
 
@@ -36,7 +40,7 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
       return;
     }
 
-    const body = { projectId, resourceName, amount, description };
+    const body = { projectId, resourceName, amount, description, expenseType, expenseDate, invoiceNumber };
     const result = await execute(pettyCashApi, "POST", body);
 
     if (result.statusCode === 201) {
@@ -61,7 +65,7 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
     <>
       <Form name= "Nuevo gasto de caja chica" handleSubmit={handleSubmit} >
         <InputForm
-          label="Nombre del Recurso"
+          label="Nombre del Gasto"
           value={resourceName}
           onChange={(e) => { setResourceName(e.target.value);}}
           name="resourceName"
@@ -78,6 +82,41 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
           optional={false}
           error={amountError}
         />
+
+        <InputForm
+          label="Número de Comprobante"
+          value={invoiceNumber}
+          onChange={(e) => { setInvoiceNumber(e.target.value);}}
+          name="invoiceNumber"
+          type="text"
+          optional={false}
+        />
+
+        <SelectForm
+          label="Tipo de Gasto"
+          name="expenseType"
+          value={expenseType}
+          onChange={(value) => { setExpenseType(value);}}
+          options={[
+            { label: "Comidas", value: "meals" },
+            { label: "Combustible", value: "fuel" },
+            { label: "Transporte", value: "transport" },
+            { label: "Materiales / Insumos", value: "supplies" },
+            { label: "Equipo de Seguridad", value: "safety_equipment" },
+            { label: "Servicios", value: "services" },
+            { label: "Otros", value: "other" }
+          ]}
+        />
+
+        <InputForm
+          label="Fecha"
+          value={expenseDate}
+          onChange={(e) => { setExpenseDate(e.target.value);}}
+          name="expenseDate"
+          type="date"
+          optional={false}
+        />
+
         <TextAreaForm
           label="Descripción"
           value={description}

@@ -34,6 +34,8 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
           return;
         }
 
+        console.log(`Res for ${url}: `, json.data);
+
         if (json.statusCode === 200) {
           setData(json.data);
           setError(null);
