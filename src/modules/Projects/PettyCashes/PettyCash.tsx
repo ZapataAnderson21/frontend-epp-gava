@@ -57,7 +57,6 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
     const res = await execute(`${pettyCashApi}${pettyCashId}`, "PATCH", updatedPettyCash);
     
     setSuccessMessage(res.message);
-    setOpenSaveModal(false);
 
     if(res.statusCode == 200) {
       successAction();
@@ -67,6 +66,9 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
       });
     } else {
       setError(true);
+      setOnOk(() => () => {
+        setOpenSaveModal(false);
+      });
     }
   }
 
