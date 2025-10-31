@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ReturnButton, SaveButton } from "../../../common/button";
-import { ButtonContainer, Form, InputForm, SaveModal, SelectForm } from "../../../common/form";
+import { ButtonContainer, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
 import { pettyCashApi } from "../../../data/apiUrl";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction, useFetch } from "../../../hooks";
@@ -97,7 +97,6 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
           value={amount}
           type="number"
           onChange={(e) => setAmount(Number(e.target.value))}
-          disabled
         />
 
         <InputForm
@@ -106,7 +105,6 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
           value={invoiceNumber}
           type="text"
           onChange={(e) => setInvoiceNumber(e.target.value)}
-          disabled
         />
 
         <InputForm
@@ -115,7 +113,6 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
           value={expenseDate}
           type="date"
           onChange={(e) => setExpenseDate(e.target.value)}
-          disabled
         />
 
         <InputForm
@@ -127,13 +124,11 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
           disabled
         />
 
-        <InputForm
+        <TextAreaForm
           label="Descripción"
           name="description"
           value={description}
-          type="text"
           onChange={(e) => setDescription(e.target.value)}
-          disabled
         />
 
         <ButtonContainer>
