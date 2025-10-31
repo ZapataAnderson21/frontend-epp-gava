@@ -10,10 +10,11 @@ import { ErrorMessage } from "../../../common/error";
 
 interface PettyCashProps {
   pettyCashId: number;
+  successAction: () => void;
   closeAction: () => void;
 }
 
-export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) {
+export default function PettyCash({ pettyCashId, successAction, closeAction }: PettyCashProps) {
 
   const {data: pettyCash, error: fetchError, loading} = useFetch<PettyCashType>(`${pettyCashApi}${pettyCashId}`);
   const [expenseType, setExpenseType] =  useState<string>("");
@@ -59,6 +60,7 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
     setOpenSaveModal(false);
 
     if(res.statusCode == 200) {
+      successAction();
       setOnOk(() => () => {
         setOpenSaveModal(false);
         closeAction();

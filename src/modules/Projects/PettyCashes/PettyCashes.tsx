@@ -170,7 +170,7 @@ export default function PettyCashes() {
               <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} closeAction={closeAction} />
             )}
             {showRightPanel === "detail" && selectedPettyCashId && (
-              <PettyCash pettyCashId={selectedPettyCashId} closeAction={closeAction} />
+              <PettyCash pettyCashId={selectedPettyCashId} successAction={successAction} closeAction={closeAction} />
             )}
         </div>
         )}
