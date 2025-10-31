@@ -158,7 +158,6 @@ export default function Project() {
                     <CountCard loading={loading} title="Órdenes de Compra" count={project?.purchaseOrders?.length ?? 0} to={`/admin/purchase-orders?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Requerimientos"   count={project?.requests?.length ?? 0}       to={`/admin/requests?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Caja Chica"       count={project?.pettyCashes?.length ?? 0}    to={`/admin/petty-cash?projectId=${projectId}`} />
-                    <CountCard loading={loading} title="Servicios"        count={project?.serviceSales?.length ?? 0}   to={`/admin/service-sale?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Emergencias"      count={project?.emergencies?.length ?? 0}    to={`/admin/emergencies?projectId=${projectId}`} />
                   </div>
                 </div>

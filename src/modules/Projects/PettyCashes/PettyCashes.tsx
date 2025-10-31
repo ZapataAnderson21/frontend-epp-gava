@@ -39,6 +39,11 @@ export default function PettyCashes() {
     setShowRightPanel("detail");
   };
 
+  const closeAction = () => {
+    setShowRightPanel("");
+    setSelectedPettyCashId(null);
+  };
+
   const navigate = useNavigate();
 
   return (
@@ -157,22 +162,18 @@ export default function PettyCashes() {
 
         </section>
 
-        <section className="flex flex-row flex-wrap w-full gap-4">
-
-          
-            <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
-          
-          {showRightPanel === "new" && (
-            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full xl:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
-              <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} />
-            </div>  
-          )}
-          {showRightPanel === "detail" && selectedPettyCashId && (
-            <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="w-full xl:w-1/3 p-4 border-1 border-gray-200 rounded-lg">
-              <PettyCash pettyCashId={selectedPettyCashId}  />
-            </div>
-          )}
-        </section>
+        <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
+      
+        {showRightPanel && (
+          <div style={{boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"}} className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+            {showRightPanel === "new" && (
+              <NewPettyCash projectId={projectId ? Number(projectId) : 0} successAction={successAction} closeAction={closeAction} />
+            )}
+            {showRightPanel === "detail" && selectedPettyCashId && (
+              <PettyCash pettyCashId={selectedPettyCashId} closeAction={closeAction} />
+            )}
+        </div>
+        )}
       </Panel>
     </Permission>
   );

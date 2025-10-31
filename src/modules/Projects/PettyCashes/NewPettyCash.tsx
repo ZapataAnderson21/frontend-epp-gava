@@ -1,24 +1,24 @@
 import { useState } from "react";
-import { ButtonSubmit, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction } from "../../../hooks";
 import { pettyCashApi } from "../../../data/apiUrl";
+import { ReturnButton } from "../../../common/button";
 
 interface NewPettyCashProps {
   projectId: number;
   successAction: () => void;
+  closeAction: () => void;
 }
 
-export default function NewPettyCash({ projectId, successAction }: NewPettyCashProps) {
+export default function NewPettyCash({ projectId, successAction, closeAction }: NewPettyCashProps) {
 
-  const [resourceName, setResourceName] = useState("");
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const [expenseType, setExpenseType] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
 
-  const [resourceNameError, setResourceNameError] = useState("");
   const [amountError, setAmountError] = useState("");
 
   const { execute, loading, response, error } = useApiAction<PettyCashType>()
@@ -30,17 +30,12 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
     e.preventDefault();
     setOpenSaveModal(true);
 
-    // validaciones...
-    if (!resourceName || resourceName.trim() === "") {
-      setResourceNameError("El nombre del recurso es obligatorio.");
-      return;
-    }
     if (amount <= 0) {
       setAmountError("El monto debe ser mayor que cero.");
       return;
     }
 
-    const body = { projectId, resourceName, amount, description, expenseType, expenseDate, invoiceNumber };
+    const body = { projectId, amount, description, expenseType, expenseDate, invoiceNumber };
     const result = await execute(pettyCashApi, "POST", body);
 
     if (result.statusCode === 201) {
@@ -48,9 +43,7 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
 
       // Limpia el formulario
       setDescription("");
-      setResourceName("");
       setAmount(0);
-      setResourceNameError("");
       setAmountError("");
 
       // Que el botón OK solo cierre el modal
@@ -62,17 +55,24 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
 
 
   return (
-    <>
+    <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
       <Form name= "Nuevo gasto de caja chica" handleSubmit={handleSubmit} >
-        <InputForm
-          label="Nombre del Gasto"
-          value={resourceName}
-          onChange={(e) => { setResourceName(e.target.value);}}
-          name="resourceName"
-          type="text"
-          optional={false}
-          error={resourceNameError}
+        <SelectForm
+          label="Tipo de Gasto"
+          name="expenseType"
+          value={expenseType}
+          onChange={(value) => { setExpenseType(value);}}
+          options={[
+            { label: "Comidas", value: "meals" },
+            { label: "Combustible", value: "fuel" },
+            { label: "Transporte", value: "transport" },
+            { label: "Materiales / Insumos", value: "supplies" },
+            { label: "Equipo de Seguridad", value: "safety_equipment" },
+            { label: "Servicios", value: "services" },
+            { label: "Otros", value: "other" }
+          ]}
         />
+        
         <InputForm
           label="Monto"
           value={amount}
@@ -92,22 +92,6 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
           optional={false}
         />
 
-        <SelectForm
-          label="Tipo de Gasto"
-          name="expenseType"
-          value={expenseType}
-          onChange={(value) => { setExpenseType(value);}}
-          options={[
-            { label: "Comidas", value: "meals" },
-            { label: "Combustible", value: "fuel" },
-            { label: "Transporte", value: "transport" },
-            { label: "Materiales / Insumos", value: "supplies" },
-            { label: "Equipo de Seguridad", value: "safety_equipment" },
-            { label: "Servicios", value: "services" },
-            { label: "Otros", value: "other" }
-          ]}
-        />
-
         <InputForm
           label="Fecha"
           value={expenseDate}
@@ -124,11 +108,14 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
           name="description"
           optional={true}
         />
-        <ButtonSubmit
-          label="Guardar"
-          loading={loading}
-          loadingLabel="Guardando..."
-        />
+        <ButtonContainer>
+          <ButtonSubmit
+            label="Guardar"
+            loading={loading}
+            loadingLabel="Guardando..."
+          />
+          <ReturnButton onClick={closeAction} />
+        </ButtonContainer>
       </Form>
       {openSaveModal && (
         <SaveModal
@@ -137,6 +124,6 @@ export default function NewPettyCash({ projectId, successAction }: NewPettyCashP
           error={!!error || response?.statusCode !== 201}
         />
       )}
-    </>
+    </div>
   )
 }

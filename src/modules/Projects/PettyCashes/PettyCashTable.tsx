@@ -20,7 +20,6 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
 
   const columns = [
     { key: "expenseDate", label: "Fecha", width: "12rem" },
-    { key: "resourceName", label: "Nombre del gasto", width: "12rem" },
     { key: "expenseType", label: "Tipo", width: "12rem" },
     { label: "Monto (S/. )", 
       width: "12rem",

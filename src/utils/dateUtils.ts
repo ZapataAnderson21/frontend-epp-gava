@@ -63,6 +63,16 @@ export function toDatetimeLocalValue(iso?: string): string {
   return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
 }
 
+export function toDateLocalValue(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (v: number) => String(v).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  // formato requerido por <input type="date">
+  return `${yyyy}-${MM}-${dd}`;
+}
 
 export function localDatetimeToIso(datetimeLocal?: string): string | null {
   if (!datetimeLocal) return null;

@@ -278,7 +278,6 @@ export interface PurchaseOrder {
 export interface PettyCashType {
   pettyCashId: number;
   projectId: number;
-  resourceName: string;
   amount: number;
   description: string;
   invoiceNumber: string;
