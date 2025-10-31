@@ -110,7 +110,7 @@ export default function PettyCash({ pettyCashId, closeAction }: PettyCashProps) 
         <InputForm
           label="Fecha del Gasto"
           name="expenseDate"
-          value={expenseDate}
+          value={toDateLocalValue(expenseDate)}
           type="date"
           onChange={(e) => setExpenseDate(e.target.value)}
         />
