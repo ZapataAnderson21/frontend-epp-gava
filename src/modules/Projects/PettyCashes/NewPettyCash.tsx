@@ -4,6 +4,7 @@ import type { PettyCashType } from "../../../data/types";
 import { useApiAction } from "../../../hooks";
 import { pettyCashApi } from "../../../data/apiUrl";
 import { ReturnButton } from "../../../common/button";
+import { ymdLocalMidnightToUtc } from "../../../utils";
 
 interface NewPettyCashProps {
   projectId: number;
@@ -35,7 +36,7 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
       return;
     }
 
-    const body = { projectId, amount, description, expenseType, expenseDate, invoiceNumber };
+    const body = { projectId, amount, description, expenseType, expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'), invoiceNumber };
     const result = await execute(pettyCashApi, "POST", body);
 
     if (result.statusCode === 201) {

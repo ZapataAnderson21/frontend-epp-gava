@@ -1,4 +1,4 @@
-
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export function formatDate(date: string | undefined): string {
   if (!date) return "--";
@@ -49,7 +49,6 @@ export function formatYMD(date: string | undefined): string {
   return format(parsedDate, "yyyy-MM-dd");
 }
 
-
 export function toDatetimeLocalValue(iso?: string): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -79,4 +78,32 @@ export function localDatetimeToIso(datetimeLocal?: string): string | null {
   const d = new Date(datetimeLocal); // interpreta como hora local
   if (isNaN(d.getTime())) return null;
   return d.toISOString(); // => "YYYY-MM-DDTHH:mm:ss.sssZ"
+}
+
+export function ymdToUtcMidnight(ymd: string) {
+  // ymd = '2025-10-27'
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y, (m - 1), d, 0, 0, 0, 0));
+}
+
+/** Convierte 'YYYY-MM-DD' interpretándolo como 00:00 en Lima -> UTC */
+export function ymdLocalMidnightToUtc(ymd: string, tz = 'America/Lima'): Date {
+  // ymd '2025-11-20' se interpreta como '2025-11-20 00:00:00' en Lima
+  const localDate = new Date(`${ymd}T00:00:00`);
+  return toZonedTime(localDate, tz);
+}
+
+/** Devuelve 'dd/MM/yyyy' visto en Lima */
+export function formatDateInLima(d: Date): string {
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'America/Lima',
+  }).format(d);
+}
+
+/** Si prefieres devolver un YYYY-MM-DD estable (sin TZ) */
+export function formatYmdInLima(d: Date): string {
+  return formatInTimeZone(d, 'America/Lima', 'yyyy-MM-dd');
 }

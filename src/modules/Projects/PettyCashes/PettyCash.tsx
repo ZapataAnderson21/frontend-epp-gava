@@ -4,7 +4,7 @@ import { ButtonContainer, Form, InputForm, SaveModal, SelectForm, TextAreaForm }
 import { pettyCashApi } from "../../../data/apiUrl";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction, useFetch } from "../../../hooks";
-import { toDateLocalValue } from "../../../utils";
+import { toDateLocalValue, ymdLocalMidnightToUtc } from "../../../utils";
 import { LoadingSkeletonForm } from "../../../common/loading";
 import { ErrorMessage } from "../../../common/error";
 
@@ -36,7 +36,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
       setExpenseType(pettyCash.expenseType);
       setAmount(pettyCash.amount);
       setInvoiceNumber(pettyCash.invoiceNumber);
-      setExpenseDate(pettyCash.expenseDate);
+      setExpenseDate(toDateLocalValue(pettyCash.expenseDate));
       setDescription(pettyCash.description);
     }
   }, [pettyCash]);
@@ -50,7 +50,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
       expenseType,
       amount,
       invoiceNumber,
-      expenseDate,
+      expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'),
       description,
     };
 
@@ -114,7 +114,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
         <InputForm
           label="Fecha del Gasto"
           name="expenseDate"
-          value={toDateLocalValue(expenseDate)}
+          value={expenseDate}
           type="date"
           onChange={(e) => setExpenseDate(e.target.value)}
         />
@@ -133,6 +133,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
           name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          optional
         />
 
         <ButtonContainer>

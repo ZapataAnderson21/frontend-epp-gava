@@ -36,13 +36,17 @@ export default function PurchaseOrders() {
       <Panel>
 
         <HeaderPanel name={`${project ? `Órdenes de compra de ${project.name}` : loading ? "Cargando..." : "Proyecto no encontrado"}`}>
+          
           <Permission user={user} allow={adminTypes}>
             <AddButton onClick={navigateToNewPurchaseOrder} />
           </Permission>
+          
           <ReturnButton onClick={navigateBack} />
+          
         </HeaderPanel>
 
         <PurchaseOrderTable projectId={Number(projectId)} />
+      
       </Panel>
     </Permission>
   )
