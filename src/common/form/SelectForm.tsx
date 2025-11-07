@@ -71,7 +71,7 @@ export default function SelectForm<T extends Primitive = string>({
           directionRow ? "flex-row items-center text-nowrap" : "flex-col"
         } gap-2`}
       >
-        <div className="flex flex-row justify-between w-full">
+        <div className="flex flex-row justify-between w-fit">
           <label className="text-gray-700 font-bold" htmlFor={name}>
             {label}
           </label>
@@ -100,7 +100,7 @@ export default function SelectForm<T extends Primitive = string>({
                 id={`${name}-menu`}
                 role="listbox"
                 key="dropdown"
-                className="absolute top-full left-0 z-10 w-full bg-white border border-gray-200 rounded-md shadow-md overflow-hidden"
+                className="absolute top-full left-0 z-200 w-full bg-white border border-gray-200 rounded-md shadow-md overflow-hidden"
                 initial="collapsed"
                 animate="open"
                 exit="collapsed"

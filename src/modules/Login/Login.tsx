@@ -7,6 +7,7 @@ import ForgotPasswordModal from "./ForgotPasswordModal";
 import { Button } from "../../components";
 import { AiOutlineLoading } from "react-icons/ai";
 import { FiLogIn } from "react-icons/fi";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
 
 interface LoginResponse {
   accessToken: string;
@@ -22,7 +23,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [openModal, setOpenModal] = useState(false);
-  
+  const [visiblePassword, setVisiblePassword] = useState(false);
+
   const navigate = useNavigate();
   
   const location = useLocation();
@@ -105,11 +107,19 @@ export default function Login() {
           <InputForm 
             name="password"
             label="Contraseña:"
-            type="password"
+            type={visiblePassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={error}
-          />
+          >
+            <button
+              type="button"
+              onClick={() => setVisiblePassword(!visiblePassword)}
+              className="cursor-pointer hover:scale-105 duration-300"
+            >
+              {visiblePassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </InputForm>
 
           <div className="flex flex-row gap-4 items-end justify-between w-full">
             <Button

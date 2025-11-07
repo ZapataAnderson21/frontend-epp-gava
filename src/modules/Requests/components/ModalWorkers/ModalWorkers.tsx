@@ -4,19 +4,19 @@ import type { Worker, RequestWorker } from "../../../../data/types";
 
 interface ModalElementsProps {
   title: string;
-  groupId: number;
+  workerType: string;
   isOpen?: boolean;
   onSelected: (workers: Worker[], reqs: RequestWorker[]) => void;
   onClose: () => void;
 }
 
-export default function ModalWorkers({ title, groupId, isOpen, onSelected, onClose }: ModalElementsProps) {
+export default function ModalWorkers({ title, workerType, isOpen, onSelected, onClose }: ModalElementsProps) {
 
   if (!isOpen) return null;
 
   return (
     <ModalSelect title={title} isOpen={isOpen} onClose={onClose}>
-      <ContentWorkersModal groupId={groupId} onSelected={onSelected} onClose={onClose} />
+      <ContentWorkersModal workerType={workerType} onSelected={onSelected} onClose={onClose} />
     </ModalSelect>
   );
 } 

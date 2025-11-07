@@ -24,23 +24,25 @@ export default function Projects() {
   return (
     <Panel>
       <HeaderPanel name={`PROYECTOS`}>
-        <SelectForm 
-          label="Filtrar por"
-          name="filter"
-          value={filter}
-          onChange={(value) => {
-            const option = options.find(opt => opt.value === value);
-            if (option) {
-              setFilter(option.value);
-            }
-          }}
-          options={options}
-          directionRow={true}
-        />
-
+        <div className="w-fit">
+          <SelectForm 
+            label="Filtrar por"
+            name="filter"
+            value={filter}
+            onChange={(value) => {
+              const option = options.find(opt => opt.value === value);
+              if (option) {
+                setFilter(option.value);
+              }
+            }}
+            options={options}
+            directionRow={true}
+          />
+        </div>
         <Permission user={user} allow={adminTypes}>
           <AddButton onClick={() => {navigate("/admin/projects/new")}} />
         </Permission>
+        
       </HeaderPanel>
 
       <ProjectTable filter={filter} />

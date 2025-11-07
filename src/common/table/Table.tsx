@@ -51,7 +51,7 @@ export default function Table<T>({ data, columns }: TableProps<T>) {
           <div className="table-row-group">
             <AnimatePresence>
               {data.map((item, idx) => {
-                const rowClasses = `cursor-pointer hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
+                const rowClasses = `hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
                 const cells = (
                   <>
                     {columns.map((col, i) => (

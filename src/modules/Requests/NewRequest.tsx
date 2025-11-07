@@ -306,8 +306,8 @@ export default function NewRequest() {
               <div className="flex flex-col w-full gap-4">
                 <span className="font-semibold mt-4">Busca los trabajadores que vas a seleccionar:</span>
                 <div className="flex flex-row items-center justify-around gap-4 w-full mb-3">
-                  <WorkerSelectCard icon={<FaPersonDigging className="size-16" />} title="Obreros" groupId={5} onSelected={handleSelectionWorkersUpdate} />
-                  <WorkerSelectCard icon={<MdEngineering className="size-16" />} title="Técnicos" groupId={6} onSelected={handleSelectionWorkersUpdate} />
+                  <WorkerSelectCard icon={<FaPersonDigging className="size-16" />} title="Obreros" workerType={"laborer"} onSelected={handleSelectionWorkersUpdate} />
+                  <WorkerSelectCard icon={<MdEngineering className="size-16" />} title="Técnicos" workerType={"technician"} onSelected={handleSelectionWorkersUpdate} />
                 </div>
 
                 {/* Trabajadores seleccionados (editable) */}

@@ -22,11 +22,8 @@ export default function Emergencies() {
   return (
     <Panel>
       <HeaderPanel name={`EMERGENCIAS`}>
-        {projectId && <ReturnButton onClick={() => navigate(`/admin/projects/${projectId}`)} /> }
-
-        <AddButton
-          onClick={navigateToNewProject}
-        />
+        <AddButton onClick={navigateToNewProject} />
+        { projectId && <ReturnButton onClick={() => navigate(`/admin/projects/${projectId}`)} /> }
       </HeaderPanel>
       
       <EmergencyTable />

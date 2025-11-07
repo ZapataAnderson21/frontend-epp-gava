@@ -299,6 +299,17 @@ export interface ServiceSaleType {
 
 export type Currency = "PEN" | "USD" | "EUR";
 
+export const WorkerType = {
+  Laborer: ['laborer', 'Obrero'],
+  Technician: ['technician', 'Técnico'],
+  Engineer: ['engineer', 'Ingeniero'],
+  Administrator: ['administrator', 'Administrador(a)'],
+  Manager: ['manager', 'Gerente'],
+  Unspecified: ['unspecified', 'No Especificado'],
+} as const;
+
+export type WorkerType = typeof WorkerType[keyof typeof WorkerType];
+
 export interface Worker {
   workerId: number
   fullName: string
@@ -307,22 +318,11 @@ export interface Worker {
   address?: string
   personalEmail?: string
   birthDate?: string
-  workerGroupId: number
+  workerType: string
   createdAt: string
   updatedAt: string
   deletedAt?: string
-  workerGroup?: WorkerGroup
-  workerGroupName?: string
-}
-
-export interface WorkerGroup {
-  workerGroupId: number
-  name: string
-  description?: string
-  parentGroupId?: number
-  createdAt: string
-  updatedAt: string
-  parentGroup?: WorkerGroup
+  workerTypeName?: string
 }
 
 export interface RequestWorker {

@@ -20,7 +20,7 @@ export default function WorkerTable( {reFetch, onSee, isAdmin} : ProjectTablePro
     { key: "fullName", label: "Nombre Completo", width: "18rem" },
     { key: "phone", label: "Teléfono", width: "14rem" },
     { key: "personalEmail", label: "Correo Electrónico", width: "18rem" },
-    { key: "workerGroupName", label: "Grupo de Trabajador", width: "14rem" },
+    { key: "workerType", label: "Tipo", width: "14rem" },
     ...(isAdmin ? [
       {
         label: "Acciones",
@@ -50,14 +50,9 @@ export default function WorkerTable( {reFetch, onSee, isAdmin} : ProjectTablePro
     return <div className="text-center text-gray-500">No se encontraron trabajadores.</div>;
   }
 
-  const processedWorkers = workers?.map(worker => ({
-    ...worker,
-    workerGroupName: worker.workerGroup ? worker.workerGroup.parentGroup ? `${worker.workerGroup.parentGroup.name} - ${worker.workerGroup.name}` : worker.workerGroup.name : "Sin grupo"
-  }));
-
   return (
     <Table<Worker>
-      data={processedWorkers}
+      data={workers}
       columns={columns}
     />
   );

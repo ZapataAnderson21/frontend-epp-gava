@@ -17,6 +17,8 @@ import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
 import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
 import RequestDraft from './modules/Requests/RequestDraft.tsx';
+import Payrolls from './Payrolls/Payrolls.tsx';
+import Attendances from './Payrolls/Attendances.tsx';
 
 export default function App() {
 
@@ -32,6 +34,8 @@ export default function App() {
           <Route path='projects/:id' element={<Project />} />
           <Route path='projects/edit/:id' element={<EditProject />} />
           <Route path='projects/new' element={<NewProject />} />
+          <Route path='projects/payrolls/:id' element={<Payrolls />} />
+          <Route path='projects/payrolls/attendances/:id' element={<Attendances />} />
           {/* End projects routes */}
           {/* Requests routes */}
           <Route path='requests' element={<Requests />} />
@@ -79,6 +83,9 @@ export default function App() {
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}
+          {/* Payrolls routes */}
+          <Route path='payrolls' element={<Payrolls />} />
+          {/* End payrolls routes */}
         </Route>
       </Routes>
     </BrowserRouter>

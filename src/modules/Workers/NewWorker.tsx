@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm } from "../../common/form";
-import type { WorkerGroup } from "../../data/types";
-import { useApiAction, useFetch } from "../../hooks";
-import { workerApi, workerGroupApi } from "../../data/apiUrl";
-import type { Option } from "../../common/form/SelectForm";
+import { WorkerType } from "../../data/types";
+import { useApiAction } from "../../hooks";
+import { workerApi } from "../../data/apiUrl";
 import { ReturnButton } from "../../common/button";
 
 interface NewPettyCashProps {
@@ -17,28 +16,15 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
   const [dni, setDni] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [workerGroupId, setWorkerGroupId] = useState(0);
+  const [workerType, setWorkerType] = useState<WorkerType>(WorkerType.Unspecified);
 
   const [errorDni, setErrorDni] = useState("");
   const [errorPhone, setErrorPhone] = useState("");
 
-  const {data: workerGroups, error: workerGroupsError, loading: workerGroupsLoading} = useFetch<WorkerGroup[]>(`${workerGroupApi}`);
-  
-  const formatWorkerGroupOptions = (workerGroups: WorkerGroup[]): Option<number>[] => {
-    const buildGroupName = (group: WorkerGroup): string => {
-      if (group.parentGroup) {
-        return `${buildGroupName(group.parentGroup)}-${group.name}`;
-      }
-      return group.name;
-    };
-
-    return workerGroups.map(group => ({
-      value: group.workerGroupId,
-      label: buildGroupName(group)
-    }));
-  };
-
-  const workerGroupOptions = workerGroups ? formatWorkerGroupOptions(workerGroups) : [];
+  const workerTypeOptions = Object.values(WorkerType).map((type, index) => ({
+    value: index,
+    label: type[1]
+  }));
 
   const { execute, loading: saving, response, error: saveError } = useApiAction<Worker>();
 
@@ -64,7 +50,10 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       return;
     }
 
-    const body = { fullName, dni, phone, address, workerGroupId };
+    const body = { fullName, dni, phone, address, workerType: workerType[0] };
+    
+    console.log(body);
+
     const result = await execute(workerApi, "POST", body);
 
     if (result.statusCode === 201) {
@@ -75,7 +64,7 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       setDni("");
       setPhone("");
       setAddress("");
-      setWorkerGroupId(0);
+      setWorkerType(WorkerType.Unspecified);
 
       // Limpia los errores
       setErrorDni("");
@@ -125,20 +114,14 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
           onChange={(e) => setAddress(e.target.value)}
           optional={true}
         />
-
-        {workerGroupsLoading ? (
-          <p>Cargando grupos de trabajadores...</p>
-        ) : workerGroupsError ? (
-          <p>Error al cargar los grupos de trabajadores</p>
-        ) : (
-          <SelectForm
-            label="Grupo de Trabajadores"
-            name="workerGroupId"
-            value={workerGroupId}
-            options={workerGroupOptions}
-            onChange={(value) => setWorkerGroupId(value)}
-          />
-        )}
+        
+        <SelectForm
+          label="Tipo de trabajador"
+          name="workerType"
+          value={Object.values(WorkerType).indexOf(workerType)}
+          options={workerTypeOptions}
+          onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
+        />
 
         <ButtonContainer>
           <ButtonSubmit 

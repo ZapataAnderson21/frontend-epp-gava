@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm } from "../../common/form";
-import type { Option } from "../../common/form/SelectForm";
-import { workerApi, workerGroupApi } from "../../data/apiUrl";
-import type { Worker, WorkerGroup } from "../../data/types";
+import { workerApi } from "../../data/apiUrl";
+import { type  Worker, WorkerType } from "../../data/types";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton } from "../../common/button";
 import { formatYMD, logisticsTypes } from "../../utils";
@@ -23,28 +22,15 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
   const [personalEmail, setPersonalEmail] = useState("");
   const [address, setAddress] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [workerGroupId, setWorkerGroupId] = useState(0);
+  const [workerType, setWorkerType] = useState<WorkerType>(WorkerType.Unspecified);
 
   const [errorDni, setErrorDni] = useState("");
   const [errorPhone, setErrorPhone] = useState("");
 
-  const {data: workerGroups, error: workerGroupsError, loading: workerGroupsLoading} = useFetch<WorkerGroup[]>(`${workerGroupApi}`);
-  
-  const formatWorkerGroupOptions = (workerGroups: WorkerGroup[]): Option<number>[] => {
-    const buildGroupName = (group: WorkerGroup): string => {
-      if (group.parentGroup) {
-        return `${buildGroupName(group.parentGroup)}-${group.name}`;
-      }
-      return group.name;
-    };
-
-    return workerGroups.map(group => ({
-      value: group.workerGroupId,
-      label: buildGroupName(group)
-    }));
-  };
-
-  const workerGroupOptions = workerGroups ? formatWorkerGroupOptions(workerGroups) : [];
+  const workerTypeOptions = Object.values(WorkerType).map((type, index) => ({
+    value: index,
+    label: type[1]
+  }));
 
   const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
 
@@ -70,7 +56,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       return;
     }
 
-    const body = { fullName, dni, phone, address, workerGroupId, personalEmail, birthDate };
+    const body = { fullName, dni, phone, address, workerType: workerType[0], personalEmail, birthDate };
     
     const result = await execute(`${workerApi}${workerId}`, "PATCH", body);
 
@@ -97,7 +83,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       setPersonalEmail(worker.personalEmail ? worker.personalEmail : "");
       setAddress(worker.address ? worker.address : "");
       setBirthDate(worker.birthDate ? formatYMD(worker.birthDate) : "");
-      setWorkerGroupId(worker.workerGroupId);
+      setWorkerType(Object.values(WorkerType).find(type => type[0] === worker.workerType) || WorkerType.Unspecified);
     }
   }, [worker]); 
 
@@ -163,19 +149,14 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             optional={true}
           />
 
-          {workerGroupsLoading ? (
-            <p>Cargando grupos de trabajadores...</p>
-          ) : workerGroupsError ? (
-            <p>Error al cargar los grupos de trabajadores</p>
-          ) : (
-            <SelectForm
-              label="Grupo de Trabajadores"
-              name="workerGroupId"
-              value={workerGroupId}
-              options={workerGroupOptions}
-              onChange={(value) => setWorkerGroupId(value)}
-            />
-          )}
+          
+          <SelectForm
+            label="Tipo de trabajador"
+            name="workerType"
+            value={Object.values(WorkerType).indexOf(workerType)}
+            options={workerTypeOptions}
+            onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
+          />
 
           <ButtonContainer> 
               <ButtonSubmit 

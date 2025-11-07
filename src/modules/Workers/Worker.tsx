@@ -52,7 +52,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           <h2 className="text-xl font-bold mt-4">Información laboral</h2>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Grupo de trabajador:</label>
-            <span>{worker?.workerGroupId}</span>
+            <span>{worker?.workerType[1]}</span>
           </div>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Fecha y hora de registro:</label>

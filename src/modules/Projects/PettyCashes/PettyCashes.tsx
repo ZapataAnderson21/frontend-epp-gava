@@ -50,8 +50,8 @@ export default function PettyCashes() {
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
       <Panel>
         <HeaderPanel name={project ? `Caja Chica de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
-          <ReturnButton onClick={() => {navigate(`/admin/projects/${projectId}`)}} />
           <AddButton onClick={() => setShowRightPanel("new")} />
+          <ReturnButton onClick={() => {navigate(`/admin/projects/${projectId}`)}} />
         </HeaderPanel>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full mb-8">

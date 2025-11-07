@@ -10,12 +10,12 @@ import { Button } from "../../../../components";
 import { FaSave } from "react-icons/fa";
 
 interface ContentWorkersModalProps {
-  groupId: number;
+  workerType: string;
   onSelected: (workers: Worker[], reqs: RequestWorker[]) => void;
   onClose: () => void;
 }
 
-export default function ContentWorkersModal({ groupId, onSelected, onClose }: ContentWorkersModalProps) {
+export default function ContentWorkersModal({ workerType, onSelected, onClose }: ContentWorkersModalProps) {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [originalIds, setOriginalIds] = useState<number[]>([]);
@@ -40,7 +40,7 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
   const isNewRequest = location.pathname.endsWith("/new");
 
   // API
-  const { data: fetchedWorkers, error, loading } = useFetch<Worker[]>(`${workerApi}group/${groupId}`, [groupId]);
+  const { data: fetchedWorkers, error, loading } = useFetch<Worker[]>(`${workerApi}group/${workerType}`, [workerType]);
   const { data: fetchedRequestWorkers } = useFetch<RequestWorker[]>(
     id ? `${requestWorkerApi}request/${id}` : "",
     [id]
@@ -67,12 +67,12 @@ export default function ContentWorkersModal({ groupId, onSelected, onClose }: Co
     } else if (fetchedRequestWorkers) {
       // ⚠️ FILTRA por el grupo actual
       const ids = fetchedRequestWorkers
-        .filter((rw) => rw.worker?.workerGroupId === groupId)
+        .filter((rw) => rw.worker?.workerType === workerType)
         .map((rw) => rw.workerId);
       setSelectedIds(ids);
       setOriginalIds(ids);
     }
-  }, [isNewRequest, fetchedRequestWorkers, groupId]);
+  }, [isNewRequest, fetchedRequestWorkers, workerType]);
 
   const handleCheckboxChange = (workerId: number) => {
     setSelectedIds((prev) => (prev.includes(workerId) ? prev.filter((x) => x !== workerId) : [...prev, workerId]));
