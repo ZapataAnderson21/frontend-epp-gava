@@ -18,7 +18,7 @@ export default function ReturnButton({ disabled }: ReturnButtonProps) {
 
   const navigate = useNavigate();
 
-  const handleClickDay = (date: Date, event: React.MouseEvent) => {
+  const handleClickDay = (date: Date) => {
     setValue(date);
 
     const year = date.getFullYear();
