@@ -98,6 +98,14 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             type="text"
             onChange={(e) => setFullName(e.target.value)}
           />
+
+          <SelectForm
+            label="Tipo de trabajador"
+            name="workerType"
+            value={Object.values(WorkerType).indexOf(workerType)}
+            options={workerTypeOptions}
+            onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
+          />
           
           <div className="flex gap-4">
             <InputForm
@@ -147,15 +155,6 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             type="text"
             onChange={(e) => setAddress(e.target.value)}
             optional={true}
-          />
-
-          
-          <SelectForm
-            label="Tipo de trabajador"
-            name="workerType"
-            value={Object.values(WorkerType).indexOf(workerType)}
-            options={workerTypeOptions}
-            onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
           />
 
           <ButtonContainer> 

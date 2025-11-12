@@ -29,7 +29,7 @@ export default function Login() {
   
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const redirect = params.get("redirect");
+  const redirectParam = params.get("redirect");
 
   const {
     execute: loginAction,
@@ -43,6 +43,7 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     if (!email || !password) {
       setError("Por favor, completa todos los campos");
@@ -57,7 +58,10 @@ export default function Login() {
     if (response.statusCode === 200) {
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      navigate(redirect || "/admin", { replace: true });
+
+      const redirectTo = redirectParam && redirectParam !== "/" ? redirectParam : "/admin";
+
+      navigate(redirectTo, { replace: true });
     } else {
       setError(response.message || "Error desconocido");
     }

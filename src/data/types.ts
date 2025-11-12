@@ -323,6 +323,7 @@ export interface Worker {
   updatedAt: string
   deletedAt?: string
   workerTypeName?: string
+  dailyWage?: number
   attendances?: Attendance[];
 }
 

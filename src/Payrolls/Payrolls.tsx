@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser, useFetch } from "../hooks";
 import { type Project } from "../data/types";
-import { payrollApi, projectApi } from "../data/apiUrl";
+import { projectApi, workerApi } from "../data/apiUrl";
 import { ReturnButton } from "../common/button";
 import { HeaderPanel, Panel } from "../common/panel";
 import { ErrorMessage } from "../common/error";
@@ -18,9 +18,7 @@ export default function Payrolls() {
   const { id: projectId } = useParams<{ id: string }>();
 
   const {data: project, loading} = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
-  const {data: laborersAmount, loading: laborersAmountLoading} = useFetch<number>(`${payrollApi}${projectId}/laborers`, [projectId]);
-  const {data: techniciansAmount, loading: techniciansAmountLoading} = useFetch<number>(`${payrollApi}${projectId}/technicians`, [projectId]);
-  const totalAmount  = (laborersAmount || 0) + (techniciansAmount || 0);
+  const {data: totals, loading: totalsLoading} = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
 
   if (!projectId || isNaN(Number(projectId)) || Number(projectId) <= 0)  return <ErrorMessage errorMessage="No se encontró el proyecto." />;
 
@@ -49,7 +47,7 @@ export default function Payrolls() {
               Obreros
             </h4>
             <p className="flex-1 text-2xl font-extrabold">
-              {laborersAmountLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(laborersAmount)?.toFixed(2) || "0.00"}`}
+              {totalsLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(totals?.laborerAmount)?.toFixed(2) || "0.00"}`}
             </p>
           </motion.div>
 
@@ -64,7 +62,7 @@ export default function Payrolls() {
               Técnicos
             </h4>
             <p className="flex-1 text-2xl font-extrabold">
-              {techniciansAmountLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(techniciansAmount)?.toFixed(2) || "0.00"}`}
+              {totalsLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(totals?.technicianAmount)?.toFixed(2) || "0.00"}`}
             </p>
           </motion.div>
 
@@ -79,7 +77,7 @@ export default function Payrolls() {
               Total
             </h4>
             <p className="flex-1 text-2xl font-extrabold">
-              {laborersAmountLoading || techniciansAmountLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(totalAmount)?.toFixed(2) || "0.00"}`}
+              {totalsLoading ? <CgSpinner className="animate-spin" /> : `S/ ${Number(totals?.totalAmount)?.toFixed(2) || "0.00"}`}
             </p>
           </motion.div>
         </section>

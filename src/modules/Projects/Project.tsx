@@ -5,7 +5,7 @@ import { MdOutlineContentCopy } from "react-icons/md";
 import { IoIosArrowUp } from "react-icons/io";
 import { useCurrentUser, useFetch } from "../../hooks";
 import type { Project } from "../../data/types";
-import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi } from "../../data/apiUrl";
+import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi, workerApi } from "../../data/apiUrl";
 import { SectionProjectSummary, HeaderActions, HeaderSection } from "./sections";
 import { type Currency, CurrencyFilter, MoneyTrendCard, CountCard, InfoCard } from "./components";
 import { HeaderPanel, Panel } from "../../common/panel";
@@ -39,20 +39,46 @@ export default function Project() {
   const { data: servicesTotalsPEN, loading: servicesTotalsLoading } = useFetch<number>(`${serviceSaleApi}sum/${projectId}`, [projectId]);
   const { data: purchaseOrderSaleAmounts, loading: purchaseOrderSaleLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}saleAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
   const { data: purchaseOrderPurchaseAmounts, loading: purchaseOrderPurchaseLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}purchaseAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
+  const { data: payrollTotals, loading: payrollTotalsLoading } = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
 
-  const pettyCashTotals = { PEN: pettyCashPEN ? Number(pettyCashPEN) : 0, USD: 0, EUR: 0 };
-  const payrollTotals   = { PEN: 0, USD: 0, EUR: 0 };
-  const servicesTotals  = { PEN: servicesTotalsPEN ? Number(servicesTotalsPEN) : 0, USD: 0, EUR: 0 };
+  const pettyCashTotals = { 
+    PEN: pettyCashPEN ? Number(pettyCashPEN) : 0, 
+    USD: 0, 
+    EUR: 0 
+  };
+  
+  const servicesTotals  = { 
+    PEN: servicesTotalsPEN ? Number(servicesTotalsPEN) : 0, 
+    USD: 0, 
+    EUR: 0 
+  };
+  
+  const payrollTotalsAmounts = {
+    PEN: payrollTotals?.totalAmount ?? 0,
+    USD: 0,
+    EUR: 0,
+  };
 
   const purchaseOrdersSaleTotals = {
     PEN: purchaseOrderSaleAmounts?.totalPEN ?? 0,
     USD: purchaseOrderSaleAmounts?.totalUSD ?? 0,
     EUR: purchaseOrderSaleAmounts?.totalEUR ?? 0,
   };
+  
   const purchaseOrdersPurchaseTotals = {
     PEN: purchaseOrderPurchaseAmounts?.totalPEN ?? 0,
     USD: purchaseOrderPurchaseAmounts?.totalUSD ?? 0,
     EUR: purchaseOrderPurchaseAmounts?.totalEUR ?? 0,
+  };
+
+
+  const utilitiesTotals = {
+    PEN:
+      (purchaseOrdersSaleTotals.PEN || 0) - (purchaseOrdersPurchaseTotals.PEN + pettyCashTotals.PEN + servicesTotals.PEN + payrollTotalsAmounts.PEN || 0),
+    USD:
+      (purchaseOrdersSaleTotals.USD || 0) - (purchaseOrdersPurchaseTotals.USD + pettyCashTotals.USD + servicesTotals.USD + payrollTotalsAmounts.USD || 0),
+    EUR:
+      (purchaseOrdersSaleTotals.EUR || 0) - (purchaseOrdersPurchaseTotals.EUR + pettyCashTotals.EUR + servicesTotals.EUR + payrollTotalsAmounts.EUR || 0),
   };
 
   const copyCode = () => {
@@ -159,7 +185,7 @@ export default function Project() {
                     <CountCard loading={loading} title="Requerimientos"   count={project?.requests?.length ?? 0}       to={`/admin/requests?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Caja Chica"       count={project?.pettyCashes?.length ?? 0}    to={`/admin/petty-cash?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Emergencias"      count={project?.emergencies?.length ?? 0}    to={`/admin/emergencies?projectId=${projectId}`} />
-                    <CountCard loading={loading} title="Planillas"       count={0}       to={`/admin/projects/payrolls/${projectId}`} />
+                    <CountCard loading={loading} title="Planillas / Asistencias"       count={0}       to={`/admin/projects/payrolls/${projectId}`} />
                   </div>
                 </div>
               )}
@@ -185,14 +211,14 @@ export default function Project() {
               {/* Gastos */}
               <SectionProjectSummary title="Gastos">
                 <MoneyTrendCard loading={purchaseOrderPurchaseLoading} title="Órdenes de Compra" trend="down" currency={currency} amountsByCurrency={purchaseOrdersPurchaseTotals} />
-                <MoneyTrendCard loading={loading}                 title="Planillas"        trend="down" currency={currency} amountsByCurrency={payrollTotals} />
-                <MoneyTrendCard loading={servicesTotalsLoading}   title="Servicios"        trend="down" currency={currency} amountsByCurrency={servicesTotals} />
-                <MoneyTrendCard loading={pettyCashLoading}        title="Caja Chica"       trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
+                <MoneyTrendCard loading={payrollTotalsLoading} title="Planillas" trend="down" currency={currency} amountsByCurrency={payrollTotalsAmounts} />
+                <MoneyTrendCard loading={servicesTotalsLoading} title="Servicios" trend="down" currency={currency} amountsByCurrency={servicesTotals} />
+                <MoneyTrendCard loading={pettyCashLoading} title="Caja Chica" trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
               </SectionProjectSummary>
 
               {/* Utilidades */}
               <SectionProjectSummary title="Utilidades">
-                <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={{ PEN: 0, USD: 0, EUR: 0 }} />
+                <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={utilitiesTotals} />
               </SectionProjectSummary>
             </>
           </Permission>

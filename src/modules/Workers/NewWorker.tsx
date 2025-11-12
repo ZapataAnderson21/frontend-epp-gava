@@ -17,6 +17,8 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [workerType, setWorkerType] = useState<WorkerType>(WorkerType.Unspecified);
+  const [birthDate, setBirthDate] = useState("");
+  const [personalEmail, setPersonalEmail] = useState("");
 
   const [errorDni, setErrorDni] = useState("");
   const [errorPhone, setErrorPhone] = useState("");
@@ -50,7 +52,7 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       return;
     }
 
-    const body = { fullName, dni, phone, address, workerType: workerType[0] };
+    const body = { fullName, dni, phone, address, workerType: workerType[0], personalEmail, birthDate };
     
     console.log(body);
 
@@ -64,6 +66,7 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       setDni("");
       setPhone("");
       setAddress("");
+      setBirthDate("");
       setWorkerType(WorkerType.Unspecified);
 
       // Limpia los errores
@@ -82,29 +85,61 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
     <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
       <Form name={"Nuevo Trabajador"} handleSubmit={handleSubmit} >
         <InputForm
-          label="Nombre Completo"
+          label="Nombre completo"
           name="fullName"
           value={fullName}
           type="text"
           onChange={(e) => setFullName(e.target.value)}
         />
-        <InputForm
-          label="DNI"
-          name="dni"
-          value={dni}
-          type="text"
-          onChange={(e) => setDni(e.target.value)}
-          error={errorDni}
+
+        <SelectForm
+          label="Tipo de trabajador"
+          name="workerType"
+          value={Object.values(WorkerType).indexOf(workerType)}
+          options={workerTypeOptions}
+          onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
         />
-        <InputForm
-          label="Celular"
-          name="phone"
-          value={phone}
-          type="text"
-          onChange={(e) => setPhone(e.target.value)}
-          optional={true}
-          error={errorPhone}
-        />
+        
+        <div className="flex gap-4">
+          <InputForm
+            label="DNI"
+            name="dni"
+            value={dni}
+            type="text"
+            onChange={(e) => setDni(e.target.value)}
+            error={errorDni}
+          />
+
+          <InputForm
+            label="Fecha de nacimiento"
+            name="birthDate"
+            value={birthDate}
+            type="date"
+            onChange={(e) => setBirthDate(e.target.value)}
+            optional={true}
+          />
+        </div>
+        
+        <div className="flex gap-4">
+          <InputForm
+            label="Email Personal"
+            name="personalEmail"
+            value={personalEmail}
+            type="email"
+            onChange={(e) => setPersonalEmail(e.target.value)}
+            optional={true}
+          />
+
+          <InputForm
+            label="Teléfono"
+            name="phone"
+            value={phone}
+            type="text"
+            onChange={(e) => setPhone(e.target.value)}
+            optional={true}
+            error={errorPhone}
+          />
+        </div>
 
         <InputForm
           label="Dirección"
@@ -113,14 +148,6 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
           type="text"
           onChange={(e) => setAddress(e.target.value)}
           optional={true}
-        />
-        
-        <SelectForm
-          label="Tipo de trabajador"
-          name="workerType"
-          value={Object.values(WorkerType).indexOf(workerType)}
-          options={workerTypeOptions}
-          onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
         />
 
         <ButtonContainer>
