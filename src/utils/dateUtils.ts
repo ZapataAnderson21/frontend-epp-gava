@@ -1,17 +1,18 @@
 import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
-export function formatDate(date: string | undefined): string {
-  if (!date) return "--";
-  const parsedDate = new Date(date);
+export function formatDate(date?: string): string {
+  if (!date) return '--';
 
-  const format = (date: Date, formatString: string): string => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return formatString.replace("dd", day).replace("MM", month).replace("yyyy", String(year));
+  // Si viene con hora (ISO completo), úsalo tal cual
+  if (/\dT\d/.test(date)) {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '--';
+    return formatInTimeZone(d, 'America/Lima', 'dd/MM/yyyy');
   }
 
-  return format(parsedDate, "dd/MM/yyyy");
+  // Si viene como 'YYYY-MM-DD', interprétalo como medianoche LOCAL de Lima
+  const asUtc = toZonedTime(`${date}T00:00:00`, 'America/Lima');
+  return formatInTimeZone(asUtc, 'America/Lima', 'dd/MM/yyyy');
 }
 
 export function formatDateTime(date: string | undefined): string {

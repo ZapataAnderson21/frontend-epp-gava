@@ -323,6 +323,7 @@ export interface Worker {
   updatedAt: string
   deletedAt?: string
   workerTypeName?: string
+  attendances?: Attendance[];
 }
 
 export interface RequestWorker {
@@ -351,4 +352,13 @@ export interface ResourcePurchaseOrder {
   updatedAt?: string;
   resource?: Resource;
   purchaseOrder?: PurchaseOrder;
+}
+
+export interface Attendance {
+  attendanceId: number;
+  workerId: number;
+  projectId: number;
+  date: string;
+  createdAt: string;
+  updatedAt?: string;
 }

@@ -1,5 +1,5 @@
-export const root = "https://sir.gavacyc.com/api/"; 
-//export const root = "http://localhost:3001/";
+//export const root = "https://sir.gavacyc.com/api/"; 
+export const root = "http://localhost:3001/";
 
 export const userTypeApi = `${root}user-type/`;
 
@@ -39,4 +39,8 @@ export const workerGroupApi = `${root}worker-group/`;
 
 export const requestWorkerApi = `${root}request-worker/`;
 
+export const attendanceApi = `${root}attendance/`;
+
 export const payrollApi = `${root}payroll/`;
+
+export const projectPayrollApi = `${root}projects/:projectId/payroll/`;

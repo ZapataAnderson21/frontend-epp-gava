@@ -12,6 +12,7 @@ import { FaSearch } from "react-icons/fa";
 import { useMemo, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IoCloseCircle } from "react-icons/io5";
+import InputCheck from "./components/InputCheck";
 
 export default function Attendances() {
   const { user } = useCurrentUser();
@@ -37,17 +38,6 @@ export default function Attendances() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Animación por ítem (similar a tu SidebarItem)
-  const rowVariants = {
-    hidden: { opacity: 0, y: 4 },
-    visible: (delay: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.18, delay },
-    }),
-    exit: { opacity: 0, y: -4, transition: { duration: 0.12 } },
-  };
-
   // NEW: helper para normalizar cadenas (sin acentos y en minúsculas)
   const normalize = (s: string) =>
     (s || "")
@@ -62,6 +52,10 @@ export default function Attendances() {
     if (!q) return workers;
     return workers.filter(w => normalize(w.fullName).includes(q));
   }, [workers, searchTerm]);
+
+  if(!date || date.length === 0 || date === 'undefined' || date==='') {
+    return <ErrorMessage errorMessage="La fecha es requerida." />;
+  }
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
@@ -152,9 +146,8 @@ export default function Attendances() {
                   <p>Cargando...</p>
                 ) : (
                   <AnimatePresence mode="wait">
-                    {/* key fuerza el re-mount cuando cambia workerType o el patrón de filtro (opcional) */}
                     <motion.ul
-                      key={workerType} // si quisieras animar también al escribir, podrías usar `${workerType}-${searchTerm}`
+                      key={`${workerType}-${searchTerm}`}
                       className="flex flex-col gap-2"
                       initial="hidden"
                       animate="visible"
@@ -162,31 +155,21 @@ export default function Attendances() {
                     >
                       {filteredWorkers && filteredWorkers.length > 0 ? (
                         filteredWorkers.map((worker, idx) => {
-                          const baseDelay = 0.04;     // s
-                          const perItemDelay = 0.06;  // s
+                          const baseDelay = 0.04;
+                          const perItemDelay = 0.06;
                           const delay = baseDelay + idx * perItemDelay;
+                          const attendanceForDate = worker.attendances?.find(wa => wa.date.split("T")[0] === date);
 
+                          console.log("Date:", date);
+                          console.log("Worker:", worker);
+                          
                           return (
-                            <motion.li
-                              key={worker.workerId}
-                              custom={delay}
-                              variants={rowVariants}
-                              className="flex flex-row items-center gap-2"
-                            >
-                              <span className="w-full border border-gray-300 rounded-lg p-2 transition-colors duration-700">
-                                {worker.fullName}
-                              </span>
-                              <input
-                                type="checkbox"
-                                className="hover:bg-[#eff2ff] cursor-pointer w-10 h-10 rounded-2xl transition-colors duration-700"
-                                onClick={() => {}}
-                              />
-                            </motion.li>
+                            <InputCheck attendanceId={attendanceForDate?.attendanceId} worker={worker} projectId={Number(projectId)} date={date} delay={delay} value={attendanceForDate ? true : false} />
                           );
                         })
                       ) : (
                         <motion.li
-                          variants={rowVariants}
+                          key="no-results"
                           custom={0.05}
                           className="transition-colors duration-700"
                         >

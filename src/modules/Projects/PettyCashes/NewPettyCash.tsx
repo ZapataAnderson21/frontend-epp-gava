@@ -37,6 +37,9 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
     }
 
     const body = { projectId, amount, description, expenseType, expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'), invoiceNumber };
+    
+    console.log(body);
+    
     const result = await execute(pettyCashApi, "POST", body);
 
     if (result.statusCode === 201) {
