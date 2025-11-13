@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 export function formatDate(date?: string): string {
@@ -94,17 +96,15 @@ export function ymdLocalMidnightToUtc(ymd: string, tz = 'America/Lima'): Date {
   return toZonedTime(localDate, tz);
 }
 
-/** Devuelve 'dd/MM/yyyy' visto en Lima */
-export function formatDateInLima(d: Date): string {
-  return new Intl.DateTimeFormat('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    timeZone: 'America/Lima',
-  }).format(d);
-}
 
-/** Si prefieres devolver un YYYY-MM-DD estable (sin TZ) */
-export function formatYmdInLima(d: Date): string {
-  return formatInTimeZone(d, 'America/Lima', 'yyyy-MM-dd');
+export function formatToLongMonthDate(dateStr: string): string {
+  if (!dateStr) return "";
+
+  const date = dateStr.split('T')[0];
+
+  const [year, month, day] = date.split('-').map(Number);
+
+  const monthText = format(new Date(year, month - 1, 1), "MMMM", { locale: es });
+
+  return `${day} de ${monthText}`;
 }

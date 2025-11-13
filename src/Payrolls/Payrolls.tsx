@@ -82,7 +82,7 @@ export default function Payrolls() {
           </motion.div>
         </section>
 
-        {project && <PayrollsTable project={project} />}
+        {project && <PayrollsTable projectId={Number(projectId)} />}
       </Panel>
     </Permission>
   );

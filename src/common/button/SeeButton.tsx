@@ -12,7 +12,7 @@ export default function SeeButton({ onClick, disabled }: SeeButtonProps) {
       icon={<FaEye />}
       onClick={onClick}
       disabled={disabled}
-      bgColor="oklch(27.9% 0.041 260.031)"
+      bgColor="#252525ff"
       bgHoverColor="#000000"
     />
   )

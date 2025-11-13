@@ -19,6 +19,7 @@ import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrd
 import RequestDraft from './modules/Requests/RequestDraft.tsx';
 import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';
+import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
 
 export default function App() {
 
@@ -36,6 +37,7 @@ export default function App() {
           <Route path='projects/new' element={<NewProject />} />
           <Route path='projects/payrolls/:id' element={<Payrolls />} />
           <Route path='projects/payrolls/attendances/:id' element={<Attendances />} />
+          <Route path='projects/payrolls/weekly/:id' element={<WeeklyPayroll  />} />
           {/* End projects routes */}
           {/* Requests routes */}
           <Route path='requests' element={<Requests />} />

@@ -363,3 +363,21 @@ export interface Attendance {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface WorkersPayroll {
+  workerId: number;
+  workerName: string;
+  workerType: string; // "laborer" | "technician"
+  attendances: number;
+  dailyWage: number;
+}
+
+export interface WeeklyPayrollData {
+  weekId: number;
+  startDate: string;
+  endDate: string;
+  laborerAmount: number;
+  technicianAmount: number;
+  totalAmount: number;
+  workers: WorkersPayroll[];
+}
