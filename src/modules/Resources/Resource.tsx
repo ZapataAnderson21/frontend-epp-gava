@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ButtonContainer, Form, InputForm, SaveModal, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, TextAreaForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useApiAction, useFetch } from "../../hooks";
 import { resourceApi } from "../../data/apiUrl";
@@ -32,11 +33,6 @@ export default function Resource() {
   const [categorySelected, setCategorySelected] = useState<CategoryResource | null>(null);
   const [openCatModal, setOpenCatModal] = useState(false);
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,18 +49,32 @@ export default function Resource() {
   // * acción PATCH
   const { execute, loading: saving } = useApiAction<ResourceResponse>();
 
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
-
   const navigateToResources = () => {
     navigate("/admin/resources");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpenSaveModal(true);
+
+    // Validación
+    const errors: string[] = [];
+    if (!name.trim()) errors.push("El nombre es requerido");
+    if (!unit.trim()) errors.push("La unidad es requerida");
+    if (categoryResourceId === 0) errors.push("Debe seleccionar una categoría");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const payload = {
       name,
@@ -73,17 +83,17 @@ export default function Resource() {
       categoryResourceId,
     };
 
-    const response = await execute(resourceApi + resourceId, "PATCH", payload);
-
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 200) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToResources());
-    }
+    await toast.promise(
+      execute(resourceApi + resourceId, "PATCH", payload),
+      {
+        loading: "Actualizando recurso...",
+        success: (response) => {
+          setTimeout(() => navigateToResources(), 1200);
+          return response.message || "Recurso actualizado exitosamente";
+        },
+        error: (err) => err.message || "Error al actualizar recurso",
+      }
+    );
   };
 
   if (loadingResource) return <LoadingSkeletonForm numberRows={4} />;
@@ -116,10 +126,7 @@ export default function Resource() {
           <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage || "Error al crear el recurso"} error={error} />
-      )}
+      <Toaster position="top-center" />
 
       {/* Modal de categorías */}
       <CategoryPickerModal

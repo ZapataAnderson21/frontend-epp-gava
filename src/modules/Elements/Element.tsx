@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { type UpdateElementDto, type ElementType } from "../../data/types";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
-import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { elementApi } from "../../data/apiUrl";
 import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 import { ReturnButton, SaveButton } from "../../common/button";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Element() {
   const elementId = Number(useParams<{ id: string }>().id ?? 0);
@@ -16,11 +16,6 @@ export default function Element() {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [description, setDescription] = useState("");
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
   const { data: element, loading, error: fetchError } = useFetch<ElementType>(`${elementApi}${elementId}`);
 
@@ -34,35 +29,26 @@ export default function Element() {
     }
   }, [element]);
 
-  const closeModalAndReset = () => {
-    setSuccessMessage("");
-    setError(false);
-    setOpenSaveModal(false);
-  };
-
   const navigateToElements = () => {
-    setSuccessMessage("");
-    setError(false);
-    setOpenSaveModal(false);
     navigate(`/admin/elements/type/${type}/`);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
     const updatedData: UpdateElementDto = { name, type, description };
-    const response = await updateElement(`${elementApi}${elementId}`, "PATCH", updatedData);
 
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 200) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToElements());
-    }
+    toast.promise(
+      updateElement(`${elementApi}${elementId}`, "PATCH", updatedData),
+      {
+        loading: 'Actualizando elemento...',
+        success: (result) => {
+          setTimeout(() => navigateToElements(), 1200);
+          return result.message || 'Elemento actualizado con éxito';
+        },
+        error: (err) => err.message || 'Error al actualizar el elemento',
+      }
+    );
   };
 
   if (loading) return <LoadingSkeletonForm numberRows={3} />;
@@ -70,6 +56,7 @@ export default function Element() {
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
       <Form name={`ELEMENTO ${elementId}`} handleSubmit={handleUpdate}>
         <InputForm
           label="Nombre"
@@ -104,10 +91,6 @@ export default function Element() {
           <SaveButton loading={updating} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage} error={error} />
-      )}
     </>
   );
 }

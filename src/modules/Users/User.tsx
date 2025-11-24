@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import type { UserType, UpdateUserDto } from "../../data/types";
 import { userApi, userTypeApi } from "../../data/apiUrl";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
-import SaveModal from "../../common/form/SaveModal";
 import ErrorWithButton from "../../common/error/ErrorWithButton";
+import toast, { Toaster } from "react-hot-toast";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form";
@@ -20,12 +20,6 @@ export default function User() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
-
-  // Para modal de éxito/error
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
   const navigate = useNavigate();
 
@@ -47,23 +41,32 @@ export default function User() {
     }
   }, [user]);
 
-  const closeModalAndReset = () => {
-    setSuccessMessage("");
-    setError(false);
-    setOpenSaveModal(false);
-  };
-
   const navigateToUsers = () => {
-    setSuccessMessage("");
-    setError(false);
-    setOpenSaveModal(false);
     navigate("/admin/users");
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setOpenSaveModal(true);
+    // Validación
+    const errors: string[] = [];
+    if (!name.trim()) errors.push("El nombre es requerido");
+    if (!lastname.trim()) errors.push("El apellido es requerido");
+    if (!email.trim()) errors.push("El correo es requerido");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const updatedData: UpdateUserDto = {
       name,
@@ -72,23 +75,17 @@ export default function User() {
       password,
     };
 
-    try {
-      const res = await updateUser(`${userApi}${userId}`, "PATCH", updatedData);
-
-      setSuccessMessage(res.message);
-
-      if (res.statusCode !== 200) {
-        setError(true);
-        setOnOk(() => () => closeModalAndReset());
-      } else {
-        setError(false);
-        setOnOk(() => () => navigateToUsers());
+    await toast.promise(
+      updateUser(`${userApi}${userId}`, "PATCH", updatedData),
+      {
+        loading: "Actualizando usuario...",
+        success: (response) => {
+          setTimeout(() => navigateToUsers(), 1200);
+          return response.message || "Usuario actualizado exitosamente";
+        },
+        error: (err) => err.message || "Error al actualizar usuario",
       }
-    } catch (err) {
-      setError(true);
-      setSuccessMessage("Error inesperado al actualizar el usuario");
-      setOnOk(() => () => closeModalAndReset());
-    }
+    );
   };
 
   if (loadingUser || loadingRoles) {
@@ -165,9 +162,7 @@ export default function User() {
           <SaveButton loading={updating} />
         </ButtonContainer>
       </Form>
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage} error={error} />
-      )}
+      <Toaster position="top-center" />
     </>
   );
 }

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { elementApi } from "../../data/apiUrl";
 import { useApiAction } from "../../hooks";
 import { ReturnButton, SaveButton } from "../../common/button";
-import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm, SaveModal } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 
 interface ElementResponse {
   name: string;
@@ -18,19 +19,9 @@ export default function NewEpp() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState(typeRoot);
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
   
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
-
   const navigateToElements = () => {
     if (type) {
       navigate(`/admin/elements/type/${type}`);
@@ -41,25 +32,25 @@ export default function NewEpp() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
     const elementData = { name, type, description };
 
-    const response = await execute(elementApi, "POST", elementData);
-
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 201) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToElements());
-    }
+    toast.promise(
+      execute(elementApi, "POST", elementData),
+      {
+        loading: 'Creando elemento...',
+        success: (result) => {
+          setTimeout(() => navigateToElements(), 1200);
+          return result.message || 'Elemento creado con éxito';
+        },
+        error: (err) => err.message || 'Error al crear el elemento',
+      }
+    );
   };
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
       <Form name="REGISTRAR ELEMENTO" handleSubmit={handleSubmit}>
         <InputForm 
           label="Nombre"
@@ -90,10 +81,6 @@ export default function NewEpp() {
           <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage} error={error} />
-      )}
     </>
   );
 }

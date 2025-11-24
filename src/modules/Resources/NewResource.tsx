@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ButtonContainer, Form, InputForm, SaveModal, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, TextAreaForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks";
 import { resourceApi } from "../../data/apiUrl";
@@ -25,20 +26,10 @@ export default function NewResource() {
   const [categorySelected, setCategorySelected] = useState<CategoryResource | null>(null);
   const [openCatModal, setOpenCatModal] = useState(false);
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const navigate = useNavigate();
 
   // * acción POST
   const { execute, loading: saving } = useApiAction<ResourceResponse>();
-
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
 
   const navigateToResources = () => {
     navigate("/admin/resources");
@@ -46,7 +37,26 @@ export default function NewResource() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpenSaveModal(true);
+
+    // Validación
+    const errors: string[] = [];
+    if (!name.trim()) errors.push("El nombre es requerido");
+    if (!unit.trim()) errors.push("La unidad es requerida");
+    if (categoryResourceId === 0) errors.push("Debe seleccionar una categoría");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const payload = {
       name,
@@ -55,17 +65,17 @@ export default function NewResource() {
       categoryResourceId,
     };
 
-    const response = await execute(resourceApi, "POST", payload);
-
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 201) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToResources());
-    }
+    await toast.promise(
+      execute(resourceApi, "POST", payload),
+      {
+        loading: "Creando recurso...",
+        success: (response) => {
+          setTimeout(() => navigateToResources(), 1200);
+          return response.message || "Recurso creado exitosamente";
+        },
+        error: (err) => err.message || "Error al crear recurso",
+      }
+    );
   };
 
   return (
@@ -94,10 +104,7 @@ export default function NewResource() {
           <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage || "Error al crear el recurso"} error={error} />
-      )}
+      <Toaster position="top-center" />
 
       {/* Modal de categorías */}
       <CategoryPickerModal

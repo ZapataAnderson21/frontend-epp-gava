@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm } from "../../common/form";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import { workerApi } from "../../data/apiUrl";
 import { type  Worker, WorkerType } from "../../data/types";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
@@ -34,45 +35,58 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
 
   const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
 
-  const { execute, loading: saving, response, error: saveError } = useApiAction<Worker>();
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
+  const { execute, loading: saving } = useApiAction<Worker>();
   
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
-    if(dni.length !== 8 || !/^\d{8}$/.test(dni)) {
+    // Validación
+    const errors: string[] = [];
+    if (!fullName.trim()) errors.push("El nombre completo es requerido");
+    if (dni.length !== 8 || !/^\d{8}$/.test(dni)) {
+      errors.push("El DNI debe tener 8 dígitos y contener solo números");
       setErrorDni("El DNI debe tener 8 dígitos y contener solo números");
-      setOnOk(() => () => setOpenSaveModal(false));
-      return;
+    } else {
+      setErrorDni("");
+    }
+    if (phone && (phone.length !== 9 || !/^\d+$/.test(phone))) {
+      errors.push("El teléfono debe tener 9 dígitos y contener solo números");
+      setErrorPhone("El teléfono debe tener 9 dígitos y contener solo números");
+    } else {
+      setErrorPhone("");
     }
 
-    if(phone && (phone.length !== 9 || !/^\d+$/.test(phone))) {
-      setErrorPhone("El teléfono debe tener 9 dígitos y contener solo números");
-      setOnOk(() => () => setOpenSaveModal(false));
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
       return;
     }
 
     const body = { fullName, dni, phone, address, workerType: workerType[0], personalEmail, birthDate };
     
-    const result = await execute(`${workerApi}${workerId}`, "PATCH", body);
-
-    if (result.statusCode === 200) {
-      successAction();
-
-      setErrorDni("");
-      setErrorPhone("");
-
-      setOnOk(() => () => {
-        setOpenSaveModal(false);
-        closeAction();
-      });
-    } else {
-      setOnOk(() => () => setOpenSaveModal(false));
-    }
+    await toast.promise(
+      execute(`${workerApi}${workerId}`, "PATCH", body),
+      {
+        loading: "Actualizando trabajador...",
+        success: (result) => {
+          setErrorDni("");
+          setErrorPhone("");
+          successAction();
+          setTimeout(() => closeAction(), 1200);
+          return result.message || "Trabajador actualizado exitosamente";
+        },
+        error: (err) => err.message || "Error al actualizar trabajador",
+      }
+    );
   };
 
   useEffect(() => {
@@ -166,13 +180,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             <ReturnButton onClick={closeAction} />
           </ButtonContainer>
         </Form>
-        {openSaveModal && (
-          <SaveModal
-            onOk={onOk}
-            message={response?.message || saveError || "Error al guardar"}
-            error={!!saveError || response?.statusCode !== 200}
-          />
-        )}
+        <Toaster position="top-center" />
       </div>
     </Permission>
   );

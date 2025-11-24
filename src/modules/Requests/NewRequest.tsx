@@ -11,7 +11,8 @@ import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
 import type { ElementRequestType, Project, ElementType, Worker, RequestWorker } from "../../data/types";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, SaveModal, ButtonContainer } from "../../common/form";
+import { InputForm, SelectForm, TextAreaForm, ButtonContainer } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
@@ -44,12 +45,6 @@ export default function NewRequest() {
 
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
-
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-  const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
-  const [error, setError] = useState<boolean>(false);
-
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
   const navigate = useNavigate();
@@ -75,11 +70,6 @@ export default function NewRequest() {
     setRequestWorkers(nextRequestWorkers);
     localStorage.setItem("selectedWorkers", JSON.stringify(nextWorkers));
     localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
-  };
-
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
   };
 
   const navigateToBack = () => {
@@ -141,70 +131,70 @@ export default function NewRequest() {
 
   const handleSaveRequest = async (e : React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpenSaveModal(true);
-    setError(false);
 
     if (projectId === 0) {
-      await setError(true);
-      await setSuccessMessage("Por favor, selecciona un proyecto.");
-      await setOnOk(() => closeModalAndReset);
-    } 
-    
-    const result = await handleSave(projectId, deliveryDueDate, description);
-    if (result?.data && !result?.loading && !result?.error) {
-      setSuccessMessage(result?.data.request.message || "Solicitud guardada exitosamente.");
-      setError(false);
-      setOnOk(() => navigateToBack);
-      setElements([]);
-      setElementRequests([]);
-      setWorkers([]);
-      setRequestWorkers([]);
-      localStorage.removeItem("projectId");
-      localStorage.removeItem("deliveryDueDate");
-      localStorage.removeItem("selectedElements");
-      localStorage.removeItem("selectedElementRequest");
-      localStorage.removeItem("selectedWorkers");
-      localStorage.removeItem("selectedRequestWorkers");
-    } else {
-      setError(true);
-      setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
-      setOnOk(() => closeModalAndReset);
+      toast.error("Por favor, selecciona un proyecto.");
+      return;
     }
+
+    await toast.promise(
+      handleSave(projectId, deliveryDueDate, description),
+      {
+        loading: "Guardando solicitud...",
+        success: (result) => {
+          if (result?.data && !result?.loading && !result?.error) {
+            setElements([]);
+            setElementRequests([]);
+            setWorkers([]);
+            setRequestWorkers([]);
+            localStorage.removeItem("projectId");
+            localStorage.removeItem("deliveryDueDate");
+            localStorage.removeItem("selectedElements");
+            localStorage.removeItem("selectedElementRequest");
+            localStorage.removeItem("selectedWorkers");
+            localStorage.removeItem("selectedRequestWorkers");
+            setTimeout(() => navigateToBack(), 1200);
+            return result?.data.request.message || "Solicitud guardada exitosamente.";
+          }
+          throw new Error("Error al guardar la solicitud.");
+        },
+        error: (err) => err.message || "Error al guardar la solicitud.",
+      }
+    );
   };
 
   const handleSaveAndSendRequest = async () => {
-
     setOpenPasswordModal(false);
-    setOpenSaveModal(true);
 
     if (projectId === 0) {
-      await setError(true);
-      await setSuccessMessage("Por favor, selecciona un proyecto.");
-      await setOnOk(() => closeModalAndReset);
+      toast.error("Por favor, selecciona un proyecto.");
       return;
-    } 
-
-    const result = await handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel);
-    if (result) {
-      setSuccessMessage("Solicitud guardada y enviada exitosamente.");
-      setError(false);
-      setOnOk(() => navigateToBack);
-      setElements([]);
-      setElementRequests([]);
-      setWorkers([]);
-      setRequestWorkers([]);
-      localStorage.removeItem("selectedWorkers");
-      localStorage.removeItem("selectedRequestWorkers");
-      localStorage.removeItem("projectId");
-      localStorage.removeItem("deliveryDueDate");
-      localStorage.removeItem("selectedElements");
-      localStorage.removeItem("selectedElementRequest");
-    } else {
-      setError(true);
-      setSuccessMessage("Error al guardar y enviar la solicitud. Por favor, intenta nuevamente.");
-      setOnOk(() => closeModalAndReset);
-      setOpenSaveModal(true);
     }
+
+    await toast.promise(
+      handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel),
+      {
+        loading: "Guardando y enviando solicitud...",
+        success: (result) => {
+          if (result) {
+            setElements([]);
+            setElementRequests([]);
+            setWorkers([]);
+            setRequestWorkers([]);
+            localStorage.removeItem("selectedWorkers");
+            localStorage.removeItem("selectedRequestWorkers");
+            localStorage.removeItem("projectId");
+            localStorage.removeItem("deliveryDueDate");
+            localStorage.removeItem("selectedElements");
+            localStorage.removeItem("selectedElementRequest");
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud guardada y enviada exitosamente.";
+          }
+          throw new Error("Error al guardar y enviar la solicitud.");
+        },
+        error: (err) => err.message || "Error al guardar y enviar la solicitud.",
+      }
+    );
   }
 
   const handleRemoveWorker = (worker: Worker) => {
@@ -362,7 +352,7 @@ export default function NewRequest() {
 
           <ButtonContainer>
             <ReturnButton onClick={() => navigateToBack()} />
-            <SaveButton loading={openSaveModal} />
+            <SaveButton loading={false} />
             <Button
               type="button"
               icon={<MdAttachEmail />}
@@ -374,6 +364,7 @@ export default function NewRequest() {
           </ButtonContainer>
         </div>
       </form>
+      <Toaster position="top-center" />
       {
         openPasswordModal && (
           <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>
@@ -409,11 +400,6 @@ export default function NewRequest() {
           </div>
         )
       }
-      {
-        openSaveModal && (
-          <SaveModal onOk={onOk} message={successMessage} error={error} />
-        )
-      }
-      </>
+    </>
   );
 }

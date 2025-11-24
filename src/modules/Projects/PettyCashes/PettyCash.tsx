@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { ReturnButton, SaveButton } from "../../../common/button";
-import { ButtonContainer, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../../common/form";
 import { pettyCashApi } from "../../../data/apiUrl";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction, useFetch } from "../../../hooks";
 import { toDateLocalValue, ymdLocalMidnightToUtc } from "../../../utils";
 import { LoadingSkeletonForm } from "../../../common/loading";
 import { ErrorMessage } from "../../../common/error";
+import toast, { Toaster } from "react-hot-toast";
 
 interface PettyCashProps {
   pettyCashId: number;
@@ -25,12 +26,6 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
 
   const {execute, loading: saving} = useApiAction<PettyCashType>();
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   useEffect(() => {
     if (pettyCash) {
       setExpenseType(pettyCash.expenseType);
@@ -44,8 +39,6 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setOpenSaveModal(true);
-
     const updatedPettyCash = {
       expenseType,
       amount,
@@ -54,22 +47,18 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
       description,
     };
 
-    const res = await execute(`${pettyCashApi}${pettyCashId}`, "PATCH", updatedPettyCash);
-    
-    setSuccessMessage(res.message);
-
-    if(res.statusCode == 200) {
-      successAction();
-      setOnOk(() => () => {
-        setOpenSaveModal(false);
-        closeAction();
-      });
-    } else {
-      setError(true);
-      setOnOk(() => () => {
-        setOpenSaveModal(false);
-      });
-    }
+    toast.promise(
+      execute(`${pettyCashApi}${pettyCashId}`, "PATCH", updatedPettyCash),
+      {
+        loading: 'Actualizando gasto de caja chica...',
+        success: (result) => {
+          successAction();
+          setTimeout(() => closeAction(), 1200);
+          return result.message || 'Gasto de caja chica actualizado con éxito';
+        },
+        error: (err) => err.message || 'Error al actualizar el gasto de caja chica',
+      }
+    );
   }
 
   if(loading) return <LoadingSkeletonForm numberRows={6} />;
@@ -77,7 +66,8 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
 
   return (
    <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
-      <Form name={pettyCash ? `Detalle de salida de caja chica: ${pettyCash.pettyCashId}` : loading ? "Cargando..." : error ? "Error" : "Salida de caja chica no encontrada"} handleSubmit={handleUpdate} >
+      <Toaster position="top-center" reverseOrder={false} />
+      <Form name={pettyCash ? `Detalle de salida de caja chica: ${pettyCash.pettyCashId}` : loading ? "Cargando..." : fetchError ? "Error" : "Salida de caja chica no encontrada"} handleSubmit={handleUpdate} >
         
         <SelectForm
           label="Tipo de Gasto"
@@ -142,13 +132,6 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
         </ButtonContainer>
 
       </Form>
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={successMessage}
-          error={error}
-        />
-      )}
     </div>
   );
 }

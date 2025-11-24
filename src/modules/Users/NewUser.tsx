@@ -2,8 +2,8 @@ import { useState } from "react";
 import { userApi } from "../../data/apiUrl";
 import { userTypeApi } from "../../data/apiUrl";
 import { useNavigate } from "react-router-dom";
-import SaveModal from "../../common/form/SaveModal";
 import { useFetch } from "../../hooks/useFetch";
+import toast, { Toaster } from "react-hot-toast";
 import { useApiAction } from "../../hooks/useApiAction";
 import type { UserType } from "../../data/types";
 import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form";
@@ -33,11 +33,6 @@ export default function NewUser() {
   const [password, setPassword] = useState("");
   const [userTypeId, setUserTypeId] = useState<number>(0);
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const [openUserTypesModal, setOpenUserTypesModal] = useState(false);
 
   const [reloadUserTypes, setReloadUserTypes] = useState(0);
@@ -50,18 +45,34 @@ export default function NewUser() {
   // 🔹 acción POST
   const { execute, loading: saving } = useApiAction<UserResponse>();
 
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
-
   const navigateToUsers = () => {
     navigate("/admin/users");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setOpenSaveModal(true);
+
+    // Validación
+    const errors: string[] = [];
+    if (!name.trim()) errors.push("El nombre es requerido");
+    if (!lastName.trim()) errors.push("El apellido es requerido");
+    if (!email.trim()) errors.push("El correo es requerido");
+    if (!password.trim()) errors.push("La contraseña es requerida");
+    if (userTypeId === 0) errors.push("Debe seleccionar un rol");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const payload = {
       name,
@@ -72,17 +83,17 @@ export default function NewUser() {
       userTypeId,
     };
 
-    const response = await execute(userApi, "POST", payload);
-
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 201) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToUsers());
-    }
+    await toast.promise(
+      execute(userApi, "POST", payload),
+      {
+        loading: "Creando usuario...",
+        success: (response) => {
+          setTimeout(() => navigateToUsers(), 1200);
+          return response.message || "Usuario creado exitosamente";
+        },
+        error: (err) => err.message || "Error al crear usuario",
+      }
+    );
   };
 
   return (
@@ -133,10 +144,7 @@ export default function NewUser() {
         }}
       />
 
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage} error={error} />
-      )}
+      <Toaster position="top-center" />
     </Permission>
   );
 }

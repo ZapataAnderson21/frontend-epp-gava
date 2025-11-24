@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { useFormDataAction } from "../../hooks/useFormDataAction";
 import { emergencyApi, projectApi } from "../../data/apiUrl";
+import toast, { Toaster } from "react-hot-toast";
 
 import type { Project } from "../../data/types";
 
-import { SaveModal, ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function NewEmergency() {
@@ -19,16 +20,9 @@ export default function NewEmergency() {
   const [projectId, setProjectId] = useState<number>(0);
   const [image, setImage] = useState<File | null>(null);
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const { data: projects, loading: loadingProjects, error: errorProjects } = useFetch<Project[]>(`${projectApi}status/active`);
   
-  const { execute, response, error, loading } = useFormDataAction<any>();
-
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-  };
+  const { execute, loading } = useFormDataAction<any>();
 
   const navigateToEmergencies = () => {
     navigate("/admin/emergencies");
@@ -36,7 +30,26 @@ export default function NewEmergency() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
+
+    // Validación
+    const errors: string[] = [];
+    if (!title.trim()) errors.push("El asunto es requerido");
+    if (!description.trim()) errors.push("La descripción es requerida");
+    if (projectId === 0) errors.push("Debe seleccionar un proyecto");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const formData = new FormData();
     if (image) formData.append("image", image);
@@ -45,13 +58,17 @@ export default function NewEmergency() {
     formData.append("userId", user.userId);
     formData.append("projectId", projectId.toString());
 
-    const result = await execute(emergencyApi, "POST", formData);
-
-    if (result.statusCode === 201) {
-      setOnOk(() => () => navigateToEmergencies());
-    } else {
-      setOnOk(() => () => closeModalAndReset());
-    }
+    await toast.promise(
+      execute(emergencyApi, "POST", formData),
+      {
+        loading: "Registrando emergencia...",
+        success: (result) => {
+          setTimeout(() => navigateToEmergencies(), 1200);
+          return result.message || "Emergencia registrada exitosamente";
+        },
+        error: (err) => err.message || "Error al registrar emergencia",
+      }
+    );
   };
 
   return (
@@ -104,14 +121,7 @@ export default function NewEmergency() {
           <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={response?.message || error || "Error al guardar"}
-          error={!!error || response?.statusCode !== 201}
-        />
-      )}
+      <Toaster position="top-center" />
     </>
   );
 }

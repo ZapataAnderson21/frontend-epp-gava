@@ -14,7 +14,8 @@ import { useApiAction, useHandleForm } from "../../hooks";
 import { projectApi, requestApi, elementRequestApi, requestWorkerApi } from "../../data/apiUrl";
 import { ErrorMessage } from "../../common/error";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ButtonContainer, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import WorkerSelectCard from "./components/ModalWorkers/WorkerSelectCard";
 import RowRequestWorker from "./components/RowRequestWorker";
 import { Button } from "../../components";
@@ -42,11 +43,6 @@ export default function RequestDraft() {
   const [openWarning, setOpenWarning] = useState<boolean>(false);
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
 
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-  const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
-  const [error, setError] = useState<boolean>(false);
-
   // ✅ hooks nuevos
   const { execute: deleteElementRequest } = useApiAction<any>();
   const { data: fetchedRequest } = useFetch<RequestType>(`${requestApi}${requestId}`, [requestId]);
@@ -56,11 +52,6 @@ export default function RequestDraft() {
   const navigate = useNavigate();
 
   const { handleUpdate, handleUpdateAndSend } = useHandleForm();
-
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
 
   const navigateToBack = () => {
     if (projectIdParam) {
@@ -131,66 +122,61 @@ export default function RequestDraft() {
   const handleUpdateRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError(false);
-    setOpenSaveModal(true);
-
     if (projectId === 0) {
-      alert("Por favor, selecciona un proyecto.");
+      toast.error("Por favor, selecciona un proyecto.");
       return;
     }
 
     const deliveryDueDateIso = await localDatetimeToIso(deliveryDueDate);
     if (!deliveryDueDateIso) {
-      setError(true);
-      setSuccessMessage("Fecha/hora de entrega inválida.");
-      setOnOk(() => closeModalAndReset);
+      toast.error("Fecha/hora de entrega inválida.");
       return;
     }
 
-    const result = await handleUpdate(Number(requestId), projectId, elementRequests, deliveryDueDateIso, description, requestWorkers);
-
-    if (result) {
-      setSuccessMessage("Solicitud guardada exitosamente.");
-      setError(false);
-      setOnOk(() => navigateToBack);
-    } else {
-      setError(true);
-      setSuccessMessage("Error al guardar la solicitud. Por favor, intenta nuevamente.");
-      setOnOk(() => closeModalAndReset);
-    }
+    await toast.promise(
+      handleUpdate(Number(requestId), projectId, elementRequests, deliveryDueDateIso, description, requestWorkers),
+      {
+        loading: "Actualizando solicitud...",
+        success: (result) => {
+          if (result) {
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud actualizada exitosamente.";
+          }
+          throw new Error("Error al actualizar la solicitud.");
+        },
+        error: (err) => err.message || "Error al actualizar la solicitud.",
+      }
+    );
   }
 
   const handleUpdateAndSendRequest = async () => {
-    setError(false);
     setOpenPasswordModal(false);
-    setOpenSaveModal(true);
 
     if (projectId === 0) {
-      alert("Por favor, selecciona un proyecto.");
+      toast.error("Por favor, selecciona un proyecto.");
       return;
     }
 
     const deliveryDueDateIso = await localDatetimeToIso(deliveryDueDate);
     if (!deliveryDueDateIso) {
-      setError(true);
-      setSuccessMessage("Fecha/hora de entrega inválida.");
-      setOnOk(() => closeModalAndReset);
+      toast.error("Fecha/hora de entrega inválida.");
       return;
     }
 
-    const result = await handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, deliveryDueDateIso, description, requestWorkers);
-
-    console.log("Resultado de handleUpdateAndSend:", result);
-
-    if (result) {
-      setSuccessMessage("Solicitud enviada exitosamente.");
-      setError(false);
-      setOnOk(() => navigateToBack);
-    } else {
-      setError(true);
-      setSuccessMessage("Error al enviar la solicitud. Por favor, intenta nuevamente.");
-      setOnOk(() => closeModalAndReset);
-    }
+    await toast.promise(
+      handleUpdateAndSend(Number(requestId), projectId, elementRequests, passwordCPanel, deliveryDueDateIso, description, requestWorkers),
+      {
+        loading: "Actualizando y enviando solicitud...",
+        success: (result) => {
+          if (result) {
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud actualizada y enviada exitosamente.";
+          }
+          throw new Error("Error al actualizar y enviar la solicitud.");
+        },
+        error: (err) => err.message || "Error al actualizar y enviar la solicitud.",
+      }
+    );
   }
 
   const handleSelectionElementsUpdate = (nextEls: ElementType[], nextReqs: ElementRequestType[]) => {
@@ -360,7 +346,7 @@ export default function RequestDraft() {
 
           <ButtonContainer>
             <ReturnButton onClick={() => navigateToBack()} />
-            <SaveButton loading={openSaveModal} />
+            <SaveButton loading={false} />
             <Button
               type="button"
               icon={<MdAttachEmail />}
@@ -372,6 +358,7 @@ export default function RequestDraft() {
           </ButtonContainer>
         </div>
       </form>
+      <Toaster position="top-center" />
 
       {openPasswordModal && (
          <div className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center transition-all duration-300`}>
@@ -406,12 +393,6 @@ export default function RequestDraft() {
           </div>
         </div>
       )}
-
-      {
-        openSaveModal && (
-          <SaveModal onOk={onOk} message={successMessage} error={error} />
-        )
-      }
     </>
   );
 }

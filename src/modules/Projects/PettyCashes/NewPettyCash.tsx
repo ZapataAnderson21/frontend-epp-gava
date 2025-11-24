@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../../common/form";
+import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm, TextAreaForm } from "../../../common/form";
 import type { PettyCashType } from "../../../data/types";
 import { useApiAction } from "../../../hooks";
 import { pettyCashApi } from "../../../data/apiUrl";
 import { ReturnButton } from "../../../common/button";
 import { ymdLocalMidnightToUtc } from "../../../utils";
+import toast, { Toaster } from "react-hot-toast";
 
 interface NewPettyCashProps {
   projectId: number;
@@ -22,44 +23,42 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
 
   const [amountError, setAmountError] = useState("");
 
-  const { execute, loading, response, error } = useApiAction<PettyCashType>()
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
+  const { execute, loading } = useApiAction<PettyCashType>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
     if (amount <= 0) {
       setAmountError("El monto debe ser mayor que cero.");
+      toast.error("El monto debe ser mayor que cero.");
       return;
     }
 
     const body = { projectId, amount, description, expenseType, expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'), invoiceNumber };
-    
-    console.log(body);
-    
-    const result = await execute(pettyCashApi, "POST", body);
 
-    if (result.statusCode === 201) {
-      successAction();
-
-      // Limpia el formulario
-      setDescription("");
-      setAmount(0);
-      setAmountError("");
-
-      // Que el botón OK solo cierre el modal
-      setOnOk(() => () => setOpenSaveModal(false));
-    } else {
-      setOnOk(() => () => setOpenSaveModal(false));
-    }
+    toast.promise(
+      execute(pettyCashApi, "POST", body),
+      {
+        loading: 'Creando gasto de caja chica...',
+        success: (result) => {
+          successAction();
+          setDescription("");
+          setAmount(0);
+          setAmountError("");
+          setExpenseType("");
+          setExpenseDate("");
+          setInvoiceNumber("");
+          return result.message || 'Gasto de caja chica creado con éxito';
+        },
+        error: (err) => err.message || 'Error al crear el gasto de caja chica',
+      }
+    );
   };
 
 
   return (
     <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
+      <Toaster position="top-center" reverseOrder={false} />
       <Form name= "Nuevo gasto de caja chica" handleSubmit={handleSubmit} >
         <SelectForm
           label="Tipo de Gasto"
@@ -121,13 +120,6 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
           <ReturnButton onClick={closeAction} />
         </ButtonContainer>
       </Form>
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={response?.message || error || "Error al guardar"}
-          error={!!error || response?.statusCode !== 201}
-        />
-      )}
     </div>
   )
 }

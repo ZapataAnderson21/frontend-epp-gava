@@ -8,8 +8,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
-import SaveModal from "../../common/form/SaveModal";
 import ErrorMessage from "../../common/error/ErrorMessage";
+import toast, { Toaster } from "react-hot-toast";
 
 import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
@@ -32,7 +32,6 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [isEmployee, setIsEmployee] = useState(false);
   const [descriptionResponse, setDescriptionResponse] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
-  const [openSaveModal, setOpenSaveModal] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const [searchParams] = useSearchParams();
@@ -91,45 +90,57 @@ export default function RequestView({ requestId }: RequestViewProps) {
   // Cambiar estado
   const handleChangeStatus = async (newStatus: string) => {
     if (!request) return;
-    try {
-      await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: newStatus });
-      navigate(0);
-    } catch (err) {
-      console.error("Error al cambiar estado:", err);
-    }
+    await toast.promise(
+      updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: newStatus }),
+      {
+        loading: "Actualizando estado...",
+        success: () => {
+          setTimeout(() => navigate(0), 1200);
+          return "Estado actualizado exitosamente.";
+        },
+        error: (err) => err.message || "Error al actualizar el estado.",
+      }
+    );
   };
 
   // Revisado
   const handleReviewed = async () => {
-    try {
-      const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
-        requestId: Number(requestId),
-        responder_userId: Number(user.userId),
-        description: "Solicitud revisada por administración.",
-      });
+    await toast.promise(
+      (async () => {
+        const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
+          requestId: Number(requestId),
+          responder_userId: Number(user.userId),
+          description: "Solicitud revisada por administración.",
+        });
 
-      if (!request) return;
+        if (!request) throw new Error("No se encontró la solicitud.");
 
-      for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity =
-          elementRequest.elementRequestId !== undefined
-            ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
-            : elementRequest.quantityRequested;
+        for (const elementRequest of request.elementRequests || []) {
+          const acceptedQuantity =
+            elementRequest.elementRequestId !== undefined
+              ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
+              : elementRequest.quantityRequested;
 
-        if (elementRequest.elementRequestId !== undefined) {
-          await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
-            elementRequestId: elementRequest.elementRequestId,
-            quantity_accepted: acceptedQuantity,
-            requestResponseId: response.data.requestResponseId,
-          });
+          if (elementRequest.elementRequestId !== undefined) {
+            await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
+              elementRequestId: elementRequest.elementRequestId,
+              quantity_accepted: acceptedQuantity,
+              requestResponseId: response.data.requestResponseId,
+            });
+          }
         }
-      }
 
-      handleChangeStatus("underReview");
-      setOpenSaveModal(true);
-    } catch (error) {
-      console.error("Error al revisar la solicitud:", error);
-    }
+        await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: "underReview" });
+      })(),
+      {
+        loading: "Revisando solicitud...",
+        success: () => {
+          setTimeout(() => navigate(0), 1200);
+          return "Solicitud revisada exitosamente.";
+        },
+        error: (err) => err.message || "Error al revisar la solicitud.",
+      }
+    );
   };
 
   const returnAction = () => {
@@ -138,46 +149,48 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   // Aprobado
   const handleApproved = async () => {
-    try {
-      // Buscar la respuesta existente
-      const response = await fetch(`${requestResponseApi}/request/${requestId}`).then((r) => r.json());
+    await toast.promise(
+      (async () => {
+        const response = await fetch(`${requestResponseApi}/request/${requestId}`).then((r) => r.json());
 
-      if (!request || !response?.data) return;
+        if (!request || !response?.data) throw new Error("No se encontró la solicitud o respuesta.");
 
-      for (const elementRequest of request.elementRequests || []) {
-        const acceptedQuantity =
-          elementRequest.elementRequestId !== undefined
-            ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
-            : elementRequest.quantityRequested;
+        for (const elementRequest of request.elementRequests || []) {
+          const acceptedQuantity =
+            elementRequest.elementRequestId !== undefined
+              ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
+              : elementRequest.quantityRequested;
 
-        // ✅ Validar que elementRequestResponses exista y tenga elementos
-        if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
-          await updateElementRequestResponse(
-            `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
-            "PATCH",
-            {
-              elementRequestId: elementRequest.elementRequestId,
-              quantity_accepted: acceptedQuantity,
-              requestResponseId: response.data.requestResponseId,
-            }
-          );
-        } else {
-          console.warn(
-            `No se encontró ElementRequestResponse para elementRequestId: ${elementRequest.elementRequestId}`
-          );
+          if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
+            await updateElementRequestResponse(
+              `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
+              "PATCH",
+              {
+                elementRequestId: elementRequest.elementRequestId,
+                quantity_accepted: acceptedQuantity,
+                requestResponseId: response.data.requestResponseId,
+              }
+            );
+          }
         }
+
+        await updateRequestResponse(`${requestResponseApi}/${response.data.requestResponseId}`, "PATCH", {
+          requestId: response.data.requestId,
+          responder_userId: Number(user.userId),
+          description: descriptionResponse,
+        });
+
+        await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: "approved" });
+      })(),
+      {
+        loading: "Aprobando solicitud...",
+        success: () => {
+          setTimeout(() => navigate(0), 1200);
+          return "Solicitud aprobada exitosamente.";
+        },
+        error: (err) => err.message || "Error al aprobar la solicitud.",
       }
-
-      await updateRequestResponse(`${requestResponseApi}/${response.data.requestResponseId}`, "PATCH", {
-        requestId: response.data.requestId,
-        responder_userId: Number(user.userId),
-        description: descriptionResponse,
-      });
-
-      handleChangeStatus("approved");
-    } catch (error) {
-      console.error("Error al aprobar la solicitud:", error);
-    }
+    );
   };
 
   if (loadingRequest) return <p>Cargando...</p>;
@@ -263,14 +276,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
         </div>
         {pdfUrl && <iframe src={pdfUrl} title="Requerimiento PDF" className="w-full h-full min-h-120" />}
       </div>
-
-      {openSaveModal && (
-        <SaveModal
-          onOk={() => {
-            navigate(0);
-          }}
-        />
-      )}
+      <Toaster position="top-center" />
     </>
   );
 }
