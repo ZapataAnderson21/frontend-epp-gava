@@ -38,8 +38,18 @@ export default function PayrollsTable({ projectId }: PayrollsTableProps) {
     { label: "Semana", width: "12rem",
       render: (row: WeeklyPayrollProps) => `${formatToLongMonthDate(row.startDate)} - ${formatToLongMonthDate(row.endDate)}`
     },
-    { key: "laborerAmount", label: "Obreros (S/)", width: "12rem" },
-    { key: "technicianAmount", label: "Técnicos (S/)", width: "12rem" },
+    { label: "Obreros", 
+      width: "12rem",
+      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.laborerAmount).toFixed(2)}`
+    },
+    { label: "Técnicos", 
+      width: "12rem",
+      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.technicianAmount).toFixed(2)}`
+    },
+    { label: "Total", 
+      width: "12rem",
+      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.totalAmount).toFixed(2)}`
+    },
     {
       label: "Acciones",
       width: "8rem",

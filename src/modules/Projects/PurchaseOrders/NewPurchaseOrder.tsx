@@ -10,6 +10,7 @@ import { ReturnButton, SaveButton } from "../../../common/button";
 import Permission from "../../../common/auth/Permission";
 import { adminTypes } from "../../../utils";
 import { useCurrentUser } from "../../../hooks";
+import { Select } from "../../../components";
 
 export default function NewPurchaseOrder() {
   const { user } = useCurrentUser();
@@ -133,19 +134,17 @@ export default function NewPurchaseOrder() {
                   <div className="w-full">
                     <p><strong>Señores:</strong> {supplier && (<>{supplier.name}</>)} </p>
                     <div className="flex flex-row flex-wrap w-full items-center gap-2">
-                      <div className="w-fit">
-                        <ConditionsSection.SelectInline
-                          label="Sírvase a suministrarnos los "
-                          name="purchaseOrderType"
-                          value={purchaseOrderType}
-                          onChange={setPurchaseOrderType}
-                          options={[
-                            { value: "materials", label: "materiales" },
-                            { value: "services", label: "servicios" },
-                          ]}
-                          purchaseOrderTypeError={errors.purchaseOrderType}
-                        />
-                      </div>
+                      <p className="text-gray-700 font-bold">Sírvase a suministrarnos los </p>  
+                      <Select
+                        name="purchaseOrderType"
+                        value={purchaseOrderType}
+                        onChange={(val) => setPurchaseOrderType(val)}
+                        options={[
+                          { value: "materials", label: "materiales" },
+                          { value: "services", label: "servicios" },
+                        ]}
+                        error={Boolean(errors.purchaseOrderType)}
+                      />
                       <p className="text-gray-700 font-bold"> solicitados siguientes:</p>
                     </div>
                   </div>

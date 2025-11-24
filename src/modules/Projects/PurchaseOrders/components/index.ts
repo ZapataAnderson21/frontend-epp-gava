@@ -5,3 +5,4 @@ export { default as PaymentConditionsCard } from "./PaymentConditionsCard";
 export { default as ItemsTable } from "./ItemsTable";
 export { default as ConditionsSection } from "./ConditionsSection";
 export { default as SignaturesTable } from "./SignaturesTable";
+export { default as DuplicateModal } from "./DuplicateModal";

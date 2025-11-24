@@ -31,6 +31,7 @@ export default function SupplierSelectCard({
             value={selectSupplierId || ""}
             onChange={(value) => onChangeSupplier(Number(value))}
             options={suppliers.map((s) => ({ value: s.supplierId, label: s.name }))}
+            error={Boolean(errorSupplier)}
           />
         </div>
         {errorSupplier && <p className="text-xs text-red-600">{errorSupplier}</p>}

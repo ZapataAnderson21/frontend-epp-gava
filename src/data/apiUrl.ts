@@ -43,6 +43,4 @@ export const attendanceApi = `${root}attendance/`;
 
 export const weekApi = `${root}week/`;
 
-export const payrollApi = `${root}payroll/`;
-
-export const projectPayrollApi = `${root}projects/:projectId/payroll/`;
+export const dailyWageApi = `${root}daily-wage/`;

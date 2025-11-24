@@ -19,7 +19,7 @@ export default function ConditionsSection({
         {values.map((val, idx) => (
           <div key={idx} className="flex flex-row gap-2 w-full items-center">
             <input
-              className="cursor-text bg-gray-50 border border-gray-300 text-gray-900 rounded-md focus-visible:ring-2 focus-visible:ring-gray-600 focus:outline-none block w-full p-2.5"
+              className="cursor-text border border-gray-300 text-gray-900 rounded-sm  focus:outline-[#0047a3] block w-full p-2.5"
               type="text"
               value={val}
               onChange={(e) => onChange(idx, e.target.value)}
@@ -54,11 +54,11 @@ function SelectInline({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="font-semibold text-nowrap" htmlFor={name}>{label}</label>
+      <label className="font-semibold text-nowrap text-gray-700" htmlFor={name}>{label}</label>
       <div className="relative w-fit">
         <select
           id={name}
-          className={`p-[10px] border ${purchaseOrderTypeError ? "border-red-500" : "border-gray-400"} rounded-md`}
+          className={`p-[10px] border ${purchaseOrderTypeError ? "border-red-500" : "border-gray-400"} rounded-sm  focus:outline-[#0047a3]`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >

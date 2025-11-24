@@ -52,7 +52,7 @@ export default function SidebarItem({
       initial="hidden"
       animate="visible"
     >
-      <Link className="w-full block" to={href}>{content}</Link>
+      <Link className="w-full block" to={href} onClick={onClick}>{content}</Link>
     </motion.div>
   ) : (
     <motion.button

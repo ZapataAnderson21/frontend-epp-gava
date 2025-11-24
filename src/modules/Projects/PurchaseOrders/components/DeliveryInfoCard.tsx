@@ -34,15 +34,16 @@ export default function DeliveryInfoCard({
             <label className="font-semibold text-nowrap" htmlFor="dniCarePerson">DNI:</label>
             <input
               id="dniCarePerson"
-              className={`cursor-text bg-gray-50 border ${dniError ? "border-red-600" : "border-gray-300"} text-gray-900 text-sm rounded-md focus-visible:ring-2 focus-visible:ring-gray-600 focus:outline-none block w-full p-2.5`}
+              className={`cursor-text border ${dniError ? "border-red-600" : "border-gray-400"} text-gray-900 text-sm rounded-sm focus:outline-[#0047a3] block w-full p-2.5`}
               maxLength={8}
               value={dniCarePerson}
               onChange={(e) => { const v = e.target.value; if (/^\d{0,8}$/.test(v)) setDniCarePerson(v); }}
+              required
             />
           </div>
           {dniError && <p className="text-xs text-red-600">{dniError}</p>}
         </div>
-        <InputForm name="observations" label="Observación" type="text" value={observations} onChange={(e) => setObservations(e.target.value)} />
+        <InputForm name="observations" label="Observación" type="text" value={observations} onChange={(e) => setObservations(e.target.value)} optional={true} />
       </div>
     </div>
   );

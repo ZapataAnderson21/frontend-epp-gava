@@ -71,11 +71,11 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <img src="/logo-gava.png" alt="Logo" className="h-14" />
           </motion.div>
 
-          <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaTruck />} label="Proveedores"    href="/admin/suppliers" index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+            <SidebarItem icon={<FaTruck />} label="Proveedores"    href="/admin/suppliers" index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
-          <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" index={3} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" index={3} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           {/* Grupo con desplegable */}
           <div className="w-full flex flex-col">
@@ -123,6 +123,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
                       index={0}
                       baseDelay={0}
                       perItemDelay={0.05}
+                      onClick={() => isMobile && setIsOpen?.(false)}
                     />
                   </motion.div>
 
@@ -136,6 +137,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
                       index={1}
                       baseDelay={0}
                       perItemDelay={0.05}
+                      onClick={() => isMobile && setIsOpen?.(false)}
                     />
                   </motion.div>
                 </motion.div>
@@ -144,14 +146,14 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
 
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaBoxOpen />} label="Recursos (O-C)" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+            <SidebarItem icon={<FaBoxOpen />} label="Recursos (O-C)" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           
-          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
-          <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           
-          <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} />
+          <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           
         </div>
 

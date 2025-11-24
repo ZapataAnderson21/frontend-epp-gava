@@ -52,7 +52,7 @@ export default function MoneyTrendCard({
       <FaArrowRightArrowLeft className="text-4xl text-blue-600" />
     );
 
-  const value = amountsByCurrency[currency] ?? 0;
+  const value: number = amountsByCurrency[currency] ?? 0;
   const displayAmount = formatMoney(value, currency);
 
   return (

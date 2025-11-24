@@ -7,15 +7,18 @@ import type { PurchaseOrder, Resource, ResourcePurchaseOrder, Supplier } from ".
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { ReturnButton, SaveButton } from "../../../common/button";
-import { ConditionsSection, DeliveryInfoCard, ItemsTable, PaymentConditionsCard, PurchaseOrderHeader, SignaturesTable, SupplierSelectCard } from "./components";
+import { ConditionsSection, DeliveryInfoCard, DuplicateModal, ItemsTable, PaymentConditionsCard, PurchaseOrderHeader, SignaturesTable, SupplierSelectCard } from "./components";
 import type { ItemRow } from "../../../hooks/usePurchaseOrderForm";
 import { ButtonContainer, SaveModal } from "../../../common/form";
 import { Button } from "../../../components";
 import { TiStarOutline } from "react-icons/ti";
 import { Loading } from "../../../common/loading";
+import { FaRegCopy } from "react-icons/fa6";
 
 export default function EditPurchaseOrder() {
   const { id: purchaseOrderId } = useParams<{ id: string }>();
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // ---- estado de formulario ----
   const [code, setCode] = useState<string>("");
@@ -30,7 +33,9 @@ export default function EditPurchaseOrder() {
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [paymentConditions1, setPaymentConditions1] = useState<string>("");
   const [paymentConditions, setPaymentConditions] = useState<string>("");
+  const [paymentConditions2, setPaymentConditions2] = useState<string>("");
   const [purchaseOrderType, setPurchaseOrderType] = useState<string>("");
+
 
   const [items, setItems] = useState<ItemRow[]>([]);
   // rpoIds[i] = id del resourcePurchaseOrder asociado a la fila i (o null si es nuevo)
@@ -78,7 +83,8 @@ export default function EditPurchaseOrder() {
     setDniCarePerson(purchaseOrder.dniCarePerson);
     setObservations(purchaseOrder.observations ?? "");
     setPaymentMethod(purchaseOrder.paymentMethod);
-    setPaymentConditions1(purchaseOrder.paymentConditions);
+    setPaymentConditions1(purchaseOrder.paymentConditions.split(" - ")[0] || "");
+    setPaymentConditions2(purchaseOrder.paymentConditions.split(" - ")[1] || "");
     setPaymentConditions(purchaseOrder.paymentConditions);
     setPurchaseOrderType(purchaseOrder.purchaseOrderType);
 
@@ -394,6 +400,25 @@ export default function EditPurchaseOrder() {
     }
   };
 
+  const { execute: duplicatePurchaseOrder, loading: isDuplicating } = useApiAction<PurchaseOrder>();
+
+  const handleDuplicate = async (projectId: number) => {
+    try {
+      const response = await duplicatePurchaseOrder(
+        `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
+        'POST',
+        { projectId }
+      );
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setIsModalOpen(false);
+        navigate(`/admin/purchase-orders?projectId=${projectId}`);
+      }
+    } catch (error) {
+      console.error('Error duplicating purchase order:', error);
+    }
+  };
+
   if (loading || suppliersLoading || resourcePuchaseOrdersLoading || resourcesLoading) {
     return <Loading />;
   }
@@ -405,8 +430,20 @@ export default function EditPurchaseOrder() {
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <div className="flex flex-col p-4">
-        <div className="w-fit">
-          <ReturnButton onClick={navigateToPurchaseOrders} />
+        <div className="flex w-full items-center justify-between">
+          <div className="w-fit">
+            <ReturnButton onClick={navigateToPurchaseOrders} />
+          </div>
+          <div className="w-fit flex flex-row gap-2">
+            <Button
+              icon={<FaRegCopy />}
+              label="Duplicar"
+              bgColor="#9f7aea"
+              bgHoverColor="#7c3aed"
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+            />
+          </div>
         </div>
         <div className="w-full flex flex-col items-center justify-center">
           <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
@@ -446,6 +483,8 @@ export default function EditPurchaseOrder() {
               <PaymentConditionsCard
                 paymentConditions1={paymentConditions1}
                 setPaymentConditions1={setPaymentConditions1}
+                paymentConditions2={paymentConditions2}
+                setPaymentConditions2={setPaymentConditions2}
                 supplier={supplier}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
@@ -533,6 +572,12 @@ export default function EditPurchaseOrder() {
           error={errorFlag}
         />
       )}
+      <DuplicateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleDuplicate}
+        isLoading={isDuplicating}
+      />
     </Permission>
   )
 }

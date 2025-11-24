@@ -1,13 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
 import Permission from "../../../common/auth/Permission"
 import { ErrorMessage } from "../../../common/error"
-import { useCurrentUser, useFetch } from "../../../hooks"
+import { useCurrentUser, useFetch, useApiAction } from "../../../hooks"
 import { logisticsTypes } from "../../../utils";
 import { ReturnButton } from "../../../common/button";
 import { purchaseOrderApi } from "../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../data/types";
-import { SignaturesTable } from "./components";
-import { FaRegFilePdf } from "react-icons/fa6";
+import { SignaturesTable, DuplicateModal } from "./components";
+import { FaRegCopy, FaRegFilePdf } from "react-icons/fa6";
 import { Button } from "../../../components";
 import { useState } from "react";
 import TableViewPO from "./components/Table/TableViewPO";
@@ -21,12 +21,32 @@ export default function PurchaseOrder() {
   const { data: purchaseOrder } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
 
   const [seePurchasePrices, setSeePurchasePrices] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const { execute: duplicatePurchaseOrder, loading: isDuplicating } = useApiAction<PurchaseOrder>();
 
   const navigate = useNavigate();
 
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/purchase-orders?projectId=${purchaseOrder?.project?.projectId}`);
   }
+
+  const handleDuplicate = async (projectId: number) => {
+    try {
+      const response = await duplicatePurchaseOrder(
+        `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
+        'POST',
+        { projectId }
+      );
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setIsModalOpen(false);
+        navigate(`/admin/purchase-orders?projectId=${projectId}`);
+      }
+    } catch (error) {
+      console.error('Error duplicating purchase order:', error);
+    }
+  };
 
   const handleDownloadPDF = async () => {
     if (!purchaseOrderId) return;
@@ -65,7 +85,7 @@ export default function PurchaseOrder() {
           <div className="w-fit">
             <ReturnButton onClick={navigateToPurchaseOrders} />
           </div>
-            <div className="w-fit">
+          <div className="w-fit flex flex-row gap-2">
             <Button 
               icon={<FaRegFilePdf />}
               label="Descargar"
@@ -74,7 +94,15 @@ export default function PurchaseOrder() {
               type="button"
               onClick={handleDownloadPDF}
             />
-            </div>
+            <Button
+              icon={<FaRegCopy />}
+              label="Duplicar"
+              bgColor="#9f7aea"
+              bgHoverColor="#7c3aed"
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+            />
+          </div>
         </div>
         <div className="w-full flex flex-col items-center justify-center">
           <div className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
@@ -182,6 +210,13 @@ export default function PurchaseOrder() {
           </div>
         </div>
       </div>
+
+      <DuplicateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleDuplicate}
+        isLoading={isDuplicating}
+      />
     </Permission>
   )
 }

@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser } from "../hooks";
-import { ReturnButton, SaveButton } from "../common/button";
+import { ReturnButton } from "../common/button";
 import { HeaderPanel, Panel } from "../common/panel";
 import { ErrorMessage } from "../common/error";
 import { adminTypes, formatToLongMonthDate } from "../utils";
@@ -9,6 +9,12 @@ import { useEffect, useState } from "react";
 import type { WeeklyPayrollData, WorkersPayroll } from "../data/types";
 import { SummaryCards } from "./components/SummaryCards";
 import { WeeklyPayrollTable } from "./components/WeeklyPayrollTable";
+import { dailyWageApi } from "../data/apiUrl";
+import { useApiAction } from "../hooks";
+import { AiOutlineLoading } from "react-icons/ai";
+import { Button } from "../components";
+import { FaSave } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 export default function WeeklyPayroll() {
   const { user } = useCurrentUser();
@@ -19,6 +25,8 @@ export default function WeeklyPayroll() {
 
   const [laborers, setLaborers] = useState<WorkersPayroll[]>([]);
   const [technicians, setTechnicians] = useState<WorkersPayroll[]>([]);
+
+  const { execute, loading } = useApiAction<any>();
 
   useEffect(() => {
     if (!week) return;
@@ -46,6 +54,31 @@ export default function WeeklyPayroll() {
     );
   };
 
+  const handleSave = async () => {
+    const allWorkers = [...laborers, ...technicians];
+
+    const payload = {
+      items: allWorkers.map(w => ({
+        workerId: w.workerId,
+        amount: w.dailyWage ?? 0,
+      })),
+    };
+
+    try {
+      const result = await execute(
+        `${dailyWageApi}week/${week.weekId}/bulk-upsert`,
+        "POST",
+        payload
+      );
+      
+      console.log(result);
+
+      toast.success("Planilla guardada");
+    } catch {
+      toast.error("Error al guardar la planilla");
+    }
+  };
+
   return (
     <Permission
       user={user}
@@ -59,8 +92,15 @@ export default function WeeklyPayroll() {
           )}`}
         >
           <div className="flex flex-row gap-2 justify-end">
-            <ReturnButton onClick={() => navigate(`/admin/projects/${projectId}`)} />
-            <SaveButton loading={false} />
+            <ReturnButton onClick={() => { navigate(`/admin/projects/payrolls/${projectId}`) }} />
+            <Button
+              icon={loading ? <AiOutlineLoading className="animate-spin" /> : <FaSave />}
+              label={loading ? "Guardando..." : "Guardar"}
+              type="button"
+              bgColor="#0047a3" 
+              bgHoverColor="#003366"
+              onClick={handleSave}
+            />
           </div>
         </HeaderPanel>
 

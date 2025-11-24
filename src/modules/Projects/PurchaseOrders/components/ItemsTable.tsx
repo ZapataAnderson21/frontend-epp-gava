@@ -1,5 +1,6 @@
 import { FaMinus, FaPlus } from "react-icons/fa";
 import type { Resource } from "../../../../data/types";
+import { Select } from "../../../../components";
 
 type ItemRow = {
   resourceId: number;
@@ -37,10 +38,10 @@ export default function ItemsTable({
   const sym = supplierCurrency?.toUpperCase() === "PEN" ? "S/." : "$";
 
   const inputCls = (hasError?: boolean) =>
-    `w-full p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400"}`;
+    `w-full p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400 focus:outline-[#0047a3]"}`;
 
   const numberCls = (hasError?: boolean) =>
-    `w-full min-w-16 p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400"}`;
+    `w-full min-w-16 p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400 focus:outline-[#0047a3]"}`;
 
   const errorText = (msg?: string) =>
     msg ? <p className="text-xs text-red-600 mt-1 text-left">{msg}</p> : null;
@@ -70,19 +71,18 @@ export default function ItemsTable({
                 {/* DESCRIPCIÓN / RECURSO */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap max-w-120">
                   <div className="flex flex-col">
-                    <select
-                      className={`w-full p-2 rounded-md bg-gray-50 min-w-64 border ${ie?.resourceId ? "border-red-600 ring-1 ring-red-300" : "border-gray-400"}`}
+                    <Select
+                      name={`resource-${index}`}
                       value={item.resourceId || ""}
-                      onChange={(e) => onChange(index, "resourceId", e.target.value)}
-                      aria-invalid={!!ie?.resourceId}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {resources.map((r) => (
-                        <option key={r.resourceId} value={r.resourceId}>
-                          {r.description}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => onChange(index, "resourceId", value)}
+                      options={[
+                        ...resources.map((r) => ({
+                          value: r.resourceId,
+                          label: r.description,
+                        })),
+                      ]}
+                      error={!!ie?.resourceId}
+                    />
                     {errorText(ie?.resourceId)}
                   </div>
                 </td>
