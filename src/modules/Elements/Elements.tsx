@@ -32,23 +32,23 @@ export default function Elements() {
   return (
     <Panel>
       <HeaderPanel name={`ELEMENTOS ${selected.label.toUpperCase()}`}>
-          
-          <SelectForm 
-            label="Filtrar por"
-            name="filter"
-            value={filter}
-            onChange={(value) => {
-              const option = options.find(opt => opt.value === value);
-              if (option) {
-                setSelected(option);
-                setFilter(option.value);
-              }
-            }}
-            options={options}
-            directionRow={true}
-          />
-
-          <AddButton onClick={() => {navigate(`/admin/elements/new?type=${filter}`)}} />  
+          <div className="w-fit">
+            <SelectForm 
+              label="Filtrar por"
+              name="filter"
+              value={filter}
+              onChange={(value) => {
+                const option = options.find(opt => opt.value === value);
+                if (option) {
+                  setSelected(option);
+                  setFilter(option.value);
+                }
+              }}
+              options={options}
+              directionRow={true}
+            />
+          </div> 
+          <AddButton onClick={() => {navigate(`/admin/elements/new?type=${filter}`)}} />
         </HeaderPanel>
 
         <ElementTable filter={filter} />
