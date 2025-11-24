@@ -15,7 +15,7 @@ interface WorkersPayroll {
   dailyWage: number;
 }
 
-interface WeeklyPayrollProps {
+export interface WeeklyPayrollProps {
   weekId: number;
   startDate: string;
   endDate: string;

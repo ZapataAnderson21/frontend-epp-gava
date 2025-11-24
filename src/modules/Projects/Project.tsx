@@ -5,7 +5,7 @@ import { MdOutlineContentCopy } from "react-icons/md";
 import { IoIosArrowUp } from "react-icons/io";
 import { useCurrentUser, useFetch } from "../../hooks";
 import type { Project } from "../../data/types";
-import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi, workerApi } from "../../data/apiUrl";
+import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi, weekApi, workerApi } from "../../data/apiUrl";
 import { SectionProjectSummary, HeaderActions, HeaderSection } from "./sections";
 import { type Currency, CurrencyFilter, MoneyTrendCard, CountCard, InfoCard } from "./components";
 import { HeaderPanel, Panel } from "../../common/panel";
@@ -13,6 +13,7 @@ import { ErrorMessage } from "../../common/error";
 import { formatDate, adminTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
 import { TbCalendarCheck, TbCalendarOff, TbLocation } from "react-icons/tb";
+import type { WeeklyPayrollProps } from "../../Payrolls/PayrollsTable";
 
 interface PurchaseOrderAmounts {
   totalPEN: number;
@@ -40,6 +41,7 @@ export default function Project() {
   const { data: purchaseOrderSaleAmounts, loading: purchaseOrderSaleLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}saleAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
   const { data: purchaseOrderPurchaseAmounts, loading: purchaseOrderPurchaseLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}purchaseAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
   const { data: payrollTotals, loading: payrollTotalsLoading } = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
+  const {data: weekPayrolls, loading: weekPayrollsLoading } = useFetch<WeeklyPayrollProps[]>(`${weekApi}totals/${projectId}`, [projectId]);
 
   const pettyCashTotals = { 
     PEN: pettyCashPEN ? Number(pettyCashPEN) : 0, 
@@ -187,7 +189,7 @@ export default function Project() {
                     <CountCard loading={loading} title="Requerimientos"   count={project?.requests?.length ?? 0}       to={`/admin/requests?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Caja Chica"       count={project?.pettyCashes?.length ?? 0}    to={`/admin/petty-cash?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Emergencias"      count={project?.emergencies?.length ?? 0}    to={`/admin/emergencies?projectId=${projectId}`} />
-                    <CountCard loading={loading} title="Planillas / Asistencias"       count={0}       to={`/admin/projects/payrolls/${projectId}`} />
+                    <CountCard loading={weekPayrollsLoading} title="Planillas / Asistencias" count={weekPayrolls?.length ?? 0} to={`/admin/projects/payrolls/${projectId}`} />
                   </div>
                 </div>
               )}
