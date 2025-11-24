@@ -12,7 +12,6 @@ import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
 import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
-import ServiceSales from './modules/Projects/ServiceSales/ServiceSales.tsx';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
 import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
@@ -79,9 +78,6 @@ export default function App() {
           {/* PettyCash routes */}
           <Route path='petty-cash' element={<PettyCashes />} />
           {/* End pettyCash routes */}
-          {/* ServiceSales routes */}
-          <Route path='service-sale' element={<ServiceSales />} />
-          {/* End serviceSales routes */}
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}

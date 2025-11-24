@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ButtonContainer, Form, InputForm, SaveModal, SelectForm, TextAreaForm } from "../../common/form";
+import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks";
 import { supplierApi } from "../../data/apiUrl";
@@ -31,20 +32,10 @@ export default function NewSupplier() {
   const [bank, setBank] = useState("");
   const [currency, setCurrency] = useState("");
 
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const navigate = useNavigate();
 
   // * acción POST
   const { execute, loading: saving } = useApiAction<ResourceResponse>();
-
-  const closeModalAndReset = () => {
-    setOpenSaveModal(false);
-    setError(false);
-  };
 
   const navigateToSuppliers = () => {
     navigate("/admin/suppliers");
@@ -52,8 +43,31 @@ export default function NewSupplier() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(false);
-    setOpenSaveModal(true);
+
+    // Validación
+    const errors: string[] = [];
+    if (!name.trim()) errors.push("El nombre es requerido");
+    if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
+    if (!phone.trim()) errors.push("El teléfono es requerido");
+    if (!email.trim()) errors.push("El email es requerido");
+    if (!ruc.trim()) errors.push("El RUC es requerido");
+    if (!accountNumber.trim()) errors.push("El número de cuenta es requerido");
+    if (!bank.trim()) errors.push("El banco es requerido");
+    if (!currency) errors.push("Debe seleccionar una moneda");
+
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Errores de validación:</strong>
+          <ul className="list-disc list-inside">
+            {errors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      );
+      return;
+    }
 
     const payload = {
       name,
@@ -67,17 +81,17 @@ export default function NewSupplier() {
       currency,
     };
 
-    const response = await execute(supplierApi, "POST", payload);
-
-    setSuccessMessage(response.message);
-
-    if (response.statusCode !== 201) {
-      setError(true);
-      setOnOk(() => () => closeModalAndReset());
-    } else {
-      setError(false);
-      setOnOk(() => () => navigateToSuppliers());
-    }
+    await toast.promise(
+      execute(supplierApi, "POST", payload),
+      {
+        loading: "Creando proveedor...",
+        success: (response) => {
+          setTimeout(() => navigateToSuppliers(), 1200);
+          return response.message || "Proveedor creado exitosamente";
+        },
+        error: (err) => err.message || "Error al crear proveedor",
+      }
+    );
   };
 
   const currencyOptions = [
@@ -105,10 +119,7 @@ export default function NewSupplier() {
           <SaveButton loading={saving} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal onOk={onOk} message={successMessage || "Error al crear el proveedor."} error={error} />
-      )}
+      <Toaster position="top-center" />
     </>
   );
 }
