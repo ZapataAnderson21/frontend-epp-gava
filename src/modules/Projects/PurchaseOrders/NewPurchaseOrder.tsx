@@ -2,7 +2,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { CgSpinner } from "react-icons/cg";
 import { ErrorMessage } from "../../../common/error";
 import { ButtonContainer } from "../../../common/form";
-import SaveModal from "../../../common/form/SaveModal";
+import { Toaster } from "react-hot-toast";
 
 import { usePurchaseOrderForm } from "../../../hooks/usePurchaseOrderForm";
 import { PurchaseOrderHeader, SupplierSelectCard, DeliveryInfoCard, PaymentConditionsCard, ItemsTable, ConditionsSection, SignaturesTable } from "./components";
@@ -41,7 +41,6 @@ export default function NewPurchaseOrder() {
 
     //validate errors
     errors,
-    validationMessages,
     setPaymentConditions,
 
     // conditions
@@ -54,7 +53,6 @@ export default function NewPurchaseOrder() {
 
     // submit & UI
     saving, handleSubmit,
-    openSaveModal, onOk, successMessage, errorFlag,
   } = usePurchaseOrderForm({ projectId, navigate });
 
   const navigateToPurchaseOrders = () => {
@@ -75,6 +73,7 @@ export default function NewPurchaseOrder() {
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col p-4">
         <div className="w-fit">
           <ReturnButton onClick={navigateToPurchaseOrders} />
@@ -191,14 +190,6 @@ export default function NewPurchaseOrder() {
           </form>
         </div>
       </div>
-
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={errorFlag ? [...validationMessages.map(m => `${m}`)].join("\n") : successMessage}
-          error={errorFlag}
-      />
-      )}
     </Permission>
   );
 }

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ReturnButton, SaveButton } from "../../common/button"
-import SaveModal from "../../common/form/SaveModal";
 import { useApiAction, useCurrentUser } from "../../hooks/";
 import { projectApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
@@ -11,6 +10,7 @@ import { Form } from "../../common/form";
 import { adminTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
 import { ErrorMessage } from "../../common/error";
+import toast, { Toaster } from "react-hot-toast";
 
 interface Project {
   project_id: number;
@@ -29,40 +29,46 @@ export default function NewProject() {
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
 
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-
   const navigate = useNavigate();
-  const { execute, loading, response, error } = useApiAction<Project>();
+  const { execute, loading} = useApiAction<Project>();
 
-  const closeModalAndReset = () => { setOpenSaveModal(false); };
   const navigateToProjects = () => { navigate("/admin/projects"); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
     const toIso = (d: string) => (d ? new Date(d + 'T00:00:00.000Z').toISOString() : undefined);
 
-    const result = await execute(
-      `${projectApi}`,
-      "POST",
-      { name, 
-        code, 
-        description, 
-        location, 
-        startDate: toIso(startDate), 
-        endDate: toIso(endDate) 
-      },
+    toast.promise(
+      execute(
+        `${projectApi}`,
+        "POST",
+        { 
+          name, 
+          code, 
+          description, 
+          location, 
+          startDate: toIso(startDate), 
+          endDate: toIso(endDate) 
+        }
+      ),
+      {
+        loading: 'Creando proyecto...',
+        success: (result) => {
+          setTimeout(() => navigateToProjects(), 1200);
+          return result.message || 'Proyecto creado con éxito';
+        },
+        error: (err) => err.message || 'Error al crear el proyecto',
+      }
     );
-
-    if (result.statusCode === 201) setOnOk(() => () => navigateToProjects());
-    else setOnOk(() => () => closeModalAndReset());
   };
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />}>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       <Form name="REGISTRAR PROYECTO" handleSubmit={handleSubmit}>
         <InputForm
           label="Nombre"
@@ -121,14 +127,6 @@ export default function NewProject() {
           <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
-
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={response?.message || error || "Error al guardar"}
-          error={!!error || response?.statusCode !== 201}
-        />
-      )}
     </Permission>
   );
 }

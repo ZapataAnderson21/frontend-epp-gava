@@ -84,7 +84,9 @@ export default function Project() {
   const copyCode = () => {
     if (project?.code) {
       navigator.clipboard.writeText(project.code);
-      toast.success('¡Código copiado al portapapeles!');
+      toast('Código copiado al portapapeles', {
+        icon: <MdOutlineContentCopy />,
+      });
     }
   };
 

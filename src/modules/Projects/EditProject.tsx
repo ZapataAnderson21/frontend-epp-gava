@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SaveModal from "../../common/form/SaveModal";
 import LoadingSkeletonForm from "../../common/loading/LoadingSkeletonForm";
 import { projectApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
@@ -13,6 +12,7 @@ import Permission from "../../common/auth/Permission";
 import { adminTypes } from "../../utils";
 import { useCurrentUser } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function EditProject() {
   const { user } = useCurrentUser();
@@ -21,7 +21,7 @@ export default function EditProject() {
   const navigate = useNavigate();
 
   const { data: project, loading, error } = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
-  const { execute: updateProject, loading: updating, response, error: errorUpdate } = useApiAction<Project>();
+  const { execute: updateProject, loading: updating } = useApiAction<Project>();
   const { execute: updateStatus } = useApiAction<Project>();
 
   const [name, setName] = useState("");
@@ -31,9 +31,6 @@ export default function EditProject() {
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
-
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
 
   useEffect(() => {
     if (project) {
@@ -58,32 +55,43 @@ export default function EditProject() {
       : { label: "Activo", value: "active" };
 
   const handleChangeStatus = () => {
-    updateStatus(`${projectApi}${projectId}/status`, "PATCH", {
-      status: changeStatus.value,
-    }).then(() => {
-      setStatus(changeStatus.value);
-    });
+    toast.promise(
+      updateStatus(`${projectApi}${projectId}/status`, "PATCH", {
+        status: changeStatus.value,
+      }),
+      {
+        loading: 'Cambiando estado...',
+        success: (result) => {
+          setStatus(changeStatus.value);
+          return result.message || `Estado cambiado a ${changeStatus.label}`;
+        },
+        error: (err) => err.message || 'Error al cambiar el estado',
+      }
+    );
   };
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
 
-    updateProject(`${projectApi}${projectId}`, "PATCH", {
-      name,
-      description,
-      code,
-      status,
-      location,
-      startDate: startDate ? new Date(startDate + 'T00:00:00.000Z').toISOString() : null,
-      endDate: endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null,
-    }).then((res) => {
-      if (res?.statusCode === 200) {
-        setOnOk(() => () => navigate("/admin/projects"));
-      } else {
-        setOnOk(() => () => setOpenSaveModal(false));
+    toast.promise(
+      updateProject(`${projectApi}${projectId}`, "PATCH", {
+        name,
+        description,
+        code,
+        status,
+        location,
+        startDate: startDate ? new Date(startDate + 'T00:00:00.000Z').toISOString() : null,
+        endDate: endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null,
+      }),
+      {
+        loading: 'Actualizando proyecto...',
+        success: (result) => {
+          setTimeout(() => navigate("/admin/projects"), 1200);
+          return result.message || 'Proyecto actualizado con éxito';
+        },
+        error: (err) => err.message || 'Error al actualizar el proyecto',
       }
-    });
+    );
   };
 
   if (loading) {
@@ -98,94 +106,88 @@ export default function EditProject() {
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
-      <>
-        <Form name={`PROYECTO ${projectId}`} handleSubmit={handleUpdate}>
-          <InputForm
-            label="Nombre"
-            name="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            optional={false}
-          />
-          <InputForm
-            label="Código"
-            name="code"
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            optional={false}
-          />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
+      <Form name={`PROYECTO ${projectId}`} handleSubmit={handleUpdate}>
+        <InputForm
+          label="Nombre"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          optional={false}
+        />
+        <InputForm
+          label="Código"
+          name="code"
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          optional={false}
+        />
 
-          <InputForm
-            label="Ubicación"
-            name="location"
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            optional={false}
-          />
+        <InputForm
+          label="Ubicación"
+          name="location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          optional={false}
+        />
 
-          <InputForm
-            label="Fecha de inicio"
-            name="startDate"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            optional={true}
-          />
+        <InputForm
+          label="Fecha de inicio"
+          name="startDate"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          optional={true}
+        />
 
-          <InputForm
-            label="Fecha de fin"
-            name="endDate"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            optional={true}
-          />
+        <InputForm
+          label="Fecha de fin"
+          name="endDate"
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          optional={true}
+        />
 
-          <TextAreaForm
-            label="Descripción"
-            name="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            optional={true}
-          />
+        <TextAreaForm
+          label="Descripción"
+          name="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          optional={true}
+        />
 
-          <InputForm
-            label="Estado"
-            name="status"
-            type="text"
-            value={status === "active" ? "Activo" : "Inactivo"}
-            onChange={() => {}}
-            optional={false}
-            disabled={true}
-          >
-            <div className="flex flex-row w-full justify-end items-end gap-1">
-              <span className="text-[14px] text-right">Cambiar estado a: </span>
-              <span
-                onClick={handleChangeStatus}
-                className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
-              >
-                {changeStatus.label}
-              </span>
-            </div>
-          </InputForm>
-          
-          <ButtonContainer>
-            <ReturnButton onClick={() => navigate("/admin/projects")} />
-            <SaveButton loading={updating} />
-          </ButtonContainer>
-        </Form>
-          
-        {openSaveModal && (
-          <SaveModal
-            onOk={onOk}
-            message={response?.message || ""}
-            error={!!errorUpdate}
-          />
-        )}
-      </>
+        <InputForm
+          label="Estado"
+          name="status"
+          type="text"
+          value={status === "active" ? "Activo" : "Inactivo"}
+          onChange={() => {}}
+          optional={false}
+          disabled={true}
+        >
+          <div className="flex flex-row w-full justify-end items-end gap-1">
+            <span className="text-[14px] text-right">Cambiar estado a: </span>
+            <span
+              onClick={handleChangeStatus}
+              className="text-[#0047a3] underline hover:scale-[101%] cursor-pointer font-bold"
+            >
+              {changeStatus.label}
+            </span>
+          </div>
+        </InputForm>
+        
+        <ButtonContainer>
+          <ReturnButton onClick={() => navigate("/admin/projects")} />
+          <SaveButton loading={updating} />
+        </ButtonContainer>
+      </Form>
     </Permission>
   );
 }

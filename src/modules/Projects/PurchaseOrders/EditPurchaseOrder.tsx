@@ -9,11 +9,12 @@ import { useEffect, useMemo, useState } from "react";
 import { ReturnButton, SaveButton } from "../../../common/button";
 import { ConditionsSection, DeliveryInfoCard, DuplicateModal, ItemsTable, PaymentConditionsCard, PurchaseOrderHeader, SignaturesTable, SupplierSelectCard } from "./components";
 import type { ItemRow } from "../../../hooks/usePurchaseOrderForm";
-import { ButtonContainer, SaveModal } from "../../../common/form";
+import { ButtonContainer } from "../../../common/form";
 import { Button } from "../../../components";
 import { TiStarOutline } from "react-icons/ti";
 import { Loading } from "../../../common/loading";
 import { FaRegCopy } from "react-icons/fa6";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function EditPurchaseOrder() {
   const { id: purchaseOrderId } = useParams<{ id: string }>();
@@ -59,13 +60,6 @@ export default function EditPurchaseOrder() {
   const { data: resources, loading: resourcesLoading, error: resourcesError } = useFetch<Resource[]>(`${resourceApi}`);
 
   const { execute, loading: saving } = useApiAction<any>();
-
-  // ---- modal ----
-  const [openSaveModal, setOpenSaveModal] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const [errorFlag, setErrorFlag] = useState<boolean>(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-  const closeSaveModal = () => setOpenSaveModal(false);
 
   const navigate = useNavigate();
 
@@ -263,14 +257,13 @@ export default function EditPurchaseOrder() {
   };
 
   // ---- submit ----
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<boolean> => {
-    
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // 2) Usar la validación local
+    // Validación local
     const { ok, msgs, fieldErrors } = validateAndCollect();
 
-    // 3) Sincronizar errores a los inputs (estado React)
+    // Sincronizar errores a los inputs
     setErrorSupplier(fieldErrors.supplier);
     setErrorPaymentMethod(fieldErrors.paymentMethod);
     setErrorPaymentConditions(fieldErrors.paymentConditions);
@@ -278,21 +271,19 @@ export default function EditPurchaseOrder() {
     setErrorDni(fieldErrors.dni);
 
     if (!ok) {
-      // 4) Construir mensaje y RECIÉN abrir modal
-      setErrorFlag(true);
-      setSuccessMessage([msgs].join(" "));
-      setOnOk(() => () => setOpenSaveModal(false));
-      setOpenSaveModal(true);
-      return false;
+      toast.error(
+        <div>
+          <strong>Falta completar:</strong>
+          <ul className="list-disc pl-4 mt-1">
+            {msgs.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+        </div>,
+        { duration: 5000 }
+      );
+      return;
     }
 
-    // Si todo ok, puedes mostrar “Procesando…” y seguir con el guardado
-    setErrorFlag(false);
-    setSuccessMessage("Procesando…");
-    setOnOk(() => () => setOpenSaveModal(false));
-    setOpenSaveModal(true);
-
-    try {
+    const updatePurchaseOrder = async () => {
       // 1) Actualizar cabecera OC
       const body = {
         code,
@@ -314,13 +305,10 @@ export default function EditPurchaseOrder() {
 
       const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", body);
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
-        setErrorFlag(true);
-        setSuccessMessage(resp.message || "No se pudo actualizar la orden de compra." );
-        return false;
+        throw new Error(resp.message || "No se pudo actualizar la orden de compra.");
       }
 
       // 2) Sincronizar ítems (POST/PATCH/DELETE)
-      // Conjunto de ids originales
       const originalIds = new Set<number>((resourcePurchaseOrders || []).map(r => r.resourcePurchaseOrderId));
       const keptIds = new Set<number>();
 
@@ -343,17 +331,13 @@ export default function EditPurchaseOrder() {
           if (upd.statusCode >= 200 && upd.statusCode < 300) {
             keptIds.add(id);
           } else {
-            setErrorFlag(true);
-            setSuccessMessage("Hubo errores al actualizar algunos ítems." );
+            throw new Error("Hubo errores al actualizar algunos ítems.");
           }
         } else {
           // POST nuevo
           const crt = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
-          if (crt.statusCode >= 200 && crt.statusCode < 300) {
-            // opcional: refrescar id en memoria si quieres
-          } else {
-            setErrorFlag(true);
-            setSuccessMessage("Hubo errores al crear algunos ítems." );
+          if (crt.statusCode < 200 || crt.statusCode >= 300) {
+            throw new Error("Hubo errores al crear algunos ítems.");
           }
         }
       }
@@ -365,58 +349,82 @@ export default function EditPurchaseOrder() {
         }
       }
 
-      setErrorFlag(false);
-      setSuccessMessage("Orden de compra actualizada exitosamente." );
-      setOnOk(() => () => navigateToPurchaseOrders());
-      return true;
-    } catch (err: any) {
-      setErrorFlag(true);
-      setSuccessMessage(err?.message || "Error desconocido al actualizar." );
-      setOnOk(() => () => setOpenSaveModal(false));
-      return false;
-    }
+      return resp;
+    };
+
+    toast.promise(
+      updatePurchaseOrder(),
+      {
+        loading: 'Actualizando orden de compra...',
+        success: (result) => {
+          setTimeout(() => navigateToPurchaseOrders(), 1200);
+          return result.message || 'Orden de compra actualizada con éxito';
+        },
+        error: (err) => err.message || 'Error al actualizar la orden de compra',
+      }
+    );
   };
 
   const handleAuthorize = async () => {
-    const saved = await handleSubmit(new Event("submit") as unknown as React.FormEvent<HTMLFormElement>);
-    if (!saved) return;
-    if (errorFlag) return;
+    // Validar antes de autorizar
+    const { ok, msgs, fieldErrors } = validateAndCollect();
 
-    setOpenSaveModal(true);
-    setErrorFlag(false);
-    setSuccessMessage("");
-    setOnOk(() => () => closeSaveModal());
+    setErrorSupplier(fieldErrors.supplier);
+    setErrorPaymentMethod(fieldErrors.paymentMethod);
+    setErrorPaymentConditions(fieldErrors.paymentConditions);
+    setErrorPurchaseOrderType(fieldErrors.purchaseOrderType);
+    setErrorDni(fieldErrors.dni);
 
-    const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", {
-      status: "authorized",
-    });
-
-    if (resp.statusCode === 200) {
-      setSuccessMessage("Orden de compra autorizada." );
-      setOnOk(() => () => navigateToPurchaseOrders());
-    } else {
-      setErrorFlag(true);
-      setSuccessMessage(resp.message || "No se pudo autorizar la orden." );
+    if (!ok) {
+      toast.error(
+        <div>
+          <strong>Completa los campos antes de autorizar:</strong>
+          <ul className="list-disc pl-4 mt-1">
+            {msgs.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+        </div>,
+        { duration: 5000 }
+      );
+      return;
     }
+
+    toast.promise(
+      execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", {
+        status: "authorized",
+      }),
+      {
+        loading: 'Autorizando orden de compra...',
+        success: (result) => {
+          setTimeout(() => navigateToPurchaseOrders(), 1200);
+          return result.message || 'Orden de compra autorizada con éxito';
+        },
+        error: (err) => err.message || 'Error al autorizar la orden de compra',
+      }
+    );
   };
 
   const { execute: duplicatePurchaseOrder, loading: isDuplicating } = useApiAction<PurchaseOrder>();
 
   const handleDuplicate = async (projectId: number) => {
-    try {
-      const response = await duplicatePurchaseOrder(
+    toast.promise(
+      duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
         'POST',
         { projectId }
-      );
-      
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        setIsModalOpen(false);
-        navigate(`/admin/purchase-orders?projectId=${projectId}`);
+      ),
+      {
+        loading: 'Duplicando orden de compra...',
+        success: (result) => {
+          setIsModalOpen(false);
+          setTimeout(() => navigate(`/admin/purchase-orders?projectId=${projectId}`), 1200);
+          return result.message || 'Orden de compra duplicada con éxito';
+        },
+        error: (err) => {
+          setIsModalOpen(false);
+          return err.message || 'Error al duplicar la orden de compra';
+        },
       }
-    } catch (error) {
-      console.error('Error duplicating purchase order:', error);
-    }
+    );
   };
 
   if (loading || suppliersLoading || resourcePuchaseOrdersLoading || resourcesLoading) {
@@ -429,6 +437,7 @@ export default function EditPurchaseOrder() {
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col p-4">
         <div className="flex w-full items-center justify-between">
           <div className="w-fit">
@@ -565,13 +574,6 @@ export default function EditPurchaseOrder() {
         </div>
       </div>
 
-      {openSaveModal && (
-        <SaveModal
-          onOk={onOk}
-          message={successMessage}
-          error={errorFlag}
-        />
-      )}
       <DuplicateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useFetch, useApiAction } from "../hooks";
 import type { Project, Resource, Supplier } from "../data/types";
 import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
+import toast from "react-hot-toast";
 
 export type ItemRow = {
   resourceId: number;
@@ -232,18 +233,10 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     return { valid, errors: nextErrors, messages: msgs };
   }
 
-  // modal & submit
-  const [openSaveModal, setOpenSaveModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorFlag, setErrorFlag] = useState(false);
-  const [onOk, setOnOk] = useState<() => void>(() => () => {});
-  const closeSaveModal = () => setOpenSaveModal(false);
   const navigateToList = () => navigate(`/admin/purchase-orders?projectId=${projectId}`);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenSaveModal(true);
-    setErrorFlag(false);
 
     // VALIDACIÓN granular
     const { valid, errors: found, messages } = validateAll();
@@ -251,65 +244,76 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     setValidationMessages(messages);
 
     if (!valid) {
-      setSuccessMessage(["Falta completar:", ...messages.map((m) => `• ${m}`)].join("\n"));
-      setErrorFlag(true);
-      setOnOk(() => () => closeSaveModal());
+      toast.error(
+        <div>
+          <strong>Falta completar:</strong>
+          <ul className="list-disc pl-4 mt-1">
+            {messages.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+        </div>,
+        { duration: 5000 }
+      );
       return;
     }
 
-    const body = {
-      code,
-      deliveryLocation,
-      destination,
-      paymentConditions,
-      generalConditions: generalConditions.join("| "),
-      qualityConditions: qualityConditions.join("| "),
-      paymentMethod,
-      saleAmount: sale_amount * 1.18,
-      purchaseAmount: purchase_amount,
-      carePerson,
-      dniCarePerson,
-      observations,
-      projectId: Number(projectId),
-      supplierId: selectSupplierId!,
-      quotation,
-      purchaseOrderType,
-    };
-
-    const ocResp = await execute(`${purchaseOrderApi}`, "POST", body);
-
-    if (ocResp.statusCode !== 201) {
-      setErrorFlag(true);
-      setOnOk(() => () => closeSaveModal());
-      return;
-    } else {
-      setErrorFlag(false);
-    }
-
-    const purchaseOrderId = await Number(ocResp.data.purchaseOrderId);
-
-    for (const it of items) {
-      const payload = {
-        resourceId: Number(it.resourceId),
-        purchaseOrderId: Number(purchaseOrderId),
-        quantity: Number(it.quantity),
-        unitSalesPrice: Number(it.unitSalesPrice),
-        unitPurchasePrice: Number(it.unitPurchasePrice),
+    const createPurchaseOrder = async () => {
+      const body = {
+        code,
+        deliveryLocation,
+        destination,
+        paymentConditions,
+        generalConditions: generalConditions.join("| "),
+        qualityConditions: qualityConditions.join("| "),
+        paymentMethod,
+        saleAmount: sale_amount * 1.18,
+        purchaseAmount: purchase_amount,
+        carePerson,
+        dniCarePerson,
+        observations,
+        projectId: Number(projectId),
+        supplierId: selectSupplierId!,
+        quotation,
+        purchaseOrderType,
       };
 
-      const itemResp = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
+      const ocResp = await execute(`${purchaseOrderApi}`, "POST", body);
 
-      setSuccessMessage(itemResp.message);
-      setOnOk(() => () => navigateToList());
-
-      if (itemResp.statusCode !== 201) {
-        setErrorFlag(true);
-        return;
+      if (ocResp.statusCode !== 201) {
+        throw new Error(ocResp.message || "Error al crear la orden de compra");
       }
 
-      setErrorFlag(false);
-    }
-    setSuccessMessage(ocResp.message);
+      const purchaseOrderId = Number(ocResp.data.purchaseOrderId);
+
+      for (const it of items) {
+        const payload = {
+          resourceId: Number(it.resourceId),
+          purchaseOrderId: Number(purchaseOrderId),
+          quantity: Number(it.quantity),
+          unitSalesPrice: Number(it.unitSalesPrice),
+          unitPurchasePrice: Number(it.unitPurchasePrice),
+        };
+
+        const itemResp = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
+
+        if (itemResp.statusCode !== 201) {
+          throw new Error(itemResp.message || "Error al agregar los ítems");
+        }
+      }
+
+      return ocResp;
+    };
+
+    toast.promise(
+      createPurchaseOrder(),
+      {
+        loading: 'Creando orden de compra...',
+        success: (result) => {
+          setTimeout(() => navigateToList(), 1200);
+          return result.message || 'Orden de compra creada con éxito';
+        },
+        error: (err) => err.message || 'Error al crear la orden de compra',
+      }
+    );
   };
 
   return {
@@ -342,12 +346,11 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     items, handleItemChange, addItem, removeItem,
     sale_amount, purchase_amount,
 
-    // validation (nuevo)
+    // validation
     errors,
     validationMessages,
 
     // submit & UI
     saving, handleSubmit,
-    openSaveModal, onOk, successMessage, errorFlag, closeSaveModal,
   };
 }
