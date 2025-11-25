@@ -96,7 +96,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       setPhone(worker.phone ? worker.phone : "");
       setPersonalEmail(worker.personalEmail ? worker.personalEmail : "");
       setAddress(worker.address ? worker.address : "");
-      setBirthDate(worker.birthDate ? formatYMD(worker.birthDate) : "");
+      setBirthDate(worker.birthDate ? (worker.birthDate.split("T")[0]) : "");
       setWorkerType(Object.values(WorkerType).find(type => type[0] === worker.workerType) || WorkerType.Unspecified);
     }
   }, [worker]); 

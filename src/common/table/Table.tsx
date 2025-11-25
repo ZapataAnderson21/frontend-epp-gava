@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { usePagination } from "./usePagination";
+import Pagination from "./Pagination";
 
 type Column<T> = {
   key?: keyof T;
@@ -12,9 +14,23 @@ type Column<T> = {
 interface TableProps<T> {
   data: T[];
   columns: readonly Column<T>[];
+  itemsPerPage?: number;
+  enablePagination?: boolean;
 }
 
-export default function Table<T>({ data, columns }: TableProps<T>) {
+export default function Table<T>({ 
+  data, 
+  columns, 
+  itemsPerPage = 10,
+  enablePagination = true 
+}: TableProps<T>) {
+  const { currentPage, totalPages, paginatedData, goToPage } = usePagination({
+    data,
+    itemsPerPage,
+  });
+
+  // Usar datos paginados si la paginación está habilitada, de lo contrario usar todos los datos
+  const displayData = enablePagination ? paginatedData : data;
 
   const baseDelayMs = 0;
   const perRowDelayMs = 60;
@@ -50,7 +66,7 @@ export default function Table<T>({ data, columns }: TableProps<T>) {
 
           <div className="table-row-group">
             <AnimatePresence>
-              {data.map((item, idx) => {
+              {displayData.map((item, idx) => {
                 const rowClasses = `hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
                 const cells = (
                   <>
@@ -85,6 +101,15 @@ export default function Table<T>({ data, columns }: TableProps<T>) {
           </div>
         </div>
       </div>
+      
+      {/* Componente de paginación */}
+      {enablePagination && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
+      )}
     </div>
   );
 }

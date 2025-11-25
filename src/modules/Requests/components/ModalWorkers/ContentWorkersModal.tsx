@@ -40,7 +40,7 @@ export default function ContentWorkersModal({ workerType, onSelected, onClose }:
   const isNewRequest = location.pathname.endsWith("/new");
 
   // API
-  const { data: fetchedWorkers, error, loading } = useFetch<Worker[]>(`${workerApi}group/${workerType}`, [workerType]);
+  const { data: fetchedWorkers, error, loading } = useFetch<Worker[]>(`${workerApi}type/${workerType}`, [workerType]);
   const { data: fetchedRequestWorkers } = useFetch<RequestWorker[]>(
     id ? `${requestWorkerApi}request/${id}` : "",
     [id]

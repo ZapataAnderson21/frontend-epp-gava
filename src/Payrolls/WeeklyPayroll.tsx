@@ -14,7 +14,7 @@ import { useApiAction } from "../hooks";
 import { AiOutlineLoading } from "react-icons/ai";
 import { Button } from "../components";
 import { FaSave } from "react-icons/fa";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function WeeklyPayroll() {
   const { user } = useCurrentUser();
@@ -64,19 +64,20 @@ export default function WeeklyPayroll() {
       })),
     };
 
-    try {
-      const result = await execute(
+    await toast.promise(
+      execute(
         `${dailyWageApi}week/${week.weekId}/bulk-upsert`,
         "POST",
         payload
-      );
-      
-      console.log(result);
-
-      toast.success("Planilla guardada");
-    } catch {
-      toast.error("Error al guardar la planilla");
-    }
+      ),
+      {
+        loading: "Guardando planilla...",
+        success: (result) => {
+          return result.message || "Planilla guardada exitosamente";
+        },
+        error: (err) => err.message || "Error al guardar la planilla",
+      }
+    );
   };
 
   return (
@@ -85,6 +86,7 @@ export default function WeeklyPayroll() {
       allow={adminTypes}
       fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}
     >
+      <Toaster position="top-center" />
       <Panel>
         <HeaderPanel
           name={`Planillas ${formatToLongMonthDate(week.startDate)} - ${formatToLongMonthDate(

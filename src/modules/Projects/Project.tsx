@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { MdOutlineContentCopy } from "react-icons/md";
 import { IoIosArrowUp } from "react-icons/io";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCurrentUser, useFetch } from "../../hooks";
 import type { Project } from "../../data/types";
 import { pettyCashApi, projectApi, purchaseOrderApi, serviceSaleApi, weekApi, workerApi } from "../../data/apiUrl";
@@ -10,7 +11,7 @@ import { SectionProjectSummary, HeaderActions, HeaderSection } from "./sections"
 import { type Currency, CurrencyFilter, MoneyTrendCard, CountCard, InfoCard } from "./components";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { ErrorMessage } from "../../common/error";
-import { formatDate, adminTypes } from "../../utils";
+import { adminTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
 import { TbCalendarCheck, TbCalendarOff, TbLocation } from "react-icons/tb";
 import type { WeeklyPayrollProps } from "../../Payrolls/PayrollsTable";
@@ -27,12 +28,13 @@ export default function Project() {
 
   const [currency, setCurrency] = React.useState<Currency>("PEN");
 
-  const [collapsed, setCollapsed] = React.useState<{ info: boolean; regs: boolean }>({
+  const [collapsed, setCollapsed] = React.useState<{ info: boolean; regs: boolean; econ: boolean }>({
     info: false,
     regs: false,
+    econ: false,
   });
 
-  const toggleSection = (key: "info" | "regs") =>
+  const toggleSection = (key: "info" | "regs" | "econ") =>
     setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
 
   const { data: project, loading, error } = useFetch<Project>( `${projectApi}${projectId}`, [projectId]);
@@ -42,6 +44,8 @@ export default function Project() {
   const { data: purchaseOrderPurchaseAmounts, loading: purchaseOrderPurchaseLoading } = useFetch<PurchaseOrderAmounts>(`${purchaseOrderApi}purchaseAmounts/${projectId}?currency=${currency}`, [projectId, currency]);
   const { data: payrollTotals, loading: payrollTotalsLoading } = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
   const {data: weekPayrolls, loading: weekPayrollsLoading } = useFetch<WeeklyPayrollProps[]>(`${weekApi}totals/${projectId}`, [projectId]);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const pettyCashTotals = { 
     PEN: pettyCashPEN ? Number(pettyCashPEN) : 0, 
@@ -94,6 +98,11 @@ export default function Project() {
 
   if (error) return <ErrorMessage errorMessage={error} />;
 
+  useEffect(() => {
+    setStartDate(project?.startDate?.split("T")[0] || "");
+    setEndDate(project?.endDate?.split("T")[0] || "");
+  }, [project]);
+
   return (
     <Panel>
       <Toaster position="top-center" reverseOrder={false} />
@@ -104,7 +113,7 @@ export default function Project() {
 
       <div className="flex flex-col w-full">
         {project?.description && (
-          <p><span className="font-bold">Descripción: </span>{project?.description}</p>
+          <p className="mb-8">{project?.description}</p>
         )}
       </div>
 
@@ -126,9 +135,17 @@ export default function Project() {
           </button>
         </HeaderSection>
 
-        {!collapsed.info && (
-          <div id="section-info" className="flex flex-col gap-4 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
+        <AnimatePresence>
+          {!collapsed.info && (
+            <motion.div
+              id="section-info"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="flex flex-col gap-4 mb-6 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
               <InfoCard loading={loading} title="Código" info={project?.code || "N/A"}>
                 <button
                   type="button"
@@ -151,15 +168,16 @@ export default function Project() {
                 />
               </InfoCard>
 
-              <InfoCard loading={loading} title="Fecha de Inicio" info={formatDate(project?.startDate) || "--"} >
+              <InfoCard loading={loading} title="Fecha de Inicio" info={startDate.split("-").reverse().join("/")} >
                 <TbCalendarCheck className="text-2xl" />
               </InfoCard>
-              <InfoCard loading={loading} title="Fecha de Fin" info={formatDate(project?.endDate) || "--"}>
+              <InfoCard loading={loading} title="Fecha de Fin" info={endDate.split("-").reverse().join("/")} >
                 <TbCalendarOff className="text-2xl" />
               </InfoCard>
-            </div>
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {
           <Permission user={user} allow={adminTypes}>
@@ -182,48 +200,85 @@ export default function Project() {
                 </button>
               </HeaderSection>
 
-              {!collapsed.regs && (
-                <div id="section-regs" className="flex flex-col gap-4 mb-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
+              <AnimatePresence>
+                {!collapsed.regs && (
+                  <motion.div
+                    id="section-regs"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="flex flex-col gap-4 mb-6 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mt-4">
                     <CountCard loading={loading} title="Órdenes de Compra" count={project?.purchaseOrders?.length ?? 0} to={`/admin/purchase-orders?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Requerimientos"   count={project?.requests?.length ?? 0}       to={`/admin/requests?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Caja Chica"       count={project?.pettyCashes?.length ?? 0}    to={`/admin/petty-cash?projectId=${projectId}`} />
                     <CountCard loading={loading} title="Emergencias"      count={project?.emergencies?.length ?? 0}    to={`/admin/emergencies?projectId=${projectId}`} />
                     <CountCard loading={weekPayrollsLoading} title="Planillas / Asistencias" count={weekPayrolls?.length ?? 0} to={`/admin/projects/payrolls/${projectId}`} />
-                  </div>
-                </div>
-              )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <hr className="border-t border-gray-200" />
 
               {/* ===== Resumen económico ===== */}
               <HeaderSection title="Resumen económico">
-                <CurrencyFilter currency={currency} onChange={setCurrency} />
+                <div className="flex items-center gap-2">
+                  <CurrencyFilter currency={currency} onChange={setCurrency} />
+                  <button
+                    type="button"
+                    onClick={() => toggleSection("econ")}
+                    aria-expanded={!collapsed.econ}
+                    aria-controls="section-econ"
+                    className="flex items-center gap-2 p-1 rounded hover:bg-gray-100"
+                    title={collapsed.econ ? "Mostrar sección" : "Ocultar sección"}
+                  >
+                    <IoIosArrowUp
+                      className={`transition-transform duration-200 ${collapsed.econ ? "-rotate-180" : "rotate-0"}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
               </HeaderSection>
 
-              {/* Ingresos */}
-              <SectionProjectSummary title="Ingresos">
-                <MoneyTrendCard
-                  loading={purchaseOrderSaleLoading}
-                  title="Órdenes de Compra"
-                  trend="up"
-                  currency={currency}
-                  amountsByCurrency={purchaseOrdersSaleTotals}
-                />
-              </SectionProjectSummary>
+              <AnimatePresence>
+                {!collapsed.econ && (
+                  <motion.div
+                    id="section-econ"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="flex flex-col gap-4 overflow-hidden"
+                  >
+                    {/* Ingresos */}
+                    <SectionProjectSummary title="Ingresos">
+                      <MoneyTrendCard
+                        loading={purchaseOrderSaleLoading}
+                        title="Órdenes de Compra"
+                        trend="up"
+                        currency={currency}
+                        amountsByCurrency={purchaseOrdersSaleTotals}
+                      />
+                    </SectionProjectSummary>
 
-              {/* Gastos */}
-              <SectionProjectSummary title="Gastos">
-                <MoneyTrendCard loading={purchaseOrderPurchaseLoading} title="Órdenes de Compra" trend="down" currency={currency} amountsByCurrency={purchaseOrdersPurchaseTotals} />
-                <MoneyTrendCard loading={payrollTotalsLoading} title="Planillas" trend="down" currency={currency} amountsByCurrency={payrollTotalsAmounts} />
-                <MoneyTrendCard loading={servicesTotalsLoading} title="Servicios" trend="down" currency={currency} amountsByCurrency={servicesTotals} />
-                <MoneyTrendCard loading={pettyCashLoading} title="Caja Chica" trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
-              </SectionProjectSummary>
+                    {/* Gastos */}
+                    <SectionProjectSummary title="Gastos">
+                      <MoneyTrendCard loading={purchaseOrderPurchaseLoading} title="Órdenes de Compra" trend="down" currency={currency} amountsByCurrency={purchaseOrdersPurchaseTotals} />
+                      <MoneyTrendCard loading={payrollTotalsLoading} title="Planillas" trend="down" currency={currency} amountsByCurrency={payrollTotalsAmounts} />
+                      <MoneyTrendCard loading={servicesTotalsLoading} title="Servicios" trend="down" currency={currency} amountsByCurrency={servicesTotals} />
+                      <MoneyTrendCard loading={pettyCashLoading} title="Caja Chica" trend="down" currency={currency} amountsByCurrency={pettyCashTotals} />
+                    </SectionProjectSummary>
 
-              {/* Utilidades */}
-              <SectionProjectSummary title="Utilidades">
-                <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={utilitiesTotals} />
-              </SectionProjectSummary>
+                    {/* Utilidades */}
+                    <SectionProjectSummary title="Utilidades">
+                      <MoneyTrendCard loading={loading} title={currency} trend="flat" currency={currency} amountsByCurrency={utilitiesTotals} />
+                    </SectionProjectSummary>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           </Permission>
         }

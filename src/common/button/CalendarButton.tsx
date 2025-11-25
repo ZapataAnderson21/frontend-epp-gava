@@ -45,7 +45,7 @@ export default function ReturnButton({ disabled }: ReturnButtonProps) {
               value={value}
               onChange={(date) => setValue(date as Date)}
               onClickDay={handleClickDay}
-              className="border-0 rounded-md text-sm text-gray-700"
+              className="border-0 rounded-md text-sm text-gray-700 p-2 shadow-lg"
               tileClassName={({ date, view }) => 
                 view === 'month' && date.toDateString() === value.toDateString()
                   ? 'bg-blue-500 text-white rounded'

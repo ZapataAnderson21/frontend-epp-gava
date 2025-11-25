@@ -158,13 +158,13 @@ export default function Attendances() {
                           const baseDelay = 0.04;
                           const perItemDelay = 0.06;
                           const delay = baseDelay + idx * perItemDelay;
-                          const attendanceForDate = worker.attendances?.find(wa => wa.date.split("T")[0] === date);
-
+                          const attendanceForDateAndProject = worker.attendances?.find(wa => wa.date.split("T")[0] === date && wa.projectId === Number(projectId));
+                          
                           console.log("Date:", date);
                           console.log("Worker:", worker);
                           
                           return (
-                            <InputCheck attendanceId={attendanceForDate?.attendanceId} worker={worker} projectId={Number(projectId)} date={date} delay={delay} value={attendanceForDate ? true : false} />
+                            <InputCheck attendanceId={attendanceForDateAndProject?.attendanceId} worker={worker} projectId={Number(projectId)} date={date} delay={delay} value={attendanceForDateAndProject ? true : false} />
                           );
                         })
                       ) : (

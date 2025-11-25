@@ -1,9 +1,9 @@
 import { IoCloseCircle } from "react-icons/io5";
 import { ErrorMessage } from "../../common/error";
 import { workerApi } from "../../data/apiUrl";
-import type { Worker } from "../../data/types";
+import { WorkerType, type Worker } from "../../data/types";
 import { useFetch } from "../../hooks";
-import { formatDate, formatDateTime } from "../../utils";
+import { formatDateTime } from "../../utils";
 
 interface WorkerProps {
   workerId: number;
@@ -13,6 +13,17 @@ interface WorkerProps {
 export default function Worker({ workerId, closeAction }: WorkerProps) {
 
   const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
+
+  // Función para obtener el nombre en español del tipo de trabajador
+  const getWorkerTypeLabel = (workerType: string | undefined): string => {
+    if (!workerType) return "No especificado";
+    
+    const typeEntry = Object.values(WorkerType).find(
+      (type) => type[0] === workerType.toLowerCase()
+    );
+    
+    return typeEntry ? typeEntry[1] : workerType;
+  };
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <ErrorMessage errorMessage="Error al cargar el trabajador" />;
@@ -34,7 +45,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           </div>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Fecha de nacimiento:</label>
-            <span>{formatDate(worker?.birthDate)}</span>
+            <span>{`${worker?.birthDate?.split("T")[0].split("-")[2]}/${worker?.birthDate?.split("T")[0].split("-")[1]}/${worker?.birthDate?.split("T")[0].split("-")[0]}`}</span>
           </div>
           <h2 className="text-xl font-bold mt-4">Información de contacto</h2>
           <div className="flex flex-row gap-2">
@@ -52,7 +63,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           <h2 className="text-xl font-bold mt-4">Información laboral</h2>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Grupo de trabajador:</label>
-            <span>{worker?.workerType[1]}</span>
+            <span>{getWorkerTypeLabel(worker?.workerType)}</span>
           </div>
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Fecha y hora de registro:</label>

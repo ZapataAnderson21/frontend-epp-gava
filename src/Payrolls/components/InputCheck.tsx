@@ -5,7 +5,6 @@ import { ymdLocalMidnightToUtc } from "../../utils";
 import { attendanceApi } from "../../data/apiUrl";
 import { toast, Toaster } from "react-hot-toast";
 import { useState } from "react";
-import Attendances from "../Attendances";
 
 interface InputCheckProps {
   attendanceId?: number;
@@ -41,32 +40,34 @@ export default function InputCheck( { attendanceId: initialAttendanceId, project
 
     console.log(body);
 
-    const result = await execute(attendanceApi, "POST", body);
-
-    const resultData = await result.data as Attendance;
-
-    console.log(result);
-
-    if (result.statusCode === 201) {
-      setValue(true);
-      setAttendanceId(resultData.attendanceId);
-      await toast.success('Asistencia registrada.');
-    } else {
-      await toast.error('Error al registrar la asistencia.');
-    }
+    toast.promise(
+      execute(attendanceApi, "POST", body),
+      {
+        loading: 'Registrando asistencia...',
+        success: (result) => {
+          const resultData = result.data as Attendance;
+          setValue(true);
+          setAttendanceId(resultData.attendanceId);
+          return result.message || 'Asistencia registrada.';
+        },
+        error: (err) => err.message || 'Error al registrar la asistencia.',
+      }
+    );
   }
 
   const handleDelete = async () => {
-
-    const result = await execute(`${attendanceApi}${attendanceId}`, "DELETE");
-
-    if (result.statusCode === 200) {
-      setValue(false);
-      setAttendanceId(undefined);
-      await toast.success('Asistencia eliminada.');
-    } else {
-      await toast.error('Error al eliminar la asistencia.');
-    }
+    toast.promise(
+      execute(`${attendanceApi}${attendanceId}`, "DELETE"),
+      {
+        loading: 'Eliminando asistencia...',
+        success: (result) => {
+          setValue(false);
+          setAttendanceId(undefined);
+          return result.message || 'Asistencia eliminada.';
+        },
+        error: (err) => err.message || 'Error al eliminar la asistencia.',
+      }
+    );
   }
 
   const rowVariants = {
