@@ -5,7 +5,7 @@ import { workerApi } from "../../data/apiUrl";
 import { type  Worker, WorkerType } from "../../data/types";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton } from "../../common/button";
-import { formatYMD, logisticsTypes, ymdLocalMidnightToUtc } from "../../utils";
+import { logisticsTypes, ymdLocalMidnightToUtc } from "../../utils";
 import Permission from "../../common/auth/Permission";
 
 interface EditWorkerProps {
