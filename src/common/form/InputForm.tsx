@@ -4,6 +4,7 @@ interface InputFormProps {
   name: string;
   type: string;
   value: string | number;
+  maxLength?: number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   optional?: boolean;
@@ -11,7 +12,7 @@ interface InputFormProps {
   children?: React.ReactNode;
 }
 
-export default function InputForm({ label, name, type, value, onChange, error, optional, disabled, children }: InputFormProps) {
+export default function InputForm({ label, name, type, value, maxLength, onChange, error, optional, disabled, children }: InputFormProps) {
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2">
@@ -28,6 +29,7 @@ export default function InputForm({ label, name, type, value, onChange, error, o
           className={`border ${error ? "border-red-600" : "border-gray-400"} p-2 rounded-sm w-full focus:outline-[#0047a3]`}
           value={value}
           onChange={onChange}
+          maxLength={maxLength}
           required={!optional}
           disabled={disabled}
         />

@@ -33,6 +33,9 @@ export default function NewUser() {
   const [password, setPassword] = useState("");
   const [userTypeId, setUserTypeId] = useState<number>(0);
 
+  const [errorPassword, setErrorPassword] = useState("");
+  const [errorPhone, setErrorPhone] = useState("");
+
   const [openUserTypesModal, setOpenUserTypesModal] = useState(false);
 
   const [reloadUserTypes, setReloadUserTypes] = useState(0);
@@ -59,18 +62,40 @@ export default function NewUser() {
     if (!email.trim()) errors.push("El correo es requerido");
     if (!password.trim()) errors.push("La contraseña es requerida");
     if (userTypeId === 0) errors.push("Debe seleccionar un rol");
+    if (phone.length !== 0 && phone.length !== 9) {
+      errors.push("El teléfono debe tener exactamente 9 dígitos");
+      setErrorPhone("El teléfono debe tener exactamente 9 dígitos");
+    } else {
+      setErrorPhone("");
+    }
+    if (password.length < 8) {
+      errors.push("La contraseña debe tener al menos 8 caracteres");
+      setErrorPassword("La contraseña debe tener al menos 8  caracteres");
+    } else {
+      setErrorPassword("");
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      errors.push("La contraseña debe contener al menos una mayúscula");
+      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      errors.push("La contraseña debe contener al menos un número");
+      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+    }
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
+      errors.push("La contraseña debe contener al menos un carácter especial");
+      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+    }
 
     if (errors.length > 0) {
-      toast.error(
-        <div>
-          <strong>Errores de validación:</strong>
-          <ul className="list-disc list-inside">
-            {errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </div>
-      );
+      // Mostrar cada error de validación en un toast separado
+      errors.forEach((err: string, index: number) => {
+        setTimeout(() => {
+          toast.error(err, {
+            duration: 4000,
+          });
+        }, index * 100); // Pequeño delay entre cada toast para que se vean en secuencia
+      });
       return;
     }
 
@@ -78,7 +103,7 @@ export default function NewUser() {
       name,
       lastName,
       email,
-      phone,
+      ...(phone.trim() !== "" && { phone: phone }),
       password,
       userTypeId,
     };
@@ -102,8 +127,8 @@ export default function NewUser() {
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <InputForm label="Apellido" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} optional={false} />
         <InputForm label="Correo" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
-        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => setPhone(e.target.value)} optional={true} />
-        <InputForm label="Contraseña" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} optional={false} />
+        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={true}  maxLength={9} error={errorPhone} />
+        <InputForm label="Contraseña" name="password" type="password" value={password} onChange={(e) => { setErrorPassword(""); setPassword(e.target.value)}} optional={false} error={errorPassword} />
         
         {loadingRoles && 
           <div className="w-full flex flex-col items-start justify-center gap-4">
@@ -121,7 +146,7 @@ export default function NewUser() {
             onChange={(value) => setUserTypeId(Number(value))}
             options={userTypes ? userTypes.map((role) => ({ value: role.userTypeId, label: role.name })) : []}
           >
-          <p className="text-[14px] font-bold underline cursor-pointer" onClick={() => setOpenUserTypesModal(true)}>¿Añadir un rol?</p>  
+            <div className="text-[14px] font-bold underline cursor-pointer" onClick={() => setOpenUserTypesModal(true)}>¿Añadir un rol?</div>  
           </SelectForm>
         )}
 

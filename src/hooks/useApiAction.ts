@@ -42,6 +42,7 @@ export function useApiAction<T>() {
 
       if (json.statusCode < 200 || json.statusCode >= 300) {
         setError(json.message);
+        throw new Error(json.message || "Error en la solicitud");
       }
       return json;
     } catch (err: any) {

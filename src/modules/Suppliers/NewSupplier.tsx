@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useApiAction } from "../../hooks";
 import { supplierApi } from "../../data/apiUrl";
 import { ReturnButton, SaveButton } from "../../common/button";
+import { set } from "date-fns";
 
 
 interface ResourceResponse {
@@ -32,6 +33,10 @@ export default function NewSupplier() {
   const [bank, setBank] = useState("");
   const [currency, setCurrency] = useState("");
 
+  const [errorPhone, setErrorPhone] = useState("");
+  const [errorRuc, setErrorRuc] = useState("");
+  const [errorAccountNumber, setErrorAccountNumber] = useState("");
+
   const navigate = useNavigate();
 
   // * acción POST
@@ -54,18 +59,34 @@ export default function NewSupplier() {
     if (!accountNumber.trim()) errors.push("El número de cuenta es requerido");
     if (!bank.trim()) errors.push("El banco es requerido");
     if (!currency) errors.push("Debe seleccionar una moneda");
+    if (phone.length !== 9) {
+      errors.push("El teléfono debe tener exactamente 9 dígitos");
+      setErrorPhone("El teléfono debe tener exactamente 9 dígitos");
+    } else {
+      setErrorPhone("");
+    }
+    if (ruc.length !== 11) {
+      errors.push("El RUC debe tener exactamente 11 dígitos");
+      setErrorRuc("El RUC debe tener exactamente 11 dígitos");
+    } else {
+      setErrorRuc("");
+    }
+    if (accountNumber.length < 10) {
+      errors.push("El número de cuenta debe tener al menos 10 dígitos");
+      setErrorAccountNumber("El número de cuenta debe tener al menos 10 dígitos");
+    } else {
+      setErrorAccountNumber("");
+    }
 
     if (errors.length > 0) {
-      toast.error(
-        <div>
-          <strong>Errores de validación:</strong>
-          <ul className="list-disc list-inside">
-            {errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
-        </div>
-      );
+      // Mostrar cada error de validación en un toast separado
+      errors.forEach((err: string, index: number) => {
+        setTimeout(() => {
+          toast.error(err, {
+            duration: 4000,
+          });
+        }, index * 100); // Pequeño delay entre cada toast para que se vean en secuencia
+      });
       return;
     }
 
@@ -89,7 +110,23 @@ export default function NewSupplier() {
           setTimeout(() => navigateToSuppliers(), 1200);
           return response.message || "Proveedor creado exitosamente";
         },
-        error: (err) => err.message || "Error al crear proveedor",
+        error: (err) => {
+          // Dividir el mensaje de error por comas y mostrar cada uno en un toast separado
+          const errorMessage = err.message || "Error al crear proveedor";
+          const errorMessages = errorMessage.split(',').map((msg: string) => msg.trim()).filter((msg: string) => msg.length > 0);
+          
+          // Mostrar cada error en un toast separado
+          errorMessages.forEach((msg: string, index: number) => {
+            setTimeout(() => {
+              toast.error(msg, {
+                duration: 4000,
+              });
+            }, index * 100); // Pequeño delay entre cada toast para que se vean en secuencia
+          });
+          
+          // Retornar el primer error para el toast.promise principal
+          return errorMessages[0] || "Error al crear proveedor";
+        },
       }
     );
   };
@@ -105,11 +142,11 @@ export default function NewSupplier() {
       <Form name="REGISTRAR PROVEEDOR" handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
-        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => setPhone(e.target.value)} optional={false} />
+        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(''); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
         <TextAreaForm label="Dirección" name="address" value={address} onChange={(e) => setAddress(e.target.value)} optional={true} />
-        <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => setRuc(e.target.value)} optional={false} />
-        <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.trim())} optional={false} />
+        <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => {setErrorRuc(''); const v = e.target.value; if (/^\d{0,11}$/.test(v)) setRuc(v); }} optional={false} maxLength={11} error={errorRuc} />
+        <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => {setErrorAccountNumber(''); const v = e.target.value; if (/^\d*$/.test(v)) setAccountNumber(v); }} optional={false} maxLength={20} error={errorAccountNumber} />
         <InputForm label="Banco" name="bank" type="text" value={bank} onChange={(e) => setBank(e.target.value)} optional={false} />
         <SelectForm label="Moneda" name="currency" options={currencyOptions} value={currency} onChange={(value) => setCurrency(value)} />
 

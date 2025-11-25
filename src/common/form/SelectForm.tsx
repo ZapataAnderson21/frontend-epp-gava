@@ -40,10 +40,10 @@ export default function SelectForm<T extends Primitive = string>({
           directionRow ? "flex-row items-center text-nowrap" : "flex-col"
         } gap-2`}
       >
-        <div className="flex flex-row justify-between w-fit">
-          <label className="text-gray-700 font-bold" htmlFor={name}>
+        <div className="flex flex-row justify-between w-full">
+          <p className="text-gray-700 font-bold">
             {label}
-          </label>
+          </p>
           {children}
         </div>
 
