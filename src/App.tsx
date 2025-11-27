@@ -19,6 +19,7 @@ import RequestDraft from './modules/Requests/RequestDraft.tsx';
 import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';
 import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
+import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
 
 export default function App() {
 
@@ -81,9 +82,10 @@ export default function App() {
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}
-          {/* Payrolls routes */}
-          <Route path='payrolls' element={<Payrolls />} />
-          {/* End payrolls routes */}
+          {/* General Payrolls routes */}
+          <Route path='payrolls' element={<GeneralPayrolls />} />
+          <Route path='payrolls/:weekId' element={<GeneralWeeklyPayroll />} />
+          {/* End general payrolls routes */}
         </Route>
       </Routes>
     </BrowserRouter>

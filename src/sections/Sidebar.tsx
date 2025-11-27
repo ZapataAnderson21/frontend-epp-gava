@@ -1,4 +1,4 @@
-import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie } from "react-icons/fa6";
+import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave } from "react-icons/fa6";
 import { FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -154,6 +154,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+
+          <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           
         </div>
 

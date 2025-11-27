@@ -1,5 +1,4 @@
-export const root = "https://sir.gavacyc.com/api/"; 
-//export const root = "http://localhost:3001/";
+export const root = import.meta.env.VITE_API_URL || "https://sir.gavacyc.com/api/";
 
 export const userTypeApi = `${root}user-type/`;
 
@@ -44,3 +43,5 @@ export const attendanceApi = `${root}attendance/`;
 export const weekApi = `${root}week/`;
 
 export const dailyWageApi = `${root}daily-wage/`;
+
+export const weeklyWageApi = `${root}weekly-wage/`;
