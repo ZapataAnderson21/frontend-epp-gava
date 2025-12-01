@@ -3,7 +3,7 @@ import type { RequestType } from "../../data/types";
 
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 import Button from "../../components/Button";
 import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
@@ -35,7 +35,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const projectId = searchParams.get("projectId");
+  
+  // Detectar si venimos de la página del proyecto
+  const cameFromProject = location.state?.fromProject as number | undefined;
 
   const navigate = useNavigate();
 
@@ -144,7 +148,16 @@ export default function RequestView({ requestId }: RequestViewProps) {
   };
 
   const returnAction = () => {
-    navigate(`/admin/requests${projectId ? `?projectId=${projectId}` : ""}`);
+    // Si venimos de la página del proyecto, regresar ahí
+    if (cameFromProject) {
+      navigate(`/admin/projects/${cameFromProject}/requests`);
+    } else if (projectId) {
+      // Fallback a query params (método antiguo)
+      navigate(`/admin/requests?projectId=${projectId}`);
+    } else {
+      // Sin proyecto, ir a la lista general
+      navigate("/admin/requests");
+    }
   }
 
   // Aprobado

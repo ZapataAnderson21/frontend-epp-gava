@@ -87,14 +87,14 @@ export default function WeeklyPayroll() {
       fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}
     >
       <Toaster position="top-center" />
-      <Panel>
+      <div className="w-full max-w-full">
         <HeaderPanel
           name={`Planillas ${formatToLongMonthDate(week.startDate)} - ${formatToLongMonthDate(
             week.endDate
           )}`}
         >
           <div className="flex flex-row gap-2 justify-end">
-            <ReturnButton onClick={() => { navigate(`/admin/projects/payrolls/${projectId}`) }} />
+            <ReturnButton onClick={() => { navigate(`/admin/projects/${projectId}/payrolls`) }} />
             <Button
               icon={loading ? <AiOutlineLoading className="animate-spin" /> : <FaSave />}
               label={loading ? "Guardando..." : "Guardar"}
@@ -121,7 +121,7 @@ export default function WeeklyPayroll() {
           searchPlaceholder="Buscar técnico por nombre..."
           onWageChange={handleTechnicianWageChange}
         />
-      </Panel>
+      </div>
     </Permission>
   );
 }

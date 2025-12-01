@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -27,6 +27,7 @@ type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 
 export default function RequestTable({ filter }: RequestTableProps) {
   const [searchParams] = useSearchParams();
+  const { id: routeProjectId } = useParams<{ id: string }>();
 
   // Lee y normaliza desde localStorage
   const stored = useMemo<StoredUser>(() => {
@@ -43,11 +44,18 @@ export default function RequestTable({ filter }: RequestTableProps) {
     return !isManager && Number.isFinite(idNum) && idNum > 0 ? idNum : undefined;
   }, [isManager, stored.userId]);
 
+  // Captura projectId de route params (/projects/:id/requests) o query params (?projectId=1)
   const projectId = useMemo(() => {
+    // Primero intenta desde route params
+    if (routeProjectId) {
+      const n = Number(routeProjectId);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+    // Fallback a query params
     const v = searchParams.get("projectId");
     const n = v ? Number(v) : undefined;
-    return Number.isFinite(n!) ? n : undefined;
-  }, [searchParams]);
+    return Number.isFinite(n!) && n! > 0 ? n : undefined;
+  }, [routeProjectId, searchParams]);
 
   const urlFetch = useMemo(() => {
     const params = new URLSearchParams();
@@ -82,11 +90,20 @@ export default function RequestTable({ filter }: RequestTableProps) {
   const navigate = useNavigate();
 
   const navigateToRequest = (requestId: number) => {
-    navigate(`/admin/requests/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
+    // Si estamos en la página del proyecto, pasar el projectId en el state
+    if (routeProjectId) {
+      navigate(`/admin/requests/${requestId}`, { state: { fromProject: Number(routeProjectId) } });
+    } else {
+      navigate(`/admin/requests/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
+    }
   }
 
   const navigateToEditRequest = (requestId: number) => {
-    navigate(`/admin/requests/edit/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
+    if (routeProjectId) {
+      navigate(`/admin/requests/edit/${requestId}`, { state: { fromProject: Number(routeProjectId) } });
+    } else {
+      navigate(`/admin/requests/edit/${requestId}${projectId ? `?projectId=${projectId}` : ""}`);
+    }
   }
 
   const columns = [

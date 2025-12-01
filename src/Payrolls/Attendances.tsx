@@ -59,10 +59,10 @@ export default function Attendances() {
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
-      <Panel>
+      <div className="flex flex-col max-w-full w-full gap-6">
         <HeaderPanel name='Registrar asistencias' >
           <div className="flex flex-row gap-2 justify-end">
-            <ReturnButton onClick={() => { navigate(`/admin/projects/payrolls/${projectId}`) }} />
+            <ReturnButton onClick={() => { navigate(`/admin/projects/${projectId}/payrolls`) }} />
           </div>
         </HeaderPanel>
 
@@ -185,7 +185,7 @@ export default function Attendances() {
             </div>
           </div>
         </section>
-      </Panel>
+      </div>
     </Permission>
   );
 }

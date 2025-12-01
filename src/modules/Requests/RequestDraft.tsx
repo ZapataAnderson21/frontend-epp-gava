@@ -13,7 +13,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction, useHandleForm } from "../../hooks";
 import { projectApi, requestApi, elementRequestApi, requestWorkerApi } from "../../data/apiUrl";
 import { ErrorMessage } from "../../common/error";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { ButtonContainer, InputForm, SelectForm, TextAreaForm } from "../../common/form";
 import toast, { Toaster } from "react-hot-toast";
 import WorkerSelectCard from "./components/ModalWorkers/WorkerSelectCard";
@@ -24,7 +24,11 @@ import { localDatetimeToIso, toDatetimeLocalValue } from "../../utils";
 export default function RequestDraft() {
 
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const projectIdParam = searchParams.get("projectId");
+  
+  // Detectar si venimos de la página del proyecto
+  const cameFromProject = location.state?.fromProject as number | undefined;
 
   const requestId = window.location.pathname.split("/").pop() || "";
 
@@ -54,10 +58,15 @@ export default function RequestDraft() {
   const { handleUpdate, handleUpdateAndSend } = useHandleForm();
 
   const navigateToBack = () => {
-    if (projectIdParam) {
+    // Si venimos de la página del proyecto, regresar ahí
+    if (cameFromProject) {
+      navigate(`/admin/projects/${cameFromProject}/requests`);
+    } else if (projectIdParam) {
+      // Fallback a query params (método antiguo)
       navigate(`/admin/requests?projectId=${projectIdParam}`);
     } else {
-      navigate(`/admin/requests`);
+      // Sin proyecto, ir a la lista general
+      navigate("/admin/requests");
     }
   };
 

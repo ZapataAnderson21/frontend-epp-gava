@@ -6,12 +6,14 @@ import { Login, ResetPassword } from './modules/Login';
 import { Users, User, NewUser} from './modules/Users';
 import { Elements, Element, NewElement } from './modules/Elements';
 import { Projects, Project, NewProject, EditProject } from './modules/Projects';
+import { ProjectGantt } from './modules/Projects/ProjectGantt';
 import { Requests, Request, NewRequest } from './modules/Requests';
 import { PurchaseOrders, PurchaseOrder, NewPurchaseOrder } from './modules/Projects/PurchaseOrders';
 import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
 import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
+import PurchaseOrdersProject from './modules/Projects/pages/PurchaseOrders.tsx';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
 import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
@@ -20,6 +22,8 @@ import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';
 import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
 import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
+import Summary from './modules/Projects/pages/Summary.tsx';
+import RequestsProject from './modules/Projects/pages/Requests.tsx';
 
 export default function App() {
 
@@ -32,12 +36,19 @@ export default function App() {
           <Route path='' element={<Projects />} />
           {/* Projects routes */}
           <Route path='projects' element={<Projects />} />
-          <Route path='projects/:id' element={<Project />} />
-          <Route path='projects/edit/:id' element={<EditProject />} />
           <Route path='projects/new' element={<NewProject />} />
-          <Route path='projects/payrolls/:id' element={<Payrolls />} />
-          <Route path='projects/payrolls/attendances/:id' element={<Attendances />} />
-          <Route path='projects/payrolls/weekly/:id' element={<WeeklyPayroll  />} />
+          <Route path='projects/edit/:id' element={<EditProject />} />
+          <Route path='projects/:id' element={<Project />}>
+            <Route path="" element={<Summary />} />
+            <Route path='purchase-orders' element={<PurchaseOrdersProject />} />
+            <Route path='progress' element={<ProjectGantt />} />
+            <Route path='payrolls' element={<Payrolls />} />
+            <Route path='petty-cash' element={<PettyCashes />} />
+            <Route path='requests' element={<RequestsProject />} />
+            <Route path='purchase-orders' element={<PurchaseOrders />} />
+            <Route path='payrolls/attendances' element={<Attendances />} />
+            <Route path='payrolls/weekly' element={<WeeklyPayroll  />} />
+          </Route>
           {/* End projects routes */}
           {/* Requests routes */}
           <Route path='requests' element={<Requests />} />
@@ -76,9 +87,6 @@ export default function App() {
           <Route path='purchase-orders/new' element={<NewPurchaseOrder />} />
           <Route path='purchase-orders/edit/:id' element={<EditPurchaseOrder />} />
           {/* End purchaseOrders routes */}
-          {/* PettyCash routes */}
-          <Route path='petty-cash' element={<PettyCashes />} />
-          {/* End pettyCash routes */}
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}

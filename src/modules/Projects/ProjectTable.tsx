@@ -15,7 +15,7 @@ interface ProjectTableProps {
   filter: string;
 }
 
-const statusColor = {
+export const statusColor = {
   "Activo": "#228b22",
   "Inactivo": "#c53030"
 }

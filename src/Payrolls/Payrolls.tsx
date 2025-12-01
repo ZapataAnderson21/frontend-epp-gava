@@ -1,9 +1,7 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCurrentUser, useFetch } from "../hooks";
 import { type Project } from "../data/types";
 import { projectApi, workerApi } from "../data/apiUrl";
-import { ReturnButton } from "../common/button";
-import { HeaderPanel, Panel } from "../common/panel";
 import { ErrorMessage } from "../common/error";
 import { adminTypes } from "../utils";
 import Permission from "../common/auth/Permission";
@@ -11,6 +9,7 @@ import { CgSpinner } from "react-icons/cg";
 import { motion } from "framer-motion";
 import PayrollsTable from "./PayrollsTable";
 import CalendarButton from "../common/button/CalendarButton";
+import { Loading } from "../common/loading";
 
 export default function Payrolls() {
   const { user } = useCurrentUser();
@@ -22,18 +21,14 @@ export default function Payrolls() {
 
   if (!projectId || isNaN(Number(projectId)) || Number(projectId) <= 0)  return <ErrorMessage errorMessage="No se encontró el proyecto." />;
 
-
-  const navigate = useNavigate();
+  if(loading) return <Loading /> 
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
-      <Panel>
-        <HeaderPanel name={project ? `Planillas de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
-            <div className="flex flex-row gap-2 justify-end">
-              <ReturnButton onClick={() => {navigate(`/admin/projects/${projectId}`)}} />
-              <CalendarButton />
-            </div>
-        </HeaderPanel>
+      <div className="flex flex-col max-w-full w-full gap-6">
+        <div className="flex justify-end">
+          <CalendarButton />
+        </div>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full mb-8">
           <motion.div 
@@ -83,7 +78,7 @@ export default function Payrolls() {
         </section>
 
         {project && <PayrollsTable projectId={Number(projectId)} />}
-      </Panel>
+      </div>
     </Permission>
   );
 }

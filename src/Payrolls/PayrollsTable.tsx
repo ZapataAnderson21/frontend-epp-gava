@@ -53,7 +53,7 @@ export default function PayrollsTable({ projectId }: PayrollsTableProps) {
     {
       label: "Acciones",
       width: "8rem",
-      render: (week: WeeklyPayrollProps) => <SeeButton onClick={() => navigate(`/admin/projects/payrolls/weekly/${projectId}`, { state: { week } })} />
+      render: (week: WeeklyPayrollProps) => <SeeButton onClick={() => navigate(`/admin/projects/${projectId}/payrolls/weekly`, { state: { week } })} />
     }
   ] as const;
 

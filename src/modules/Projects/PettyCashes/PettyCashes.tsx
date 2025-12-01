@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useCurrentUser, useFetch } from "../../../hooks";
-import { type Project } from "../../../data/types";
-import { pettyCashApi, projectApi } from "../../../data/apiUrl";
-import { ReturnButton, AddButton } from "../../../common/button";
-import { HeaderPanel, Panel } from "../../../common/panel";
+import { pettyCashApi } from "../../../data/apiUrl";
+import { AddButton } from "../../../common/button";
 import { ErrorMessage } from "../../../common/error";
 import { adminTypes } from "../../../utils";
 import { PettyCash, NewPettyCash, PettyCashTable }  from "./";
@@ -15,10 +13,8 @@ import { motion } from "framer-motion";
 export default function PettyCashes() {
   const { user } = useCurrentUser();
 
-  const [searchParams] = useSearchParams();
-  const projectId = searchParams.get("projectId");
+  const { id: projectId } = useParams<{ id: string }>();
 
-  const {data: project, loading} = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
   const [reFetch, setReFetch] = useState(0);
   const {data: mealsAmount, loading: mealsAmountLoading} = useFetch<number>(`${pettyCashApi}sum/${projectId}/meals`, [projectId, reFetch]);
   const {data: fuelAmount, loading: fuelAmountLoading} = useFetch<number>(`${pettyCashApi}sum/${projectId}/fuel`, [projectId, reFetch]);
@@ -44,17 +40,11 @@ export default function PettyCashes() {
     setSelectedPettyCashId(null);
   };
 
-  const navigate = useNavigate();
-
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
-      <Panel>
-        <HeaderPanel name={project ? `Caja Chica de ${project.name}` : loading ? "Cargando..." :  "Proyecto no encontrado"}>
-          <AddButton onClick={() => setShowRightPanel("new")} />
-          <ReturnButton onClick={() => {navigate(`/admin/projects/${projectId}`)}} />
-        </HeaderPanel>
+      <div className="flex flex-col max-w-full w-full gap-6">
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full mb-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full">
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -162,6 +152,10 @@ export default function PettyCashes() {
 
         </section>
 
+        <div className="flex justify-end">
+          <AddButton onClick={() => setShowRightPanel("new")} />
+        </div>
+
         <PettyCashTable projectId={projectId ? Number(projectId) : 0} reFetch={reFetch} onSee={handleSeeDetail} />
       
         {showRightPanel && (
@@ -174,7 +168,7 @@ export default function PettyCashes() {
             )}
         </div>
         )}
-      </Panel>
+      </div>
     </Permission>
   );
 }

@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ReturnButton } from "../../common/button";
 import AddButton from "../../common/button/AddButton";
 
-const options = [
+export const options = [
   { value: "all", label: "Todas" },
   { value: "inProgress", label: "En Progreso" },
   { value: "reviewed", label: "Revisadas" },

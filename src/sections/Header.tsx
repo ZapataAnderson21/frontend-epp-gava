@@ -1,3 +1,5 @@
+import { NotificationBell } from "../components";
+
 export default function Header() {
 
   const user = localStorage.getItem("user");
@@ -7,7 +9,8 @@ export default function Header() {
     <section className="col-span-1 row-span-1 flex items-center justify-end w-full h-[90px] shadow-xs">
         <div className="flex flex-row items-center justify-end w-full p-8">
           <div>
-            <div className="flex flex-row items-center justify-center gap-4">
+            <div className="flex flex-row items-center justify-center gap-6">
+              <NotificationBell />              
               <div className="flex flex-col items-end justify-center">
                 <span className="text-gray-700 font-bold text-nowrap">{parsedUser?.name} {parsedUser?.last_name}</span>
                 <span className="text-gray-800 text-sm font-extrabold">{parsedUser?.userType}</span>

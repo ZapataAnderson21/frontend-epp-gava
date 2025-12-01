@@ -21,7 +21,7 @@ export default function StatCard({ title, right }: StatCardProps) {
       whileHover={{ scale: 1.015 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       style={cardShadow} className={cardClass}>
-      <h4 className="font-bold">{title}</h4>
+      <h4 className="font-bold text-nowrap overflow-hidden">{title}</h4>
       <div className="flex flex-row justify-between gap-4 items-center">{right}</div>
     </motion.div>
   );

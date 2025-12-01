@@ -34,9 +34,9 @@ export default function SidebarItem({
   const delay = baseDelay + index * perItemDelay;
 
   const content =
-    <div tabIndex={0} className="flex flex-row items-center justify-between gap-4 p-3 hover:bg-[#eff2ff]
-                                 hover:text-[#0047a3] hover:shadow-[#c8d1f3] hover:shadow-md focus:bg-[#e0e5f6] focus:text-[#0047a3]
-                                 focus:shadow-[#c8d1f3] focus:shadow-sm w-full cursor-pointer rounded-sm transition-colors duration-200">
+    <div tabIndex={0} className="flex flex-row items-center justify-between gap-4 p-3 hover:bg-primary-50
+                                 hover:text-primary hover:shadow-primary-50 hover:shadow-md focus:bg-primary-50 focus:text-primary
+                                 focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-sm transition-colors duration-200">
       <div className="flex flex-row items-center gap-4">
         {icon}
         {label}
