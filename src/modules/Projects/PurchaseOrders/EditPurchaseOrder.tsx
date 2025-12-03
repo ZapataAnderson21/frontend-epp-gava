@@ -106,7 +106,7 @@ export default function EditPurchaseOrder() {
 
   // ---- navegación ----
   const navigateToPurchaseOrders = () => {
-    navigate(`/admin/purchase-orders?projectId=${purchaseOrder?.projectId}`);
+    navigate(`/admin/projects/${purchaseOrder?.projectId}/purchase-orders`);
   };
 
   // ---- helpers de items ----

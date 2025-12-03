@@ -9,6 +9,7 @@ export default function NavbarProject() {
       <NavbarItemProject to='requests' name="Requerimientos" />
       <NavbarItemProject to='petty-cash' name="Caja Chica" />
       <NavbarItemProject to='emergencies' name="Emergencias" />
+      <NavbarItemProject to='payrolls' name="Planillas / Asistencias" />
       <NavbarItemProject to='progress' name="Avance" />
       <div className="w-full border-b border-gray-300 absolute bottom-0"></div>
     </div>

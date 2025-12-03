@@ -8,14 +8,27 @@ interface ProjectTimelineProps {
   endDate?: string | null;
 }
 
+// Parsear fecha UTC interpretándola como fecha en Lima (sin desfase de día)
+function parseUtcDateAsLocal(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null;
+  // Extraer solo la parte de fecha YYYY-MM-DD
+  const ymd = dateStr.split("T")[0];
+  // Crear fecha como medianoche local (evita el desfase UTC)
+  const [year, month, day] = ymd.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export default function ProjectTimeline({
   loading = false,
   startDate,
   endDate,
 }: ProjectTimelineProps) {
   const today = new Date();
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate) : null;
+  // Usar solo la fecha (sin hora) para comparaciones correctas
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  const start = parseUtcDateAsLocal(startDate);
+  const end = parseUtcDateAsLocal(endDate);
 
   // Calcular métricas de tiempo
   const calculateTimeMetrics = () => {
@@ -32,13 +45,13 @@ export default function ProjectTimeline({
     }
 
     const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const daysElapsed = Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const daysRemaining = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.ceil((todayMidnight.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const daysRemaining = Math.ceil((end.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
 
     // Determinar estado
     let status: "sin-fechas" | "no-iniciado" | "en-curso" | "por-vencer" | "vencido" = "en-curso";
     
-    if (today < start) {
+    if (todayMidnight < start) {
       status = "no-iniciado";
     } else if (daysRemaining < 0) {
       status = "vencido";

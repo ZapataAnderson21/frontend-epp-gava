@@ -28,7 +28,7 @@ export default function PurchaseOrder() {
   const navigate = useNavigate();
 
   const navigateToPurchaseOrders = () => {
-    navigate(`/admin/purchase-orders?projectId=${purchaseOrder?.project?.projectId}`);
+    navigate(`/admin/projects/${purchaseOrder?.project?.projectId}/purchase-orders`);
   }
 
   const handleDuplicate = async (projectId: number) => {
