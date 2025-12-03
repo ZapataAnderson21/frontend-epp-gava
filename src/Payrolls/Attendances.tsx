@@ -3,7 +3,7 @@ import { useCurrentUser, useFetch } from "../hooks";
 import { type Project, type Worker } from "../data/types";
 import { projectApi, workerApi } from "../data/apiUrl";
 import { ReturnButton } from "../common/button";
-import { HeaderPanel, Panel } from "../common/panel";
+import { HeaderPanel } from "../common/panel";
 import { ErrorMessage } from "../common/error";
 import { logisticsTypes } from "../utils";
 import Permission from "../common/auth/Permission";

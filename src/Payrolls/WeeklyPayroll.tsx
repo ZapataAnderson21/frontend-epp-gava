@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useCurrentUser } from "../hooks";
 import { ReturnButton } from "../common/button";
-import { HeaderPanel, Panel } from "../common/panel";
+import { HeaderPanel } from "../common/panel";
 import { ErrorMessage } from "../common/error";
 import { adminTypes, formatToLongMonthDate } from "../utils";
 import Permission from "../common/auth/Permission";
