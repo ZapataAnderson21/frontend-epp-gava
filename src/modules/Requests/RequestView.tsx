@@ -152,8 +152,8 @@ export default function RequestView({ requestId }: RequestViewProps) {
     if (cameFromProject) {
       navigate(`/admin/projects/${cameFromProject}/requests`);
     } else if (projectId) {
-      // Fallback a query params (método antiguo)
-      navigate(`/admin/requests?projectId=${projectId}`);
+      // Si hay projectId en query params, ir a la página del proyecto
+      navigate(`/admin/projects/${projectId}/requests`);
     } else {
       // Sin proyecto, ir a la lista general
       navigate("/admin/requests");

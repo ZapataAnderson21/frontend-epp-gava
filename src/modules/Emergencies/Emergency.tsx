@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { emergencyApi } from "../../data/apiUrl";
@@ -27,6 +27,8 @@ const EmergencyStatus: Record<string, string> = {
 
 export default function Emergency() {
   const { id: emergencyId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const urlProjectId = searchParams.get("projectId");
 
   const { data: emergency, loading, error } = useFetch<EmergencyType>(`${emergencyApi}${emergencyId}`, [emergencyId]);
 
@@ -37,9 +39,18 @@ export default function Emergency() {
   const [imageUrl, setImageUrl] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromProject = (location.state as { fromProject?: number })?.fromProject;
+
+  // Usa fromProject del state o urlProjectId de query params como fallback
+  const projectIdToReturn = fromProject || (urlProjectId ? Number(urlProjectId) : null);
 
   const navigateToEmergencies = () => {
-    navigate("/admin/emergencies");
+    if (projectIdToReturn) {
+      navigate(`/admin/projects/${projectIdToReturn}/emergencies`);
+    } else {
+      navigate("/admin/emergencies");
+    }
   };
 
   useEffect(() => {

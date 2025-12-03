@@ -74,7 +74,7 @@ export default function NewRequest() {
 
   const navigateToBack = () => {
     if (projectIdParam) {
-      navigate(`/admin/requests?projectId=${projectIdParam}`);
+      navigate(`/admin/projects/${projectIdParam}/requests`);
     } else {
       navigate(`/admin/requests`);
     }

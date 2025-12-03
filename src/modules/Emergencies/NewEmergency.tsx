@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useFetch } from "../../hooks/useFetch";
 import { useFormDataAction } from "../../hooks/useFormDataAction";
@@ -13,20 +13,18 @@ import { ReturnButton, SaveButton } from "../../common/button";
 
 export default function NewEmergency() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlProjectId = searchParams.get("projectId");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [projectId, setProjectId] = useState<number>(0);
+  const [projectId, setProjectId] = useState<number>(urlProjectId ? Number(urlProjectId) : 0);
   const [image, setImage] = useState<File | null>(null);
 
   const { data: projects, loading: loadingProjects, error: errorProjects } = useFetch<Project[]>(`${projectApi}status/active`);
   
   const { execute, loading } = useFormDataAction<any>();
-
-  const navigateToEmergencies = () => {
-    navigate("/admin/emergencies");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +67,14 @@ export default function NewEmergency() {
         error: (err) => err.message || "Error al registrar emergencia",
       }
     );
+  };
+
+  const navigateToEmergencies = () => {
+    if (urlProjectId) {
+      navigate(`/admin/projects/${urlProjectId}/emergencies`);
+    } else {
+      navigate("/admin/emergencies");
+    }
   };
 
   return (

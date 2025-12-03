@@ -62,8 +62,8 @@ export default function RequestDraft() {
     if (cameFromProject) {
       navigate(`/admin/projects/${cameFromProject}/requests`);
     } else if (projectIdParam) {
-      // Fallback a query params (método antiguo)
-      navigate(`/admin/requests?projectId=${projectIdParam}`);
+      // Si hay projectId en query params, ir a la página del proyecto
+      navigate(`/admin/projects/${projectIdParam}/requests`);
     } else {
       // Sin proyecto, ir a la lista general
       navigate("/admin/requests");

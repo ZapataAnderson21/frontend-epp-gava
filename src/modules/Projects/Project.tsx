@@ -17,7 +17,7 @@ export default function Project() {
   return (
     <Panel>
 
-      <div className="w-full flex justify-end">
+      <div className="w-full flex justify-end mb-4">
         {projectId && <HeaderActions projectId={Number(projectId)} />}
       </div>
 

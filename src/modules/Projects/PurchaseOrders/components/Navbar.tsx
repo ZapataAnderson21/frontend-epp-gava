@@ -3,7 +3,7 @@ import NavbarItemProject from "./NavbarItemProject";
 export default function NavbarProject() {
 
   return (
-    <div className=" relative flex flex-row gap-4 overflow-auto text-nowrap w-full min-h-12 mb-6 z-10">
+    <div className="relative flex flex-row gap-4 overflow-auto text-nowrap w-full min-h-12 mb-6 z-10">
       <NavbarItemProject to='' name="Resumen" />
       <NavbarItemProject to='purchase-orders' name="Órdenes de Compra" />
       <NavbarItemProject to='requests' name="Requerimientos" />

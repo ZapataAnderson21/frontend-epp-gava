@@ -7,6 +7,7 @@ import { emergencyApi } from "../../data/apiUrl";
 import type { EmergencyType } from "../../data/types";
 import { useFetch } from "../../hooks";
 import SeeButton from "../../common/button/SeeButton";
+import { AddButton } from "../../common/button";
 
 const labelStatus: Record<string, string> = {
   "pending" : "PENDIENTE",
@@ -89,14 +90,57 @@ export default function EmergencyTable() {
       "label": "Acciones",
       width: "8rem",
       render: (row: EmergencyType) => {
-        return <SeeButton onClick={() => navigate(`/admin/emergencies/${row.emergencyId}`)} />;
+        return <SeeButton onClick={() => navigate(`/admin/emergencies/${row.emergencyId}`, { state: { fromProject: projectId } })} />;
       }
     }
   ] as const;
 
-  if (loading) return <LoadingSkeletonTable />;
-  if (error) return <ErrorMessage errorMessage={error} />;
-  if (!emergencies?.length) return <div className="text-gray-500">No hay emergencias disponibles.</div>;
+  const navigateToNewProject = () => {
+    if (projectId) {
+      navigate(`/admin/emergencies/new?projectId=${projectId}`);
+    } else {
+      navigate(`/admin/emergencies/new`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col max-w-full w-full gap-6">
+        <div className="flex w-full justify-end">
+          <div className="w-fit">
+            <AddButton onClick={navigateToNewProject} />
+          </div>
+        </div>
+        <LoadingSkeletonTable />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col max-w-full w-full gap-6">
+        <div className="flex w-full justify-end">
+          <div className="w-fit">
+            <AddButton onClick={navigateToNewProject} />
+          </div>
+        </div>
+        <ErrorMessage errorMessage={error} />
+      </div>
+    );
+  }
+
+  if (!emergencies?.length) {
+    return (
+      <div className="flex flex-col max-w-full w-full gap-6">
+        <div className="flex w-full justify-end">
+          <div className="w-fit">
+            <AddButton onClick={navigateToNewProject} />
+          </div>
+        </div>
+        <div className="text-gray-500">No hay emergencias disponibles.</div>
+      </div>
+    );
+  }
 
   const processedEmergencies = emergencies.map((e) => ({
     ...e,
@@ -105,9 +149,16 @@ export default function EmergencyTable() {
   }));
 
   return (
-    <Table<EmergencyType>
-      data={processedEmergencies}
-      columns={columns}
-    />
+    <div className="flex flex-col max-w-full w-full gap-6">
+      <div className="flex w-full justify-end">
+        <div className="w-fit">
+          <AddButton onClick={navigateToNewProject} />
+        </div>
+      </div>
+      <Table<EmergencyType>
+        data={processedEmergencies}
+        columns={columns}
+      />  
+    </div>
   );
 }
