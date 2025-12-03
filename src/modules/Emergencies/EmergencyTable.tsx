@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { useMemo } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
@@ -24,6 +24,7 @@ type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 
 export default function EmergencyTable() {
   const [searchParams] = useSearchParams();
+  const { id: routeProjectId } = useParams<{ id: string }>();
 
   // 1) Lee y normaliza el usuario (una sola vez)
   const stored = useMemo<StoredUser>(() => {
@@ -34,12 +35,18 @@ export default function EmergencyTable() {
   const role = String(stored.userType ?? stored.type ?? "").toUpperCase().trim();
   const isManager = role === "GERENTE" || role === "ADMINISTRADORA";
 
-  // 2) projectId desde la URL (opcional)
+  // 2) projectId desde route params (/projects/:id/emergencies) o query params (?projectId=1)
   const projectId = useMemo(() => {
+    // Primero intenta desde route params
+    if (routeProjectId) {
+      const n = Number(routeProjectId);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+    // Fallback a query params
     const v = searchParams.get("projectId");
     const n = v ? Number(v) : undefined;
-    return Number.isFinite(n!) ? n : undefined;
-  }, [searchParams]);
+    return Number.isFinite(n!) && n! > 0 ? n : undefined;
+  }, [routeProjectId, searchParams]);
 
   // 3) userId efectivo: solo si NO es gerente/administradora
   const effectiveUserId = useMemo(() => {

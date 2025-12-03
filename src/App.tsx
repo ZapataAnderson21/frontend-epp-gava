@@ -24,6 +24,7 @@ import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
 import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
 import Summary from './modules/Projects/pages/Summary.tsx';
 import RequestsProject from './modules/Projects/pages/Requests.tsx';
+import EmergenciesProject from './modules/Projects/pages/Emergencies.tsx';
 
 export default function App() {
 
@@ -48,6 +49,7 @@ export default function App() {
             <Route path='purchase-orders' element={<PurchaseOrders />} />
             <Route path='payrolls/attendances' element={<Attendances />} />
             <Route path='payrolls/weekly' element={<WeeklyPayroll  />} />
+            <Route path='emergencies' element={<EmergenciesProject  />} />
           </Route>
           {/* End projects routes */}
           {/* Requests routes */}
