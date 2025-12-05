@@ -1,53 +1,32 @@
+// components/NotificationBell.tsx
 import { useState, useRef, useEffect } from "react";
-import { LuBell } from "react-icons/lu";
+import { LuBell, LuCheck, LuTrash2, LuWifi, LuWifiOff } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-// Datos de ejemplo para la maquetación
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    title: "Nuevo requerimiento",
-    message: "Se ha creado un nuevo requerimiento de EPP",
-    time: "Hace 5 min",
-    read: false,
-  },
-  {
-    id: 2,
-    title: "Orden aprobada",
-    message: "La orden de compra #OC-2025-001 fue aprobada",
-    time: "Hace 30 min",
-    read: false,
-  },
-  {
-    id: 3,
-    title: "Emergencia reportada",
-    message: "Nueva emergencia en Proyecto Centro Comercial",
-    time: "Hace 1 hora",
-    read: true,
-  },
-  {
-    id: 4,
-    title: "Planilla generada",
-    message: "La planilla de la semana ha sido generada",
-    time: "Hace 2 horas",
-    read: true,
-  },
-];
+import { useNotifications, type Notification } from "../hooks";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import { config } from "../config";
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications] = useState<Notification[]>(mockNotifications);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Obtener token del localStorage o tu sistema de auth
+  const token = localStorage.getItem("accessToken") || "";
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications({
+    apiUrl: config.apiUrl,
+    wsUrl: config.wsUrl,
+    token,
+  });
 
   // Cerrar al hacer clic fuera
   useEffect(() => {
@@ -61,6 +40,27 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Formatear tiempo relativo
+  const formatTime = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: es,
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Manejar clic en notificación
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.isRead) {
+      await markAsRead(notification.notificationId);
+    }
+    // Aquí puedes agregar navegación según el tipo de notificación
+    // Por ejemplo: router.push(`/tasks/${notification.taskId}`)
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Botón de campana */}
@@ -69,6 +69,14 @@ export default function NotificationBell() {
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
       >
         <LuBell className="size-5 text-gray-800" />
+        
+        {/* Indicador de conexión */}
+        <span 
+          className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ${
+            isConnected ? 'bg-green-500' : 'bg-red-500'
+          }`}
+          title={isConnected ? 'Conectado' : 'Desconectado'}
+        />
         
         {/* Badge de contador */}
         {unreadCount > 0 && (
@@ -94,36 +102,56 @@ export default function NotificationBell() {
           >
             {/* Header del dropdown */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-              <h3 className="font-semibold text-gray-800">Notificaciones</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-800">Notificaciones</h3>
+                {isConnected ? (
+                  <LuWifi className="size-3 text-green-500" title="En tiempo real" />
+                ) : (
+                  <LuWifiOff className="size-3 text-red-500" title="Sin conexión" />
+                )}
+              </div>
               {unreadCount > 0 && (
-                <span className="text-xs text-blue-600 font-medium">
-                  {unreadCount} sin leer
-                </span>
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                >
+                  <LuCheck className="size-3" />
+                  Marcar todas
+                </button>
               )}
             </div>
 
             {/* Lista de notificaciones */}
             <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  <div className="animate-spin size-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
+                  <p className="text-sm">Cargando...</p>
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-gray-500">
                   <LuBell className="size-8 mx-auto mb-2 text-gray-300" />
                   <p className="text-sm">No tienes notificaciones</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.read ? "bg-blue-50/50" : ""
+                  <motion.div
+                    key={notification.notificationId}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors group ${
+                      !notification.isRead ? "bg-blue-50/50" : ""
                     }`}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-start gap-3">
                       {/* Indicador de no leído */}
                       <div className="pt-1.5">
-                        {!notification.read && (
+                        {!notification.isRead ? (
                           <span className="block w-2 h-2 bg-blue-500 rounded-full" />
+                        ) : (
+                          <span className="block w-2 h-2" />
                         )}
-                        {notification.read && <span className="block w-2 h-2" />}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -134,11 +162,22 @@ export default function NotificationBell() {
                           {notification.message}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-1">
-                          {notification.time}
+                          {formatTime(notification.createdAt)}
                         </p>
                       </div>
+
+                      {/* Botón eliminar */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNotification(notification.notificationId);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded text-red-500 transition-opacity"
+                      >
+                        <LuTrash2 className="size-3" />
+                      </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>
