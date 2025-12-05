@@ -35,6 +35,8 @@ export function useApiAction<T>() {
       const json: ApiResponse<T> = await res.json();
       setResponse(json);
 
+      console.log("API Action Response:", json);
+
       if (json.statusCode === 401) {
         redirectToLoginPreservingURL();
         throw new Error("Unauthorized");

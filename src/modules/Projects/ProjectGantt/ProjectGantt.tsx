@@ -81,49 +81,42 @@ export default function ProjectGantt() {
   }, []);
 
   const handleSaveTask = useCallback(
-    async (taskData: Partial<Task>, assignedUserIds: number[]) => {
-      try {
-        if (taskData.taskId) {
-          // Actualizar tarea existente - PATCH /task/:taskId
-          const updateDto: UpdateTaskDto = {
-            title: taskData.title,
-            description: taskData.description || undefined,
-            status: taskData.status,
-            priority: taskData.priority,
-            startDate: taskData.startDate || undefined,
-            dueDate: taskData.dueDate || undefined,
-            assignedUserIds,
-          };
+    async (taskData: Partial<Task>, assignedUserIds: number[]): Promise<boolean> => {
+      if (taskData.taskId) {
+        // Actualizar tarea existente - PATCH /task/:taskId
+        const updateDto: UpdateTaskDto = {
+          title: taskData.title,
+          description: taskData.description || undefined,
+          status: taskData.status,
+          priority: taskData.priority,
+          startDate: taskData.startDate || undefined,
+          dueDate: taskData.dueDate || undefined,
+          assignedUserIds,
+        };
 
-          await executeUpdate(`${taskApi}${taskData.taskId}`, "PUT", updateDto);
-          toast.success("Tarea actualizada");
-        } else {
-          // Crear nueva tarea - POST /task
-          const createDto: CreateTaskDto = {
-            title: taskData.title!,
-            description: taskData.description || undefined,
-            status: taskData.status,
-            priority: taskData.priority,
-            projectId: Number(projectId),
-            parentTaskId: parentTask?.taskId,
-            startDate: taskData.startDate || undefined,
-            dueDate: taskData.dueDate || undefined,
-            assignedUserIds,
-          };
+        await executeUpdate(`${taskApi}${taskData.taskId}`, "PUT", updateDto);
+      } else {
+        // Crear nueva tarea - POST /task
+        const createDto: CreateTaskDto = {
+          title: taskData.title!,
+          description: taskData.description || undefined,
+          status: taskData.status,
+          priority: taskData.priority,
+          projectId: Number(projectId),
+          parentTaskId: parentTask?.taskId,
+          startDate: taskData.startDate || undefined,
+          dueDate: taskData.dueDate || undefined,
+          assignedUserIds,
+        };
 
-          await executeCreate(taskApi, "POST", createDto);
-          toast.success("Tarea creada");
-        }
-
-        setIsTaskModalOpen(false);
-        setSelectedTask(null);
-        setParentTask(null);
-        refreshTasks();
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Error al guardar la tarea";
-        toast.error(errorMessage);
+        await executeCreate(taskApi, "POST", createDto);
       }
+
+      setIsTaskModalOpen(false);
+      setSelectedTask(null);
+      setParentTask(null);
+      refreshTasks();
+      return true;
     },
     [projectId, parentTask, executeCreate, executeUpdate, refreshTasks]
   );

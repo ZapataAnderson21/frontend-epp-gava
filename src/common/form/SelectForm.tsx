@@ -18,6 +18,7 @@ interface SelectFormProps<T extends Primitive = string> {
   // Opcionales para animación
   openDurationMs?: number;   // duración abrir/cerrar
   staggerMs?: number;        // separación entre opciones
+  disabled?: boolean;
 }
 
 export default function SelectForm<T extends Primitive = string>({
@@ -26,6 +27,7 @@ export default function SelectForm<T extends Primitive = string>({
   value,
   onChange,
   options,
+  disabled,
   directionRow,
   children,
   error,
@@ -55,6 +57,7 @@ export default function SelectForm<T extends Primitive = string>({
           error={error}
           openDurationMs={openDurationMs}
           staggerMs={staggerMs}
+          disabled={disabled}
         />
       </div>
     </div>

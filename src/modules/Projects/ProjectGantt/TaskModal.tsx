@@ -5,11 +5,12 @@ import { InputForm, SelectForm } from "../../../common/form";
 import type { Task, TaskStatus, TaskPriority } from "./types";
 import { STATUS_LABELS, PRIORITY_LABELS } from "./types";
 import type { User } from "../../../data/types";
+import toast, { Toaster } from "react-hot-toast";
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (task: Partial<Task>, assignedUserIds: number[]) => void;
+  onSave: (task: Partial<Task>, assignedUserIds: number[]) => Promise<boolean>;
   task?: Task | null;
   parentTask?: Task | null;
   users: User[];
@@ -110,7 +111,7 @@ export default function TaskModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -126,7 +127,16 @@ export default function TaskModal({
       dueDate: form.dueDate || undefined,
     };
 
-    onSave(taskData, assignedUsers);
+    await toast.promise(
+      onSave(taskData, assignedUsers),
+      {
+        loading: task ? "Actualizando tarea..." : "Creando tarea...",
+        success: () => {
+          return task ? "Tarea actualizada exitosamente" : "Tarea creada exitosamente";
+        },
+        error: (err) => err?.message || "Error al guardar la tarea",
+      }
+    );
   };
 
   const availableUsers = users.filter((u) => !assignedUsers.includes(u.userId));
@@ -134,6 +144,7 @@ export default function TaskModal({
   if (!isOpen) return null;
 
   return (
+    <>
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -329,5 +340,7 @@ export default function TaskModal({
         </motion.div>
       </motion.div>
     </AnimatePresence>
+    <Toaster position="top-center" />
+    </>
   );
 }

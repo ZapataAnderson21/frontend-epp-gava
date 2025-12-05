@@ -18,6 +18,7 @@ interface SelectProps<T extends Primitive = string> {
   placeholder?: string;
   openDurationMs?: number;
   staggerMs?: number;
+  disabled?: boolean;
 }
 
 export default function Select<T extends Primitive = string>({
@@ -29,6 +30,7 @@ export default function Select<T extends Primitive = string>({
   placeholder = "Seleccionar ...",
   openDurationMs = 200,
   staggerMs = 30,
+  disabled = false,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
@@ -81,8 +83,9 @@ export default function Select<T extends Primitive = string>({
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen((v) => !v)}
-        className={`w-full flex items-center justify-between border ${error ? "border-red-500" : "border-gray-400"} min-w-[180px] p-2 rounded-sm focus:border focus:border-[#0047a3]`}
+        onClick={() => !disabled && setIsOpen((v) => !v)}
+        disabled={disabled}
+        className={`w-full flex items-center justify-between border ${error ? "border-red-500" : "border-gray-400"} min-w-[180px] p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={`${name}-menu`}

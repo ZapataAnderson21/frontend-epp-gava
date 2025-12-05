@@ -234,6 +234,7 @@ export default function NewRequest() {
                   label: project.name,
                 })),
               ]}
+              disabled={!!projectIdParam}
             />
 
             <InputForm
