@@ -1,4 +1,4 @@
-export const root = import.meta.env.VITE_API_URL || "https://sir.gavacyc.com/api/";
+export const root = `${import.meta.env.VITE_API_URL}api/`;
 
 export const userTypeApi = `${root}user-type/`;
 
