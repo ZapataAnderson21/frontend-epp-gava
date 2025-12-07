@@ -9,8 +9,8 @@ export const config = {
   // API REST
   apiUrl: import.meta.env.VITE_API_URL || "https://sir.gavacyc.com/api/",
   
-  // WebSocket
-  wsUrl: import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "https://sir.gavacyc.com/api/",
+  // WebSocket - Solo la URL base, sin /socket ni /socket.io
+  wsUrl: import.meta.env.VITE_WS_URL || "https://sir.gavacyc.com",
   
   // Ambiente
   isDev: import.meta.env.DEV,
