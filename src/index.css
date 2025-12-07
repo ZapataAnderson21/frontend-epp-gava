@@ -66,3 +66,30 @@
   /* Fuente personalizada */
   --font-family-sans: 'Lato', ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Fondo con waves diagonales difuminadas */
+.blobs-bg {
+  background-color: #f9fafb;
+  position: relative;
+  overflow: hidden;
+}
+
+.blobs-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(0, 71, 163, 0.35) 0%, transparent 40%),
+    linear-gradient(135deg, transparent 30%, rgba(0, 71, 163, 0.25) 50%, transparent 70%),
+    linear-gradient(135deg, transparent 60%, rgba(0, 71, 163, 0.18) 100%);
+  filter: blur(30px);
+  z-index: 0;
+}
+
+.blobs-bg > * {
+  position: relative;
+  z-index: 1;
+}

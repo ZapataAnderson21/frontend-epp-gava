@@ -1,15 +1,17 @@
 // components/NotificationBell.tsx
 import { useState, useRef, useEffect } from "react";
-import { LuBell, LuCheck, LuTrash2, LuWifi, LuWifiOff } from "react-icons/lu";
+import { LuBell, LuCheck, LuTrash2 } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, type Notification } from "../hooks";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { config } from "../config";
+import { useNavigate } from "react-router-dom";
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate(); // Agregar este hook
   
   // Obtener token del localStorage o tu sistema de auth
   const token = localStorage.getItem("accessToken") || "";
@@ -17,7 +19,6 @@ export default function NotificationBell() {
   const {
     notifications,
     unreadCount,
-    isConnected,
     isLoading,
     markAsRead,
     markAllAsRead,
@@ -57,8 +58,14 @@ export default function NotificationBell() {
     if (!notification.isRead) {
       await markAsRead(notification.notificationId);
     }
-    // Aquí puedes agregar navegación según el tipo de notificación
-    // Por ejemplo: router.push(`/tasks/${notification.taskId}`)
+    
+    // Navegar usando la URL de la notificación
+    if (notification.url) {
+      // Extraer solo el path (sin el dominio) si viene URL completa
+      const url = new URL(notification.url, window.location.origin);
+      navigate(url.pathname);
+      setIsOpen(false); // Cerrar el dropdown después de navegar
+    }
   };
 
   return (
@@ -69,14 +76,6 @@ export default function NotificationBell() {
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
       >
         <LuBell className="size-5 text-gray-800" />
-        
-        {/* Indicador de conexión */}
-        <span 
-          className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ${
-            isConnected ? 'bg-green-500' : 'bg-red-500'
-          }`}
-          title={isConnected ? 'Conectado' : 'Desconectado'}
-        />
         
         {/* Badge de contador */}
         {unreadCount > 0 && (
@@ -104,11 +103,6 @@ export default function NotificationBell() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-gray-800">Notificaciones</h3>
-                {isConnected ? (
-                  <LuWifi className="size-3 text-green-500" title="En tiempo real" />
-                ) : (
-                  <LuWifiOff className="size-3 text-red-500" title="Sin conexión" />
-                )}
               </div>
               {unreadCount > 0 && (
                 <button

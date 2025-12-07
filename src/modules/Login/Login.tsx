@@ -93,8 +93,8 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center min-h-screen sm:bg-gray-100">
-        <form className="flex flex-col gap-4 bg-white px-8 py-12 rounded-lg sm:shadow-md w-full max-w-md" onSubmit={handleLogin}>
+      <div className="flex flex-col items-center justify-center min-h-screen blobs-bg">
+        <form className="flex flex-col gap-4 sm:bg-white px-8 py-12 rounded-lg sm:shadow-md w-full max-w-md" onSubmit={handleLogin}>
           <div className="flex flex-row items-center justify-center gap-4 w-full mb-8">
             <img src="/buho-gava.webp" alt="Logo-Buho" className="h-16" />
             <img src="/logo-gava.png" alt="Logo" className="h-16" />

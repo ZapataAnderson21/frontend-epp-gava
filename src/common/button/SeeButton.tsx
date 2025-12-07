@@ -9,7 +9,7 @@ interface SeeButtonProps {
 export default function SeeButton({ onClick, disabled }: SeeButtonProps) {
   return (
     <ActionButton
-      icon={<FaEye />}
+      icon={<FaEye className="size-4" />}
       onClick={onClick}
       disabled={disabled}
       bgColor="#252525ff"

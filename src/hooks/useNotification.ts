@@ -11,6 +11,7 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   userId: number;
+  url?: string;
   projectId?: number;
   taskId?: number;
   requestId?: number;
@@ -133,7 +134,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
   const markAsRead = useCallback(
     async (notificationId: number) => {
       try {
-        await fetch(`${apiUrl}/notification/${notificationId}/read`, {
+        await fetch(`${apiUrl}notification/${notificationId}/read`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -156,7 +157,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
   // Marcar todas como leídas
   const markAllAsRead = useCallback(async () => {
     try {
-      await fetch(`${apiUrl}/notification/read-all`, {
+      await fetch(`${apiUrl}notification/read-all`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -174,7 +175,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
   const deleteNotification = useCallback(
     async (notificationId: number) => {
       try {
-        await fetch(`${apiUrl}/notification/${notificationId}`, {
+        await fetch(`${apiUrl}notification/${notificationId}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -183,6 +184,11 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
 
         setNotifications((prev) =>
           prev.filter((n) => n.notificationId !== notificationId)
+        );
+        setUnreadCount((prev) =>
+          prev > 0
+            ? prev - (notifications.find(n => n.notificationId === notificationId)?.isRead ? 0 : 1)
+            : 0
         );
       } catch (error) {
         console.error('Error eliminando notificación:', error);
