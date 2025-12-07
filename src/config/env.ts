@@ -7,10 +7,10 @@
 
 export const config = {
   // API REST
-  apiUrl: import.meta.env.VITE_API_URL || "http://localhost:3001/",
+  apiUrl: import.meta.env.VITE_API_URL || "https://sir.gavacyc.com/api/",
   
   // WebSocket
-  wsUrl: import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:3001",
+  wsUrl: import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "https://sir.gavacyc.com/api/",
   
   // Ambiente
   isDev: import.meta.env.DEV,
