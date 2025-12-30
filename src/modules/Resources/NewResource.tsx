@@ -83,7 +83,7 @@ export default function NewResource() {
       <Form name="REGISTRAR RECURSO" handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <InputForm label="Unidad" name="unit" type="text" value={unit} onChange={(e) => setUnit(e.target.value)} optional={false} />
-        <TextAreaForm label="Descripción" name="description" value={description} onChange={(e) => setDescription(e.target.value)} optional={true} />
+        <TextAreaForm label="Descripción" name="description" value={description} onChange={(e) => setDescription(e.target.value)} optional={false} />
 
         {/* Reemplazo del SelectForm */}
         <div className="w-full">

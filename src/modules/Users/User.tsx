@@ -23,7 +23,7 @@ export default function User() {
 
   const navigate = useNavigate();
 
-  const { data: user, loading: loadingUser, error: errorUser } = useFetch<{ name: string; last_name: string; email: string; userType: string }>(
+  const { data: user, loading: loadingUser, error: errorUser } = useFetch<{ name: string; lastName: string; email: string; userType: string }>(
     `${userApi}${userId}`,
     [userId]
   );
@@ -35,7 +35,7 @@ export default function User() {
   useEffect(() => {
     if (user) {
       setName(user.name);
-      setLastname(user.last_name);
+      setLastname(user.lastName);
       setEmail(user.email);
       setRole(user.userType);
     }

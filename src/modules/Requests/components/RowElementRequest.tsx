@@ -11,7 +11,7 @@ export default function RowElementRequest({ elementRequest, handleRemoveElement,
   return (
     <div className="flex flex-row items-center justify-between w-full p-2 border-b border-gray-200 
                     gap-4 hover:rounded-lg hover:bg-[#eff2ff] cursor-pointer">
-      <span className="flex items-start justify-start w-48">{elementRequest.element?.name}</span>
+      <span className="flex items-start justify-start w-48 xl:text-nowrap">{elementRequest.element?.name}</span>
 
       <input
         type="text"
