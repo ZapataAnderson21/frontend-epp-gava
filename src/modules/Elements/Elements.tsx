@@ -7,7 +7,7 @@ import AddButton from '../../common/button/AddButton';
 
 const options = [
   { value: "all", label: "Todos" },
-  { value: "epp", label: "de Protección Personal (EPP)" },
+  { value: "epp", label: "EPP" },
   { value: "operative", label: "Operativos" },
 ];
 

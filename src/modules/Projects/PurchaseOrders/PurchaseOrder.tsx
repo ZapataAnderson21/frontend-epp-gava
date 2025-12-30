@@ -6,7 +6,7 @@ import { logisticsTypes } from "../../../utils";
 import { ReturnButton } from "../../../common/button";
 import { purchaseOrderApi } from "../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../data/types";
-import { SignaturesTable, DuplicateModal } from "./components";
+import { SignaturesTable, DuplicateModal, SectionCard, InfoField } from "./components";
 import { FaRegCopy, FaRegFilePdf } from "react-icons/fa6";
 import { Button } from "../../../components";
 import { useState } from "react";
@@ -80,7 +80,7 @@ export default function PurchaseOrder() {
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
-      <div className="flex flex-col p-4">
+      <div className="flex flex-col w-full">
         <div className="flex w-full items-center justify-between">
           <div className="w-fit">
             <ReturnButton onClick={navigateToPurchaseOrders} />
@@ -129,51 +129,42 @@ export default function PurchaseOrder() {
 
             <div className="flex flex-col gap-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="grid-cols-1 flex flex-col h-full">
-                  <div className="bg-[#14519d] text-white p-4 border border-[#14519d]">
-                    <h1 className="text-xl font-bold">DATOS DEL PROVEEDOR</h1>
-                  </div>
-                  <div className="flex flex-col gap-4 p-4 shadow-md border border-gray-300 h-full">
-                    <p className="text-nowrap"> <span className="font-bold">Proveedor: </span>{purchaseOrder?.supplier?.name}</p>
-                    <p className="text-nowrap"><span className="font-bold">RUC:</span> {purchaseOrder?.supplier?.ruc} </p>
-                    <p className="text-nowrap"> <span className="font-bold">Contacto: </span>{purchaseOrder?.supplier?.contactName}</p>
-                    <p className="text-nowrap"><span className="font-bold">Correo:</span> {purchaseOrder?.supplier?.email} </p>
-                    <p className="text-nowrap"><span className="font-bold">Teléfono:</span> {purchaseOrder?.supplier?.phone} </p>
-                    <p className="text-nowrap"><span className="font-bold">Cotización:</span> {purchaseOrder?.quotation} </p>
-                  </div>
-                </div>
+                <SectionCard title="DATOS DEL PROVEEDOR">
+                  <InfoField label="Proveedor" value={purchaseOrder?.supplier?.name} />
+                  <InfoField label="RUC" value={purchaseOrder?.supplier?.ruc} />
+                  <InfoField label="Contacto" value={purchaseOrder?.supplier?.contactName} />
+                  <InfoField label="Correo" value={purchaseOrder?.supplier?.email} />
+                  <InfoField label="Teléfono" value={purchaseOrder?.supplier?.phone} />
+                  <InfoField label="Cotización" value={purchaseOrder?.quotation} />
+                </SectionCard>
 
-                <div className="grid-cols-1 flex flex-col h-full">
-                  <div className="bg-[#14519d] text-white p-4 border border-[#14519d]">
-                    <h1 className="text-xl font-bold">DATOS DE ENTREGA O ENVÍO</h1>
-                  </div>
-                  <div className="flex flex-col gap-4 p-4 shadow-md border border-gray-300 h-full">
-                    <p className="text-nowrap"> <span className="font-bold">Lugar de entrega: </span>{purchaseOrder?.deliveryLocation}</p>
-                    <p className="text-nowrap"><span className="font-bold">Destino:</span> {purchaseOrder?.destination} </p>
-                    <p className="text-nowrap"> <span className="font-bold">Atención: </span>{purchaseOrder?.carePerson}</p>
-                    <p className="text-nowrap"><span className="font-bold">DNI:</span> {purchaseOrder?.dniCarePerson} </p>
-                    <p className="text-nowrap"><span className="font-bold">Observación:</span> {purchaseOrder?.observations} </p>
-                  </div>
-                </div>
+                <SectionCard title="DATOS DE ENTREGA O ENVÍO">
+                  <InfoField label="Lugar de entrega" value={purchaseOrder?.deliveryLocation} />
+                  <InfoField label="Destino" value={purchaseOrder?.destination} />
+                  <InfoField label="Atención" value={purchaseOrder?.carePerson} />
+                  <InfoField label="DNI" value={purchaseOrder?.dniCarePerson} />
+                  <InfoField label="Observación" value={purchaseOrder?.observations} />
+                </SectionCard>
               </div>
 
-              <div className="flex flex-col gap-8">
-                <div className="grid-cols-1 flex flex-col h-full">
-                  <div className="bg-[#14519d] text-white p-4 border border-[#14519d]">
-                    <h1 className="text-xl font-bold">DATOS DEL PROVEEDOR</h1>
-                  </div>
-                  <div className="flex flex-col gap-4 p-4 border-r border-l border-gray-300 h-full">
-                    <p className="text-nowrap font-bold">{purchaseOrder?.paymentConditions}</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 shadow-md border border-gray-300 h-full">
-                    <p className="text-nowrap"><span className="font-bold">Método de pago: </span>{purchaseOrder?.paymentMethod}</p>
-                    <p className="text-nowrap"><span className="font-bold">Cta. cte: </span>{purchaseOrder?.supplier?.bank} ({purchaseOrder?.supplier?.currency}) - {purchaseOrder?.supplier?.accountNumber}</p>
-                  </div>
+              <div className="flex flex-col">
+                <div className="bg-[#14519d] text-white p-4 border border-[#14519d]">
+                  <h1 className="text-xl font-bold">CONDICIONES DE PAGO</h1>
+                </div>
+                <div className="flex flex-col gap-4 p-4 border-x border-gray-300">
+                  <p className="font-bold">{purchaseOrder?.paymentConditions}</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 shadow-md border border-gray-300">
+                  <InfoField label="Método de pago" value={purchaseOrder?.paymentMethod} />
+                  <InfoField 
+                    label="Cta. cte" 
+                    value={`${purchaseOrder?.supplier?.bank} (${purchaseOrder?.supplier?.currency}) - ${purchaseOrder?.supplier?.accountNumber}`} 
+                  />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <p className="text-nowrap"><span className="font-bold">Señores: </span>{purchaseOrder?.supplier?.name}</p>
+                <InfoField label="Señores" value={purchaseOrder?.supplier?.name} />
                 <p>Sírvase a suministrarnos los {purchaseOrder?.purchaseOrderType} solicitados siguientes:</p>
 
                 <div className="flex items-center justify-end text-[13px] font-semibold">

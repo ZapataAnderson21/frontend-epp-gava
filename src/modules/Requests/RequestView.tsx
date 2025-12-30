@@ -287,7 +287,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
             </div>
           )}
         </div>
-        {pdfUrl && <iframe src={pdfUrl} title="Requerimiento PDF" className="w-full h-full min-h-120" />}
+        {pdfUrl && <iframe src={pdfUrl} title="Requerimiento PDF" className="w-full h-[calc(100vh-5rem)] min-h-120" />}
       </div>
       <Toaster position="top-center" />
     </>

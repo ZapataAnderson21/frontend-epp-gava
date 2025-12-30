@@ -8,21 +8,12 @@ import { useFetch } from "../../hooks";
 import { useMemo, useEffect } from "react";
 import SeeButton from "../../common/button/SeeButton";
 import { EditButton } from "../../common/button";
+import StatusTag from "./components/StatusTag";
 
 interface RequestTableProps {
   filter: string;
   projectId?: number;
 }
-
-const bgStatusColor = {
-  "Borrador": "#9ca3af", // gray-400
-  "En progreso": "#d97706", // amber-600
-  "Revisada": "#fbbf24", // yellow-600
-  "Aprobada": "#4ade80", // green-500
-  "Rechazada": "#ef4444", // red-500
-  "Atendida": "#06b6d4", // cyan-500
-  "Completada": "#3b82f6", // purple-500
-};
 
 type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 
@@ -99,11 +90,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
       label: "Estado",
       width: "8rem",
       render: (row: RequestType) => {
-        return (
-        <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
-              style={{ backgroundColor: bgStatusColor[row.status as keyof typeof bgStatusColor] || '#9ca3af' }}>
-                {row.status.toUpperCase()}
-        </span>);
+        return <StatusTag status={row.status} />
      }
     },
     {

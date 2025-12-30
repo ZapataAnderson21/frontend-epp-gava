@@ -7,3 +7,5 @@ export { default as ConditionsSection } from "./ConditionsSection";
 export { default as SignaturesTable } from "./SignaturesTable";
 export { default as DuplicateModal } from "./DuplicateModal";
 export { default as NavbarProject } from "./Navbar"
+export { default as InfoField } from "./InfoField";
+export { default as SectionCard } from "./SectionCard";

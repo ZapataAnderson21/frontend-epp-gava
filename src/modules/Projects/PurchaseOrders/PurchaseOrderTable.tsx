@@ -27,11 +27,11 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
   const navigate = useNavigate();
 
   const handleEdit = (purchaseOrderId: number) => {
-    navigate(`/admin/purchase-orders/edit/${purchaseOrderId}`);
+    navigate(`/admin/projects/${projectId}/purchase-orders/edit/${purchaseOrderId}`);
   };
 
   const handleSee = (purchaseOrderId: number) => {
-    navigate(`/admin/purchase-orders/${purchaseOrderId}`);
+    navigate(`/admin/projects/${projectId}/purchase-orders/${purchaseOrderId}`);
   };
 
   if (loading) return <LoadingSkeletonTable />;

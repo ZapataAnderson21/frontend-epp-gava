@@ -158,13 +158,13 @@ export default function ProjectGantt() {
   if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
-    <div className="flex flex-col w-full max-w-full gap-6">
+    <div className="flex flex-col w-full max-w-full gap-4">
       <div className="flex justify-end">
         <AddButton onClick={handleAddTask} />
       </div>
 
       {/* Estadísticas */}
-      <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm w-full">
+      <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm w-full">
         <TaskStats tasks={tasks || []} />
       </div>
 

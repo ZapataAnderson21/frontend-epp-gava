@@ -9,8 +9,9 @@ import { useApiAction } from "../hooks/useApiAction";
 import { userApi } from "../data/apiUrl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCurrentUser } from "../hooks";
-import { logisticsTypes } from "../utils";
+import { adminTypes, logisticsTypes } from "../utils";
 import Permission from "../common/auth/Permission";
+import { NotificationBell } from "../components";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   const { user } = useCurrentUser();
   const [isElementosOpen, setIsElementosOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -66,7 +68,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: baseDelay }}
-            className="flex flex-row items-center justify-start m-3"
+            className="flex flex-row items-center justify-start mt-7"
           >
             <img src="/logo-gava.png" alt="Logo" className="h-14" />
           </motion.div>
@@ -155,19 +157,57 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
-          <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <Permission user={user} allow={adminTypes}>
+            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          </Permission>
           
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-gray-300 py-4 px-6">
-          <SidebarItem
-            icon={<IoLogOut />}
-            label={loggingOut ? "Saliendo..." : "Salir"}
-            onClick={handleLogout}
-            index={8}
-            baseDelay={baseDelay}
-            perItemDelay={perItemDelay}
-          />
+        {/* Sección inferior: Usuario y Logout */}
+        <div className="flex flex-col border-t border-gray-300 py-4 px-4">
+          {/* Info del usuario - clickeable */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: baseDelay + 10 * perItemDelay }}
+            className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+            onClick={() => setIsUserMenuOpen((v) => !v)}
+          >
+            <div className="flex items-center justify-center border-2 border-[#0047a3] rounded-full size-10 overflow-hidden flex-shrink-0">
+              <img src="/buho-gava.webp" alt="Avatar" className="size-10 object-cover" />
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-gray-700 font-semibold text-sm truncate">
+                {user?.name} {user?.lastName}
+              </span>
+              <span className="text-[#0047a3] text-xs font-bold uppercase">
+                {user?.userType}
+              </span>
+            </div>
+            <NotificationBell />
+          </motion.div>
+
+          {/* Botón de logout - aparece al hacer clic en usuario */}
+          <AnimatePresence initial={false}>
+            {isUserMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden mt-2"
+              >
+                <SidebarItem
+                  icon={<IoLogOut />}
+                  label={loggingOut ? "Saliendo..." : "Salir"}
+                  onClick={handleLogout}
+                  index={0}
+                  baseDelay={0}
+                  perItemDelay={0}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </section>

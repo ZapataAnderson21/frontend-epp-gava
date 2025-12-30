@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { Outlet } from "react-router-dom";
 import { IoMenu } from "react-icons/io5";
@@ -46,7 +45,6 @@ export default function Home() {
           {!isMobile && (
             <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
           )}
-          <Header />
           <Outlet />
         </div>
       </div>

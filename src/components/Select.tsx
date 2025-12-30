@@ -85,7 +85,7 @@ export default function Select<T extends Primitive = string>({
         type="button"
         onClick={() => !disabled && setIsOpen((v) => !v)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between border ${error ? "border-red-500" : "border-gray-400"} min-w-[180px] p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={`w-full flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} min-w-[180px] p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={`${name}-menu`}
@@ -103,7 +103,7 @@ export default function Select<T extends Primitive = string>({
             id={`${name}-menu`}
             role="listbox"
             key="dropdown"
-            className="absolute top-full left-0 z-200 w-full bg-white border border-gray-200 rounded-md shadow-md overflow-hidden"
+            className="absolute top-full left-0 z-200 w-full bg-white border border-gray-200 rounded-md shadow-md overflow-hidden max-h-72 overflow-y-auto"
             initial="collapsed"
             animate="open"
             exit="collapsed"

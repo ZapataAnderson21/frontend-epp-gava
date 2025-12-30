@@ -9,28 +9,25 @@ import { CgSpinner } from "react-icons/cg";
 import { motion } from "framer-motion";
 import PayrollsTable from "./PayrollsTable";
 import CalendarButton from "../common/button/CalendarButton";
-import { Loading } from "../common/loading";
-
 export default function Payrolls() {
   const { user } = useCurrentUser();
 
   const { id: projectId } = useParams<{ id: string }>();
 
-  const {data: project, loading} = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
-  const {data: totals, loading: totalsLoading} = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
+  const { data: project } = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
+  const { data: totals, loading: totalsLoading } = useFetch<{laborerAmount: number; technicianAmount: number; totalAmount: number}>(`${workerApi}totals/${projectId}`, [projectId]);
 
   if (!projectId || isNaN(Number(projectId)) || Number(projectId) <= 0)  return <ErrorMessage errorMessage="No se encontró el proyecto." />;
-
-  if(loading) return <Loading /> 
 
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
       <div className="flex flex-col max-w-full w-full gap-6">
+        
         <div className="flex justify-end">
           <CalendarButton />
         </div>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full mb-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

@@ -10,6 +10,7 @@ import { adminTypes } from "../../utils";
 import { type Project } from "../../data/types";
 import { projectApi } from "../../data/apiUrl";
 import Permission from "../../common/auth/Permission";
+import StatusTag from "./components/StatusTag";
 
 interface ProjectTableProps {
   filter: string;
@@ -34,10 +35,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
       width: "8rem",
       render: (row: Project) => {
         return (
-          <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
-                style={{ backgroundColor: statusColor[row.status as keyof typeof statusColor] || '#9ca3af' }}>
-                  {row.status.toUpperCase()}
-          </span>
+          <StatusTag status={row.status} />
         );
       }
     },

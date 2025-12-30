@@ -141,7 +141,7 @@ export default function Summary() {
           </div>
         </div>
 
-        <Permission user={user} allow={adminTypes} fallback={<div />}>
+        <Permission user={user} allow={adminTypes}>
           <ColumnCard title="Resumen de registros">
             <div className="w-full rounded-xl">
               <div className="flex flex-row justify-between bg-sky-50 p-2 rounded-tr-xl rounded-tl-xl">
@@ -167,73 +167,73 @@ export default function Summary() {
 
       {/* ===== COLUMNA 3: Resumen económico ===== */}
       
-      <div className="col-span-1">
-        <Permission user={user} allow={adminTypes} fallback={<div />}>
-        <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm h-full">
-          <div className="flex flex-col mb-4 gap-2">
-            <h3 className="text-xl font-extrabold text-gray-800">Resumen Económico</h3>
-            <div className="flex w-full justify-end">
-              <div className="w-fit">
-                <CurrencyFilter currency={currency} onChange={setCurrency} />
+      <Permission user={user} allow={adminTypes}>
+        <div className="col-span-1">
+          <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm h-full">
+            <div className="flex flex-col mb-4 gap-2">
+              <h3 className="text-xl font-extrabold text-gray-800">Resumen Económico</h3>
+              <div className="flex w-full justify-end">
+                <div className="w-fit">
+                  <CurrencyFilter currency={currency} onChange={setCurrency} />
+                </div>
               </div>
             </div>
+            <div className="space-y-4">
+                {/* Ingresos */}
+                <SectionProjectSummary title="Ingresos" trend="up">
+                  <MoneyTrendCard
+                    index={1}
+                    loading={purchaseOrderSaleLoading}
+                    title="Órdenes de Compra"
+                    trend="up"
+                    currency={currency}
+                    amountsByCurrency={purchaseOrdersSaleTotals}
+                  />
+                </SectionProjectSummary>
+
+                {/* Gastos */}
+                <SectionProjectSummary title="Gastos" trend="down">
+                  <MoneyTrendCard
+                    index={1} 
+                    loading={purchaseOrderPurchaseLoading} 
+                    title="Órdenes de Compra" 
+                    trend="down" 
+                    currency={currency} 
+                    amountsByCurrency={purchaseOrdersPurchaseTotals} 
+                  />
+                  <MoneyTrendCard
+                    index={2}
+                    loading={payrollTotalsLoading} 
+                    title="Planillas" 
+                    trend="down" 
+                    currency={currency} 
+                    amountsByCurrency={payrollTotalsAmounts} 
+                  />
+                  <MoneyTrendCard
+                    index={3} 
+                    loading={pettyCashLoading} 
+                    title="Caja Chica" 
+                    trend="down" 
+                    currency={currency} 
+                    amountsByCurrency={pettyCashTotals} 
+                  />
+                </SectionProjectSummary>
+
+                {/* Utilidades */}
+                <SectionProjectSummary title="Utilidades" trend="equal">
+                  <MoneyTrendCard 
+                    index={1}
+                    loading={loading} 
+                    title={currency} 
+                    trend="flat" 
+                    currency={currency} 
+                    amountsByCurrency={utilitiesTotals} 
+                  />
+                </SectionProjectSummary>
+              </div>
           </div>
-          <div className="space-y-4">
-              {/* Ingresos */}
-              <SectionProjectSummary title="Ingresos" trend="up">
-                <MoneyTrendCard
-                  index={1}
-                  loading={purchaseOrderSaleLoading}
-                  title="Órdenes de Compra"
-                  trend="up"
-                  currency={currency}
-                  amountsByCurrency={purchaseOrdersSaleTotals}
-                />
-              </SectionProjectSummary>
-
-              {/* Gastos */}
-              <SectionProjectSummary title="Gastos" trend="down">
-                <MoneyTrendCard
-                  index={1} 
-                  loading={purchaseOrderPurchaseLoading} 
-                  title="Órdenes de Compra" 
-                  trend="down" 
-                  currency={currency} 
-                  amountsByCurrency={purchaseOrdersPurchaseTotals} 
-                />
-                <MoneyTrendCard
-                  index={2}
-                  loading={payrollTotalsLoading} 
-                  title="Planillas" 
-                  trend="down" 
-                  currency={currency} 
-                  amountsByCurrency={payrollTotalsAmounts} 
-                />
-                <MoneyTrendCard
-                  index={3} 
-                  loading={pettyCashLoading} 
-                  title="Caja Chica" 
-                  trend="down" 
-                  currency={currency} 
-                  amountsByCurrency={pettyCashTotals} 
-                />
-              </SectionProjectSummary>
-
-              {/* Utilidades */}
-              <SectionProjectSummary title="Utilidades" trend="equal">
-                <MoneyTrendCard 
-                  index={1}
-                  loading={loading} 
-                  title={currency} 
-                  trend="flat" 
-                  currency={currency} 
-                  amountsByCurrency={utilitiesTotals} 
-                />
-              </SectionProjectSummary>
-            </div>
         </div>
-        </Permission>
-      </div>
+      </Permission>
 
       {/* ===== COLUMNA 2: Avance del proyecto ===== */}
       <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm">

@@ -14,7 +14,7 @@ export default function PurchaseOrdersProject() {
   const navigate = useNavigate();
   
   const navigateToNewPurchaseOrder = () => {
-    navigate(`/admin/purchase-orders/new?projectId=${projectId}`);
+    navigate(`/admin/projects/${projectId}/purchase-orders/new`);
   }
 
   return (

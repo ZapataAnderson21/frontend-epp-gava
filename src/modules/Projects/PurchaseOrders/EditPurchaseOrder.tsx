@@ -438,22 +438,7 @@ export default function EditPurchaseOrder() {
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="flex flex-col p-4">
-        <div className="flex w-full items-center justify-between">
-          <div className="w-fit">
-            <ReturnButton onClick={navigateToPurchaseOrders} />
-          </div>
-          <div className="w-fit flex flex-row gap-2">
-            <Button
-              icon={<FaRegCopy />}
-              label="Duplicar"
-              bgColor="#9f7aea"
-              bgHoverColor="#7c3aed"
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-            />
-          </div>
-        </div>
+      <div className="flex flex-col justify-center w-full">
         <div className="w-full flex flex-col items-center justify-center">
           <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
             <PurchaseOrderHeader
@@ -568,6 +553,14 @@ export default function EditPurchaseOrder() {
                 bgHoverColor="#C97816"
                 type="button"
                 onClick={handleAuthorize}
+              />
+              <Button
+                icon={<FaRegCopy />}
+                label="Duplicar"
+                bgColor="#9f7aea"
+                bgHoverColor="#7c3aed"
+                type="button"
+                onClick={() => setIsModalOpen(true)}
               />
             </ButtonContainer>
           </form>

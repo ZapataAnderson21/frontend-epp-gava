@@ -8,7 +8,7 @@ import { Elements, Element, NewElement } from './modules/Elements';
 import { Projects, Project, NewProject, EditProject } from './modules/Projects';
 import { ProjectGantt } from './modules/Projects/ProjectGantt';
 import { Requests, Request, NewRequest } from './modules/Requests';
-import { PurchaseOrders, PurchaseOrder, NewPurchaseOrder } from './modules/Projects/PurchaseOrders';
+import { PurchaseOrder, NewPurchaseOrder } from './modules/Projects/PurchaseOrders';
 import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
@@ -41,12 +41,16 @@ export default function App() {
           <Route path='projects/edit/:id' element={<EditProject />} />
           <Route path='projects/:id' element={<Project />}>
             <Route path="" element={<Summary />} />
-            <Route path='purchase-orders' element={<PurchaseOrdersProject />} />
+            <Route path='purchase-orders'>
+              <Route index element={<PurchaseOrdersProject />} />
+              <Route path=':purchaseOrderId' element={<PurchaseOrder />} />
+              <Route path='new' element={<NewPurchaseOrder />} />
+              <Route path='edit/:purchaseOrderId' element={<EditPurchaseOrder />} />
+            </Route>
             <Route path='progress' element={<ProjectGantt />} />
             <Route path='payrolls' element={<Payrolls />} />
             <Route path='petty-cash' element={<PettyCashes />} />
             <Route path='requests' element={<RequestsProject />} />
-            <Route path='purchase-orders' element={<PurchaseOrders />} />
             <Route path='payrolls/attendances' element={<Attendances />} />
             <Route path='payrolls/weekly' element={<WeeklyPayroll  />} />
             <Route path='emergencies' element={<EmergenciesProject  />} />
@@ -83,12 +87,6 @@ export default function App() {
           <Route path='suppliers/new' element={<NewSupplier />} />
           <Route path='suppliers/:id' element={<Supplier />} />
           {/* End suppliers routes */}
-          {/* PurchaseOrders routes */}
-          <Route path='purchase-orders' element={<PurchaseOrders />} />
-          <Route path='purchase-orders/:id' element={<PurchaseOrder />} />
-          <Route path='purchase-orders/new' element={<NewPurchaseOrder />} />
-          <Route path='purchase-orders/edit/:id' element={<EditPurchaseOrder />} />
-          {/* End purchaseOrders routes */}
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}

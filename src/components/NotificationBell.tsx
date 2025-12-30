@@ -97,7 +97,7 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden"
+            className="fixed left-50 bottom-18 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] overflow-hidden"
           >
             {/* Header del dropdown */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">

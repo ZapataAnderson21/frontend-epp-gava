@@ -1,4 +1,4 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CgSpinner } from "react-icons/cg";
 import { ErrorMessage } from "../../../common/error";
 import { ButtonContainer } from "../../../common/form";
@@ -14,9 +14,12 @@ import { Select } from "../../../components";
 
 export default function NewPurchaseOrder() {
   const { user } = useCurrentUser();
-  const [searchParams] = useSearchParams();
-  const projectId = searchParams.get("projectId") ?? "";
+  const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  if (!projectId) {
+    return <ErrorMessage errorMessage="Project ID is required." />;
+  }
 
   const {
     // data
@@ -56,7 +59,7 @@ export default function NewPurchaseOrder() {
   } = usePurchaseOrderForm({ projectId, navigate });
 
   const navigateToPurchaseOrders = () => {
-    navigate(`/admin/purchase-orders?projectId=${projectId}`);
+    navigate(`/admin/projects/${projectId}/purchase-orders`);
   }
 
   if (projectLoading || suppliersLoading || resourcesLoading) {
@@ -74,10 +77,7 @@ export default function NewPurchaseOrder() {
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="flex flex-col p-4">
-        <div className="w-fit">
-          <ReturnButton onClick={navigateToPurchaseOrders} />
-        </div>
+      <div className="flex flex-col justify-center w-full">
 
         <div className="w-full flex flex-col items-center justify-center">
           <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
