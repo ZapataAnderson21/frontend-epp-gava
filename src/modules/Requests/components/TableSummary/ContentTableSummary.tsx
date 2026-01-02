@@ -8,7 +8,7 @@ interface ContentTableSummaryProps {
 
 export default function ContentTableSummary({ request, onQuantityChange }: ContentTableSummaryProps) {
   return (
-    <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+    <div className="flex flex-col items-start justify-start w-full">
       {request?.elementRequests?.map((item, index) => (
         <RowTableSummary 
           key={index} 

@@ -17,7 +17,7 @@ import { FaRegCopy } from "react-icons/fa6";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function EditPurchaseOrder() {
-  const { id: purchaseOrderId } = useParams<{ id: string }>();
+  const { purchaseOrderId } = useParams<{ purchaseOrderId: string }>();
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 

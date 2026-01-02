@@ -19,7 +19,7 @@ export default function RowTableSummary({ elementRequest, onQuantityChange }: Ro
   };
 
   return (
-    <div className="grid grid-cols-4 w-full max-w-2xl h-full text-[14px] text-gray-700 gap-1 mt-1">
+    <div className="grid grid-cols-4 w-full h-full text-[14px] text-gray-700 gap-1 mt-1">
       <CellTableSummary value={elementRequest.element?.name} />
       <CellTableSummary value={elementRequest.unit} />
       <CellTableSummary value={elementRequest.quantityRequested} />

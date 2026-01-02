@@ -16,7 +16,9 @@ export default function PurchaseOrder() {
   
   const { user } = useCurrentUser();
 
-  const { id: purchaseOrderId } = useParams<{ id: string }>();
+  const { purchaseOrderId } = useParams<{ purchaseOrderId: string }>();
+
+  const { id: projectId } = useParams<{ id: string }>();
   
   const { data: purchaseOrder } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
 
@@ -28,7 +30,7 @@ export default function PurchaseOrder() {
   const navigate = useNavigate();
 
   const navigateToPurchaseOrders = () => {
-    navigate(`/admin/projects/${purchaseOrder?.project?.projectId}/purchase-orders`);
+    navigate(`/admin/projects/${projectId}/purchase-orders`);
   }
 
   const handleDuplicate = async (projectId: number) => {
@@ -41,7 +43,7 @@ export default function PurchaseOrder() {
       
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setIsModalOpen(false);
-        navigate(`/admin/purchase-orders?projectId=${projectId}`);
+        navigate(`/admin/projects/${projectId}/purchase-orders`);
       }
     } catch (error) {
       console.error('Error duplicating purchase order:', error);

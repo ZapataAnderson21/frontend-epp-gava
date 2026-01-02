@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { RequestType } from "../../data/types";
 
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaFilePdf } from "react-icons/fa";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 import Button from "../../components/Button";
@@ -15,24 +15,20 @@ import { requestApi, requestResponseApi, elementRequestResponseApi } from "../..
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { ReturnButton } from "../../common/button";
+import Permission from "../../common/auth/Permission";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { adminTypes, gerencyTypes, logisticsTypes } from "../../utils";
 
 interface RequestViewProps {
   requestId: number;
 }
 
 export default function RequestView({ requestId }: RequestViewProps) {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [isLogistics, setIsLogistics] = useState(false);
-  const [isGerency, setIsGerency] = useState(false);
-  const [isInProgress, setIsInProgress] = useState(false);
-  const [isUnderReview, setIsUnderReview] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [isAttend, setIsAttend] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isEmployee, setIsEmployee] = useState(false);
+  const { user, loading: loadingUser } = useCurrentUser();
   const [descriptionResponse, setDescriptionResponse] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPdfOpen, setIsPdfOpen] = useState(false);
 
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -48,6 +44,17 @@ export default function RequestView({ requestId }: RequestViewProps) {
     `${requestApi}${requestId}`,
     [requestId]
   );
+
+  // Roles (coherentes con Permission/user.userType)
+  const adminOnlyTypes = adminTypes.filter((t) => !gerencyTypes.includes(t));
+  const logisticsOnlyTypes = logisticsTypes.filter((t) => !adminTypes.includes(t));
+  const isEmployee = !!user && !adminTypes.includes(user.userType) && !logisticsOnlyTypes.includes(user.userType);
+
+  // Estados (derivados de la request)
+  const isInProgress = request?.status === "En progreso";
+  const isUnderReview = request?.status === "Revisada";
+  const isApproved = request?.status === "Aprobada";
+  const isAttend = request?.status === "Atendida";
 
   // ✅ useApiAction para POST y PATCH
   const { execute: createRequestResponse } = useApiAction<any>();
@@ -75,21 +82,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
       });
   }, [requestId]);
 
-  // Roles y estado
-  useEffect(() => {
-    if (!user || !user.userUserTypes) return;
-
-    const userType = user.userUserTypes[0].userType.name;
-    if (["GERENTE"].includes(userType)) setIsGerency(true);
-    if (["LOGISTICA"].includes(userType)) setIsLogistics(true);
-    if (["ADMINISTRADORA"].includes(userType)) setIsAdmin(true);
-    if (!["GERENTE", "ADMINISTRADORA", "LOGISTICA"].includes(userType)) setIsEmployee(true);
-
-    if (request?.status === "inProgress") setIsInProgress(true);
-    if (request?.status === "underReview") setIsUnderReview(true);
-    if (request?.status === "approved") setIsApproved(true);
-    if (request?.status === "attended") setIsAttend(true);
-  }, [user, request]);
+  // (Roles/estado ahora se derivan, no se guardan en estado)
 
   // Cambiar estado
   const handleChangeStatus = async (newStatus: string) => {
@@ -109,6 +102,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   // Revisado
   const handleReviewed = async () => {
+    if (!user) return;
     await toast.promise(
       (async () => {
         const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
@@ -162,6 +156,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   // Aprobado
   const handleApproved = async () => {
+    if (!user) return;
     await toast.promise(
       (async () => {
         const response = await fetch(`${requestResponseApi}/request/${requestId}`).then((r) => r.json());
@@ -206,25 +201,35 @@ export default function RequestView({ requestId }: RequestViewProps) {
     );
   };
 
-  if (loadingRequest) return <p>Cargando...</p>;
+  if (loadingRequest || loadingUser) return <p>Cargando...</p>;
   if (errorRequest) return <ErrorMessage errorMessage={errorRequest} />;
   if (!request) return <ErrorMessage errorMessage="No se encontró la solicitud." />;
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center lg:flex-row lg:items-start w-full h-full p-10 text-gray-800 gap-8">
-        <div className="flex flex-col items-start justify-start w-full lg:w-[814px] xl:w-[900px] gap-4 text-gray-800">
+      <div className="flex flex-col items-start justify-start w-full h-full p-10 text-gray-800 gap-8">
+        <div className="flex flex-col items-start justify-start w-full max-w-4xl gap-4 text-gray-800">
           <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
             <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {requestId}</h1>
-            <div>
+            <div className="flex gap-2">
+              {pdfUrl && (
+                <button
+                  onClick={() => setIsPdfOpen(!isPdfOpen)}
+                  className="hidden xl:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  type="button"
+                >
+                  <FaFilePdf />
+                  {isPdfOpen ? "Ocultar PDF" : "Ver PDF"}
+                </button>
+              )}
               <ReturnButton onClick={returnAction} />
             </div>
           </div>
 
-          {isAdmin && (
+          <Permission user={user} allow={adminOnlyTypes}>
             <>
               <p className="mt-4 text-[12px] font-bold">Puedes modificar la cantidad de elementos solicitados:</p>
-              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
+              <div className="flex flex-col items-start justify-start w-full">
                 <HeaderTableSummary />
                 <ContentTableSummary
                   request={request}
@@ -237,9 +242,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 </div>
               )}
             </>
-          )}
+          </Permission>
 
-          {isGerency && (
+          <Permission user={user} allow={gerencyTypes}>
             <>
               <p className="mt-1 text-[12px] font-bold">Modifica las cantidades antes de aprobar:</p>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
@@ -262,9 +267,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 </div>
               )}
             </>
-          )}
+          </Permission>
 
-          {isLogistics && (
+          <Permission user={user} allow={logisticsOnlyTypes}>
             <>
               <div className="flex flex-col items-start justify-start w-full max-w-2xl">
                 <HeaderTableSummary />
@@ -279,7 +284,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 </div>
               )}
             </>
-          )}
+          </Permission>
 
           {isEmployee && isAttend && (
             <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
@@ -287,7 +292,42 @@ export default function RequestView({ requestId }: RequestViewProps) {
             </div>
           )}
         </div>
-        {pdfUrl && <iframe src={pdfUrl} title="Requerimiento PDF" className="w-full h-[calc(100vh-5rem)] min-h-120" />}
+
+        {/* Panel del PDF deslizable desde la derecha en pantallas XL */}
+        {pdfUrl && (
+          <div
+            className={`
+              fixed top-0 right-0 h-screen w-full xl:w-[50vw] bg-white z-50
+              transform transition-transform duration-300 ease-in-out
+              shadow-[-8px_0_24px_rgba(0,0,0,0.3)]
+              ${isPdfOpen ? 'translate-x-0' : 'translate-x-full'}
+            `}
+          >
+            <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
+              <h2 className="text-lg font-bold">Requerimiento PDF</h2>
+              <button
+                onClick={() => setIsPdfOpen(false)}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                type="button"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
+            <iframe 
+              src={pdfUrl} 
+              title="Requerimiento PDF" 
+              className="w-full h-[calc(100%-60px)]"
+            />
+          </div>
+        )}
+
+        {/* Overlay para cerrar el PDF en mobile cuando está abierto */}
+        {isPdfOpen && pdfUrl && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 xl:hidden"
+            onClick={() => setIsPdfOpen(false)}
+          />
+        )}
       </div>
       <Toaster position="top-center" />
     </>

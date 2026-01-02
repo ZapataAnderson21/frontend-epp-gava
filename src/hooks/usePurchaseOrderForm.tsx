@@ -233,7 +233,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     return { valid, errors: nextErrors, messages: msgs };
   }
 
-  const navigateToList = () => navigate(`/admin/purchase-orders?projectId=${projectId}`);
+  const navigateToList = () => navigate(`/admin/projects/${projectId}/purchase-orders`);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
