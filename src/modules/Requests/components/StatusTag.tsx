@@ -2,7 +2,7 @@ interface StatusTagProps {
   status: string;
 }
 
-const statusColor = {
+export const statusColor = {
   "Borrador": "#9ca3af", // gray-400
   "En progreso": "#d97706", // amber-600
   "Revisada": "#fbbf24", // yellow-600

@@ -42,8 +42,6 @@ export default function GeneralWeeklyPayroll() {
     const allWorkers = [...laborers, ...technicians];
     return {
       totalGross: allWorkers.reduce((sum, w) => sum + w.grossAmount, 0),
-      totalAfp: allWorkers.reduce((sum, w) => sum + w.afpDiscount, 0),
-      totalAdvance: allWorkers.reduce((sum, w) => sum + w.advanceDiscount, 0),
       totalNet: allWorkers.reduce((sum, w) => sum + w.weeklyWage, 0),
     };
   }, [laborers, technicians]);

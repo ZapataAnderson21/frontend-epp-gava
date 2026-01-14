@@ -20,60 +20,48 @@ export function formatDate(date?: string): string {
 export function formatDateTime(date: string | undefined): string {
   if (!date) return "--";
   const parsedDate = new Date(date);
-
-  const format = (date: Date, formatString: string): string => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return formatString
-      .replace("dd", day)
-      .replace("MM", month)
-      .replace("yyyy", String(year))
-      .replace("HH", hours)
-      .replace("mm", minutes);
-  }
-
-  return format(parsedDate, "dd/MM/yyyy - HH:mm");
+  if (isNaN(parsedDate.getTime())) return "--";
+  return formatInTimeZone(parsedDate, 'America/Lima', 'dd/MM/yyyy - HH:mm');
 }
 
 export function formatYMD(date: string | undefined): string {
   if (!date) return "--";
-  const parsedDate = new Date(date);
-
-  const format = (date: Date, formatString: string): string => {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return formatString.replace("dd", day).replace("MM", month).replace("yyyy", String(year));
+  // Extraer la fecha directamente del string ISO para evitar desfase por zona horaria
+  if (date.includes('T')) {
+    return date.split('T')[0];
   }
-
-  return format(parsedDate, "yyyy-MM-dd");
+  // Si ya viene como YYYY-MM-DD, devolverlo tal cual
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  // Fallback: usar formatInTimeZone
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) return "--";
+  return formatInTimeZone(parsedDate, 'America/Lima', 'yyyy-MM-dd');
 }
 
 export function toDatetimeLocalValue(iso?: string): string {
   if (!iso) return "";
   const d = new Date(iso);
-  const pad = (v: number) => String(v).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const MM = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const HH = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  // formato requerido por <input type="datetime-local">
-  return `${yyyy}-${MM}-${dd}T${HH}:${mm}`;
+  if (isNaN(d.getTime())) return "";
+  // formato requerido por <input type="datetime-local"> usando zona horaria de Lima
+  return formatInTimeZone(d, 'America/Lima', "yyyy-MM-dd'T'HH:mm");
 }
 
 export function toDateLocalValue(iso?: string): string {
   if (!iso) return "";
+  // Extraer la fecha directamente del string ISO para evitar desfase por zona horaria
+  if (iso.includes('T')) {
+    return iso.split('T')[0];
+  }
+  // Si ya viene como YYYY-MM-DD, devolverlo tal cual
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    return iso;
+  }
+  // Fallback: usar formatInTimeZone
   const d = new Date(iso);
-  const pad = (v: number) => String(v).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const MM = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  // formato requerido por <input type="date">
-  return `${yyyy}-${MM}-${dd}`;
+  if (isNaN(d.getTime())) return "";
+  return formatInTimeZone(d, 'America/Lima', 'yyyy-MM-dd');
 }
 
 export function localDatetimeToIso(datetimeLocal?: string): string | null {

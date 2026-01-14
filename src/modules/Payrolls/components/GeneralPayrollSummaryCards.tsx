@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 
 interface PayrollSummary {
   totalGross: number;
-  totalAfp: number;
-  totalAdvance: number;
   totalNet: number;
 }
 
@@ -15,8 +13,6 @@ export function GeneralPayrollSummaryCards({ summary }: GeneralPayrollSummaryCar
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 w-full mb-8">
       <SummaryCard title="Monto Bruto" amount={summary.totalGross} color="text-gray-800" />
-      <SummaryCard title="Desc. AFP" amount={summary.totalAfp} color="text-orange-600" isDiscount />
-      <SummaryCard title="Desc. Adelantos" amount={summary.totalAdvance} color="text-red-600" isDiscount />
       <SummaryCard title="Pago Neto" amount={summary.totalNet} color="text-green-600" />
     </section>
   );

@@ -1,5 +1,5 @@
 import getAuthHeaders from "./getAuthHeaders";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { redirectToLoginPreservingURL } from "../auth-redirect";
 
 interface ApiResponse<T> {
@@ -56,5 +56,14 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     };
   }, [url, ...extraDeps]);
 
-  return { data, loading, error };
+  // Permite actualizar los datos localmente sin re-fetch
+  const updateData = useCallback((updater: T | ((prev: T | null) => T | null)) => {
+    if (typeof updater === 'function') {
+      setData(updater as (prev: T | null) => T | null);
+    } else {
+      setData(updater);
+    }
+  }, []);
+
+  return { data, loading, error, setData: updateData };
 }

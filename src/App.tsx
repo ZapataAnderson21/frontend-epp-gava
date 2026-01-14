@@ -6,25 +6,26 @@ import { Login, ResetPassword } from './modules/Login';
 import { Users, User, NewUser} from './modules/Users';
 import { Elements, Element, NewElement } from './modules/Elements';
 import { Projects, Project, NewProject, EditProject } from './modules/Projects';
-import { ProjectGantt } from './modules/Projects/ProjectGantt';
+import { ProjectGantt } from './modules/Projects/routes/Project/outlet/ProjectGantt';
 import { Requests, Request, NewRequest } from './modules/Requests';
-import { PurchaseOrder, NewPurchaseOrder } from './modules/Projects/PurchaseOrders';
+import PurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseOrders/PurchaseOrder.tsx';
+import NewPurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseOrders/NewPurchaseOrder.tsx';
 import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
-import PettyCashes from './modules/Projects/PettyCashes/PettyCashes.tsx';
-import PurchaseOrdersProject from './modules/Projects/pages/PurchaseOrders.tsx';
+import { PettyCashes } from './modules/Projects/routes/Project/outlet/PettyCashes/index.ts';
+import PurchaseOrdersProject from './modules/Projects/routes/Project/outlet/PurchaseOrders';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
-import EditPurchaseOrder from './modules/Projects/PurchaseOrders/EditPurchaseOrder.tsx';
+import EditPurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseOrders';
 import RequestDraft from './modules/Requests/RequestDraft.tsx';
 import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';
 import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
 import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
-import Summary from './modules/Projects/pages/Summary.tsx';
-import RequestsProject from './modules/Projects/pages/Requests.tsx';
-import EmergenciesProject from './modules/Projects/pages/Emergencies.tsx';
+import Summary from './modules/Projects/routes/Project/outlet/Summary/Summary.tsx';
+import RequestsProject from './modules/Projects/routes/Project/outlet/Requests.tsx';
+import EmergenciesProject from './modules/Projects/routes/Project/outlet/Emergencies.tsx';
 
 export default function App() {
 

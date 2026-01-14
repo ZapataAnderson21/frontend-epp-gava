@@ -53,36 +53,6 @@ export function GeneralPayrollTable({
       render: (row: WorkerPayrollDetail) => `S/ ${row.grossAmount.toFixed(2)}`,
     },
     {
-      label: "AFP (S/)",
-      width: "8rem",
-      align: "center" as const,
-      render: (row: WorkerPayrollDetail) => (
-        <input
-          type="number"
-          min={0}
-          step={0.01}
-          value={row.afpDiscount}
-          onChange={(e) => onAfpChange(row.workerId, Number(e.target.value) || 0)}
-          className="w-20 border border-gray-300 rounded-md px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      ),
-    },
-    {
-      label: "Adelanto (S/)",
-      width: "8rem",
-      align: "center" as const,
-      render: (row: WorkerPayrollDetail) => (
-        <input
-          type="number"
-          min={0}
-          step={0.01}
-          value={row.advanceDiscount}
-          onChange={(e) => onAdvanceChange(row.workerId, Number(e.target.value) || 0)}
-          className="w-20 border border-gray-300 rounded-md px-2 py-1 text-right focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      ),
-    },
-    {
       label: "Pago Semanal",
       width: "9rem",
       align: "right" as const,
@@ -113,7 +83,7 @@ export function GeneralPayrollTable({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <h2 className="text-lg font-bold">{title}</h2>
 
-        <div className="max-w-md w-full sm:w-auto">
+        <div className="max-w-xs w-full">
           <div className="relative">
             <input
               type="text"
@@ -134,8 +104,6 @@ export function GeneralPayrollTable({
         <div className="mt-2 bg-gray-100 rounded-md p-3 flex flex-wrap gap-4 justify-end text-sm font-semibold">
           <span>Total Asist.: {totals.attendances}</span>
           <span>Bruto: S/ {totals.gross.toFixed(2)}</span>
-          <span className="text-orange-600">AFP: S/ {totals.afp.toFixed(2)}</span>
-          <span className="text-red-600">Adelantos: S/ {totals.advance.toFixed(2)}</span>
           <span className="text-green-700">Neto: S/ {totals.net.toFixed(2)}</span>
         </div>
       )}
