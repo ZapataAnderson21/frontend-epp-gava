@@ -27,7 +27,7 @@ export default function ResetPassword() {
       const result = await execute(
         `${userApi}reset-password`,
         "POST",
-        { token, newPassword }
+        { accessToken: token, password: newPassword }
       );
 
       if (result.statusCode === 200) {
