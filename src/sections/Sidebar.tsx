@@ -58,8 +58,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
       ref={sidebarRef}
       className={`text-gray-500
         ${isMobile
-          ? `fixed top-0 left-0 h-screen w-[220px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[220px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
-          : `fixed top-0 left-0 h-screen w-[220px] shadow-gray-300 shadow-md bg-white z-10`
+          ? `fixed top-0 left-0 h-screen w-[280px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[280px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
+          : `fixed top-0 left-0 h-screen w-[280px] shadow-gray-300 shadow-md bg-white z-10`
         }`}
     >
       <div className="flex flex-col justify-between h-full overflow-y-auto">
@@ -70,7 +70,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             transition={{ duration: 0.25, delay: baseDelay }}
             className="flex flex-row items-center justify-start mt-7"
           >
-            <img src="/logo-gava.png" alt="Logo" className="h-14" />
+            <img src="/logo-gava.png" alt="Logo" className="h-14 ml-2" />
           </motion.div>
 
           <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
@@ -83,7 +83,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <div className="w-full flex flex-col">
             <SidebarItem
               icon={<FaCubes />}
-              label="Elementos"
+              label="Elementos SSOMA"
               isRoot
               isOpen={isElementosOpen}
               onClick={() => setIsElementosOpen((v) => !v)}
@@ -148,7 +148,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
 
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaBoxOpen />} label="Recursos (O-C)" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaBoxOpen />} label="Recursos Ord. Compra" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           
           <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />

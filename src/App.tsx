@@ -17,7 +17,7 @@ import { PettyCashes } from './modules/Projects/routes/Project/outlet/PettyCashe
 import PurchaseOrdersProject from './modules/Projects/routes/Project/outlet/PurchaseOrders';
 import RequireAuth from './RequireAuth.tsx';
 import Workers from './modules/Workers/Workers.tsx';
-import EditPurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseOrders';
+import EditPurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseOrders/EditPurchaseOrder';
 import RequestDraft from './modules/Requests/RequestDraft.tsx';
 import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';

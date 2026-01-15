@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] w-full">
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] w-full">
         {isMobile && (
           <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />
         )}
@@ -32,7 +32,7 @@ export default function Home() {
         {isMobile && (
           <div
             className={`fixed top-12 rounded-tr-md rounded-br-md
-                      ${isOpen ? "left-[220px]" : "left-0"} z-40 flex items-center justify-center bg-[#0047a3] size-10 text-white text-2xl cursor-pointer transition-all duration-300`}
+                      ${isOpen ? "left-[280px]" : "left-0"} z-40 flex items-center justify-center bg-[#0047a3] size-10 text-white text-2xl cursor-pointer transition-all duration-300`}
             onClick={toggleSidebar}
           >
             <IoMenu />
@@ -40,7 +40,7 @@ export default function Home() {
         )}
         <div
           className={`col-span-2 w-full ${(isOpen && isMobile) && "blur-[1px]"} 
-                      transition-all duration-300 ease-in-out ${!isMobile ? "md:pl-[220px]" : ""}`}
+                      transition-all duration-300 ease-in-out ${!isMobile ? "md:pl-[280px]" : ""}`}
         >
           {!isMobile && (
             <Sidebar isOpen={isOpen} isMobile={isMobile} setIsOpen={setIsOpen} />

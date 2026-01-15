@@ -12,6 +12,11 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefetchTrigger(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -54,7 +59,7 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     return () => {
       active = false;
     };
-  }, [url, ...extraDeps]);
+  }, [url, refetchTrigger, ...extraDeps]);
 
   // Permite actualizar los datos localmente sin re-fetch
   const updateData = useCallback((updater: T | ((prev: T | null) => T | null)) => {
@@ -65,5 +70,5 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     }
   }, []);
 
-  return { data, loading, error, setData: updateData };
+  return { data, loading, error, setData: updateData, refetch };
 }
