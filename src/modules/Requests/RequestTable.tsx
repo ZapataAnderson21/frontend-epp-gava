@@ -25,7 +25,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
   }, []);
 
   const role = String(stored.userType ?? stored.type ?? "").toUpperCase().trim();
-  const isManager = role === "GERENTE" || role === "ADMINISTRADORA";
+  const isManager = role === "GERENTE" || role === "ADMINISTRADORA" || role === "LOGISTICA";
   const myUserId = Number(stored.userId);
 
   const effectiveUserId = useMemo(() => {

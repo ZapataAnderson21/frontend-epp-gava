@@ -134,7 +134,7 @@ export interface RequestType {
   createdAt: string
   deliveryDueDate: string
   status: string
-  description: string
+  description?: string
   projectId: number
   userId: number
   type: string
@@ -167,7 +167,9 @@ export interface RequestResponseType {
   requestId: number
   responderUserId: number
   responseDate: string
-  description?: string
+  adminDescription?: string
+  managementDescription?: string
+  logisticsDescription?: string
   request?: RequestType
   responder?: User
 }

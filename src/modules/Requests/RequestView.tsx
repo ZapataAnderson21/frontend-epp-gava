@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RequestType } from "../../data/types";
+import type { RequestResponseType, RequestType } from "../../data/types";
 
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes, FaFilePdf } from "react-icons/fa";
@@ -18,6 +18,7 @@ import { ReturnButton } from "../../common/button";
 import Permission from "../../common/auth/Permission";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { adminTypes, gerencyTypes, logisticsTypes } from "../../utils";
+import { ButtonContainer } from "../../common/form";
 
 interface RequestViewProps {
   requestId: number;
@@ -25,7 +26,9 @@ interface RequestViewProps {
 
 export default function RequestView({ requestId }: RequestViewProps) {
   const { user, loading: loadingUser } = useCurrentUser();
-  const [descriptionResponse, setDescriptionResponse] = useState("");
+  const [adminDescription, setAdminDescription] = useState("");
+  const [managementDescription, setManagementDescription] = useState("");
+  const [logisticsDescription, setLogisticsDescription] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
@@ -45,6 +48,12 @@ export default function RequestView({ requestId }: RequestViewProps) {
     [requestId]
   );
 
+  // ✅ useFetch para traer la RequestResponse
+  const { data: requestResponse, loading: loadingRequestResponse, error: errorRequestResponse } = useFetch<RequestResponseType>(
+    `${requestResponseApi}request/${requestId}`,
+    [requestId]
+  );
+
   // Roles (coherentes con Permission/user.userType)
   const adminOnlyTypes = adminTypes.filter((t) => !gerencyTypes.includes(t));
   const logisticsOnlyTypes = logisticsTypes.filter((t) => !adminTypes.includes(t));
@@ -52,9 +61,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   // Estados (derivados de la request)
   const isInProgress = request?.status === "En progreso";
-  const isUnderReview = request?.status === "Revisada";
+  const isReviewed = request?.status === "Revisada";
   const isApproved = request?.status === "Aprobada";
-  const isAttend = request?.status === "Atendida";
+  const isAddressed = request?.status === "Atendida";
 
   // ✅ useApiAction para POST y PATCH
   const { execute: createRequestResponse } = useApiAction<any>();
@@ -88,7 +97,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const handleChangeStatus = async (newStatus: string) => {
     if (!request) return;
     await toast.promise(
-      updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: newStatus }),
+      updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: newStatus }),
       {
         loading: "Actualizando estado...",
         success: () => {
@@ -107,8 +116,8 @@ export default function RequestView({ requestId }: RequestViewProps) {
       (async () => {
         const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
           requestId: Number(requestId),
-          responder_userId: Number(user.userId),
-          description: "Solicitud revisada por administración.",
+          responderUserId: Number(user.userId),
+          adminDescription: adminDescription || "Solicitud revisada por administración.",
         });
 
         if (!request) throw new Error("No se encontró la solicitud.");
@@ -122,13 +131,13 @@ export default function RequestView({ requestId }: RequestViewProps) {
           if (elementRequest.elementRequestId !== undefined) {
             await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
               elementRequestId: elementRequest.elementRequestId,
-              quantity_accepted: acceptedQuantity,
+              quantityAccepted: acceptedQuantity,
               requestResponseId: response.data.requestResponseId,
             });
           }
         }
 
-        await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: "underReview" });
+        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "reviewed" });
       })(),
       {
         loading: "Revisando solicitud...",
@@ -159,9 +168,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
     if (!user) return;
     await toast.promise(
       (async () => {
-        const response = await fetch(`${requestResponseApi}/request/${requestId}`).then((r) => r.json());
-
-        if (!request || !response?.data) throw new Error("No se encontró la solicitud o respuesta.");
+        if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
 
         for (const elementRequest of request.elementRequests || []) {
           const acceptedQuantity =
@@ -171,24 +178,24 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
           if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
             await updateElementRequestResponse(
-              `${elementRequestResponseApi}/${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
+              `${elementRequestResponseApi}${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
               "PATCH",
               {
                 elementRequestId: elementRequest.elementRequestId,
-                quantity_accepted: acceptedQuantity,
-                requestResponseId: response.data.requestResponseId,
+                quantityAccepted: acceptedQuantity,
+                requestResponseId: requestResponse.requestResponseId,
               }
             );
           }
         }
 
-        await updateRequestResponse(`${requestResponseApi}/${response.data.requestResponseId}`, "PATCH", {
-          requestId: response.data.requestId,
-          responder_userId: Number(user.userId),
-          description: descriptionResponse,
+        await updateRequestResponse(`${requestResponseApi}${requestResponse.requestResponseId}`, "PATCH", {
+          requestId: requestResponse.requestId,
+          responderUserId: Number(user.userId),
+          managementDescription: managementDescription,
         });
 
-        await updateRequestStatus(`${requestApi}/${request.requestId}/status`, "PATCH", { status: "approved" });
+        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "approved" });
       })(),
       {
         loading: "Aprobando solicitud...",
@@ -197,6 +204,32 @@ export default function RequestView({ requestId }: RequestViewProps) {
           return "Solicitud aprobada exitosamente.";
         },
         error: (err) => err.message || "Error al aprobar la solicitud.",
+      }
+    );
+  };
+
+  // Atendido (logística)
+  const handleAttended = async () => {
+    if (!user) return;
+    await toast.promise(
+      (async () => {
+        if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
+
+        await updateRequestResponse(`${requestResponseApi}${requestResponse.requestResponseId}`, "PATCH", {
+          requestId: requestResponse.requestId,
+          responderUserId: Number(user.userId),
+          logisticsDescription: logisticsDescription,
+        });
+
+        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "addressed" });
+      })(),
+      {
+        loading: "Atendiendo solicitud...",
+        success: () => {
+          setTimeout(() => navigate(0), 1200);
+          return "Solicitud atendida exitosamente.";
+        },
+        error: (err) => err.message || "Error al atender la solicitud.",
       }
     );
   };
@@ -226,70 +259,77 @@ export default function RequestView({ requestId }: RequestViewProps) {
             </div>
           </div>
 
+          {/* Tabla visible para todos */}
+          <div className="flex flex-col items-start justify-start w-full">
+            <HeaderTableSummary />
+            <ContentTableSummary
+              request={request}
+              onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+            />
+          </div>
+
+          {/* Respuestas visibles para todos */}
+          {requestResponse?.adminDescription && <p className="text-black"><strong>Respuesta de Administración:</strong> {requestResponse.adminDescription}</p>}
+          {requestResponse?.managementDescription && <p className="text-black"><strong>Respuesta de Gerencia:</strong> {requestResponse.managementDescription}</p>}
+          {requestResponse?.logisticsDescription && <p className="text-black"><strong>Respuesta de Logística:</strong> {requestResponse.logisticsDescription}</p>}
+
+          {/* Acciones de Admin */}
           <Permission user={user} allow={adminOnlyTypes}>
-            <>
-              <p className="mt-4 text-[12px] font-bold">Puedes modificar la cantidad de elementos solicitados:</p>
-              <div className="flex flex-col items-start justify-start w-full">
-                <HeaderTableSummary />
-                <ContentTableSummary
-                  request={request}
-                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
-                />
-              </div>
-              {isInProgress && (
-                <div className="flex flex-row flex-wrap items-center gap-8 w-full max-w-2xl text-white mt-2">
+            {isInProgress && (
+              <>
+                <textarea
+                  className="w-full h-24 p-2 border-2 border-gray-300 rounded-md"
+                  placeholder="Comentarios de revisión (opcional)..."
+                  value={adminDescription}
+                  onChange={(e) => setAdminDescription(e.target.value)}
+                ></textarea>
+                <ButtonContainer>
                   <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" type="button" />
-                </div>
-              )}
-            </>
+                </ButtonContainer>
+              </>
+            )}
           </Permission>
 
+          {/* Acciones de Gerencia */}
           <Permission user={user} allow={gerencyTypes}>
-            <>
-              <p className="mt-1 text-[12px] font-bold">Modifica las cantidades antes de aprobar:</p>
-              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
-                <HeaderTableSummary />
-                <ContentTableSummary
-                  request={request}
-                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
-                />
-              </div>
-              <textarea
-                className="w-full h-24 p-2 border-2 border-gray-300 rounded-md mt-4"
-                placeholder="Comentarios de aprobación o rechazo..."
-                value={descriptionResponse}
-                onChange={(e) => setDescriptionResponse(e.target.value)}
-              ></textarea>
-              {isUnderReview && (
-                <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
+            {isReviewed && (
+              <>
+                <textarea
+                  className="w-full h-24 p-2 border-2 border-gray-300 rounded-md"
+                  placeholder="Comentarios de aprobación o rechazo..."
+                  value={managementDescription}
+                  onChange={(e) => setManagementDescription(e.target.value)}
+                ></textarea>
+                <ButtonContainer>
                   <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" type="button" />
                   <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" type="button" />
-                </div>
-              )}
-            </>
+                </ButtonContainer>
+              </>
+            )}
           </Permission>
 
+          {/* Acciones de Logística */}
           <Permission user={user} allow={logisticsOnlyTypes}>
-            <>
-              <div className="flex flex-col items-start justify-start w-full max-w-2xl">
-                <HeaderTableSummary />
-                <ContentTableSummary
-                  request={request}
-                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
-                />
-              </div>
-              {isApproved && (
-                <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
-                  <Button icon={<FaCheck />} label="Atendido" onClick={() => handleChangeStatus("attended")} bgColor="#0047a3" bgHoverColor="#003d8f" type="button" />
-                </div>
-              )}
-            </>
+            {isApproved && (
+              <>
+                <textarea
+                  className="w-full h-24 p-2 border-2 border-gray-300 rounded-md"
+                  placeholder="Comentarios de atención (opcional)..."
+                  value={logisticsDescription}
+                  onChange={(e) => setLogisticsDescription(e.target.value)}
+                ></textarea>
+                <ButtonContainer>
+                  <Button icon={<FaCheck />} label="Atendido" onClick={handleAttended} bgColor="#0047a3" bgHoverColor="#003d8f" type="button" />
+                </ButtonContainer>
+              </>
+            )}
           </Permission>
 
-          {isEmployee && isAttend && (
-            <div className="flex flex-row gap-8 w-full max-w-2xl text-white mt-2">
+          {/* Acción de Empleado */}
+          {isEmployee && isAddressed && (
+            <ButtonContainer>
               <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" type="button" />
-            </div>
+            </ButtonContainer>
           )}
         </div>
 

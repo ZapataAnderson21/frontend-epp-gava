@@ -19,10 +19,10 @@ export default function RowTableSummary({ elementRequest, onQuantityChange }: Ro
   };
 
   return (
-    <div className="grid grid-cols-4 w-full h-full text-[14px] text-gray-700 gap-1 mt-1">
-      <CellTableSummary value={elementRequest.element?.name} />
-      <CellTableSummary value={elementRequest.unit} />
-      <CellTableSummary value={elementRequest.quantityRequested} />
+    <div className="grid w-full h-full text-[14px] text-gray-700 gap-1 mt-1" style={{ gridTemplateColumns: '1fr 144px 112px 112px' }}>
+      <CellTableSummary value={elementRequest.element?.name} className="w-full" />
+      <CellTableSummary value={elementRequest.unit} className="w-full" />
+      <CellTableSummary value={elementRequest.quantityRequested} className="w-full" />
       <input
         type="number"
         className="border-2 border-gray-800 w-full h-full text-center px-3 py-1 rounded-md bg-yellow-400 font-semibold"
