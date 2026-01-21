@@ -49,7 +49,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
   );
 
   // ✅ useFetch para traer la RequestResponse
-  const { data: requestResponse, loading: loadingRequestResponse, error: errorRequestResponse } = useFetch<RequestResponseType>(
+  const { data: requestResponse } = useFetch<RequestResponseType>(
     `${requestResponseApi}request/${requestId}`,
     [requestId]
   );
