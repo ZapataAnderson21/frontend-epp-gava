@@ -15,8 +15,6 @@ export function GeneralPayrollTable({
   title,
   workers,
   searchPlaceholder,
-  onAfpChange,
-  onAdvanceChange,
 }: GeneralPayrollTableProps) {
   const [search, setSearch] = useState("");
 

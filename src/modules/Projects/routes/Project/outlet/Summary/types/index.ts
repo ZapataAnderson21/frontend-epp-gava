@@ -1,5 +1,4 @@
-import type { Project } from "../../../../../../../data/types";
-import type { Currency } from "../../../../../components";
+import type { Project, Currency } from "../../../../../../../data/types";
 
 export interface PurchaseOrderAmounts {
   totalPEN: number;

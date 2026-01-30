@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useFetch } from "../../../../../../../hooks";
 import type { Project } from "../../../../../../../data/types";
 import { pettyCashApi, projectApi, purchaseOrderApi, workerApi } from "../../../../../../../data/apiUrl";
-import type { Currency } from "../../../../../components";
+import type { Currency } from "../../../../../../../data/types";
 import type { PayrollTotals, PurchaseOrderAmounts, UseSummaryReturn } from "../types";
 
 export function useSummary(): UseSummaryReturn {
