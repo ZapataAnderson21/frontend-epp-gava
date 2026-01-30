@@ -72,7 +72,7 @@ export default function User() {
       name,
       lastName: lastname,
       email,
-      password,
+      password : password || undefined
     };
 
     await toast.promise(
@@ -83,7 +83,17 @@ export default function User() {
           setTimeout(() => navigateToUsers(), 1200);
           return response.message || "Usuario actualizado exitosamente";
         },
-        error: (err) => err.message || "Error al actualizar usuario",
+        error: (err) => {
+          // Separa los mensajes por punto y muestra cada uno en un toast diferente
+          const messages: string[] = typeof err.message === "string"
+            ? err.message.split(".,").map((msg: string) => msg.trim()).filter((msg: string) => msg.length > 0)
+            : [String(err.message)];
+          messages.forEach((msg: string) => {
+            toast.error(msg);
+          });
+          // Retorna string vacío para que el toast.promise no muestre un toast adicional
+          return "";
+        },
       }
     );
   };
@@ -127,14 +137,6 @@ export default function User() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <InputForm
-          label="Contraseña"
-          name="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          optional={true}
-        />
-        <InputForm
           label="Nueva contraseña"
           name="password"
           type="password"
@@ -143,20 +145,25 @@ export default function User() {
           optional={true}
         />
 
-        {loadingRoles && <span className="text-sm text-gray-500">Cargando roles...</span>}
-        {errorRoles && <span className="text-sm text-red-500">Error al cargar los roles</span>}
+        {(() => {
+          
+          if (loadingRoles)  return <span className="text-sm text-gray-500">Cargando roles...</span>;
+        
+          if (errorRoles) return <span className="text-sm text-red-500">Error al cargar los roles</span>;
 
-        {!loadingRoles && !errorRoles && userTypes && (
-          <SelectForm
-            label="Rol"
-            name="role"
-            value={role}
-            onChange={(value) => setRole(value.toString())}
-            options={userTypes ? userTypes.map((role) => (
-              { value: role.name, label: role.name }
-            )) : []}
-          />
-        )}
+          if (userTypes && userTypes.length > 0) {
+            return (
+              <SelectForm
+                label="Rol"
+                name="role"
+                value={role}
+                onChange={(value) => setRole(value.toString())}
+                options={userTypes.map((role) => ({ value: role.name, label: role.name }))}
+              />
+            );
+          }
+          return null;
+        })()}
         <ButtonContainer >
           <ReturnButton onClick={() => navigateToUsers()} />
           <SaveButton loading={updating} />
