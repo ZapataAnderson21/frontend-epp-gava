@@ -12,6 +12,8 @@ import { useCurrentUser } from "../hooks";
 import { adminTypes, logisticsTypes } from "../utils";
 import Permission from "../common/auth/Permission";
 import { NotificationBell } from "../components";
+import { IoMdSettings } from "react-icons/io";
+import UserSettingsModal from "./UserSettingsModal";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,9 +22,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
-  const { user } = useCurrentUser();
+  const { user, refetch } = useCurrentUser();
+  const [currentUser, setCurrentUser] = useState(user);
   const [isElementosOpen, setIsElementosOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -48,6 +52,10 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, isMobile, setIsOpen]);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
 
   // base para delays
   const baseDelay = 0.1;     // s
@@ -178,10 +186,10 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-gray-700 font-semibold text-sm truncate">
-                {user?.name} {user?.lastName}
+                {currentUser?.name} {currentUser?.lastName}
               </span>
               <span className="text-[#0047a3] text-xs font-bold uppercase">
-                {user?.userType}
+                {currentUser?.userType}
               </span>
             </div>
             <NotificationBell />
@@ -198,6 +206,18 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
                 className="overflow-hidden mt-2"
               >
                 <SidebarItem
+                  icon={<IoMdSettings />}
+                  label="Configuración"
+                  onClick={() => {
+                    setIsUserSettingsOpen(true);
+                    setIsUserMenuOpen(false);
+                    if (isMobile) setIsOpen?.(false);
+                  }}
+                  index={0}
+                  baseDelay={0}
+                  perItemDelay={0}
+                />
+                <SidebarItem
                   icon={<IoLogOut />}
                   label={loggingOut ? "Saliendo..." : "Salir"}
                   onClick={handleLogout}
@@ -210,6 +230,15 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </AnimatePresence>
         </div>
       </div>
+      <UserSettingsModal
+        open={isUserSettingsOpen}
+        user={currentUser ?? null}
+        onClose={() => setIsUserSettingsOpen(false)}
+        onUpdated={(updated) => {
+          setCurrentUser(updated);
+          refetch();
+        }}
+      />
     </section>
   );
 }

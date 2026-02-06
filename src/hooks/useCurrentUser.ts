@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAccessToken } from "../utils/auth";
 import { userApi } from "../data/apiUrl";
 import type { User } from "../data/types";
@@ -13,6 +13,11 @@ export function useCurrentUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefetchTrigger((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -39,6 +44,9 @@ export function useCurrentUser() {
 
         const json: MeResponse = await res.json();
         if (mounted) setUser(json.data);
+
+        console.log("Fetched current user:", json.data);
+
       } catch (e: any) {
         if (mounted) {
           setUser(null);
@@ -51,7 +59,7 @@ export function useCurrentUser() {
 
     fetchMe();
     return () => { mounted = false; };
-  }, []);
+  }, [refetchTrigger]);
 
-  return { user, loading, error };
+  return { user, loading, error, refetch };
 }
