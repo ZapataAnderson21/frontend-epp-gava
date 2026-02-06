@@ -62,7 +62,7 @@ export default function UserTypeCreateModal({ open, onClose, onCreated }: Props)
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white shadow-xl p-4"
+            className="w-full max-w-md rounded-2xl bg-white shadow-xl"
             key="box"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -72,7 +72,7 @@ export default function UserTypeCreateModal({ open, onClose, onCreated }: Props)
             <div className="flex items-center justify-end w-full">
               <button
                 onClick={onClose}
-                className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
+                className="p-4 rounded hover:bg-gray-100 cursor-pointer"
                 aria-label="Cerrar"
               >
                 <IoClose />

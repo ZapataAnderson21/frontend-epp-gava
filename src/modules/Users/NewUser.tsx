@@ -136,7 +136,6 @@ export default function NewUser() {
             <div className="h-8 bg-gray-300 rounded animate-pulse w-full"></div>
           </div>
         }
-        {errorRoles && <span className="text-sm text-red-500">Error al cargar los roles</span>}
         
         {!loadingRoles && !errorRoles && userTypes && (
           <SelectForm
