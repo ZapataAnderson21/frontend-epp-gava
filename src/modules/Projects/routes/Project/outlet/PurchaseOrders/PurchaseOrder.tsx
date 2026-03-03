@@ -157,7 +157,16 @@ export default function PurchaseOrder() {
                   <p className="font-bold">{purchaseOrder?.paymentConditions}</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 shadow-md border border-gray-300">
-                  <InfoField label="Método de pago" value={purchaseOrder?.paymentMethod} />
+                  <InfoField
+                    label="Método de pago"
+                    value={
+                      purchaseOrder?.paymentMethod === "deposit"
+                        ? "Depósito"
+                        : purchaseOrder?.paymentMethod === "transfer"
+                          ? "Transferencia"
+                          : purchaseOrder?.paymentMethod
+                    }
+                  />
                   <InfoField 
                     label="Cta. cte" 
                     value={`${purchaseOrder?.supplier?.bank} (${purchaseOrder?.supplier?.currency}) - ${purchaseOrder?.supplier?.accountNumber}`} 
