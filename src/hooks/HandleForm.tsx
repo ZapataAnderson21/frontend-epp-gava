@@ -182,13 +182,15 @@ export function useHandleForm() {
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
+    const type =  getTypeFromElements(selectedElements);
+
     const requestData = {
       userId: Number(user.userId),
       projectId,
       description,
       deliveryDueDate,
       status: "draft",
-      type: getTypeFromElements(selectedElements),
+      type: type
     };
 
     const response = await updateRequest(`${requestApi}${requestId}`, "PATCH", requestData);
