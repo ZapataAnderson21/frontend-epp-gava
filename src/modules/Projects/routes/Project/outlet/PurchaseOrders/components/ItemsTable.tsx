@@ -54,9 +54,9 @@ export default function ItemsTable({
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">DESCRIPCIÓN</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">UND</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">CANT</th>
-            <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">PR UNIT COMP</th>
+            <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">V. UNIT</th>
+            <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">V. PARC</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">PR UNIT VENT</th>
-            <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">PR PARC COMP</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">PR PARC VENT</th>
             <th className="p-2 border-gray-100 text-nowrap">ACCIONES</th>
           </tr>
@@ -69,7 +69,7 @@ export default function ItemsTable({
             return (
               <tr key={index}>
                 {/* DESCRIPCIÓN / RECURSO */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap max-w-120">
+                <td className="p-2 border-1 border-gray-400 text-nowrap min-w-80 max-w-120">
                   <div className="flex flex-col">
                     <Select
                       name={`resource-${index}`}
@@ -121,6 +121,11 @@ export default function ItemsTable({
                   </div>
                 </td>
 
+                {/* PR PARC COMP */}
+                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                  <p>{sym} {item.subtotal.toFixed(2)}</p>
+                </td>
+
                 {/* PR UNIT VENT */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap">
                   <div className="flex flex-col">
@@ -134,11 +139,6 @@ export default function ItemsTable({
                     />
                     {errorText(ie?.unitSalesPrice)}
                   </div>
-                </td>
-
-                {/* PR PARC COMP */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
-                  <p>{sym} {item.subtotal.toFixed(2)}</p>
                 </td>
 
                 {/* PR PARC VENT */}
@@ -172,16 +172,21 @@ export default function ItemsTable({
 
         <tfoot>
           <tr>
-            <td colSpan={5} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
+            <td colSpan={4} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {purchaseAmount.toFixed(2)}</td>
+            <td></td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {saleAmount.toFixed(2)}</td>
           </tr>
           <tr>
-            <td colSpan={6} className="p-2 pr-8 font-bold text-right">IGV</td>
+            <td colSpan={4} className="p-2 pr-8 font-bold text-right">IGV</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {(purchaseAmount * 0.18).toFixed(2)}</td>
+            <td></td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {(saleAmount * 0.18).toFixed(2)}</td>
           </tr>
           <tr>
-            <td colSpan={6} className="p-2 pr-8 font-bold text-right">TOTAL</td>
+            <td colSpan={4} className="p-2 pr-8 font-bold text-right">TOTAL</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800">{sym} {(purchaseAmount * 1.18).toFixed(2)}</td>
+            <td></td>
             <td className="p-2 border-1 border-gray-400 text-white bg-gray-800">{sym} {(saleAmount * 1.18).toFixed(2)}</td>
           </tr>
         </tfoot>

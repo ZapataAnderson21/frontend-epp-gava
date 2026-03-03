@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RequestResponseType, RequestType } from "../../data/types";
+import type { ElementRequestType, ElementType, RequestResponseType, RequestType } from "../../data/types";
 
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes, FaFilePdf } from "react-icons/fa";
@@ -11,14 +11,15 @@ import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
 import ErrorMessage from "../../common/error/ErrorMessage";
 import toast, { Toaster } from "react-hot-toast";
 
-import { requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
+import { elementApi, elementRequestApi, requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
-import { ReturnButton } from "../../common/button";
+import { AddButton, ReturnButton } from "../../common/button";
 import Permission from "../../common/auth/Permission";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { adminTypes, gerencyTypes, logisticsTypes } from "../../utils";
 import { ButtonContainer } from "../../common/form";
+import Select from "../../components/Select";
 
 interface RequestViewProps {
   requestId: number;
@@ -32,6 +33,12 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
+  const [isAddRowOpen, setIsAddRowOpen] = useState(false);
+  const [newElementType, setNewElementType] = useState<"epp" | "operative">("epp");
+  const [newElementId, setNewElementId] = useState<number>(0);
+  const [newUnit, setNewUnit] = useState("");
+  const [newQuantity, setNewQuantity] = useState<number>(1);
 
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -46,6 +53,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const { data: request, loading: loadingRequest, error: errorRequest } = useFetch<RequestType>(
     `${requestApi}${requestId}`,
     [requestId]
+  );
+
+  const { data: elementsByType, loading: loadingElements, error: errorElements } = useFetch<ElementType[]>(
+    `${elementApi}type/${newElementType}`,
+    [newElementType]  
   );
 
   // ✅ useFetch para traer la RequestResponse
@@ -71,6 +83,13 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const { execute: createElementRequestResponse } = useApiAction<any>();
   const { execute: updateElementRequestResponse } = useApiAction<any>();
   const { execute: updateRequestStatus } = useApiAction<any>();
+  const { execute: createElementRequest } = useApiAction<any>();
+
+  useEffect(() => {
+    if (request?.elementRequests) {
+      setElementRequests(request.elementRequests);
+    }
+  }, [request]);
 
   // Cargar PDF
   useEffect(() => {
@@ -107,6 +126,66 @@ export default function RequestView({ requestId }: RequestViewProps) {
         error: (err) => err.message || "Error al actualizar el estado.",
       }
     );
+  };
+
+  const handleAddElement = () => {
+    setIsAddRowOpen(true);
+    setNewElementType("epp");
+    setNewElementId(0);
+    setNewUnit("");
+    setNewQuantity(1);
+  };
+
+  const handleCancelAddElement = () => {
+    setIsAddRowOpen(false);
+    setNewElementId(0);
+    setNewUnit("");
+    setNewQuantity(1);
+  };
+
+  const handleCreateElementRequest = async () => {
+    if (!request) return;
+    if (!newElementId) {
+      toast.error("Selecciona un elemento.");
+      return;
+    }
+
+    if (!newUnit.trim()) {
+      toast.error("Ingresa la unidad.");
+      return;
+    }
+
+    if (newQuantity <= 0) {
+      toast.error("La cantidad debe ser mayor a 0.");
+      return;
+    }
+
+    try {
+      const response = await createElementRequest(`${elementRequestApi}`, "POST", {
+        elementId: newElementId,
+        quantityRequested: newQuantity,
+        unit: newUnit.trim(),
+        requestId: request.requestId,
+      });
+
+      if (response?.statusCode !== 201) {
+        throw new Error(response?.message || "No se pudo agregar el elemento.");
+      }
+
+      const elementRef = (elementsByType || []).find((el) => el.elementId === newElementId);
+      const created: ElementRequestType = {
+        ...response.data,
+        element: response.data.element ?? elementRef,
+      };
+
+      setElementRequests((prev) => [...prev, created]);
+      setIsAddRowOpen(false);
+      setNewElementId(0);
+      setNewUnit("");
+      setNewQuantity(1);
+    } catch (err: any) {
+      toast.error(err?.message || "Error al agregar el elemento.");
+    }
   };
 
   // Revisado
@@ -250,11 +329,12 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   onClick={() => setIsPdfOpen(!isPdfOpen)}
                   className="hidden xl:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   type="button"
-                >
+                >r
                   <FaFilePdf />
                   {isPdfOpen ? "Ocultar PDF" : "Ver PDF"}
                 </button>
               )}
+              <AddButton onClick={handleAddElement} />
               <ReturnButton onClick={returnAction} />
             </div>
           </div>
@@ -262,8 +342,89 @@ export default function RequestView({ requestId }: RequestViewProps) {
           {/* Tabla visible para todos */}
           <div className="flex flex-col items-start justify-start w-full">
             <HeaderTableSummary />
+            {isAddRowOpen && (
+              <div className="w-full border border-gray-200 rounded-md p-3 bg-gray-50 mt-2">
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 rounded-md border ${newElementType === "epp" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+                    onClick={() => setNewElementType("epp")}
+                  >
+                    Seguridad
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-1 rounded-md border ${newElementType === "operative" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+                    onClick={() => setNewElementType("operative")}
+                  >
+                    Operativo
+                  </button>
+                </div>
+
+                <div className="grid w-full text-[14px] text-gray-700 gap-1" style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}>
+                  <div className="w-full min-w-0">
+                    <Select
+                      name="newElementId"
+                      value={newElementId}
+                      onChange={(value) => setNewElementId(Number(value))}
+                      options={(elementsByType || [])
+                        .filter((el) => !elementRequests.some((er) => er.elementId === el.elementId))
+                        .map((el) => ({ value: el.elementId, label: el.name }))}
+                      placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
+                      disabled={loadingElements || !!errorElements}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
+                    placeholder="Unidad"
+                    value={newUnit}
+                    onChange={(e) => setNewUnit(e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
+                    placeholder="Cantidad"
+                    min={1}
+                    value={newQuantity}
+                    onChange={(e) => setNewQuantity(Number(e.target.value))}
+                  />
+                  <input
+                    type="number"
+                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md bg-gray-100"
+                    value={0}
+                    disabled
+                  />
+                </div>
+
+                {errorElements && (
+                  <p className="text-red-600 text-sm mt-2">{errorElements}</p>
+                )}
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Button
+                    icon={<FaCheck />}
+                    label="Agregar"
+                    onClick={handleCreateElementRequest}
+                    bgColor="#008000"
+                    bgHoverColor="#0c4a28"
+                    type="button"
+                    disabled={loadingElements}
+                  />
+                  <Button
+                    icon={<FaTimes />}
+                    label="Cancelar"
+                    onClick={handleCancelAddElement}
+                    bgColor="#d80027"
+                    bgHoverColor="#c80008"
+                    type="button"
+                  />
+                </div>
+              </div>
+            )}
             <ContentTableSummary
               request={request}
+              elementRequests={elementRequests}
               onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
             />
           </div>

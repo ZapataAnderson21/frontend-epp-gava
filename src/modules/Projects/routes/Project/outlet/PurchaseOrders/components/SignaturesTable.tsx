@@ -12,7 +12,7 @@ export default function SignaturesTable() {
         <tr>
           <td className="p-2 border-1 border-gray-400">Angi Gonzales Cotrina</td>
           <td className="p-2 border-1 border-gray-400">Henrry Gayoso Valdera</td>
-          <td className="p-2 border-1 border-gray-400">Morayma Lloja Fernandez</td>
+          <td className="p-2 border-1 border-gray-400">Angi Gonzales Cotrina</td>
         </tr>
       </tbody>
     </table>
