@@ -41,10 +41,10 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitPurchasePrice}</td>}
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitPurchasePrice}</td>}
-              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
-              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitSalesPrice}</td>
+              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitPurchasePrice.toFixed(2)}</td>}
+              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{(item.quantity*item.unitPurchasePrice).toFixed(2)}</td>}
+              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitSalesPrice.toFixed(2)}</td>
+              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{(item.quantity*item.unitSalesPrice).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
