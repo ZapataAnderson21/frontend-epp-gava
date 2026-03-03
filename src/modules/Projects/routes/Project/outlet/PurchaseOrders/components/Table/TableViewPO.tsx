@@ -28,10 +28,10 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>DESCRIPCIÓN</th>
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>UND</th>
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>CANT</th>
-            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>PR UNIT COMP</th>}
-            <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>PR UNIT {seePurchasePrices ? 'VENT' : ''}</th>
-            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>PR PARC COMP</th>}
-            <th className='p-2 text-nowrap'>PR PARC {seePurchasePrices ? 'VENT' : ''}</th>
+            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT</th>}
+            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V PARC</th>}
+            <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT {seePurchasePrices ? 'VENT' : ''}</th>
+            <th className='p-2 text-nowrap'>V PARC {seePurchasePrices ? 'VENT' : ''}</th>
           </tr>
         </thead>
         <tbody className='border-1 border-gray-400'>
@@ -42,24 +42,29 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
               { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitPurchasePrice}</td>}
-              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
               { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitPurchasePrice}</td>}
+              <td className='p-2 border-1 border-gray-400 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.unitSalesPrice}</td>
               <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'}{item.quantity*item.unitSalesPrice}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={seePurchasePrices ? colSpan(6) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
+            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
             { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalCompra?.toFixed(2)}</td>}
+            { seePurchasePrices && <td></td> }
             <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta?.toFixed(2)}</td>
           </tr>
           <tr>
-            <td colSpan={colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
+            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
+            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {(subtotalCompra ? (subtotalCompra * 0.18).toFixed(2) : 0)}</td>}
+            { seePurchasePrices && <td></td> }
             <td className='p-2 border-1 border-gray-400 bg-gray-100'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 0.18).toFixed(2) : 0}</td>
           </tr>
           <tr>
-            <td colSpan={colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
+            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
+            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-800 text-white'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalCompra ? (subtotalCompra * 1.18).toFixed(2) : 0}</td> }
+            { seePurchasePrices && <td></td> }
             <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{purchaseOrder?.supplier?.currency.toUpperCase() === 'PEN' ? 'S/.' : '$'} {subtotalVenta ? (subtotalVenta * 1.18).toFixed(2) : 0}</td>
           </tr>
         </tfoot>
