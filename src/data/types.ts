@@ -254,6 +254,7 @@ export interface Supplier {
 export interface PurchaseOrder {
   purchaseOrderId: number;
   code: string;
+  codeComplete?: string; 
   deliveryLocation: string;
   destination: string;
   paymentConditions: string;
@@ -347,6 +348,7 @@ export interface ResourcePurchaseOrder {
   resourcePurchaseOrderId: number;
   purchaseOrderId: number;
   resourceId: number;
+  orderNumber?: number;
   quantity: number;
   unitSalesPrice: number;
   unitPurchasePrice: number;

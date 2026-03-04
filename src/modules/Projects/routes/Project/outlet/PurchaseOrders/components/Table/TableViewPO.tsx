@@ -45,7 +45,7 @@ export default function TableViewPO({ purchaseOrder, seeSalesPrices }: TableView
           </tr>
         </thead>
         <tbody className='border-1 border-gray-400'>
-          {purchaseOrder?.resources?.reverse().map((item, index) => (
+          {purchaseOrder?.resources?.map((item, index) => (
             <tr key={index}>
               <td className='p-2 border-1 border-gray-400'>{index+1}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>

@@ -69,7 +69,7 @@ export default function PurchaseOrder() {
 
       const a = document.createElement('a');
       a.href = url;
-      a.download = `orden-compra-${purchaseOrderId}.pdf`; // el mismo nombre que en el backend
+      a.download = `OC-${purchaseOrder?.codeComplete}.pdf`; // el mismo nombre que en el backend
       document.body.appendChild(a);
       a.click();
       a.remove();

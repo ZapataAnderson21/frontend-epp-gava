@@ -5,6 +5,7 @@ import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, su
 import toast from "react-hot-toast";
 
 export type ItemRow = {
+  orderNumber: number;
   resourceId: number;
   description: string;
   unit: string;
@@ -74,8 +75,11 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   const [purchaseOrderType, setPurchaseOrderType] = useState("");
 
   const [items, setItems] = useState<ItemRow[]>([
-    { resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 },
+    { orderNumber: 1, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 },
   ]);
+
+  const normalizeOrderNumbers = (rows: ItemRow[]) =>
+    rows.map((row, index) => ({ ...row, orderNumber: index + 1 }));
 
   // --- ERRORS state ---
   const [errors, setErrors] = useState<FormErrors>({});
@@ -120,27 +124,27 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
       const up = Number(next[index].unitPurchasePrice) || 0;
       next[index].subtotal = qty * up;
 
-      return next;
+      return normalizeOrderNumbers(next);
     });
   };
 
   const addItem = (rowIndex?: number) => {
     const newRow: ItemRow = {
-      resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0,
+      orderNumber: 0, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0,
     };
     setItems((prev) => {
-      if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) return [...prev, newRow];
+      if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) return normalizeOrderNumbers([...prev, newRow]);
       const next = [...prev];
       next.splice(rowIndex + 1, 0, newRow);
-      return next;
+      return normalizeOrderNumbers(next);
     });
   };
 
   const removeItem = (rowIndex: number) => {
     setItems((prev) => {
       if (prev.length === 1)
-        return [{ resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
-      return prev.filter((_, i) => i !== rowIndex);
+        return [{ orderNumber: 1, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
+      return normalizeOrderNumbers(prev.filter((_, i) => i !== rowIndex));
     });
   };
 
@@ -288,6 +292,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         const payload = {
           resourceId: Number(it.resourceId),
           purchaseOrderId: Number(purchaseOrderId),
+          orderNumber: Number(it.orderNumber),
           quantity: Number(it.quantity),
           unitSalesPrice: Number(it.unitSalesPrice),
           unitPurchasePrice: Number(it.unitPurchasePrice),

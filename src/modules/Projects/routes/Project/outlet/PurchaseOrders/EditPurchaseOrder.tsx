@@ -90,8 +90,17 @@ export default function EditPurchaseOrder() {
 
   useEffect(() => {
     if (!resourcePurchaseOrders) return;
+    const normalizeOrderNumbers = (rows: ItemRow[]) =>
+      rows.map((row, index) => ({ ...row, orderNumber: index + 1 }));
+
+    const sorted = [...resourcePurchaseOrders].sort((a, b) => {
+      const ao = a.orderNumber ?? Number.MAX_SAFE_INTEGER;
+      const bo = b.orderNumber ?? Number.MAX_SAFE_INTEGER;
+      return ao - bo;
+    });
     // Mapear filas + ids
-    const itemRows: ItemRow[] = resourcePurchaseOrders.map(rpo => ({
+    const itemRows: ItemRow[] = sorted.map((rpo, index) => ({
+      orderNumber: rpo.orderNumber ?? index + 1,
       resourceId: rpo.resourceId,
       description: rpo.resource?.description || "",
       unit: rpo.resource?.unit || "",
@@ -100,8 +109,8 @@ export default function EditPurchaseOrder() {
       unitPurchasePrice: String(rpo.unitPurchasePrice ?? ""),
       subtotal: (rpo.quantity || 0) * (rpo.unitPurchasePrice || 0),
     }));
-    setItems(itemRows);
-    setRpoIds(resourcePurchaseOrders.map(r => r.resourcePurchaseOrderId));
+    setItems(normalizeOrderNumbers(itemRows));
+    setRpoIds(sorted.map(r => r.resourcePurchaseOrderId));
   }, [resourcePurchaseOrders]);
 
   // ---- navegación ----
@@ -112,6 +121,8 @@ export default function EditPurchaseOrder() {
   // ---- helpers de items ----
   const handleItemChange = (index: number, field: string, value: any) => {
     setItems(prev => {
+      const normalizeOrderNumbers = (rows: ItemRow[]) =>
+        rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
       const next = [...prev];
       if (field === "resourceId") {
         const selected = resources?.find(r => r.resourceId === Number(value));
@@ -132,12 +143,13 @@ export default function EditPurchaseOrder() {
       const qty = Number(next[index].quantity) || 0;
       const up = Number(next[index].unitPurchasePrice) || 0;
       next[index].subtotal = qty * up;
-      return next;
+      return normalizeOrderNumbers(next);
     });
   };
 
   const addItem = (rowIndex?: number) => {
     const newRow: ItemRow = {
+      orderNumber: 0,
       resourceId: 0,
       description: "",
       unit: "",
@@ -147,12 +159,14 @@ export default function EditPurchaseOrder() {
       subtotal: 0,
     };
     setItems(prev => {
+      const normalizeOrderNumbers = (rows: ItemRow[]) =>
+        rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
       if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
-        return [...prev, newRow];
+        return normalizeOrderNumbers([...prev, newRow]);
       }
       const next = [...prev];
       next.splice(rowIndex + 1, 0, newRow);
-      return next;
+      return normalizeOrderNumbers(next);
     });
     setRpoIds(prev => {
       if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
@@ -166,10 +180,12 @@ export default function EditPurchaseOrder() {
 
   const removeItem = (index: number) => {
     setItems(prev => {
-      if (prev.length === 1) return [{ resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
+      const normalizeOrderNumbers = (rows: ItemRow[]) =>
+        rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
+      if (prev.length === 1) return [{ orderNumber: 1, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
       const next = [...prev];
       next.splice(index, 1);
-      return next;
+      return normalizeOrderNumbers(next);
     });
     setRpoIds(prev => {
       if (prev.length === 1) return [null];
@@ -320,6 +336,7 @@ export default function EditPurchaseOrder() {
         const payload = {
           resourceId: Number(row.resourceId),
           purchaseOrderId: Number(purchaseOrderId),
+          orderNumber: Number(row.orderNumber),
           quantity: Number(row.quantity) || 0,
           unitSalesPrice: Number(row.unitSalesPrice) || 0,
           unitPurchasePrice: Number(row.unitPurchasePrice) || 0,

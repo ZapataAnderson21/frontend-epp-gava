@@ -3,6 +3,7 @@ import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
 
 type ItemRow = {
+  orderNumber: number;
   resourceId: number;
   description: string;
   unit: string;
@@ -51,6 +52,7 @@ export default function ItemsTable({
       <table className="text-center w-full">
         <thead className="bg-[#14519d] border-1 border-[#14519d] text-white">
           <tr>
+            <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">N°</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">DESCRIPCIÓN</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">UND</th>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">CANT</th>
@@ -65,7 +67,7 @@ export default function ItemsTable({
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={8} className="p-4 border-1 border-gray-400 text-center">
+              <td colSpan={9} className="p-4 border-1 border-gray-400 text-center">
                 <button
                   type="button"
                   className="bg-black text-white px-4 py-2 rounded-md cursor-pointer"
@@ -75,11 +77,16 @@ export default function ItemsTable({
                 </button>
               </td>
             </tr>
-          ) : items.reverse().map((item, index) => {
+          ) : items.map((item, index) => {
             const ie = itemErrors?.[index];
 
             return (
               <tr key={index}>
+                {/* N° */}
+                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                  <p>{item.orderNumber}</p>
+                </td>
+
                 {/* DESCRIPCIÓN / RECURSO */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap min-w-80 max-w-120">
                   <div className="flex flex-col">
@@ -187,19 +194,19 @@ export default function ItemsTable({
 
         <tfoot>
           <tr>
-            <td colSpan={4} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
+            <td colSpan={5} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {purchaseAmount.toFixed(2)}</td>
             <td></td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {saleAmount.toFixed(2)}</td>
           </tr>
           <tr>
-            <td colSpan={4} className="p-2 pr-8 font-bold text-right">IGV</td>
+            <td colSpan={5} className="p-2 pr-8 font-bold text-right">IGV</td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(purchaseAmount * 0.18).toFixed(2)}</td>
             <td></td>
             <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(saleAmount * 0.18).toFixed(2)}</td>
           </tr>
           <tr>
-            <td colSpan={4} className="p-2 pr-8 font-bold text-right">TOTAL</td>
+            <td colSpan={5} className="p-2 pr-8 font-bold text-right">TOTAL</td>
             <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(purchaseAmount * 1.18).toFixed(2)}</td>
             <td></td>
             <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(saleAmount * 1.18).toFixed(2)}</td>
