@@ -8,6 +8,8 @@ import { EditButton, SeeButton } from "../../../../../../common/button";
 import { useNavigate } from "react-router-dom";
 import StatusTag, { statusOptions } from "./components/StatusTag";
 import toast, { Toaster } from "react-hot-toast";
+  import { useMemo, useState } from "react";
+  import { Select } from "../../../../../../components";
 
 interface PurchaseOrderTableProps {
   projectId: number;
@@ -16,6 +18,8 @@ interface PurchaseOrderTableProps {
 export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProps) {
   const { data: purchaseOrders, loading, error, setData } = useFetch<PurchaseOrder[]>(`${purchaseOrderApi}project/${projectId}`, [projectId]);
   const { execute } = useApiAction<any>();
+  const [supplierFilter, setSupplierFilter] = useState<number>(0);
+  const [codeQuery, setCodeQuery] = useState("");
 
   const processedPurchaseOrders = purchaseOrders?.map((po) => ({
     ...po,
@@ -26,6 +30,28 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
     }), 
     supplierName: po.supplier ? po.supplier.name : "N/A",
   })) || [];
+
+  const supplierOptions = useMemo(() => {
+    const seen = new Map<number, string>();
+    (purchaseOrders || []).forEach((po) => {
+      if (po.supplierId && po.supplier?.name) {
+        seen.set(po.supplierId, po.supplier.name);
+      }
+    });
+    return [
+      { value: 0, label: "Todos" },
+      ...Array.from(seen.entries()).map(([value, label]) => ({ value, label })),
+    ];
+  }, [purchaseOrders]);
+
+  const filteredPurchaseOrders = useMemo(() => {
+    const q = codeQuery.trim().toLowerCase();
+    return processedPurchaseOrders.filter((po) => {
+      const supplierMatch = supplierFilter === 0 || po.supplierId === supplierFilter;
+      const codeMatch = !q || String(po.code || "").toLowerCase().includes(q);
+      return supplierMatch && codeMatch;
+    });
+  }, [processedPurchaseOrders, supplierFilter, codeQuery]);
 
   const navigate = useNavigate();
 
@@ -75,8 +101,29 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+      <div className="flex flex-col sm:flex-row gap-3 md:items-end md:justify-between mb-4">
+        <div className="flex flex-col w-full gap-1">
+          <label className="text-sm text-gray-700">Buscar por código</label>
+          <input
+            type="text"
+            value={codeQuery}
+            onChange={(e) => setCodeQuery(e.target.value)}
+            placeholder="Ej. OC-2024-001"
+            className="border border-gray-400 rounded-sm p-2 min-w-[220px] focus:outline-[#0047a3]"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-gray-700">Proveedor</label>
+          <Select
+            name="supplier-filter"
+            value={supplierFilter}
+            onChange={(val) => setSupplierFilter(Number(val))}
+            options={supplierOptions}
+          />
+        </div>
+      </div>
       <Table<PurchaseOrder>
-        data={processedPurchaseOrders as unknown as PurchaseOrder[]}
+        data={filteredPurchaseOrders as unknown as PurchaseOrder[]}
         columns={[
           { key: "code", label: "Código", width: "12rem" },
           { key: "supplierName", label: "Proveedor", width: "12rem" },
@@ -99,6 +146,9 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
           ) }
         ] as const}
       />
+      {!filteredPurchaseOrders.length && (
+        <p className="text-center text-gray-500 mt-3">No hay resultados con esos filtros.</p>
+      )}
     </>
   );
 }
