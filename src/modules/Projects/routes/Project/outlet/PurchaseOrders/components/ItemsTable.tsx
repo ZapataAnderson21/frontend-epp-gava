@@ -75,7 +75,7 @@ export default function ItemsTable({
                 </button>
               </td>
             </tr>
-          ) : items.map((item, index) => {
+          ) : items.reverse().map((item, index) => {
             const ie = itemErrors?.[index];
 
             return (
