@@ -22,7 +22,7 @@ export default function PurchaseOrder() {
   
   const { data: purchaseOrder } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
 
-  const [seePurchasePrices, setSeePurchasePrices] = useState<boolean>(false);
+  const [seeSalesPrices, setSeeSalesPrices] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { execute: duplicatePurchaseOrder, loading: isDuplicating } = useApiAction<PurchaseOrder>();
@@ -181,13 +181,13 @@ export default function PurchaseOrder() {
                 <div className="flex items-center justify-end text-[13px] font-semibold">
                   <p 
                     className="cursor-pointer hover:scale-[101%] transition-transform duration-300 border rounded-lg py-1 px-2 bg-slate-700 text-white"
-                    onClick={() => setSeePurchasePrices(!seePurchasePrices)}
+                    onClick={() => setSeeSalesPrices(!seeSalesPrices)}
                   >
-                    {seePurchasePrices ? 'OCULTAR PRECIOS DE COMPRA' : 'MOSTRAR PRECIOS DE COMPRA'}
+                    {seeSalesPrices ? 'OCULTAR PRECIOS DE VENTA' : 'MOSTRAR PRECIOS DE VENTA'}
                   </p>
                 </div>
 
-                { purchaseOrder && <TableViewPO purchaseOrder={purchaseOrder} seePurchasePrices={seePurchasePrices} /> }
+                { purchaseOrder && <TableViewPO purchaseOrder={purchaseOrder} seeSalesPrices={seeSalesPrices} /> }
 
               </div>
               

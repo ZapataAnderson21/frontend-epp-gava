@@ -61,9 +61,21 @@ export default function ItemsTable({
             <th className="p-2 border-gray-100 text-nowrap">ACCIONES</th>
           </tr>
         </thead>
-
+    
         <tbody>
-          {items.map((item, index) => {
+          {items.length === 0 ? (
+            <tr>
+              <td colSpan={8} className="p-4 border-1 border-gray-400 text-center">
+                <button
+                  type="button"
+                  className="bg-black text-white px-4 py-2 rounded-md cursor-pointer"
+                  onClick={() => onAddRow(0)}
+                >
+                  Agregar fila
+                </button>
+              </td>
+            </tr>
+          ) : items.map((item, index) => {
             const ie = itemErrors?.[index];
 
             return (
@@ -98,6 +110,7 @@ export default function ItemsTable({
                     <input
                       className={numberCls(!!ie?.quantity)}
                       type="number"
+                      step="0.01"
                       value={item.quantity}
                       min="0"
                       onChange={(e) => onChange(index, "quantity", e.target.value)}
@@ -112,7 +125,8 @@ export default function ItemsTable({
                   <div className="flex flex-col">
                     <input
                       className={inputCls(!!ie?.unitPurchasePrice)}
-                      type="text"
+                      type="number"
+                      step="0.0001"
                       value={item.unitPurchasePrice}
                       onChange={(e) => onChange(index, "unitPurchasePrice", e.target.value)}
                       aria-invalid={!!ie?.unitPurchasePrice}
@@ -132,6 +146,7 @@ export default function ItemsTable({
                     <input
                       className={numberCls(!!ie?.unitSalesPrice)}
                       type="number"
+                      step="0.0001"
                       value={item.unitSalesPrice}
                       min="0"
                       onChange={(e) => onChange(index, "unitSalesPrice", e.target.value)}
@@ -173,21 +188,21 @@ export default function ItemsTable({
         <tfoot>
           <tr>
             <td colSpan={4} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {purchaseAmount.toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {purchaseAmount.toFixed(2)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {saleAmount.toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {saleAmount.toFixed(2)}</td>
           </tr>
           <tr>
             <td colSpan={4} className="p-2 pr-8 font-bold text-right">IGV</td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {(purchaseAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(purchaseAmount * 0.18).toFixed(2)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100">{sym} {(saleAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(saleAmount * 0.18).toFixed(2)}</td>
           </tr>
           <tr>
             <td colSpan={4} className="p-2 pr-8 font-bold text-right">TOTAL</td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800">{sym} {(purchaseAmount * 1.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(purchaseAmount * 1.18).toFixed(2)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800">{sym} {(saleAmount * 1.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(saleAmount * 1.18).toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>

@@ -2,10 +2,10 @@ import type { PurchaseOrder } from "../../../../../../../../data/types";
 
 interface TableViewPOProps {
   purchaseOrder: PurchaseOrder;
-  seePurchasePrices: boolean;
+  seeSalesPrices: boolean;
 }
 
-export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableViewPOProps) {
+export default function TableViewPO({ purchaseOrder, seeSalesPrices }: TableViewPOProps) {
   const toNumber = (value: number | string | null | undefined) => {
     if (value === null || value === undefined) return 0;
     return typeof value === "number" ? value : Number(value);
@@ -13,10 +13,10 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
 
   const currencySymbol = purchaseOrder?.supplier?.currency.toUpperCase() === "PEN" ? "S/." : "$";
 
-  const formatPrice = (value: number | string | null | undefined) => {
+  const formatPrice = (value: number | string | null | undefined, decimals = 2) => {
     const numeric = toNumber(value);
     const safe = Number.isFinite(numeric) ? numeric : 0;
-    return safe.toFixed(2);
+    return safe.toFixed(decimals);
   };
 
   const subtotalCompra = purchaseOrder?.resources?.reduce((total, item) => {
@@ -27,9 +27,7 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
     return total + (toNumber(item.unitSalesPrice) * toNumber(item.quantity));
   }, 0);
 
-  const colSpan = (qty: number) => {
-    return seePurchasePrices ? qty : qty - 2;
-  }
+  const colSpan = (qty: number) => (seeSalesPrices ? qty : qty - 2);
 
   return (
     <div className='overflow-x-auto'>
@@ -40,10 +38,10 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>DESCRIPCIÓN</th>
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>UND</th>
             <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>CANT</th>
-            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT</th>}
-            {seePurchasePrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V PARC</th>}
-            <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT {seePurchasePrices ? 'VENT' : ''}</th>
-            <th className='p-2 text-nowrap'>V PARC {seePurchasePrices ? 'VENT' : ''}</th>
+            <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT</th>
+            <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V PARC</th>
+            {seeSalesPrices && <th className='p-2 border-r-1 border-[#f3f4f6] text-nowrap'>V UNIT VENT</th>}
+            {seeSalesPrices && <th className='p-2 text-nowrap'>V PARC VENT</th>}
           </tr>
         </thead>
         <tbody className='border-1 border-gray-400'>
@@ -53,31 +51,31 @@ export default function TableViewPO({ purchaseOrder, seePurchasePrices }: TableV
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitPurchasePrice)}</td>}
-              { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(toNumber(item.quantity) * toNumber(item.unitPurchasePrice))}</td>}
-              <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitSalesPrice)}</td>
-              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(toNumber(item.quantity) * toNumber(item.unitSalesPrice))}</td>
+              <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitPurchasePrice, 4)}</td>
+              <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(toNumber(item.quantity) * toNumber(item.unitPurchasePrice), 2)}</td>
+              {seeSalesPrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitSalesPrice, 2)}</td>}
+              {seeSalesPrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(toNumber(item.quantity) * toNumber(item.unitSalesPrice), 2)}</td>}
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
-            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
-            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalCompra)}</td>}
-            { seePurchasePrices && <td></td> }
-            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalVenta)}</td>
+            <td colSpan={seeSalesPrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>SUBTOTAL</td>
+            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalCompra, 2)}</td>
+            { seeSalesPrices && <td></td> }
+            { seeSalesPrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalVenta, 2)}</td>}
           </tr>
           <tr>
-            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
-            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalCompra ? subtotalCompra * 0.18 : 0)}</td>}
-            { seePurchasePrices && <td></td> }
-            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalVenta ? subtotalVenta * 0.18 : 0)}</td>
+            <td colSpan={seeSalesPrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>IGV</td>
+            <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalCompra ? subtotalCompra * 0.18 : 0, 2)}</td>
+            { seeSalesPrices && <td></td> }
+            { seeSalesPrices && <td className='p-2 border-1 border-gray-400 bg-gray-100'>{currencySymbol} {formatPrice(subtotalVenta ? subtotalVenta * 0.18 : 0, 2)}</td>}
           </tr>
           <tr>
-            <td colSpan={seePurchasePrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
-            { seePurchasePrices && <td className='p-2 border-1 border-gray-400 bg-gray-800 text-white'>{currencySymbol} {formatPrice(subtotalCompra ? subtotalCompra * 1.18 : 0)}</td> }
-            { seePurchasePrices && <td></td> }
-            <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{currencySymbol} {formatPrice(subtotalVenta ? subtotalVenta * 1.18 : 0)}</td>
+            <td colSpan={seeSalesPrices ? colSpan(5) : colSpan(7)} className='p-2 pr-8 font-bold text-right table-cell'>TOTAL</td>
+            <td className='p-2 border-1 border-gray-400 bg-gray-800 text-white'>{currencySymbol} {formatPrice(subtotalCompra ? subtotalCompra * 1.18 : 0, 2)}</td>
+            { seeSalesPrices && <td></td> }
+            { seeSalesPrices && <td className='p-2 border-1 border-gray-400 text-white bg-gray-800'>{currencySymbol} {formatPrice(subtotalVenta ? subtotalVenta * 1.18 : 0, 2)}</td>}
           </tr>
         </tfoot>
       </table>
