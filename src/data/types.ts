@@ -243,7 +243,9 @@ export interface Supplier {
   phone: string;
   email: string;
   address?: string;
-  ruc: string;
+  documentType: "ruc" | "dni";
+  ruc?: string | null;
+  dni?: string | null;
   accountNumber: string;
   bank: string;
   currency: string;

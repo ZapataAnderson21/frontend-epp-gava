@@ -14,7 +14,9 @@ interface ResourceResponse {
   phone: string;
   email: string;
   address: string;
+  documentType: "ruc" | "dni";
   ruc: string;
+  dni: string;
   accountNumber: string;
   bank: string;
   currency: string;
@@ -27,13 +29,16 @@ export default function NewSupplier() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [documentType, setDocumentType] = useState<"ruc" | "dni">("ruc");
   const [ruc, setRuc] = useState("");
+  const [dni, setDni] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [bank, setBank] = useState("");
   const [currency, setCurrency] = useState("");
 
   const [errorPhone, setErrorPhone] = useState("");
   const [errorRuc, setErrorRuc] = useState("");
+  const [errorDni, setErrorDni] = useState("");
   const [errorAccountNumber, setErrorAccountNumber] = useState("");
 
   const navigate = useNavigate();
@@ -54,7 +59,8 @@ export default function NewSupplier() {
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (!phone.trim()) errors.push("El teléfono es requerido");
     if (!email.trim()) errors.push("El email es requerido");
-    if (!ruc.trim()) errors.push("El RUC es requerido");
+    if (documentType === "ruc" && !ruc.trim()) errors.push("El RUC es requerido");
+    if (documentType === "dni" && !dni.trim()) errors.push("El DNI es requerido");
     if (!accountNumber.trim()) errors.push("El número de cuenta es requerido");
     if (!bank.trim()) errors.push("El banco es requerido");
     if (!currency) errors.push("Debe seleccionar una moneda");
@@ -64,15 +70,29 @@ export default function NewSupplier() {
     } else {
       setErrorPhone("");
     }
-    if (ruc.length !== 11) {
-      errors.push("El RUC debe tener exactamente 11 dígitos");
-      setErrorRuc("El RUC debe tener exactamente 11 dígitos");
+    if (documentType === "ruc") {
+      if (ruc.length !== 11) {
+        errors.push("El RUC debe tener exactamente 11 dígitos");
+        setErrorRuc("El RUC debe tener exactamente 11 dígitos");
+      } else {
+        setErrorRuc("");
+      }
     } else {
       setErrorRuc("");
     }
-    if (accountNumber.length < 10) {
-      errors.push("El número de cuenta debe tener al menos 10 dígitos");
-      setErrorAccountNumber("El número de cuenta debe tener al menos 10 dígitos");
+    if (documentType === "dni") {
+      if (dni.length !== 8) {
+        errors.push("El DNI debe tener exactamente 8 dígitos");
+        setErrorDni("El DNI debe tener exactamente 8 dígitos");
+      } else {
+        setErrorDni("");
+      }
+    } else {
+      setErrorDni("");
+    }
+    if (accountNumber.length < 13) {
+      errors.push("El número de cuenta debe tener al menos 13 dígitos");
+      setErrorAccountNumber("El número de cuenta debe tener al menos 13 dígitos");
     } else {
       setErrorAccountNumber("");
     }
@@ -95,7 +115,8 @@ export default function NewSupplier() {
       phone,
       email,
       address,
-      ruc,
+      documentType,
+      ...(documentType === "ruc" ? { ruc } : { dni }),
       accountNumber,
       bank,
       currency,
@@ -130,10 +151,17 @@ export default function NewSupplier() {
     );
   };
 
+  type DocumentType = "ruc" | "dni";
+
   const currencyOptions = [
     { value: "USD", label: "Dólares" },
     { value: "PEN", label: "Soles Peruanos" },
     { value: "EUR", label: "Euros" }
+  ];
+
+  const documentTypeOptions: { value: DocumentType; label: string }[] = [
+    { value: "ruc", label: "RUC" },
+    { value: "dni", label: "DNI" }
   ];
 
   return (
@@ -144,7 +172,12 @@ export default function NewSupplier() {
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(''); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
         <TextAreaForm label="Dirección" name="address" value={address} onChange={(e) => setAddress(e.target.value)} optional={true} />
-        <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => {setErrorRuc(''); const v = e.target.value; if (/^\d{0,11}$/.test(v)) setRuc(v); }} optional={false} maxLength={11} error={errorRuc} />
+        <SelectForm<DocumentType> label="Tipo de documento" name="documentType" options={documentTypeOptions} value={documentType} onChange={(value) => { setDocumentType(value); setErrorRuc(""); setErrorDni(""); if (value === "ruc") { setDni(""); } else { setRuc(""); } }} />
+        {documentType === "ruc" ? (
+          <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => {setErrorRuc(""); const v = e.target.value; if (/^\d{0,11}$/.test(v)) setRuc(v); }} optional={false} maxLength={11} error={errorRuc} />
+        ) : (
+          <InputForm label="DNI" name="dni" type="text" value={dni} onChange={(e) => {setErrorDni(""); const v = e.target.value; if (/^\d{0,8}$/.test(v)) setDni(v); }} optional={false} maxLength={8} error={errorDni} />
+        )}
         <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => {setErrorAccountNumber(''); const v = e.target.value; if (/^\d*$/.test(v)) setAccountNumber(v); }} optional={false} maxLength={20} error={errorAccountNumber} />
         <InputForm label="Banco" name="bank" type="text" value={bank} onChange={(e) => setBank(e.target.value)} optional={false} />
         <SelectForm label="Moneda" name="currency" options={currencyOptions} value={currency} onChange={(value) => setCurrency(value)} />
