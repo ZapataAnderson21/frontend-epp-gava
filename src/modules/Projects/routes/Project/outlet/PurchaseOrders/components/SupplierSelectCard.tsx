@@ -38,7 +38,14 @@ export default function SupplierSelectCard({
 
         {supplier && (
           <>
-            <InputForm name="ruc" label="RUC" type="text" value={supplier.ruc} onChange={() => {}} disabled />
+            <InputForm
+              name="document"
+              label={supplier.documentType === "dni" ? "DNI" : "RUC"}
+              type="text"
+              value={supplier.documentType === "dni" ? supplier.dni ?? "" : supplier.ruc ?? ""}
+              onChange={() => {}}
+              disabled
+            />
             <InputForm name="contact_person" label="Contacto" type="text" value={supplier.contactName} onChange={() => {}} disabled />
             <InputForm name="correo" label="Correo" type="email" value={supplier.email} onChange={() => {}} disabled />
             <InputForm name="phone" label="Teléfono" type="text" value={supplier.phone} onChange={() => {}} disabled />

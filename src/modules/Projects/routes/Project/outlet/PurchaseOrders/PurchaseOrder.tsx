@@ -133,7 +133,14 @@ export default function PurchaseOrder() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <SectionCard title="DATOS DEL PROVEEDOR">
                   <InfoField label="Proveedor" value={purchaseOrder?.supplier?.name} />
-                  <InfoField label="RUC" value={purchaseOrder?.supplier?.ruc} />
+                  <InfoField
+                    label={purchaseOrder?.supplier?.documentType === "dni" ? "DNI" : "RUC"}
+                    value={
+                      purchaseOrder?.supplier?.documentType === "dni"
+                        ? purchaseOrder?.supplier?.dni ?? ""
+                        : purchaseOrder?.supplier?.ruc ?? ""
+                    }
+                  />
                   <InfoField label="Contacto" value={purchaseOrder?.supplier?.contactName} />
                   <InfoField label="Correo" value={purchaseOrder?.supplier?.email} />
                   <InfoField label="Teléfono" value={purchaseOrder?.supplier?.phone} />
