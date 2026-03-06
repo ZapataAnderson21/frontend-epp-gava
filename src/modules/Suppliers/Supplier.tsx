@@ -56,7 +56,7 @@ export default function Supplier() {
       setName(supplier.name);
       setContactName(supplier.contactName);
       setPhone(supplier.phone);
-      setEmail(supplier.email);
+      setEmail(supplier.email ?? "");
       setDocumentType(supplier.documentType ?? "ruc");
       setRuc(supplier.ruc ?? "");
       setDni(supplier.dni ?? "");
@@ -82,7 +82,7 @@ export default function Supplier() {
     if (!name.trim()) errors.push("El nombre es requerido");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (!phone.trim()) errors.push("El teléfono es requerido");
-    if (!email.trim()) errors.push("El email es requerido");
+    if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
     if (documentType === "ruc" && !ruc.trim()) errors.push("El RUC es requerido");
     if (documentType === "dni" && !dni.trim()) errors.push("El DNI es requerido");
     if (!accountNumber.trim()) errors.push("El número de cuenta es requerido");
@@ -184,7 +184,7 @@ export default function Supplier() {
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
-        <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
+        <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={true} />
         <TextAreaForm label="Dirección" name="address" value={address} onChange={(e) => setAddress(e.target.value)} optional={true} />
         <SelectForm<DocumentType> label="Tipo de documento" name="documentType" options={documentTypeOptions} value={documentType} onChange={(value) => { setDocumentType(value); setErrorRuc(""); setErrorDni(""); if (value === "ruc") { setDni(""); } else { setRuc(""); } }} />
         {documentType === "ruc" ? (

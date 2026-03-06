@@ -241,7 +241,7 @@ export interface Supplier {
   name: string;
   contactName: string;
   phone: string;
-  email: string;
+  email?: string;
   address?: string;
   documentType: "ruc" | "dni";
   ruc?: string | null;

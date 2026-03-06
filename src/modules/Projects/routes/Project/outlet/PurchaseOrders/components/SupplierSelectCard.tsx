@@ -47,7 +47,7 @@ export default function SupplierSelectCard({
               disabled
             />
             <InputForm name="contact_person" label="Contacto" type="text" value={supplier.contactName} onChange={() => {}} disabled />
-            <InputForm name="correo" label="Correo" type="email" value={supplier.email} onChange={() => {}} disabled />
+            <InputForm name="correo" label="Correo" type="email" value={supplier.email ?? ""} onChange={() => {}} disabled />
             <InputForm name="phone" label="Teléfono" type="text" value={supplier.phone} onChange={() => {}} disabled />
             <InputForm name="quotation" label="Cotización" type="text" value={quotation} onChange={(e) => setQuotation(e.target.value)} />
           </>
