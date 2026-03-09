@@ -341,92 +341,96 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
           {/* Tabla visible para todos */}
           <div className="flex flex-col items-start justify-start w-full">
-            <HeaderTableSummary />
-            {isAddRowOpen && (
-              <div className="w-full border border-gray-200 rounded-md p-3 bg-gray-50 mt-2">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <button
-                    type="button"
-                    className={`px-3 py-1 rounded-md border ${newElementType === "epp" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
-                    onClick={() => setNewElementType("epp")}
-                  >
-                    Seguridad
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-3 py-1 rounded-md border ${newElementType === "operative" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
-                    onClick={() => setNewElementType("operative")}
-                  >
-                    Operativo
-                  </button>
-                </div>
+            <div className="w-full overflow-x-auto pb-1">
+              <div className="min-w-[720px]">
+                <HeaderTableSummary />
+                {isAddRowOpen && (
+                  <div className="w-full border border-gray-200 rounded-md p-3 bg-gray-50 mt-2">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <button
+                        type="button"
+                        className={`px-3 py-1 rounded-md border ${newElementType === "epp" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+                        onClick={() => setNewElementType("epp")}
+                      >
+                        Seguridad
+                      </button>
+                      <button
+                        type="button"
+                        className={`px-3 py-1 rounded-md border ${newElementType === "operative" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
+                        onClick={() => setNewElementType("operative")}
+                      >
+                        Operativo
+                      </button>
+                    </div>
 
-                <div className="grid w-full text-[14px] text-gray-700 gap-1" style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}>
-                  <div className="w-full min-w-0">
-                    <Select
-                      name="newElementId"
-                      value={newElementId}
-                      onChange={(value) => setNewElementId(Number(value))}
-                      options={(elementsByType || [])
-                        .filter((el) => !elementRequests.some((er) => er.elementId === el.elementId))
-                        .map((el) => ({ value: el.elementId, label: el.name }))}
-                      placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
-                      disabled={loadingElements || !!errorElements}
-                    />
+                    <div className="grid w-full text-[14px] text-gray-700 gap-1" style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}>
+                      <div className="w-full min-w-0">
+                        <Select
+                          name="newElementId"
+                          value={newElementId}
+                          onChange={(value) => setNewElementId(Number(value))}
+                          options={(elementsByType || [])
+                            .filter((el) => !elementRequests.some((er) => er.elementId === el.elementId))
+                            .map((el) => ({ value: el.elementId, label: el.name }))}
+                          placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
+                          disabled={loadingElements || !!errorElements}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
+                        placeholder="Unidad"
+                        value={newUnit}
+                        onChange={(e) => setNewUnit(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
+                        placeholder="Cantidad"
+                        min={1}
+                        value={newQuantity}
+                        onChange={(e) => setNewQuantity(Number(e.target.value))}
+                      />
+                      <input
+                        type="number"
+                        className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md bg-gray-100"
+                        value={0}
+                        disabled
+                      />
+                    </div>
+
+                    {errorElements && (
+                      <p className="text-red-600 text-sm mt-2">{errorElements}</p>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button
+                        icon={<FaCheck />}
+                        label="Agregar"
+                        onClick={handleCreateElementRequest}
+                        bgColor="#008000"
+                        bgHoverColor="#0c4a28"
+                        type="button"
+                        disabled={loadingElements}
+                      />
+                      <Button
+                        icon={<FaTimes />}
+                        label="Cancelar"
+                        onClick={handleCancelAddElement}
+                        bgColor="#d80027"
+                        bgHoverColor="#c80008"
+                        type="button"
+                      />
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
-                    placeholder="Unidad"
-                    value={newUnit}
-                    onChange={(e) => setNewUnit(e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
-                    placeholder="Cantidad"
-                    min={1}
-                    value={newQuantity}
-                    onChange={(e) => setNewQuantity(Number(e.target.value))}
-                  />
-                  <input
-                    type="number"
-                    className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md bg-gray-100"
-                    value={0}
-                    disabled
-                  />
-                </div>
-
-                {errorElements && (
-                  <p className="text-red-600 text-sm mt-2">{errorElements}</p>
                 )}
-
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <Button
-                    icon={<FaCheck />}
-                    label="Agregar"
-                    onClick={handleCreateElementRequest}
-                    bgColor="#008000"
-                    bgHoverColor="#0c4a28"
-                    type="button"
-                    disabled={loadingElements}
-                  />
-                  <Button
-                    icon={<FaTimes />}
-                    label="Cancelar"
-                    onClick={handleCancelAddElement}
-                    bgColor="#d80027"
-                    bgHoverColor="#c80008"
-                    type="button"
-                  />
-                </div>
+                <ContentTableSummary
+                  request={request}
+                  elementRequests={elementRequests}
+                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                />
               </div>
-            )}
-            <ContentTableSummary
-              request={request}
-              elementRequests={elementRequests}
-              onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
-            />
+            </div>
           </div>
 
           {/* Respuestas visibles para todos */}
