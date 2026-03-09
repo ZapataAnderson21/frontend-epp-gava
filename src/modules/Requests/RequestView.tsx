@@ -327,9 +327,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
               {pdfUrl && (
                 <button
                   onClick={() => setIsPdfOpen(!isPdfOpen)}
-                  className="hidden xl:flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="hidden xl:flex items-center cursor-pointer gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
                   type="button"
-                >r
+                >
                   <FaFilePdf />
                   {isPdfOpen ? "Ocultar PDF" : "Ver PDF"}
                 </button>
@@ -508,7 +508,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               <h2 className="text-lg font-bold">Requerimiento PDF</h2>
               <button
                 onClick={() => setIsPdfOpen(false)}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
                 type="button"
               >
                 <FaTimes className="text-xl" />
