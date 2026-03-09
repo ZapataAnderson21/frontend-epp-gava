@@ -84,7 +84,11 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
   const columns = [
     { key: "requestId", label: "Id", width: "4rem" },
     { key: "createdAt", label: "F y H de Registro", width: "8rem" },
-    { key: "userName", label: "Solicitante", width: "8rem" },
+    { 
+      label: "Solicitante",
+      width: "12rem",
+      render: (row: RequestType) => row.user?.name + " " + row.user?.lastName || "Desconocido"
+    },
     { key: "deliveryDueDate", label: "F y H de Entrega", width: "8rem" },
     { 
       label: "Estado",
