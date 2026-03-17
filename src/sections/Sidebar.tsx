@@ -1,4 +1,4 @@
-import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave } from "react-icons/fa6";
+import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup } from "react-icons/fa6";
 import { FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -86,6 +86,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <SidebarItem icon={<FaTruck />} label="Proveedores"    href="/admin/suppliers" index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" index={3} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<FaFileInvoiceDollar />} label="Cotizaciones" href="/admin/quotations" index={4} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<FaUserGroup />} label="Clientes" href="/admin/clients" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           {/* Grupo con desplegable */}
           <div className="w-full flex flex-col">
@@ -95,7 +97,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
               isRoot
               isOpen={isElementosOpen}
               onClick={() => setIsElementosOpen((v) => !v)}
-              index={4}
+              index={6}
               baseDelay={baseDelay}
               perItemDelay={perItemDelay}
             />
@@ -156,17 +158,17 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </div>
 
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaBoxOpen />} label="Recursos Ord. Compra" href="/admin/resources" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaBoxOpen />} label="Recursos Ord. Compra" href="/admin/resources" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           
-          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
-          <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           
-          <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           <Permission user={user} allow={adminTypes}>
-            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           
         </div>

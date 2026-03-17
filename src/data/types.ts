@@ -253,6 +253,49 @@ export interface Supplier {
   updatedAt: string;
 }
 
+export interface Client {
+  clientId: number;
+  name: string;
+  contactName: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  ruc: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type QuotationStatus = "draft" | "sent" | "approved" | "accepted";
+
+export interface QuotationItem {
+  quotationItemId?: number;
+  quotationId?: number;
+  orderNumber: number;
+  description: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Quotation {
+  quotationId: number;
+  code: string;
+  clientId: number;
+  status: QuotationStatus;
+  commercialTerms?: string | null;
+  costDirectAmount: number;
+  igvRate: number;
+  igvAmount: number;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  client?: Client;
+  items?: QuotationItem[];
+}
+
 export interface PurchaseOrder {
   purchaseOrderId: number;
   code: string;

@@ -40,7 +40,7 @@ export default function ResourceTable() {
   }
 
   if (!resources || resources.length === 0) {
-    return <div className="text-center text-gray-500">No hay recursos disponibles.</div>;
+    return <div className="text-center text-gray-500 w-full">No hay recursos disponibles.</div>;
   }
 
   return (

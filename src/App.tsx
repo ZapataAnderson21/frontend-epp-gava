@@ -13,6 +13,8 @@ import NewPurchaseOrder from './modules/Projects/routes/Project/outlet/PurchaseO
 import { Emergencies, Emergency, NewEmergency } from './modules/Emergencies';
 import { Resources, Resource, NewResource } from './modules/Resources';
 import { Suppliers, Supplier, NewSupplier } from './modules/Suppliers';
+import { Quotations, Quotation, NewQuotation, EditQuotation } from './modules/Quotations';
+import { Clients, Client, NewClient } from './modules/Clients';
 import { PettyCashes } from './modules/Projects/routes/Project/outlet/PettyCashes/index.ts';
 import PurchaseOrdersProject from './modules/Projects/routes/Project/outlet/PurchaseOrders';
 import RequireAuth from './RequireAuth.tsx';
@@ -88,6 +90,17 @@ export default function App() {
           <Route path='suppliers/new' element={<NewSupplier />} />
           <Route path='suppliers/:id' element={<Supplier />} />
           {/* End suppliers routes */}
+          {/* Quotations routes */}
+          <Route path='quotations' element={<Quotations />} />
+          <Route path='quotations/new' element={<NewQuotation />} />
+          <Route path='quotations/edit/:id' element={<EditQuotation />} />
+          <Route path='quotations/:id' element={<Quotation />} />
+          {/* End quotations routes */}
+          {/* Clients routes */}
+          <Route path='clients' element={<Clients />} />
+          <Route path='clients/new' element={<NewClient />} />
+          <Route path='clients/:id' element={<Client />} />
+          {/* End clients routes */}
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
           {/* End workers routes */}
