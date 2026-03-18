@@ -1,4 +1,4 @@
-import { FaTrash } from "react-icons/fa6";
+import { FaTrashAlt } from "react-icons/fa";
 import ActionButton from "../../components/ActionButton";
 
 interface DeleteButtonProps {
@@ -9,11 +9,11 @@ interface DeleteButtonProps {
 export default function DeleteButton({ onClick, disabled }: DeleteButtonProps) {
   return (
     <ActionButton
-      icon={<FaTrash />}
+      icon={<FaTrashAlt className="size-4" />}
       onClick={onClick}
       disabled={disabled}
-      bgColor = "#d80027"
-      bgHoverColor = "#c80008"
+      bgColor="#d80027"
+      bgHoverColor="#c80008"
     />
   )
 }

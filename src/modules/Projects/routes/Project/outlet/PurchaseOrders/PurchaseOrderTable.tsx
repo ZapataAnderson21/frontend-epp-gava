@@ -4,12 +4,12 @@ import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
 import { purchaseOrderApi } from "../../../../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../../../../data/types";
-import { EditButton, SeeButton } from "../../../../../../common/button";
+import { DeleteButton, EditButton, SeeButton } from "../../../../../../common/button";
 import { useNavigate } from "react-router-dom";
 import StatusTag, { statusOptions } from "./components/StatusTag";
 import toast, { Toaster } from "react-hot-toast";
   import { useMemo, useState } from "react";
-  import { Select } from "../../../../../../components";
+  import { DeleteConfirmDialog, Select } from "../../../../../../components";
 
 interface PurchaseOrderTableProps {
   projectId: number;
@@ -20,6 +20,8 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
   const { execute } = useApiAction<any>();
   const [supplierFilter, setSupplierFilter] = useState<number>(0);
   const [codeQuery, setCodeQuery] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const processedPurchaseOrders = purchaseOrders?.map((po) => ({
     ...po,
@@ -94,6 +96,31 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
     }
   };
 
+  const handleDelete = async (purchaseOrderId: number) => {
+    setPendingDeleteId(purchaseOrderId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteId) return;
+
+    setDeleting(true);
+    const previousOrders = purchaseOrders ? [...purchaseOrders] : [];
+
+    // Optimistic update - quitar localmente de inmediato
+    setData((prev) => prev?.filter((po) => po.purchaseOrderId !== pendingDeleteId) ?? null);
+
+    try {
+      await execute(`${purchaseOrderApi}${pendingDeleteId}`, "DELETE");
+      toast.success("Orden de compra eliminada con éxito");
+    } catch (err: any) {
+      setData(previousOrders);
+      toast.error(err.message || "Error al eliminar la orden de compra");
+    } finally {
+      setDeleting(false);
+      setPendingDeleteId(null);
+    }
+  };
+
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
   if (!processedPurchaseOrders.length) return <ErrorMessage errorMessage="No hay órdenes de compra disponibles." />;
@@ -142,13 +169,29 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
             }
           },
           { label: "Acciones", width: "8rem", render: (po) => (
-              po.status === "Pendiente" ? <EditButton onClick={() => handleEdit(po.purchaseOrderId)} /> : <SeeButton onClick={() => handleSee(po.purchaseOrderId)} />
+              <div className="flex items-center gap-2">
+                {po.status === "Pendiente" ? (
+                  <EditButton onClick={() => handleEdit(po.purchaseOrderId)} />
+                ) : (
+                  <SeeButton onClick={() => handleSee(po.purchaseOrderId)} />
+                )}
+                <DeleteButton onClick={() => handleDelete(po.purchaseOrderId)} />
+              </div>
           ) }
         ] as const}
       />
       {!filteredPurchaseOrders.length && (
         <p className="text-center text-gray-500 mt-3">No hay resultados con esos filtros.</p>
       )}
+
+      <DeleteConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Eliminar orden de compra"
+        message="Esta acción no se puede deshacer. ¿Desea continuar?"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </>
   );
 }
