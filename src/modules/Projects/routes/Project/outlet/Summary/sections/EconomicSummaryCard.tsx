@@ -1,10 +1,24 @@
 import { type Currency, CurrencyFilter, MoneyTrendCard } from "../components";
 import { SectionProjectSummary } from "../components";
+import { CgSpinner } from "react-icons/cg";
 
 interface AmountsByCurrency {
   PEN: number;
   USD: number;
   EUR: number;
+}
+
+const CURRENCY_SYMBOL: Record<Currency, string> = {
+  PEN: "S/.",
+  USD: "$",
+  EUR: "€",
+};
+
+function formatMoney(value: number, currency: Currency) {
+  return `${CURRENCY_SYMBOL[currency]} ${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 interface EconomicSummaryCardProps {
@@ -36,6 +50,13 @@ export default function EconomicSummaryCard({
   pettyCashTotals,
   utilitiesTotals,
 }: EconomicSummaryCardProps) {
+  const totalExpenses =
+    (purchaseOrdersPurchaseTotals[currency] ?? 0) +
+    (payrollTotalsAmounts[currency] ?? 0) +
+    (pettyCashTotals[currency] ?? 0);
+
+  const totalExpensesLoading = purchaseOrderPurchaseLoading || payrollTotalsLoading || pettyCashLoading;
+
   return (
     <div className="col-span-1">
       <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm h-full">
@@ -61,7 +82,17 @@ export default function EconomicSummaryCard({
           </SectionProjectSummary>
 
           {/* Gastos */}
-          <SectionProjectSummary title="Gastos" trend="down">
+          <SectionProjectSummary
+            title="Gastos"
+            trend="down"
+            summary={
+              totalExpensesLoading ? (
+                <CgSpinner className="animate-spin text-2xl" />
+              ) : (
+                formatMoney(totalExpenses, currency)
+              )
+            }
+          >
             <MoneyTrendCard
               index={1} 
               loading={purchaseOrderPurchaseLoading} 

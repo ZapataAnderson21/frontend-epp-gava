@@ -2,12 +2,13 @@ import type { ReactNode } from "react";
 import { FaArrowRightArrowLeft, FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 
 interface PropsSectionProjectSummary {
-  children?: React.ReactNode;
+  children?: ReactNode;
   title: string;
-  trend: ReactNode
+  trend: "up" | "down" | "equal";
+  summary?: ReactNode;
 }
 
-export default function SectionProjectSummary({ title, children, trend }: PropsSectionProjectSummary) {
+export default function SectionProjectSummary({ title, children, trend, summary }: PropsSectionProjectSummary) {
 
   const TrendIcon =
       trend === "up" ? (
@@ -20,9 +21,12 @@ export default function SectionProjectSummary({ title, children, trend }: PropsS
 
   return (
     <div className="flex flex-col gap-2 mb-4">
-      <div className="flex flex-row gap-2 items-center">
-        <h1 className="text-lg font-extrabold">{title}</h1>
-        {TrendIcon}
+      <div className="flex flex-row items-center justify-between gap-3">
+        <div className="flex flex-row gap-2 items-center">
+          <h1 className="text-lg font-extrabold">{title}</h1>
+          {TrendIcon}
+        </div>
+        {summary ? <div className="font-extrabold text-red-600">{summary}</div> : null}
       </div>
       <div className="w-full">
         {children}
