@@ -1,11 +1,13 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
-import { quotationApi } from "../../data/apiUrl";
-import type { Quotation, QuotationStatus } from "../../data/types";
+import { Select } from "../../components";
+import { clientApi, quotationApi } from "../../data/apiUrl";
+import type { Client, Quotation, QuotationStatus } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
 import StatusTag from "./components/StatusTag";
 
@@ -18,8 +20,27 @@ const formatAmount = (value: number) => `S/ ${Number(value || 0).toFixed(2)}`;
 
 export default function QuotationTable() {
   const { data: quotations, loading, error, setData } = useFetch<Quotation[]>(quotationApi);
+  const { data: clients, loading: loadingClients, error: clientsError } = useFetch<Client[]>(clientApi);
   const { execute } = useApiAction<Quotation>();
   const navigate = useNavigate();
+  const [clientFilter, setClientFilter] = useState<number>(0);
+  const [codeQuery, setCodeQuery] = useState("");
+
+  const clientOptions = useMemo(() => {
+    return [
+      { value: 0, label: "Todos" },
+      ...((clients || []).map((client) => ({ value: client.clientId, label: client.name }))),
+    ];
+  }, [clients]);
+
+  const filteredQuotations = useMemo(() => {
+    const q = codeQuery.trim().toLowerCase();
+    return (quotations || []).filter((quotation) => {
+      const clientMatch = clientFilter === 0 || quotation.clientId === clientFilter;
+      const codeMatch = !q || String(quotation.code || "").toLowerCase().includes(q);
+      return clientMatch && codeMatch;
+    });
+  }, [quotations, clientFilter, codeQuery]);
 
   const handleStatusChange = async (quotationId: number, newStatus: QuotationStatus) => {
     if (!quotations) return;
@@ -89,12 +110,16 @@ export default function QuotationTable() {
     },
   ] as const;
 
-  if (loading) {
+  if (loading || loadingClients) {
     return <LoadingSkeletonTable />;
   }
 
   if (error && !error.toLowerCase().includes("no se encontraron cotizaciones")) {
     return <ErrorMessage errorMessage={error} />;
+  }
+
+  if (clientsError) {
+    return <ErrorMessage errorMessage={clientsError} />;
   }
 
   if (!quotations || quotations.length === 0) {
@@ -104,7 +129,33 @@ export default function QuotationTable() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
-      <Table<Quotation> data={quotations} columns={columns} />
+      <div className="flex flex-col sm:flex-row gap-3 md:items-end md:justify-between mb-4">
+        <div className="flex flex-col w-full gap-1">
+          <label className="text-sm text-gray-700">Buscar por código</label>
+          <input
+            type="text"
+            value={codeQuery}
+            onChange={(e) => setCodeQuery(e.target.value)}
+            placeholder="Ej. COT-2024-001"
+            className="border border-gray-400 rounded-sm p-2 min-w-[220px] focus:outline-[#0047a3]"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-gray-700">Cliente</label>
+          <Select
+            name="client-filter"
+            value={clientFilter}
+            onChange={(val) => setClientFilter(Number(val))}
+            options={clientOptions}
+          />
+        </div>
+      </div>
+
+      <Table<Quotation> data={filteredQuotations} columns={columns} />
+
+      {!filteredQuotations.length && (
+        <p className="text-center text-gray-500 mt-3">No hay resultados con esos filtros.</p>
+      )}
     </>
   );
 }

@@ -27,6 +27,7 @@ export default function NewQuotation() {
   const { execute, loading: saving } = useApiAction<Quotation>();
 
   const [clientId, setClientId] = useState<number>(0);
+  const [serviceDescription, setServiceDescription] = useState("");
   const [commercialTerms, setCommercialTerms] = useState("");
   const [items, setItems] = useState<DraftItem[]>([
     { orderNumber: 1, description: "", unit: "", quantity: "1", unitPrice: "0" },
@@ -82,6 +83,7 @@ export default function NewQuotation() {
     const errors: string[] = [];
 
     if (clientId <= 0) errors.push("Debe seleccionar un cliente.");
+    if (!serviceDescription.trim()) errors.push("La descripción del servicio es obligatoria.");
     if (items.length === 0) errors.push("Debe agregar al menos un item.");
 
     items.forEach((item, index) => {
@@ -120,6 +122,7 @@ export default function NewQuotation() {
 
     const payload = {
       clientId,
+      serviceDescription: serviceDescription.trim(),
       commercialTerms: normalizedTerms || undefined,
       items: items.map((item, index) => ({
         orderNumber: index + 1,
@@ -193,6 +196,16 @@ export default function NewQuotation() {
                 <p><span className="font-bold">RUC:</span> {selectedClient?.ruc ?? "-"}</p>
                 <p><span className="font-bold">Atención:</span> {selectedClient?.contactName ?? "-"}</p>
               </div>
+            </div>
+
+            <div className="pt-1">
+              <h3 className="text-xl font-bold mb-2">Descripción del Servicio:</h3>
+              <textarea
+                className="w-full min-h-28 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
+                value={serviceDescription}
+                onChange={(e) => setServiceDescription(e.target.value)}
+                placeholder="Detalle del servicio cotizado"
+              />
             </div>
 
             <div className="overflow-x-auto rounded-sm">

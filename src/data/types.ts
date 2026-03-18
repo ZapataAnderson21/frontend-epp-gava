@@ -283,6 +283,7 @@ export interface QuotationItem {
 export interface Quotation {
   quotationId: number;
   code: string;
+  serviceDescription: string;
   clientId: number;
   status: QuotationStatus;
   commercialTerms?: string | null;

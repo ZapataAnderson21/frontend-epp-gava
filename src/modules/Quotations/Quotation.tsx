@@ -121,7 +121,7 @@ export default function Quotation() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-2xl px-1">
-              <p><span className="font-bold">Servicio:</span> {quotation.items?.[0]?.description ?? "-"}</p>
+              <p><span className="font-bold">Servicio:</span> {quotation.serviceDescription ?? "-"}</p>
               <p><span className="font-bold">RUC:</span> {quotation.client?.ruc ?? "-"}</p>
               <p><span className="font-bold">Nombre del Cliente:</span> {quotation.client?.name ?? "-"}</p>
               <p><span className="font-bold">Atención:</span> {quotation.client?.contactName ?? "-"}</p>
