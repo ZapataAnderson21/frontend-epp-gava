@@ -1,4 +1,4 @@
-import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup } from "react-icons/fa6";
+import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck } from "react-icons/fa6";
 import { FaProjectDiagram, FaTools } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -9,7 +9,7 @@ import { useApiAction } from "../hooks/useApiAction";
 import { userApi } from "../data/apiUrl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCurrentUser } from "../hooks";
-import { adminTypes, logisticsTypes } from "../utils";
+import { adminTypes, logisticsTypes, monthlyEvaluationTypes } from "../utils";
 import Permission from "../common/auth/Permission";
 import { NotificationBell } from "../components";
 import { IoMdSettings } from "react-icons/io";
@@ -167,8 +167,12 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
+          <Permission user={user} allow={monthlyEvaluationTypes}>
+            <SidebarItem icon={<FaClipboardCheck />} label="Eval. mensuales" href="/admin/worker-monthly-evaluations" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          </Permission>
+
           <Permission user={user} allow={adminTypes}>
-            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={12} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           
         </div>

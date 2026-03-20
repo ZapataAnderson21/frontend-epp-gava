@@ -51,3 +51,9 @@ export const dailyWageApi = `${root}daily-wage/`;
 export const weeklyWageApi = `${root}weekly-wage/`;
 
 export const taskApi = `${root}task/`;
+
+export const workerMonthlyEvaluationApi = `${root}worker-monthly-evaluation/`;
+
+export const workerMonthlyEvaluationTemplateApi = `${workerMonthlyEvaluationApi}template/`;
+
+export const workerMonthlyEvaluationInstanceApi = `${workerMonthlyEvaluationApi}instance/`;

@@ -28,6 +28,7 @@ import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
 import Summary from './modules/Projects/routes/Project/outlet/Summary/Summary.tsx';
 import RequestsProject from './modules/Projects/routes/Project/outlet/Requests.tsx';
 import EmergenciesProject from './modules/Projects/routes/Project/outlet/Emergencies.tsx';
+import { WorkerMonthlyEvaluations } from './modules/WorkerMonthlyEvaluations';
 
 export default function App() {
 
@@ -103,6 +104,7 @@ export default function App() {
           {/* End clients routes */}
           {/* Workers routes */}
           <Route path='workers' element={<Workers />} />
+          <Route path='worker-monthly-evaluations' element={<WorkerMonthlyEvaluations />} />
           {/* End workers routes */}
           {/* General Payrolls routes */}
           <Route path='payrolls' element={<GeneralPayrolls />} />

@@ -431,3 +431,120 @@ export interface WeeklyPayrollData {
   totalAmount: number;
   workers: WorkersPayroll[];
 }
+
+export type MonthlyEvaluationQuestionType = "score" | "text";
+
+export type MonthlyEvaluationStatus = "open" | "closed";
+
+export interface MonthlyEvaluationQuestion {
+  monthlyEvaluationQuestionId: number;
+  prompt: string;
+  questionType: MonthlyEvaluationQuestionType;
+  isRequired: boolean;
+  order?: number;
+}
+
+export interface MonthlyEvaluationSection {
+  monthlyEvaluationSectionId: number;
+  title: string;
+  order?: number;
+  questions: MonthlyEvaluationQuestion[];
+}
+
+export interface MonthlyEvaluationTemplateVersion {
+  monthlyEvaluationTemplateVersionId: number;
+  sections: MonthlyEvaluationSection[];
+}
+
+export interface MonthlyEvaluationTemplate {
+  monthlyEvaluationTemplateId: number;
+  name: string;
+  description?: string;
+  observedMaxScore: number;
+  regularMaxScore: number;
+  isActive?: boolean;
+  currentVersion?: MonthlyEvaluationTemplateVersion;
+  versions?: MonthlyEvaluationTemplateVersion[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MonthlyEvaluationResponse {
+  monthlyEvaluationResponseId?: number;
+  monthlyEvaluationQuestionId: number;
+  score?: number;
+  textAnswer?: string;
+}
+
+export interface MonthlyEvaluationPerformanceScaleItem {
+  min: number;
+  max: number;
+  label: string;
+}
+
+export interface WorkerMonthlyEvaluation {
+  workerMonthlyEvaluationId: number;
+  workerId: number;
+  monthlyEvaluationTemplateVersionId: number;
+  year: number;
+  month: number;
+  sequence: number;
+  generalComment?: string;
+  status: MonthlyEvaluationStatus;
+  totalScore?: number;
+  maxScore?: number;
+  performanceLabel?: string;
+  responses: MonthlyEvaluationResponse[];
+  templateVersion?: MonthlyEvaluationTemplateVersion;
+  scoreLegend?: string[];
+  performanceScale?: MonthlyEvaluationPerformanceScaleItem[];
+  worker?: Worker;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateMonthlyEvaluationTemplateQuestionDto {
+  prompt: string;
+  questionType: MonthlyEvaluationQuestionType;
+  isRequired: boolean;
+}
+
+export interface CreateMonthlyEvaluationTemplateSectionDto {
+  title: string;
+  questions: CreateMonthlyEvaluationTemplateQuestionDto[];
+}
+
+export interface CreateMonthlyEvaluationTemplateDto {
+  name: string;
+  description?: string;
+  observedMaxScore: number;
+  regularMaxScore: number;
+  sections: CreateMonthlyEvaluationTemplateSectionDto[];
+}
+
+export interface CreateMonthlyEvaluationResponseDto {
+  monthlyEvaluationQuestionId: number;
+  score?: number;
+  textAnswer?: string;
+}
+
+export interface CreateWorkerMonthlyEvaluationDto {
+  workerId: number;
+  monthlyEvaluationTemplateVersionId: number;
+  year: number;
+  month: number;
+  sequence: number;
+  generalComment?: string;
+  responses: CreateMonthlyEvaluationResponseDto[];
+}
+
+export interface UpdateWorkerMonthlyEvaluationResponsesDto {
+  generalComment?: string;
+  responses: CreateMonthlyEvaluationResponseDto[];
+}
+
+export interface WorkerMonthlyEvaluationFilters {
+  workerId?: number;
+  month?: number;
+  year?: number;
+}

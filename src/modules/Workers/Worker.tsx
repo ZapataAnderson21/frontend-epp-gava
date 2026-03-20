@@ -4,6 +4,7 @@ import { workerApi } from "../../data/apiUrl";
 import { WorkerType, type Worker } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { formatDateTime } from "../../utils";
+import { useNavigate } from "react-router-dom";
 
 interface WorkerProps {
   workerId: number;
@@ -11,6 +12,7 @@ interface WorkerProps {
 }
 
 export default function Worker({ workerId, closeAction }: WorkerProps) {
+  const navigate = useNavigate();
 
   const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
 
@@ -68,6 +70,18 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           <div className="flex flex-row gap-2">
             <label className="font-semibold text-nowrap">Fecha y hora de registro:</label>
             <span>{formatDateTime(worker?.createdAt)}</span>
+          </div>
+          <div className="mt-3">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold"
+              onClick={() => {
+                closeAction();
+                navigate(`/admin/worker-monthly-evaluations?workerId=${workerId}`);
+              }}
+            >
+              Ver evaluaciones mensuales
+            </button>
           </div>
         </div>
       </div>
