@@ -1,87 +1,114 @@
 import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { useSearchParams } from "react-router-dom";
 import { AddButton, SeeButton } from "../../common/button";
 import Permission from "../../common/auth/Permission";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { Table } from "../../common/table";
-import { workerApi } from "../../data/apiUrl";
-import type { Worker, WorkerMonthlyEvaluation } from "../../data/types";
-import { useCurrentUser, useFetch, useWorkerMonthlyEvaluations } from "../../hooks";
+import type {
+  WorkerMonthlyEvaluationPeriod,
+  WorkerMonthlyEvaluationPeriodStatusPayload,
+} from "../../data/types";
+import { useCurrentUser, useWorkerMonthlyEvaluationPeriods } from "../../hooks";
 import { monthlyEvaluationTypes } from "../../utils";
-import WorkerMonthlyEvaluationForm from "./WorkerMonthlyEvaluationForm";
+import MonthlyEvaluationPeriodDetailModal from "./MonthlyEvaluationPeriodDetailModal";
 import TemplateManagerModal from "./TemplateManagerModal";
-import { useSearchParams } from "react-router-dom";
+import WorkerMonthlyEvaluationForm from "./WorkerMonthlyEvaluationForm";
 
 type ModalState =
   | { mode: "none" }
-  | { mode: "create" }
-  | { mode: "edit"; evaluationId: number }
+  | {
+      mode: "create";
+      initialWorkerId?: number;
+      initialTemplateId?: number;
+      initialYear?: number;
+      initialMonth?: number;
+      initialSequence?: number;
+      lockPeriodFields?: boolean;
+      returnPeriod?: WorkerMonthlyEvaluationPeriodStatusPayload;
+    }
+  | {
+      mode: "edit";
+      evaluationId: number;
+      returnPeriod?: WorkerMonthlyEvaluationPeriodStatusPayload;
+    }
+  | { mode: "periodDetail"; period: WorkerMonthlyEvaluationPeriodStatusPayload }
   | { mode: "templates" };
 
 const currentDate = new Date();
+const monthOptions = Array.from({ length: 12 }, (_, index) => ({
+  value: index + 1,
+  label: new Date(2000, index, 1).toLocaleDateString("es-PE", { month: "long" }),
+}));
 
 function monthName(month?: number) {
   if (!month) return "-";
   return new Date(2000, month - 1, 1).toLocaleDateString("es-PE", { month: "long" });
 }
 
+function formatKpiValue(value: number | null) {
+  if (value === null || Number.isNaN(value)) return "-";
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
 export default function WorkerMonthlyEvaluations() {
   const { user } = useCurrentUser();
   const [searchParams] = useSearchParams();
 
-  const workerFromQuery = Number(searchParams.get("workerId") || 0);
   const monthFromQuery = Number(searchParams.get("month") || 0);
   const yearFromQuery = Number(searchParams.get("year") || 0);
 
-  const [workerId, setWorkerId] = useState<number>(workerFromQuery || 0);
-  const [month, setMonth] = useState<number>(monthFromQuery || currentDate.getMonth() + 1);
+  const [month, setMonth] = useState<number>(monthFromQuery || 0);
   const [year, setYear] = useState<number>(yearFromQuery || currentDate.getFullYear());
   const [refreshKey, setRefreshKey] = useState(0);
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
 
-  const { data: workers } = useFetch<Worker[]>(workerApi);
-
   const filters = useMemo(
     () => ({
-      workerId: workerId || undefined,
       month: month || undefined,
       year: year || undefined,
     }),
-    [workerId, month, year],
+    [month, year],
   );
 
   const {
-    data: evaluations,
+    data: periods,
     loading,
     error,
     refetch,
-  } = useWorkerMonthlyEvaluations(filters, [refreshKey]);
+  } = useWorkerMonthlyEvaluationPeriods(filters, [refreshKey]);
 
   const handleSaved = () => {
     setRefreshKey((prev) => prev + 1);
     refetch();
   };
 
+  const openPeriodFromFilters = () => {
+    if (!month || !year) {
+      toast.error("Selecciona anio y mes para abrir la evaluacion mensual.");
+      return;
+    }
+
+    setModal({
+      mode: "periodDetail",
+      period: { year, month, sequence: 1 },
+    });
+  };
+
   const columns = [
     {
-      key: "workerId",
-      label: "Trabajador",
-      width: "18rem",
-      render: (row: WorkerMonthlyEvaluation) => row.worker?.fullName ?? `ID ${row.workerId}`,
-    },
-    {
       key: "year",
-      label: "Período",
+      label: "Periodo",
       width: "12rem",
-      render: (row: WorkerMonthlyEvaluation) => `${monthName(row.month)} ${row.year}`,
+      render: (row: WorkerMonthlyEvaluationPeriod) => `${monthName(row.month)} ${row.year}`,
     },
-    { key: "sequence", label: "Secuencia", width: "8rem" },
     {
       key: "status",
       label: "Estado",
       width: "8rem",
-      render: (row: WorkerMonthlyEvaluation) => {
+      render: (row: WorkerMonthlyEvaluationPeriod) => {
         const isOpen = row.status === "open";
         return (
           <span
@@ -93,16 +120,46 @@ export default function WorkerMonthlyEvaluations() {
       },
     },
     {
-      key: "totalScore",
-      label: "Puntaje",
-      width: "10rem",
-      render: (row: WorkerMonthlyEvaluation) => `${row.totalScore ?? 0}/${row.maxScore ?? 0}`,
+      key: "evaluatedWorkers",
+      label: "Evaluados / Pendientes",
+      width: "14rem",
+      render: (row: WorkerMonthlyEvaluationPeriod) =>
+        `${row.evaluatedWorkers} / ${row.pendingWorkers}`,
+    },
+    {
+      key: "averageScore",
+      label: "Prom.",
+      width: "8rem",
+      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.averageScore),
+    },
+    {
+      key: "highestScore",
+      label: "Max.",
+      width: "8rem",
+      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.highestScore),
+    },
+    {
+      key: "lowestScore",
+      label: "Min.",
+      width: "8rem",
+      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.lowestScore),
     },
     {
       label: "Acciones",
       width: "8rem",
-      render: (row: WorkerMonthlyEvaluation) => (
-        <SeeButton onClick={() => setModal({ mode: "edit", evaluationId: row.workerMonthlyEvaluationId })} />
+      render: (row: WorkerMonthlyEvaluationPeriod) => (
+        <SeeButton
+          onClick={() =>
+            setModal({
+              mode: "periodDetail",
+              period: {
+                year: row.year,
+                month: row.month,
+                sequence: 1,
+              },
+            })
+          }
+        />
       ),
     },
   ] as const;
@@ -112,37 +169,25 @@ export default function WorkerMonthlyEvaluations() {
       <HeaderPanel name="Evaluaciones Mensuales" />
 
       <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="flex flex-col gap-1">
-            <label className="font-semibold">Trabajador</label>
+            <label className="font-semibold">Mes</label>
             <select
               className="border border-gray-300 rounded-sm p-2"
-              value={workerId || ""}
-              onChange={(event) => setWorkerId(Number(event.target.value) || 0)}
+              value={month}
+              onChange={(event) => setMonth(Number(event.target.value) || 0)}
             >
-              <option value="">Todos</option>
-              {workers?.map((worker) => (
-                <option key={worker.workerId} value={worker.workerId}>
-                  {worker.fullName}
+              <option value={0}>Todos los meses</option>
+              {monthOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="font-semibold">Mes</label>
-            <input
-              type="number"
-              min={1}
-              max={12}
-              className="border border-gray-300 rounded-sm p-2"
-              value={month}
-              onChange={(event) => setMonth(Number(event.target.value) || 0)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="font-semibold">Año</label>
+            <label className="font-semibold">Anio</label>
             <input
               type="number"
               className="border border-gray-300 rounded-sm p-2"
@@ -161,7 +206,7 @@ export default function WorkerMonthlyEvaluations() {
                 >
                   Plantillas
                 </button>
-                <AddButton onClick={() => setModal({ mode: "create" })} />
+                <AddButton onClick={openPeriodFromFilters} />
               </div>
             </Permission>
           </div>
@@ -170,12 +215,14 @@ export default function WorkerMonthlyEvaluations() {
         {loading ? <LoadingSkeletonTable /> : null}
         {!loading && error ? <ErrorMessage errorMessage={error} /> : null}
 
-        {!loading && !error && (!evaluations || evaluations.length === 0) ? (
-          <div className="text-center text-gray-500">No se encontraron evaluaciones para el filtro actual.</div>
+        {!loading && !error && (!periods || periods.length === 0) ? (
+          <div className="text-center text-gray-500">
+            No se encontraron periodos para el filtro actual.
+          </div>
         ) : null}
 
-        {!loading && !error && evaluations && evaluations.length > 0 ? (
-          <Table<WorkerMonthlyEvaluation> data={evaluations} columns={columns} />
+        {!loading && !error && periods && periods.length > 0 ? (
+          <Table<WorkerMonthlyEvaluationPeriod> data={periods} columns={columns} />
         ) : null}
       </div>
 
@@ -184,16 +231,58 @@ export default function WorkerMonthlyEvaluations() {
           {modal.mode === "create" ? (
             <WorkerMonthlyEvaluationForm
               mode="create"
-              initialWorkerId={workerId || undefined}
-              onClose={() => setModal({ mode: "none" })}
+              initialWorkerId={modal.initialWorkerId}
+              initialTemplateId={modal.initialTemplateId}
+              initialYear={modal.initialYear}
+              initialMonth={modal.initialMonth}
+              initialSequence={modal.initialSequence}
+              lockPeriodFields={modal.lockPeriodFields}
+              onClose={() =>
+                modal.returnPeriod
+                  ? setModal({ mode: "periodDetail", period: modal.returnPeriod })
+                  : setModal({ mode: "none" })
+              }
               onSaved={handleSaved}
             />
           ) : modal.mode === "edit" ? (
             <WorkerMonthlyEvaluationForm
               mode="edit"
               evaluationId={modal.evaluationId}
+              onClose={() =>
+                modal.returnPeriod
+                  ? setModal({ mode: "periodDetail", period: modal.returnPeriod })
+                  : setModal({ mode: "none" })
+              }
+              onSaved={handleSaved}
+            />
+          ) : modal.mode === "periodDetail" ? (
+            <MonthlyEvaluationPeriodDetailModal
+              period={modal.period}
               onClose={() => setModal({ mode: "none" })}
               onSaved={handleSaved}
+              onCreateEvaluation={(params) =>
+                setModal({
+                  mode: "create",
+                  initialWorkerId: params.workerId,
+                  initialTemplateId: params.templateId,
+                  initialYear: params.year,
+                  initialMonth: params.month,
+                  initialSequence: 1,
+                  lockPeriodFields: true,
+                  returnPeriod: {
+                    year: params.year,
+                    month: params.month,
+                    sequence: 1,
+                  },
+                })
+              }
+              onEditEvaluation={(evaluationId) =>
+                setModal({
+                  mode: "edit",
+                  evaluationId,
+                  returnPeriod: modal.period,
+                })
+              }
             />
           ) : (
             <TemplateManagerModal

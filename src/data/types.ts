@@ -453,6 +453,11 @@ export interface MonthlyEvaluationSection {
 
 export interface MonthlyEvaluationTemplateVersion {
   monthlyEvaluationTemplateVersionId: number;
+  versionNumber?: number;
+  title?: string;
+  description?: string;
+  observedMaxScore?: number;
+  regularMaxScore?: number;
   sections: MonthlyEvaluationSection[];
 }
 
@@ -547,4 +552,68 @@ export interface WorkerMonthlyEvaluationFilters {
   workerId?: number;
   month?: number;
   year?: number;
+}
+
+export interface WorkerMonthlyEvaluationPeriodFilters {
+  month?: number;
+  year?: number;
+  sequence?: number;
+}
+
+export interface WorkerMonthlyEvaluationPeriod {
+  year: number;
+  month: number;
+  sequence: number;
+  status: MonthlyEvaluationStatus;
+  totalWorkers: number;
+  evaluatedWorkers: number;
+  pendingWorkers: number;
+  evaluationsCount: number;
+  averageScore: number | null;
+  highestScore: number | null;
+  lowestScore: number | null;
+  monthlyEvaluationTemplateVersionId: number | null;
+  monthlyEvaluationTemplateId: number | null;
+  templateName: string | null;
+}
+
+export interface WorkerMonthlyEvaluationPeriodKpis {
+  averageScore: number | null;
+  highestScore: number | null;
+  lowestScore: number | null;
+  totalWorkers: number;
+  evaluatedWorkers: number;
+  pendingWorkers: number;
+}
+
+export interface WorkerMonthlyEvaluationPeriodWorker {
+  workerId: number;
+  fullName: string;
+  workerType: string;
+  workerMonthlyEvaluationId: number | null;
+  status: MonthlyEvaluationStatus | null;
+  totalScore: number | null;
+  maxScore: number | null;
+  performanceLabel: string | null;
+  evaluated: boolean;
+}
+
+export interface WorkerMonthlyEvaluationPeriodDetail {
+  year: number;
+  month: number;
+  sequence: number;
+  status: MonthlyEvaluationStatus;
+  kpis: WorkerMonthlyEvaluationPeriodKpis;
+  templateSuggestion: {
+    monthlyEvaluationTemplateVersionId: number;
+    monthlyEvaluationTemplateId: number;
+    templateName: string;
+  } | null;
+  workers: WorkerMonthlyEvaluationPeriodWorker[];
+}
+
+export interface WorkerMonthlyEvaluationPeriodStatusPayload {
+  year: number;
+  month: number;
+  sequence?: number;
 }

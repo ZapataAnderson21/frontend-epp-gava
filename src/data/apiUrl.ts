@@ -59,3 +59,5 @@ export const workerMonthlyEvaluationApi = `${root}worker-monthly-evaluation/`;
 export const workerMonthlyEvaluationTemplateApi = `${workerMonthlyEvaluationApi}template/`;
 
 export const workerMonthlyEvaluationInstanceApi = `${workerMonthlyEvaluationApi}instance/`;
+
+export const workerMonthlyEvaluationPeriodApi = `${workerMonthlyEvaluationApi}period/`;

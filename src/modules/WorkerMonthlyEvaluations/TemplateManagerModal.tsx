@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { IoCloseCircle } from "react-icons/io5";
 import { ErrorMessage } from "../../common/error";
@@ -8,7 +8,10 @@ import {
   useWorkerMonthlyEvaluationActions,
 } from "../../hooks";
 import type {
+  CreateMonthlyEvaluationTemplateDto,
   MonthlyEvaluationQuestionType,
+  MonthlyEvaluationTemplate,
+  MonthlyEvaluationTemplateVersion,
 } from "../../data/types";
 
 interface TemplateManagerModalProps {
@@ -29,6 +32,17 @@ type SectionDraft = {
   questions: QuestionDraft[];
 };
 
+type EditorMode = "create" | "edit";
+
+type EditorState = {
+  name: string;
+  description: string;
+  observedMaxScore: number;
+  regularMaxScore: number;
+  sections: SectionDraft[];
+  nextId: number;
+};
+
 const EMPTY_QUESTION: QuestionDraft = {
   id: 0,
   prompt: "",
@@ -36,11 +50,8 @@ const EMPTY_QUESTION: QuestionDraft = {
   isRequired: true,
 };
 
-const EMPTY_SECTION: SectionDraft = {
-  id: 0,
-  title: "Sección principal",
-  questions: [{ ...EMPTY_QUESTION }],
-};
+const DEFAULT_OBSERVED_MAX = 20;
+const DEFAULT_REGULAR_MAX = 35;
 
 function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
   if (toIndex < 0 || toIndex >= items.length) return items;
@@ -51,31 +62,151 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
   return copy;
 }
 
-function createQuestion(idSeed: number): QuestionDraft {
+function getTemplateVersion(template?: MonthlyEvaluationTemplate): MonthlyEvaluationTemplateVersion | undefined {
+  return template?.currentVersion ?? template?.versions?.[0];
+}
+
+function buildEmptyEditorState(): EditorState {
   return {
-    ...EMPTY_QUESTION,
-    id: idSeed,
+    name: "",
+    description: "",
+    observedMaxScore: DEFAULT_OBSERVED_MAX,
+    regularMaxScore: DEFAULT_REGULAR_MAX,
+    sections: [
+      {
+        id: 1,
+        title: "Seccion principal",
+        questions: [{ ...EMPTY_QUESTION, id: 2 }],
+      },
+    ],
+    nextId: 3,
   };
 }
 
-function createSection(idSeed: number, questionSeed: number): SectionDraft {
+function buildEditorSnapshot(state: {
+  name: string;
+  description: string;
+  observedMaxScore: number;
+  regularMaxScore: number;
+  sections: SectionDraft[];
+}): string {
+  return JSON.stringify({
+    name: state.name.trim(),
+    description: state.description.trim(),
+    observedMaxScore: state.observedMaxScore,
+    regularMaxScore: state.regularMaxScore,
+    sections: state.sections.map((section) => ({
+      title: section.title.trim(),
+      questions: section.questions.map((question) => ({
+        prompt: question.prompt.trim(),
+        questionType: question.questionType,
+        isRequired: question.isRequired,
+      })),
+    })),
+  });
+}
+
+function buildEditorFromTemplate(template: MonthlyEvaluationTemplate): EditorState {
+  const version = getTemplateVersion(template);
+
+  const sections = version?.sections ?? [];
+  let idSeed = 1;
+
+  const sectionDrafts: SectionDraft[] = sections.length
+    ? sections.map((section) => ({
+        id: idSeed++,
+        title: section.title,
+        questions:
+          section.questions?.length
+            ? section.questions.map((question) => ({
+                id: idSeed++,
+                prompt: question.prompt,
+                questionType: question.questionType,
+                isRequired: question.isRequired,
+              }))
+            : [{ ...EMPTY_QUESTION, id: idSeed++ }],
+      }))
+    : [
+        {
+          id: idSeed++,
+          title: "Seccion principal",
+          questions: [{ ...EMPTY_QUESTION, id: idSeed++ }],
+        },
+      ];
+
   return {
-    ...EMPTY_SECTION,
-    id: idSeed,
-    questions: [createQuestion(questionSeed)],
+    name: template.name ?? "",
+    description: template.description ?? "",
+    observedMaxScore: version?.observedMaxScore ?? template.observedMaxScore ?? DEFAULT_OBSERVED_MAX,
+    regularMaxScore: version?.regularMaxScore ?? template.regularMaxScore ?? DEFAULT_REGULAR_MAX,
+    sections: sectionDrafts,
+    nextId: idSeed,
   };
 }
 
 export default function TemplateManagerModal({ onClose, onUpdated }: TemplateManagerModalProps) {
   const { data: templates, loading, error, refetch } = useMonthlyEvaluationTemplates();
-  const { createTemplate, duplicateTemplate, loading: saving } = useWorkerMonthlyEvaluationActions();
+  const {
+    createTemplate,
+    updateTemplate,
+    duplicateTemplate,
+    loading: saving,
+  } = useWorkerMonthlyEvaluationActions();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [observedMaxScore, setObservedMaxScore] = useState<number>(20);
-  const [regularMaxScore, setRegularMaxScore] = useState<number>(35);
-  const [nextId, setNextId] = useState<number>(3);
-  const [sections, setSections] = useState<SectionDraft[]>([createSection(1, 2)]);
+  const initial = buildEmptyEditorState();
+
+  const [editorMode, setEditorMode] = useState<EditorMode>("create");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+
+  const [name, setName] = useState(initial.name);
+  const [description, setDescription] = useState(initial.description);
+  const [observedMaxScore, setObservedMaxScore] = useState<number>(initial.observedMaxScore);
+  const [regularMaxScore, setRegularMaxScore] = useState<number>(initial.regularMaxScore);
+  const [nextId, setNextId] = useState<number>(initial.nextId);
+  const [sections, setSections] = useState<SectionDraft[]>(initial.sections);
+
+  const [baseSnapshot, setBaseSnapshot] = useState(() => buildEditorSnapshot(initial));
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
+
+  const currentSnapshot = useMemo(
+    () =>
+      buildEditorSnapshot({
+        name,
+        description,
+        observedMaxScore,
+        regularMaxScore,
+        sections,
+      }),
+    [name, description, observedMaxScore, regularMaxScore, sections],
+  );
+
+  const isDirty = currentSnapshot !== baseSnapshot;
+
+  const applyEditorState = (state: EditorState) => {
+    setName(state.name);
+    setDescription(state.description);
+    setObservedMaxScore(state.observedMaxScore);
+    setRegularMaxScore(state.regularMaxScore);
+    setSections(state.sections);
+    setNextId(state.nextId);
+
+    const snapshot = buildEditorSnapshot(state);
+    setBaseSnapshot(snapshot);
+  };
+
+  const resetToNewEditor = () => {
+    const state = buildEmptyEditorState();
+    setEditorMode("create");
+    setSelectedTemplateId(null);
+    applyEditorState(state);
+  };
+
+  const loadTemplateToEditor = (template: MonthlyEvaluationTemplate) => {
+    const state = buildEditorFromTemplate(template);
+    setEditorMode("edit");
+    setSelectedTemplateId(template.monthlyEvaluationTemplateId);
+    applyEditorState(state);
+  };
 
   const useNextId = () => {
     const id = nextId;
@@ -86,11 +217,18 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
   const addSection = () => {
     const sectionId = useNextId();
     const questionId = useNextId();
-    setSections((prev) => [...prev, createSection(sectionId, questionId)]);
+    setSections((prev) => [
+      ...prev,
+      {
+        id: sectionId,
+        title: "Seccion principal",
+        questions: [{ ...EMPTY_QUESTION, id: questionId }],
+      },
+    ]);
   };
 
   const removeSection = (sectionId: number) => {
-    const confirmed = window.confirm("¿Seguro que deseas quitar esta sección? Esta acción no se puede deshacer.");
+    const confirmed = window.confirm("Seguro que deseas quitar esta seccion?");
     if (!confirmed) return;
 
     setSections((prev) => {
@@ -118,14 +256,14 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
 
         return {
           ...section,
-          questions: [...section.questions, createQuestion(questionId)],
+          questions: [...section.questions, { ...EMPTY_QUESTION, id: questionId }],
         };
       }),
     );
   };
 
   const removeQuestion = (sectionId: number, questionId: number) => {
-    const confirmed = window.confirm("¿Seguro que deseas quitar esta pregunta? Esta acción no se puede deshacer.");
+    const confirmed = window.confirm("Seguro que deseas quitar esta pregunta?");
     if (!confirmed) return;
 
     setSections((prev) =>
@@ -173,7 +311,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
     );
   };
 
-  const buildSections = () => {
+  const buildSectionsPayload = () => {
     const normalizedSections = sections
       .map((section) => ({
         title: section.title.trim(),
@@ -188,7 +326,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
       .filter((section) => section.title.length > 0);
 
     if (normalizedSections.length === 0) {
-      toast.error("Agrega al menos una sección con título.");
+      toast.error("Agrega al menos una seccion con titulo.");
       return null;
     }
 
@@ -197,62 +335,99 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
     );
 
     if (sectionWithoutQuestions) {
-      toast.error(`La sección \"${sectionWithoutQuestions.title}\" no tiene preguntas válidas.`);
+      toast.error(`La seccion \"${sectionWithoutQuestions.title}\" no tiene preguntas validas.`);
       return null;
     }
 
     return normalizedSections;
   };
 
-  const handleCreateTemplate = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const persistEditor = async () => {
     if (!name.trim()) {
       toast.error("El nombre de la plantilla es obligatorio.");
-      return;
+      return false;
     }
 
-    const payloadSections = buildSections();
-    if (!payloadSections) return;
+    const payloadSections = buildSectionsPayload();
+    if (!payloadSections) return false;
 
-    await toast.promise(
-      createTemplate({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        observedMaxScore,
-        regularMaxScore,
-        sections: payloadSections,
-      }),
-      {
-        loading: "Creando plantilla...",
-        success: () => {
-          setName("");
-          setDescription("");
-          setSections([createSection(useNextId(), useNextId())]);
-          refetch();
-          onUpdated();
-          return "Plantilla creada correctamente";
-        },
-        error: (err) => err.message || "No se pudo crear la plantilla",
-      },
-    );
+    const payload: CreateMonthlyEvaluationTemplateDto = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      observedMaxScore,
+      regularMaxScore,
+      sections: payloadSections,
+    };
+
+    const action =
+      editorMode === "edit" && selectedTemplateId
+        ? updateTemplate(selectedTemplateId, payload)
+        : createTemplate(payload);
+
+    await toast.promise(action, {
+      loading: editorMode === "edit" ? "Guardando cambios..." : "Creando plantilla...",
+      success: editorMode === "edit" ? "Plantilla actualizada" : "Plantilla creada",
+      error: (err) => err.message || "No se pudo guardar la plantilla",
+    });
+
+    await refetch();
+    onUpdated();
+
+    setBaseSnapshot(currentSnapshot);
+    return true;
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const saved = await persistEditor();
+    if (!saved) return;
+
+    if (editorMode === "create") {
+      resetToNewEditor();
+    }
   };
 
   const handleDuplicate = async (templateId: number) => {
     await toast.promise(duplicateTemplate(templateId), {
       loading: "Duplicando plantilla...",
-      success: () => {
-        refetch();
-        onUpdated();
-        return "Plantilla duplicada correctamente";
-      },
+      success: "Plantilla duplicada",
       error: (err) => err.message || "No se pudo duplicar la plantilla",
     });
+
+    await refetch();
+    onUpdated();
+  };
+
+  const handleSelectTemplate = (template: MonthlyEvaluationTemplate) => {
+    loadTemplateToEditor(template);
+  };
+
+  const handleNewClick = () => {
+    if (!isDirty) {
+      resetToNewEditor();
+      return;
+    }
+
+    setConfirmNewOpen(true);
+  };
+
+  const handleDiscardAndNew = () => {
+    setConfirmNewOpen(false);
+    resetToNewEditor();
+  };
+
+  const handleSaveAndNew = async () => {
+    const saved = await persistEditor();
+    if (!saved) return;
+
+    setConfirmNewOpen(false);
+    resetToNewEditor();
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
+      <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
         <Loading />
       </div>
     );
@@ -260,15 +435,15 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
+      <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
         <ErrorMessage errorMessage={error} />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
-      <h2 className="text-2xl font-extrabold mb-5">Gestión de plantillas</h2>
+    <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
+      <h2 className="text-2xl font-extrabold mb-5">Gestion de plantillas</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="border border-gray-200 rounded-md p-4">
@@ -278,39 +453,69 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
             <p className="text-gray-500">No hay plantillas registradas.</p>
           ) : (
             <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-              {templates.map((template) => (
-                <div
-                  key={template.monthlyEvaluationTemplateId}
-                  className="border border-gray-200 rounded-md p-3 flex flex-col gap-2"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold">{template.name}</p>
-                      <p className="text-sm text-gray-500">{template.description || "Sin descripción"}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold"
-                      onClick={() => handleDuplicate(template.monthlyEvaluationTemplateId)}
-                      disabled={saving}
-                    >
-                      Duplicar
-                    </button>
-                  </div>
+              {templates.map((template) => {
+                const selected =
+                  editorMode === "edit" &&
+                  selectedTemplateId === template.monthlyEvaluationTemplateId;
 
-                  <div className="text-xs text-gray-600">
-                    Escalas: observada {template.observedMaxScore} / regular {template.regularMaxScore}
-                  </div>
-                </div>
-              ))}
+                const version = getTemplateVersion(template);
+                const observed = version?.observedMaxScore ?? template.observedMaxScore ?? "-";
+                const regular = version?.regularMaxScore ?? template.regularMaxScore ?? "-";
+
+                return (
+                  <button
+                    type="button"
+                    key={template.monthlyEvaluationTemplateId}
+                    className={`border rounded-md p-3 flex flex-col gap-2 text-left ${
+                      selected ? "border-[#0047a3] bg-blue-50" : "border-gray-200 bg-white"
+                    }`}
+                    onClick={() => handleSelectTemplate(template)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">{template.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {template.description || "Sin descripcion"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDuplicate(template.monthlyEvaluationTemplateId);
+                        }}
+                        disabled={saving}
+                      >
+                        Duplicar
+                      </button>
+                    </div>
+
+                    <div className="text-xs text-gray-600">
+                      Escalas: observada {observed} / regular {regular}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </section>
 
         <section className="border border-gray-200 rounded-md p-4">
-          <h3 className="font-bold mb-3">Crear nueva plantilla</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold">
+              {editorMode === "edit" ? "Editar plantilla" : "Crear nueva plantilla"}
+            </h3>
+            <button
+              type="button"
+              className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-semibold"
+              onClick={handleNewClick}
+            >
+              Nueva
+            </button>
+          </div>
 
-          <form className="flex flex-col gap-3" onSubmit={handleCreateTemplate}>
+          <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
               <label className="font-semibold">Nombre</label>
               <input
@@ -322,7 +527,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-semibold">Descripción</label>
+              <label className="font-semibold">Descripcion</label>
               <textarea
                 className="border border-gray-300 rounded-sm p-2"
                 rows={2}
@@ -333,7 +538,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="font-semibold">Máximo observado</label>
+                <label className="font-semibold">Maximo observado</label>
                 <input
                   type="number"
                   min={1}
@@ -344,7 +549,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-semibold">Máximo regular</label>
+                <label className="font-semibold">Maximo regular</label>
                 <input
                   type="number"
                   min={1}
@@ -363,7 +568,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                   className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-semibold"
                   onClick={addSection}
                 >
-                  Agregar sección
+                  Agregar seccion
                 </button>
               </div>
 
@@ -371,7 +576,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                 <div key={section.id} className="border border-gray-200 rounded-md p-3 flex flex-col gap-3">
                   <div className="flex items-end gap-2">
                     <div className="flex-1 flex flex-col gap-1">
-                      <label className="font-semibold">Título de sección</label>
+                      <label className="font-semibold">Titulo de seccion</label>
                       <input
                         type="text"
                         className="border border-gray-300 rounded-sm p-2"
@@ -449,8 +654,8 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                               }))
                             }
                           >
-                            <option value="score">score</option>
-                            <option value="text">text</option>
+                            <option value="score">Puntaje</option>
+                            <option value="text">Texto</option>
                           </select>
                         </div>
 
@@ -509,12 +714,53 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                 className="px-4 py-2 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold"
                 disabled={saving}
               >
-                {saving ? "Guardando..." : "Crear plantilla"}
+                {saving
+                  ? "Guardando..."
+                  : editorMode === "edit"
+                    ? "Guardar cambios"
+                    : "Crear plantilla"}
               </button>
             </div>
           </form>
         </section>
       </div>
+
+      {confirmNewOpen ? (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center">
+          <div className="bg-white rounded-lg w-[min(480px,92vw)] p-5 shadow-lg">
+            <h3 className="text-xl font-extrabold mb-2">Cambios sin guardar</h3>
+            <p className="text-gray-700 mb-4">
+              Hay cambios sin guardar en la plantilla actual. Deseas guardar antes de crear una nueva?
+            </p>
+
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 font-semibold"
+                onClick={() => setConfirmNewOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold"
+                onClick={handleDiscardAndNew}
+                disabled={saving}
+              >
+                Salir sin guardar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold"
+                onClick={handleSaveAndNew}
+                disabled={saving}
+              >
+                Guardar y continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <button type="button" className="absolute right-3 top-3" onClick={onClose}>
         <IoCloseCircle className="size-8" />

@@ -10,5 +10,7 @@ export {
 	useMonthlyEvaluationTemplates,
 	useWorkerMonthlyEvaluationActions,
 	useWorkerMonthlyEvaluationById,
+	useWorkerMonthlyEvaluationPeriodDetail,
+	useWorkerMonthlyEvaluationPeriods,
 	useWorkerMonthlyEvaluations,
 } from "./useWorkerMonthlyEvaluation";
