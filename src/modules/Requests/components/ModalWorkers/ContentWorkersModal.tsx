@@ -46,8 +46,8 @@ export default function ContentWorkersModal({ workerType, onSelected, onClose }:
     [id]
   );
 
-  const { execute: createRequestWorker } = useApiAction<any>();
-  const { execute: deleteRequestWorker } = useApiAction<any>();
+  const { execute: createRequestWorker } = useApiAction<RequestWorker>();
+  const { execute: deleteRequestWorker } = useApiAction<{ requestWorkerId: number }>();
 
   useEffect(() => {
     if (fetchedWorkers) {
@@ -141,23 +141,19 @@ export default function ContentWorkersModal({ workerType, onSelected, onClose }:
         shirtSize: null,
       });
 
-      // si resp.data no trae worker embebido, lo rellenamos localmente
-      const w = workers.find((x) => x.workerId === workerId);
-      createdResponses.push({
-        ...(resp?.data ?? {}),
-        workerId,
-        requestId,
-        shoeSize: resp?.data?.shoeSize ?? null,
-        pantsSize: resp?.data?.pantsSize ?? null,
-        shirtSize: resp?.data?.shirtSize ?? null,
-        worker: resp?.data?.worker ?? w, // <-- completar
-      });
-
-      // resp.data es el RequestWorker creado
       if (resp?.data) {
-        createdResponses.push(resp.data as RequestWorker);
+        const w = workers.find((x) => x.workerId === workerId);
+        createdResponses.push({
+          ...(resp.data as RequestWorker),
+          workerId,
+          requestId,
+          shoeSize: resp.data.shoeSize ?? null,
+          pantsSize: resp.data.pantsSize ?? null,
+          shirtSize: resp.data.shirtSize ?? null,
+          worker: resp.data.worker ?? w,
+        });
       } else {
-        // fallback local por si el backend no trae worker
+        // fallback local por si el backend no trae data
         const w = workers.find((x) => x.workerId === workerId);
         createdResponses.push({
           requestWorkerId: 0, // se actualizará al próximo fetch, sirve para pintar de inmediato

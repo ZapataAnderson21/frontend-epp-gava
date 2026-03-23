@@ -33,6 +33,7 @@ type ResponseDraft = {
 };
 
 const currentDate = new Date();
+const scoreOptions = [0, 1, 2, 3] as const;
 
 function getTemplateVersion(template?: MonthlyEvaluationTemplate) {
   return template?.currentVersion ?? template?.versions?.[0];
@@ -449,10 +450,12 @@ export default function WorkerMonthlyEvaluationForm({
         )}
 
         {sections.map((section) => (
-          <section key={section.monthlyEvaluationSectionId} className="border border-gray-200 rounded-md p-4">
-            <h3 className="font-bold text-lg mb-3">{section.title}</h3>
+          <section key={section.monthlyEvaluationSectionId} className="border border-gray-200 rounded-md shadow-sm bg-white">
+            <h3 className="font-bold text-lg mb-3 bg-slate-200 rounded-t-md px-3 py-2">
+              {section.title}
+            </h3>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 px-4 pb-4">
               {section.questions.map((question) => {
                 const draft = responses[question.monthlyEvaluationQuestionId];
 
@@ -464,18 +467,34 @@ export default function WorkerMonthlyEvaluationForm({
                     </label>
 
                     {question.questionType === "score" ? (
-                      <select
-                        className="border border-gray-300 rounded-sm p-2 max-w-xs"
-                        value={draft?.score ?? ""}
-                        onChange={(event) => setScore(question.monthlyEvaluationQuestionId, event.target.value)}
-                        disabled={isClosed}
-                      >
-                        <option value="">Selecciona puntaje</option>
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                      </select>
+                      <div className="flex flex-row flex-wrap items-center gap-5">
+                        {scoreOptions.map((option) => {
+                          const isSelected = draft?.score === option;
+
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              className={`flex items-center gap-2 rounded-md px-1 py-1 ${isClosed ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                              onClick={() =>
+                                setScore(
+                                  question.monthlyEvaluationQuestionId,
+                                  isSelected ? "" : String(option),
+                                )
+                              }
+                              disabled={isClosed}
+                              aria-pressed={isSelected}
+                            >
+                              <span
+                                className={`size-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-[#0047a3]" : "border-gray-400"}`}
+                              >
+                                <span className={`size-2.5 rounded-full ${isSelected ? "bg-[#0047a3]" : "bg-transparent"}`} />
+                              </span>
+                              <span className="font-semibold text-gray-700">{option}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     ) : (
                       <textarea
                         className="border border-gray-300 rounded-sm p-2"

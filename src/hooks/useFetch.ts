@@ -3,12 +3,12 @@ import { useEffect, useState, useCallback } from "react";
 import { redirectToLoginPreservingURL } from "../auth-redirect";
 
 interface ApiResponse<T> {
-  statusCode: number;
-  message: string;
-  data: T;
+  statusCode?: number;
+  message?: string;
+  data?: T;
 }
 
-export function useFetch<T>(url: string, extraDeps: any[] = []) {
+export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +22,15 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
     let active = true;
 
     const fetchData = async () => {
+      if (!url) {
+        if (active) {
+          setData(null);
+          setError(null);
+          setLoading(false);
+        }
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await fetch(url, { headers: getAuthHeaders() });
@@ -31,25 +40,33 @@ export function useFetch<T>(url: string, extraDeps: any[] = []) {
           return;
         }
 
-        const json: ApiResponse<T> = await res.json();
+        const contentType = res.headers.get("content-type") || "";
+        const hasJsonBody = contentType.includes("application/json");
+        const json: ApiResponse<T> | null = hasJsonBody
+          ? await res.json()
+          : null;
+
         if (!active) return;
 
-        if (json.statusCode === 401) {
+        const statusCode = typeof json?.statusCode === "number" ? json.statusCode : res.status;
+
+        if (statusCode === 401) {
           redirectToLoginPreservingURL();
           return;
         }
 
-        console.log(`Res for ${url}: `, json.data);
-
-        if (json.statusCode === 200) {
-          setData(json.data);
+        if (statusCode >= 200 && statusCode < 300) {
+          const responseData = json && "data" in json ? json.data : (json as T | null);
+          setData((responseData ?? null) as T | null);
           setError(null);
         } else {
-          setError(json.message);
+          const message = json?.message || res.statusText || "Error en la solicitud";
+          setError(message);
           setData(null);
         }
-      } catch (err: any) {
-        if (active) setError(err.message || "Error desconocido");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Error desconocido";
+        if (active) setError(message);
       } finally {
         if (active) setLoading(false);
       }

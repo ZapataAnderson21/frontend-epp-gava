@@ -1,4 +1,6 @@
-export const root = `${import.meta.env.VITE_API_URL}`;
+import { config } from "../config/env";
+
+export const root = config.apiUrl;
 
 export const userTypeApi = `${root}user-type/`;
 
@@ -38,8 +40,6 @@ export const serviceSaleApi = `${root}service-sale/`;
 
 export const workerApi = `${root}worker/`;
 
-export const workerGroupApi = `${root}worker-group/`;
-
 export const requestWorkerApi = `${root}request-worker/`;
 
 export const attendanceApi = `${root}attendance/`;
@@ -51,6 +51,8 @@ export const dailyWageApi = `${root}daily-wage/`;
 export const weeklyWageApi = `${root}weekly-wage/`;
 
 export const taskApi = `${root}task/`;
+
+export const notificationApi = `${root}notification/`;
 
 export const workerMonthlyEvaluationApi = `${root}worker-monthly-evaluation/`;
 

@@ -36,6 +36,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const socketRef = useRef<Socket | null>(null);
+  const notificationsBaseUrl = `${apiUrl}notification`;
 
   // Conectar WebSocket
   useEffect(() => {
@@ -94,7 +95,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     const fetchNotifications = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${apiUrl}notification`, {
+        const response = await fetch(notificationsBaseUrl, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -112,7 +113,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
 
     const fetchUnreadCount = async () => {
       try {
-        const response = await fetch(`${apiUrl}notification/unread-count`, {
+        const response = await fetch(`${notificationsBaseUrl}/unread-count`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -128,13 +129,13 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
 
     fetchNotifications();
     fetchUnreadCount();
-  }, [apiUrl, token]);
+  }, [notificationsBaseUrl, token]);
 
   // Marcar como leída
   const markAsRead = useCallback(
     async (notificationId: number) => {
       try {
-        await fetch(`${apiUrl}notification/${notificationId}/read`, {
+        await fetch(`${notificationsBaseUrl}/${notificationId}/read`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -151,13 +152,13 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
         console.error('Error marcando como leída:', error);
       }
     },
-    [apiUrl, token]
+    [notificationsBaseUrl, token]
   );
 
   // Marcar todas como leídas
   const markAllAsRead = useCallback(async () => {
     try {
-      await fetch(`${apiUrl}notification/read-all`, {
+      await fetch(`${notificationsBaseUrl}/read-all`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -169,32 +170,35 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     } catch (error) {
       console.error('Error marcando todas como leídas:', error);
     }
-  }, [apiUrl, token]);
+  }, [notificationsBaseUrl, token]);
 
   // Eliminar notificación
   const deleteNotification = useCallback(
     async (notificationId: number) => {
       try {
-        await fetch(`${apiUrl}notification/${notificationId}`, {
+        await fetch(`${notificationsBaseUrl}/${notificationId}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        setNotifications((prev) =>
-          prev.filter((n) => n.notificationId !== notificationId)
-        );
-        setUnreadCount((prev) =>
-          prev > 0
-            ? prev - (notifications.find(n => n.notificationId === notificationId)?.isRead ? 0 : 1)
-            : 0
-        );
+        setNotifications((prev) => {
+          const removedNotification = prev.find(
+            (n) => n.notificationId === notificationId,
+          );
+
+          if (removedNotification && !removedNotification.isRead) {
+            setUnreadCount((current) => Math.max(0, current - 1));
+          }
+
+          return prev.filter((n) => n.notificationId !== notificationId);
+        });
       } catch (error) {
         console.error('Error eliminando notificación:', error);
       }
     },
-    [apiUrl, token]
+    [notificationsBaseUrl, token]
   );
 
   return {

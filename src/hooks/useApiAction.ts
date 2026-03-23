@@ -32,24 +32,41 @@ export function useApiAction<T>() {
         throw new Error("Unauthorized");
       }
 
-      const json: ApiResponse<T> = await res.json();
-      setResponse(json);
+      const contentType = res.headers.get("content-type") || "";
+      const hasJsonBody = contentType.includes("application/json");
+      const raw = hasJsonBody ? await res.json() : null;
 
-      console.log("API Action Response:", json);
+      const statusCode =
+        typeof raw?.statusCode === "number" ? raw.statusCode : res.status;
+      const message =
+        raw?.message ||
+        (res.ok ? "Operaci\u00f3n completada correctamente" : res.statusText || "Error en la solicitud");
+      const data = (raw && "data" in raw ? raw.data : raw) as T;
 
-      if (json.statusCode === 401) {
+      const normalizedResponse: ApiResponse<T> = {
+        statusCode,
+        message,
+        data,
+      };
+
+      setResponse(normalizedResponse);
+
+      console.log("API Action Response:", normalizedResponse);
+
+      if (normalizedResponse.statusCode === 401) {
         redirectToLoginPreservingURL();
         throw new Error("Unauthorized");
       }
 
-      if (json.statusCode < 200 || json.statusCode >= 300) {
-        setError(json.message);
-        throw new Error(json.message || "Error en la solicitud");
+      if (normalizedResponse.statusCode < 200 || normalizedResponse.statusCode >= 300) {
+        setError(normalizedResponse.message);
+        throw new Error(normalizedResponse.message || "Error en la solicitud");
       }
-      return json;
-    } catch (err: any) {
-      if (err?.message !== "Unauthorized") {
-        setError(err.message || "Error desconocido");
+      return normalizedResponse;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      if (message !== "Unauthorized") {
+        setError(message);
       }
       throw err;
     } finally {
