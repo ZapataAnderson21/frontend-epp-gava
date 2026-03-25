@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import DeleteConfirmDialog from "../../components/DeleteConfirmDialog";
 import toast, { Toaster } from "react-hot-toast";
 import { IoCloseCircle } from "react-icons/io5";
 import { ErrorMessage } from "../../common/error";
@@ -15,6 +16,7 @@ import {
   useWorkerMonthlyEvaluationPeriodDetail,
 } from "../../hooks";
 import { monthlyEvaluationStatusTypes } from "../../utils";
+import BestWorkerCertificateModal from "./BestWorkerCertificateModal";
 
 interface CreateFromPeriodParams {
   workerId: number;
@@ -72,6 +74,8 @@ export default function MonthlyEvaluationPeriodDetailModal({
   const isPeriodClosed = detail?.status === "closed";
   const hasEvaluations = (detail?.kpis.evaluatedWorkers ?? 0) > 0;
   const [selectedTemplateId, setSelectedTemplateId] = useState<number>(0);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   const lockedTemplateId = detail?.templateSuggestion?.monthlyEvaluationTemplateId ?? 0;
   const periodTemplateId = hasEvaluations ? lockedTemplateId : selectedTemplateId;
@@ -111,6 +115,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
       },
       error: (err) => err.message || "No se pudo actualizar el estado del periodo",
     });
+  };
+
+  const handleCloseConfirm = async () => {
+    setShowCloseConfirm(false);
+    await handleTogglePeriodStatus();
   };
 
   const columns = [
@@ -270,13 +279,40 @@ export default function MonthlyEvaluationPeriodDetailModal({
         ) : null}
 
         {canToggleStatus ? (
+          <>
+            <button
+              type="button"
+              className={`px-4 py-2 rounded-md text-white font-semibold ${detail.status === "open" ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"} disabled:opacity-60`}
+              onClick={() => {
+                if (detail.status === "open") {
+                  setShowCloseConfirm(true);
+                } else {
+                  handleTogglePeriodStatus();
+                }
+              }}
+              disabled={changingStatus || !hasEvaluations}
+            >
+              {detail.status === "open" ? "Cerrar evaluacion" : "Abrir evaluacion"}
+            </button>
+            <DeleteConfirmDialog
+              isOpen={showCloseConfirm}
+              title="¿Estás seguro de que quieres cerrar esta evaluación?"
+              message="Una vez cerrada, no se podrán realizar más evaluaciones en este periodo."
+              onCancel={() => setShowCloseConfirm(false)}
+              onConfirm={handleCloseConfirm}
+              confirmText="Cerrar evaluación"
+              loading={changingStatus}
+            />
+          </>
+        ) : null}
+
+        {isPeriodClosed && hasEvaluations ? (
           <button
             type="button"
-            className={`px-4 py-2 rounded-md text-white font-semibold ${detail.status === "open" ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"} disabled:opacity-60`}
-            onClick={handleTogglePeriodStatus}
-            disabled={changingStatus || !hasEvaluations}
+            className="px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-semibold"
+            onClick={() => setShowCertificate(true)}
           >
-            {detail.status === "open" ? "Cerrar evaluacion" : "Abrir evaluacion"}
+            🏆 Certificado Mejor Trabajador
           </button>
         ) : null}
 
@@ -313,6 +349,13 @@ export default function MonthlyEvaluationPeriodDetailModal({
       <button type="button" className="absolute right-3 top-3" onClick={onClose}>
         <IoCloseCircle className="size-8" />
       </button>
+
+      {showCertificate && detail ? (
+        <BestWorkerCertificateModal
+          detail={detail}
+          onClose={() => setShowCertificate(false)}
+        />
+      ) : null}
 
       <Toaster position="top-center" />
     </div>
