@@ -16,13 +16,15 @@ interface TableProps<T> {
   columns: readonly Column<T>[];
   itemsPerPage?: number;
   enablePagination?: boolean;
+  rowClassName?: (row: T, index: number) => string | undefined;
 }
 
 export default function Table<T>({ 
   data, 
   columns, 
   itemsPerPage = 10,
-  enablePagination = true 
+  enablePagination = true,
+  rowClassName,
 }: TableProps<T>) {
   const { currentPage, totalPages, paginatedData, goToPage } = usePagination({
     data,
@@ -67,7 +69,10 @@ export default function Table<T>({
           <div className="table-row-group">
             <AnimatePresence>
               {displayData.map((item, idx) => {
-                const rowClasses = `hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
+                const customClass = rowClassName?.(item, idx);
+                const rowClasses = customClass
+                  ? `hover:bg-[#eff2ff] table-row ${customClass}`
+                  : `hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
                 const cells = (
                   <>
                     {columns.map((col, i) => (

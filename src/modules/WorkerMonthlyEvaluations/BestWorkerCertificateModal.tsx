@@ -1,9 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { IoCloseCircle } from "react-icons/io5";
-import type { WorkerMonthlyEvaluationPeriodDetail } from "../../data/types";
+import type {
+  WorkerMonthlyEvaluationPeriodDetail,
+  WorkerMonthlyEvaluationPeriodWorker,
+} from "../../data/types";
 
 interface BestWorkerCertificateModalProps {
   detail: WorkerMonthlyEvaluationPeriodDetail;
+  rankingMap: Map<number, number>;
   onClose: () => void;
 }
 
@@ -13,48 +17,49 @@ function formatMonthName(month: number) {
   });
 }
 
-function findBestWorker(detail: WorkerMonthlyEvaluationPeriodDetail) {
-  const evaluated = detail.workers.filter(
-    (w) => w.evaluated && w.totalScore !== null,
-  );
-
-  if (evaluated.length === 0) return null;
-
-  return evaluated.reduce((best, current) => {
-    if ((current.totalScore ?? 0) > (best.totalScore ?? 0)) return current;
-    if (
-      (current.totalScore ?? 0) === (best.totalScore ?? 0) &&
-      current.fullName.localeCompare(best.fullName) < 0
-    )
-      return current;
-    return best;
-  });
+function findFirstPlaceWorkers(
+  detail: WorkerMonthlyEvaluationPeriodDetail,
+  rankingMap: Map<number, number>,
+): WorkerMonthlyEvaluationPeriodWorker[] {
+  return detail.workers
+    .filter((w) => rankingMap.get(w.workerId) === 1)
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
 }
 
 const PRINT_STYLES = `
 @media print {
+  html, body {
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   body * { visibility: hidden !important; }
-  #best-worker-certificate,
-  #best-worker-certificate * { visibility: visible !important; }
-  #best-worker-certificate {
+  .print-target, .print-target * { visibility: visible !important; }
+  .print-target {
     position: fixed !important;
-    inset: 0 !important;
-    z-index: 99999 !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: block !important;
     background: white !important;
+    z-index: 99999 !important;
   }
   .certificate-inner {
-    width: 100% !important;
+    width: 100vw !important;
+    height: 100vh !important;
     max-width: none !important;
-    height: 100% !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    padding: 30px 40px !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
   }
   .no-print { display: none !important; }
   @page {
@@ -66,15 +71,23 @@ const PRINT_STYLES = `
 
 export default function BestWorkerCertificateModal({
   detail,
+  rankingMap,
   onClose,
 }: BestWorkerCertificateModalProps) {
   const styleRef = useRef<HTMLStyleElement | null>(null);
+  const [printingId, setPrintingId] = useState<number | null>(null);
 
-  const bestWorker = findBestWorker(detail);
+  useEffect(() => {
+    const handleAfterPrint = () => setPrintingId(null);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
+
+  const firstPlaceWorkers = findFirstPlaceWorkers(detail, rankingMap);
   const monthLabel = formatMonthName(detail.month);
   const yearLabel = detail.year;
 
-  const handlePrint = () => {
+  const handlePrint = (workerId: number) => {
     if (!styleRef.current) {
       const style = document.createElement("style");
       style.textContent = PRINT_STYLES;
@@ -82,12 +95,13 @@ export default function BestWorkerCertificateModal({
       styleRef.current = style;
     }
 
+    setPrintingId(workerId);
     setTimeout(() => {
       window.print();
     }, 100);
   };
 
-  if (!bestWorker) {
+  if (firstPlaceWorkers.length === 0) {
     return (
       <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center">
         <div className="bg-white rounded-xl w-[min(500px,92vw)] p-6 relative">
@@ -108,66 +122,87 @@ export default function BestWorkerCertificateModal({
     );
   }
 
-  const scoreText =
-    bestWorker.totalScore !== null && bestWorker.maxScore !== null
-      ? `${bestWorker.totalScore} / ${bestWorker.maxScore}`
-      : "-";
-
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center">
       <div className="bg-white rounded-xl w-[min(1100px,96vw)] p-6 relative overflow-y-auto max-h-[95vh]">
         {/* Action bar */}
-        <div className="flex items-center justify-between mb-4 no-print">
-          <h2 className="text-xl font-extrabold">
-            Certificado — Mejor trabajador del mes
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="px-5 py-2 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold"
-              onClick={handlePrint}
-            >
-              🖨️ Imprimir
-            </button>
-            <button type="button" onClick={onClose}>
-              <IoCloseCircle className="size-8" />
-            </button>
+        <div className="flex items-center justify-between mb-6 no-print">
+          <div className="flex flex-col">
+            <h2 className="text-2xl font-extrabold text-[#0047a3] mb-1">
+              🏆 Certificados Emitidos
+            </h2>
+            <p className="text-gray-600 font-medium">
+              Mejor trabajador del mes • {firstPlaceWorkers.length} {firstPlaceWorkers.length === 1 ? 'ganador' : 'ganadores (empate)'}
+            </p>
           </div>
+          <button type="button" onClick={onClose} className="hover:opacity-75 transition-opacity">
+            <IoCloseCircle className="size-10 text-gray-400 hover:text-red-500 transition-colors" />
+          </button>
         </div>
 
-        {/* Certificate */}
-        <div
-          id="best-worker-certificate"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="certificate-inner"
-            style={{
-              width: "100%",
-              maxWidth: "960px",
-              aspectRatio: "1.414 / 1",
-              background:
-                "linear-gradient(135deg, #fffdf5 0%, #fff9e6 40%, #fffdf5 100%)",
-              border: "8px solid transparent",
-              borderImage:
-                "linear-gradient(135deg, #c9a84c 0%, #f4d078 25%, #c9a84c 50%, #f4d078 75%, #c9a84c 100%) 1",
-              borderRadius: "4px",
-              boxShadow:
-                "0 0 0 2px #c9a84c, 0 8px 32px rgba(0,0,0,0.12)",
-              padding: "48px 56px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              overflow: "hidden",
-              fontFamily: "'Georgia', 'Times New Roman', serif",
-            }}
-          >
+        {/* Certificates */}
+        <div className="flex flex-col gap-10">
+          {firstPlaceWorkers.map((worker) => {
+            const scoreText =
+              worker.totalScore !== null && worker.maxScore !== null
+                ? `${worker.totalScore} / ${worker.maxScore}`
+                : "-";
+            const isPrinting = printingId === worker.workerId;
+
+            return (
+              <div
+                key={worker.workerId}
+                className="border border-gray-200 rounded-xl p-6 bg-gray-50/50"
+              >
+                <div className="flex items-center justify-between mb-6 no-print bg-amber-50 rounded-lg px-5 py-4 border border-amber-200">
+                  <h3 className="font-bold text-xl text-amber-900 border-l-4 border-amber-500 pl-4">
+                    {worker.fullName}
+                  </h3>
+                  <button
+                    type="button"
+                    className="px-6 py-2.5 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold flex items-center gap-2 shadow-sm transition-colors"
+                    onClick={() => handlePrint(worker.workerId)}
+                  >
+                    🖨️ Imprimir
+                  </button>
+                </div>
+
+                <div
+                  className={`certificate-page ${isPrinting ? "print-target" : ""}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "10px",
+                    margin: "0 auto",
+                    maxWidth: "960px",
+                    background: "white",
+                    borderRadius: "8px",
+                  }}
+              >
+                <div
+                  className="certificate-inner"
+                  style={{
+                    width: "100%",
+                    maxWidth: "960px",
+                    aspectRatio: "1.414 / 1",
+                    background:
+                      "linear-gradient(135deg, #fffdf5 0%, #fff9e6 40%, #fffdf5 100%)",
+                    border: "8px solid transparent",
+                    borderImage:
+                      "linear-gradient(135deg, #c9a84c 0%, #f4d078 25%, #c9a84c 50%, #f4d078 75%, #c9a84c 100%) 1",
+                    borderRadius: "4px",
+                    boxShadow: "0 0 0 2px #c9a84c, 0 8px 32px rgba(0,0,0,0.12)",
+                    padding: "48px 56px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                    fontFamily: "'Georgia', 'Times New Roman', serif",
+                  }}
+                >
             {/* Corner decorations */}
             <div
               style={{
@@ -344,7 +379,7 @@ export default function BestWorkerCertificateModal({
                 paddingRight: "40px",
               }}
             >
-              {bestWorker.fullName}
+              {worker.fullName}
             </h2>
 
             {/* Period */}
@@ -393,7 +428,7 @@ export default function BestWorkerCertificateModal({
               >
                 Puntaje: {scoreText}
               </div>
-              {bestWorker.performanceLabel ? (
+              {worker.performanceLabel ? (
                 <div
                   style={{
                     background: "#c9a84c",
@@ -405,7 +440,7 @@ export default function BestWorkerCertificateModal({
                     fontFamily: "'Arial', sans-serif",
                   }}
                 >
-                  {bestWorker.performanceLabel}
+                  {worker.performanceLabel}
                 </div>
               ) : null}
             </div>
@@ -442,18 +477,22 @@ export default function BestWorkerCertificateModal({
               </div>
             </div>
 
-            <p
-              style={{
-                fontSize: "11px",
-                color: "#CCC",
-                textAlign: "center",
-                fontFamily: "'Arial', sans-serif",
-              }}
-            >
-              Documento generado automáticamente por el sistema SIR-GAVA
-            </p>
-          </div>
-        </div>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "#CCC",
+                      textAlign: "center",
+                      fontFamily: "'Arial', sans-serif",
+                    }}
+                  >
+                    Documento generado automáticamente por el sistema SIR-GAVA
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
       </div>
     </div>
   );

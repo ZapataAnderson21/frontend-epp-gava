@@ -122,6 +122,39 @@ export default function MonthlyEvaluationPeriodDetailModal({
     await handleTogglePeriodStatus();
   };
 
+  // Ranking: compute position (1st, 2nd, 3rd) by distinct score tiers
+  const rankingMap = useMemo(() => {
+    const map = new Map<number, number>(); // workerId -> rank (1, 2, 3)
+    if (!detail || !isPeriodClosed) return map;
+
+    const evaluated = detail.workers.filter(
+      (w) => w.evaluated && w.totalScore !== null,
+    );
+    if (evaluated.length === 0) return map;
+
+    // Get unique scores sorted descending
+    const uniqueScores = [...new Set(evaluated.map((w) => w.totalScore as number))]
+      .sort((a, b) => b - a);
+
+    // Assign rank 1, 2, 3 by distinct score tiers
+    for (const worker of evaluated) {
+      const tierIndex = uniqueScores.indexOf(worker.totalScore as number);
+      if (tierIndex >= 0 && tierIndex < 3) {
+        map.set(worker.workerId, tierIndex + 1); // 1, 2, or 3
+      }
+    }
+
+    return map;
+  }, [detail, isPeriodClosed]);
+
+  const rankRowClassName = (row: WorkerMonthlyEvaluationPeriodWorker) => {
+    const rank = rankingMap.get(row.workerId);
+    if (rank === 1) return "bg-amber-100 font-semibold"; // gold
+    if (rank === 2) return "bg-gray-200"; // silver
+    if (rank === 3) return "bg-orange-100"; // bronze
+    return undefined;
+  };
+
   const columns = [
     {
       key: "fullName",
@@ -344,7 +377,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
         </div>
       </div>
 
-      <Table<WorkerMonthlyEvaluationPeriodWorker> data={detail.workers} columns={columns} />
+      <Table<WorkerMonthlyEvaluationPeriodWorker>
+        data={detail.workers}
+        columns={columns}
+        rowClassName={isPeriodClosed ? rankRowClassName : undefined}
+      />
 
       <button type="button" className="absolute right-3 top-3" onClick={onClose}>
         <IoCloseCircle className="size-8" />
@@ -353,6 +390,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
       {showCertificate && detail ? (
         <BestWorkerCertificateModal
           detail={detail}
+          rankingMap={rankingMap}
           onClose={() => setShowCertificate(false)}
         />
       ) : null}
