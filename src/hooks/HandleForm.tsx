@@ -1,16 +1,19 @@
 import { useApiAction } from "./useApiAction";
 import type {
-  ElementType,
   CreateElementRequestDto,
   ElementRequestType,
-  UpdateElementRequestDto,
+  ElementRequestWorkerPlan,
+  ElementType,
   RequestWorker,
 } from "../data/types";
 import {
-  requestApi,
   elementRequestApi,
+  elementRequestWorkerPlanApi,
+  requestApi,
   requestWorkerApi,
 } from "../data/apiUrl";
+
+type ElementPlanState = Record<string, ElementRequestWorkerPlan[]>;
 
 function getTypeFromElements(elements: ElementType[]) {
   const types = elements.map((el: ElementType) => el.type);
@@ -23,6 +26,65 @@ function getTypeFromElements(elements: ElementType[]) {
   return "";
 }
 
+function parseStoredPlans(): ElementPlanState {
+  try {
+    return JSON.parse(localStorage.getItem("selectedElementRequestPlans") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function isEpiElement(element?: ElementType) {
+  if (!element) return false;
+
+  if (element.family) {
+    return element.family === "epi";
+  }
+
+  return element.type === "epp" && element.controlType === "individual";
+}
+
+function buildPlanPayload(
+  plans: ElementRequestWorkerPlan[],
+  savedRequestWorkers: RequestWorker[],
+) {
+  const requestWorkerIdByWorkerId = new Map(
+    savedRequestWorkers.map((requestWorker) => [
+      requestWorker.workerId,
+      requestWorker.requestWorkerId,
+    ]),
+  );
+
+  return plans
+    .map((plan) => {
+      const workerId = plan.requestWorker?.workerId ?? plan.requestWorkerId;
+      const requestWorkerId =
+        requestWorkerIdByWorkerId.get(workerId) ?? plan.requestWorkerId;
+
+      return {
+        requestWorkerId,
+        plannedQuantity: Number(plan.plannedQuantity || 0),
+        size: plan.size?.trim() || undefined,
+        notes: plan.notes?.trim() || undefined,
+      };
+    })
+    .filter(
+      (plan) =>
+        Number.isFinite(plan.plannedQuantity) &&
+        plan.plannedQuantity > 0 &&
+        Number.isFinite(plan.requestWorkerId) &&
+        plan.requestWorkerId > 0,
+    );
+}
+
+function clearRequestDraftStorage() {
+  localStorage.removeItem("selectedWorkers");
+  localStorage.removeItem("selectedRequestWorkers");
+  localStorage.removeItem("selectedElements");
+  localStorage.removeItem("selectedElementRequest");
+  localStorage.removeItem("selectedElementRequestPlans");
+}
+
 export function useHandleForm() {
   const { execute: createRequest } = useApiAction<any>();
   const { execute: updateRequest } = useApiAction<any>();
@@ -31,16 +93,175 @@ export function useHandleForm() {
   const { execute: updateElementRequest } = useApiAction<any>();
   const { execute: createRequestWorker } = useApiAction<any>();
   const { execute: updateRequestWorker } = useApiAction<any>();
+  const { execute: deleteRequestWorker } = useApiAction<any>();
+  const { execute: replaceElementRequestWorkerPlans } = useApiAction<any>();
 
-  // 🟩 Guardar nueva solicitud (sin cambios)
-  const handleSave = async (projectId: number, deliveryDueDate: string, description?: string) => {
+  const syncPlans = async (
+    elementRequests: ElementRequestType[],
+    savedRequestWorkers: RequestWorker[],
+    plansState: ElementPlanState,
+  ) => {
+    const syncOperations = elementRequests
+      .filter(
+        (elementRequest) =>
+          Boolean(elementRequest.elementRequestId) && isEpiElement(elementRequest.element),
+      )
+      .map(async (elementRequest) => {
+        const sourcePlans = plansState[String(elementRequest.elementId)] || [];
+        const plansPayload = buildPlanPayload(sourcePlans, savedRequestWorkers);
+
+        await replaceElementRequestWorkerPlans(
+          `${elementRequestWorkerPlanApi}element-request/${elementRequest.elementRequestId}`,
+          "PUT",
+          { plans: plansPayload },
+        );
+      });
+
+    await Promise.all(syncOperations);
+  };
+
+  const saveRequestWorkers = async (
+    requestId: number,
+    selectedRequestWorkers: RequestWorker[],
+  ) => {
+    if (!selectedRequestWorkers.length) {
+      return [] as RequestWorker[];
+    }
+
+    const responses = await Promise.all(
+      selectedRequestWorkers.map((requestWorker) =>
+        createRequestWorker(`${requestWorkerApi}`, "POST", {
+          requestId,
+          workerId: requestWorker.workerId,
+          shoeSize: requestWorker.shoeSize ?? null,
+          pantsSize: requestWorker.pantsSize ?? null,
+          shirtSize: requestWorker.shirtSize ?? null,
+        }),
+      ),
+    );
+
+    return responses.map((response, index) => ({
+      ...(response.data as RequestWorker),
+      worker: response.data?.worker ?? selectedRequestWorkers[index].worker,
+    }));
+  };
+
+  const upsertRequestWorkers = async (
+    requestId: number,
+    selectedRequestWorkers: RequestWorker[],
+    existingRequestWorkers: RequestWorker[] = [],
+  ) => {
+    const selectedWorkerIds = new Set(
+      (selectedRequestWorkers || []).map((requestWorker) => requestWorker.workerId),
+    );
+
+    const removedRequestWorkers = (existingRequestWorkers || []).filter(
+      (requestWorker) =>
+        Boolean(requestWorker.requestWorkerId) &&
+        !selectedWorkerIds.has(requestWorker.workerId),
+    );
+
+    await Promise.all(
+      removedRequestWorkers.map((requestWorker) =>
+        deleteRequestWorker(
+          `${requestWorkerApi}${requestWorker.requestWorkerId}`,
+          "DELETE",
+        ),
+      ),
+    );
+
+    if (!selectedRequestWorkers.length) {
+      return [] as RequestWorker[];
+    }
+
+    const responses = await Promise.all(
+      (selectedRequestWorkers || []).map((requestWorker) => {
+        const body = {
+          requestId,
+          workerId: requestWorker.workerId,
+          shoeSize: requestWorker.shoeSize ?? null,
+          pantsSize: requestWorker.pantsSize ?? null,
+          shirtSize: requestWorker.shirtSize ?? null,
+        };
+
+        if (requestWorker.requestWorkerId) {
+          return updateRequestWorker(
+            `${requestWorkerApi}${requestWorker.requestWorkerId}`,
+            "PATCH",
+            body,
+          );
+        }
+
+        return createRequestWorker(`${requestWorkerApi}`, "POST", body);
+      }),
+    );
+
+    return responses.map((response, index) => ({
+      ...(response.data as RequestWorker),
+      worker: response.data?.worker ?? selectedRequestWorkers[index].worker,
+    }));
+  };
+
+  const upsertElementRequests = async (
+    requestId: number,
+    selectedElementRequests: ElementRequestType[],
+  ) => {
+    const responses = await Promise.all(
+      selectedElementRequests.map((elementRequest) => {
+        const payload = {
+          quantityRequested: Number(elementRequest.quantityRequested || 0),
+          unit: elementRequest.unit,
+          elementId: elementRequest.elementId,
+          requestId,
+        };
+
+        if (elementRequest.elementRequestId) {
+          return updateElementRequest(
+            `${elementRequestApi}${elementRequest.elementRequestId}`,
+            "PATCH",
+            payload,
+          );
+        }
+
+        const createPayload: CreateElementRequestDto = {
+          quantityRequested: Number(elementRequest.quantityRequested || 0),
+          unit: elementRequest.unit ?? "",
+          elementId: elementRequest.elementId,
+          requestId,
+        };
+
+        return createElementRequest(`${elementRequestApi}`, "POST", createPayload);
+      }),
+    );
+
+    return responses.map((response, index) => ({
+      ...(response.data as ElementRequestType),
+      element: response.data?.element ?? selectedElementRequests[index].element,
+      epiPlans:
+        response.data?.epiPlans ??
+        selectedElementRequests[index].epiPlans ??
+        [],
+    }));
+  };
+
+  const handleSave = async (
+    projectId: number,
+    deliveryDueDate: string,
+    description?: string,
+  ) => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const selectedElements = JSON.parse(localStorage.getItem("selectedElements") || "[]");
-    const selectedElementRequest = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
-    const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
+    const selectedElements: ElementType[] = JSON.parse(
+      localStorage.getItem("selectedElements") || "[]",
+    );
+    const selectedElementRequest: ElementRequestType[] = JSON.parse(
+      localStorage.getItem("selectedElementRequest") || "[]",
+    );
+    const selectedRequestWorkers: RequestWorker[] = JSON.parse(
+      localStorage.getItem("selectedRequestWorkers") || "[]",
+    );
+    const selectedElementRequestPlans = parseStoredPlans();
 
     const type = getTypeFromElements(selectedElements);
-
     const requestData = {
       userId: Number(user.userId),
       projectId,
@@ -59,82 +280,43 @@ export function useHandleForm() {
     }
 
     const requestId = response.data.requestId;
-
-    const elementRequests: CreateElementRequestDto[] = selectedElementRequest.map((el: any) => ({
-      quantityRequested: el.quantityRequested,
-      unit: el.unit,
-      elementId: el.elementId,
+    const savedRequestWorkers = await saveRequestWorkers(
       requestId,
-    }));
-
-    const elementResponses = await Promise.all(
-      elementRequests.map((el) => createElementRequest(`${elementRequestApi}`, "POST", el))
-    ).catch((error) => {
-      return {
-        loading: false,
-        error: error.message || "Unknown error",
-        data: null,
-      };
-    });
-
-    const requestWorkerPayloads = (selectedRequestWorkers || []).map((rw) => ({
+      selectedRequestWorkers,
+    );
+    const savedElementRequests = await upsertElementRequests(
       requestId,
-      workerId: rw.workerId,
-      shoeSize: rw.shoeSize ?? null,
-      pantsSize: rw.pantsSize ?? null,
-      shirtSize: rw.shirtSize ?? null,
-    }));
+      selectedElementRequest,
+    );
 
-    let requestWorkerResponses: any[] = [];
-    if (requestWorkerPayloads.length > 0) {
-      try {
-        requestWorkerResponses = await Promise.all(
-          requestWorkerPayloads.map((payload) =>
-            createRequestWorker(`${requestWorkerApi}`, "POST", payload)
-          )
-        );
-      } catch (err: any) {
-        return {
-          loading: false,
-          error: err?.message || "Unknown error",
-          data: null,
-        };
-      }
-    }
+    await syncPlans(
+      savedElementRequests,
+      savedRequestWorkers,
+      selectedElementRequestPlans,
+    );
 
-    localStorage.removeItem("selectedElements");
-    localStorage.removeItem("selectedElementRequest");
-    localStorage.removeItem("selectedWorkers");
-    localStorage.removeItem("selectedRequestWorkers");
+    clearRequestDraftStorage();
 
     return {
       loading: false,
       error: false,
       data: {
         request: response.data,
-        elements:
-          Array.isArray(elementResponses) && elementResponses.length > 0
-            ? elementResponses[0].data
-            : null,
-        workers:
-          Array.isArray(requestWorkerResponses) && requestWorkerResponses.length > 0
-            ? requestWorkerResponses.map((r) => r.data)
-            : [],
+        elements: savedElementRequests,
+        workers: savedRequestWorkers,
       },
     };
   };
 
-  // 🟩 Enviar a logística (sin cambios)
   const handleSend = async (requestId: number, passwordCPanel: string) => {
     if (!passwordCPanel) {
       throw new Error("La contraseña del panel de control es requerida.");
     }
 
-    const response = await sendRequestToLogistics(
-      `${requestApi}sendLogistics`,
-      "POST",
-      { requestId, passwordCPanel }
-    );
+    const response = await sendRequestToLogistics(`${requestApi}sendLogistics`, "POST", {
+      requestId,
+      passwordCPanel,
+    });
 
     if (response.statusCode !== 200) {
       throw new Error(response.message);
@@ -143,12 +325,11 @@ export function useHandleForm() {
     return response.data;
   };
 
-  // 🟩 Guardar y enviar (sin cambios)
   const handleSaveAndSend = async (
     projectId: number,
     deliveryDueDate: string,
     description?: string,
-    passwordCPanel?: string
+    passwordCPanel?: string,
   ) => {
     if (!passwordCPanel) {
       throw new Error("La contraseña del panel de control es requerida.");
@@ -159,107 +340,65 @@ export function useHandleForm() {
       throw new Error("Error al guardar la solicitud.");
     }
 
-    const sendResult = await handleSend(result.data.request.requestId, passwordCPanel);
-    return sendResult;
+    return await handleSend(result.data.request.requestId, passwordCPanel);
   };
 
-  // 🟩 Actualizar solicitud existente (CREA/ACTUALIZA ElementRequest y RequestWorker)
   const handleUpdate = async (
     requestId: number,
     projectId: number,
     selectedElementRequests: ElementRequestType[],
     deliveryDueDate: string,
     description: string,
-    selectedRequestWorkers: RequestWorker[] = []   // ⬅️ NUEVO parámetro opcional
+    selectedRequestWorkers: RequestWorker[] = [],
+    existingRequestWorkers: RequestWorker[] = [],
+    selectedElementRequestPlans: ElementPlanState = parseStoredPlans(),
   ) => {
-    // 1) Actualizar la cabecera de la solicitud
     const selectedElements: ElementType[] = selectedElementRequests
-      .map((elReq: ElementRequestType) => elReq.element)
-      .filter((el): el is ElementType => el !== undefined);
-
-    console.log("Elementos seleccionados para determinar el tipo:", selectedElements);
-    console.log("Tipo determinado:", getTypeFromElements(selectedElements));
+      .map((elementRequest) => elementRequest.element)
+      .filter((element): element is ElementType => Boolean(element));
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    const type =  getTypeFromElements(selectedElements);
-
     const requestData = {
       userId: Number(user.userId),
       projectId,
       description,
       deliveryDueDate,
       status: "draft",
-      type: type
+      type: getTypeFromElements(selectedElements),
     };
 
     const response = await updateRequest(`${requestApi}${requestId}`, "PATCH", requestData);
-    
-    console.log("Respuesta de actualización de solicitud:", response);
-    
     if (!response || response.statusCode !== 200) {
       return null;
     }
 
-    // 2) ElementRequest: PATCH si existe, POST si no existe
-    const elementUpdateOrCreatePromises = selectedElementRequests.map((er) => {
-      const payload: UpdateElementRequestDto = {
-        quantityRequested: er.quantityRequested,
-        unit: er.unit,
-        elementId: er.elementId,
-        requestId,
-      };
+    const savedRequestWorkers = await upsertRequestWorkers(
+      requestId,
+      selectedRequestWorkers,
+      existingRequestWorkers,
+    );
+    const savedElementRequests = await upsertElementRequests(
+      requestId,
+      selectedElementRequests,
+    );
 
-      if (er.elementRequestId) {
-        // actualizar
-        return updateElementRequest(`${elementRequestApi}${er.elementRequestId}`, "PATCH", payload);
-      } else {
-        // crear
-        const createPayload: CreateElementRequestDto = {
-          quantityRequested: er.quantityRequested ?? 0,
-          unit: er.unit ?? "",
-          elementId: er.elementId,
-          requestId,
-        };
-        return createElementRequest(`${elementRequestApi}`, "POST", createPayload);
-      }
-    });
-
-    const elementResponses = await Promise.all(elementUpdateOrCreatePromises);
-
-    // 3) RequestWorker: PATCH si existe, POST si no existe
-    const workerUpdateOrCreatePromises = (selectedRequestWorkers || []).map((rw) => {
-      const body = {
-        requestId,
-        workerId: rw.workerId,
-        shoeSize: rw.shoeSize ?? null,
-        pantsSize: rw.pantsSize ?? null,
-        shirtSize: rw.shirtSize ?? null,
-      };
-
-      if (rw.requestWorkerId) {
-        return updateRequestWorker(`${requestWorkerApi}${rw.requestWorkerId}`, "PATCH", body);
-      } else {
-        return createRequestWorker(`${requestWorkerApi}`, "POST", body);
-      }
-    });
-
-    const workerResponses = await Promise.all(workerUpdateOrCreatePromises);
-
-    // Nota: los borrados (DELETE) no se manejan aquí; se recomienda hacerlos al “quitar” desde la UI.
+    await syncPlans(
+      savedElementRequests,
+      savedRequestWorkers,
+      selectedElementRequestPlans,
+    );
 
     return {
       loading: false,
       error: false,
       data: {
         request: response.data,
-        elements: elementResponses,
-        workers: workerResponses,
+        elements: savedElementRequests,
+        workers: savedRequestWorkers,
       },
     };
   };
 
-  // 🟩 Actualizar y enviar (acepta workers opcional)
   const handleUpdateAndSend = async (
     requestId: number,
     projectId: number,
@@ -267,7 +406,9 @@ export function useHandleForm() {
     passwordCPanel: string,
     deliveryDueDate: string,
     description: string,
-    selectedRequestWorkers: RequestWorker[] = []    // ⬅️ NUEVO parámetro opcional
+    selectedRequestWorkers: RequestWorker[] = [],
+    existingRequestWorkers: RequestWorker[] = [],
+    selectedElementRequestPlans: ElementPlanState = parseStoredPlans(),
   ) => {
     const updateResult = await handleUpdate(
       requestId,
@@ -275,15 +416,17 @@ export function useHandleForm() {
       selectedElementRequests,
       deliveryDueDate,
       description,
-      selectedRequestWorkers
+      selectedRequestWorkers,
+      existingRequestWorkers,
+      selectedElementRequestPlans,
     );
 
     if (!updateResult) {
       throw new Error("Error al actualizar la solicitud.");
     }
 
-    const sendResult = await handleSend(requestId, passwordCPanel);
-    return sendResult;
+    clearRequestDraftStorage();
+    return await handleSend(requestId, passwordCPanel);
   };
 
   return {

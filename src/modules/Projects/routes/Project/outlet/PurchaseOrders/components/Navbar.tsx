@@ -15,6 +15,7 @@ export default function NavbarProject() {
       </Permission>  
       
       <NavbarItemProject to='requests' name="Requerimientos" />
+      <NavbarItemProject to='inventory' name="Inventario" />
       
       <Permission user={user} allow={logisticsTypes}>
         <NavbarItemProject to='petty-cash' name="Caja Chica" />

@@ -3,18 +3,37 @@ export interface ElementType {
   name: string;
   type: string;
   description: string;
+  code?: string | null;
+  family?: string | null;
+  familyLabel?: string | null;
+  categoryName?: string | null;
+  controlType?: string;
+  typeLabel?: string;
+  controlTypeLabel?: string;
+  deletedAt?: string | null;
+  isLegacy?: boolean;
+  isArchived?: boolean;
+  legacyWarning?: string | null;
 }
 
 export interface CreateElementDto {
   name: string;
   type: string;
   description: string;
+  code?: string | null;
+  family?: string | null;
+  categoryName?: string | null;
+  controlType?: string;
 }
 
 export interface UpdateElementDto {
   name: string;
   type: string;
   description: string;
+  code?: string | null;
+  family?: string | null;
+  categoryName?: string | null;
+  controlType?: string;
 }
 
 export interface ElementRequestType {
@@ -25,6 +44,7 @@ export interface ElementRequestType {
   requestId: number
   element?: ElementType
   elementRequestResponses?: ElementRequestResponseType[]
+  epiPlans?: ElementRequestWorkerPlan[]
 }
 
 export interface CreateElementRequestDto {
@@ -138,10 +158,89 @@ export interface RequestType {
   projectId: number
   userId: number
   type: string
+  inventoryLoadedAt?: string | null
   user?: User
   project?: Project
   elementRequests?: ElementRequestType[]
+  requestWorkers?: RequestWorker[]
   userName?: string
+}
+
+export interface ProjectInventoryEntry {
+  projectInventoryEntryId: number;
+  projectId: number;
+  projectName?: string | null;
+  projectCode?: string | null;
+  requestId: number;
+  elementId: number;
+  elementName: string;
+  elementCode?: string | null;
+  elementType: string;
+  elementTypeLabel?: string;
+  family?: string | null;
+  familyLabel?: string | null;
+  isLegacy?: boolean;
+  returnsToOffice?: boolean;
+  requiresCode?: boolean;
+  usesDecimalQuantity?: boolean;
+  usesUniqueInventory?: boolean;
+  controlType: string;
+  controlTypeLabel?: string;
+  categoryName?: string | null;
+  unit: string;
+  quantityReceived: number;
+  quantityReturned: number;
+  quantityPending: number;
+  blocksProjectInactivation: boolean;
+  responsibleUserId: number;
+  responsibleUserName?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string | null;
+}
+
+export interface ProjectInventoryResponse {
+  project: {
+    projectId: number;
+    name: string;
+    code: string;
+    status: string;
+  };
+  summary: {
+    totalEntries: number;
+    totalPendingReturn: number;
+    pendingBlockingEntries: number;
+  };
+  entries: ProjectInventoryEntry[];
+}
+
+export interface InventoryMovement {
+  inventoryMovementId: number;
+  movementType: string;
+  fromLocation: string;
+  toLocation: string;
+  quantity: number;
+  notes?: string | null;
+  createdAt: string;
+  projectId: number;
+  projectName?: string | null;
+  projectCode?: string | null;
+  requestId?: number | null;
+  elementId: number;
+  performedByUserName?: string | null;
+  responsibleUserName?: string | null;
+}
+
+export interface ElementInventoryDetail {
+  element: ElementType;
+  summary: {
+    totalReceived: number;
+    totalReturned: number;
+    totalPending: number;
+  };
+  currentLocations: ProjectInventoryEntry[];
+  movementHistory: InventoryMovement[];
 }
 
 export interface CreateRequestDto {
@@ -388,6 +487,18 @@ export interface RequestWorker {
   worker?: Worker
   workerName?: string
   request?: RequestType
+}
+
+export interface ElementRequestWorkerPlan {
+  elementRequestWorkerPlanId?: number;
+  elementRequestId: number;
+  requestWorkerId: number;
+  plannedQuantity: number;
+  size?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  requestWorker?: RequestWorker;
 }
 
 export interface ResourcePurchaseOrder {

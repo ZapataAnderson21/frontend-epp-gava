@@ -1,5 +1,5 @@
-import { FaFileLines, FaHelmetSafety, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck } from "react-icons/fa6";
-import { FaProjectDiagram, FaTools } from "react-icons/fa";
+import { FaFileLines, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck } from "react-icons/fa6";
+import { FaProjectDiagram } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
 import { useState, useRef, useEffect } from "react";
@@ -24,7 +24,6 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   const { user, refetch } = useCurrentUser();
   const [currentUser, setCurrentUser] = useState(user);
-  const [isElementosOpen, setIsElementosOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -57,9 +56,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
     setCurrentUser(user);
   }, [user]);
 
-  // base para delays
-  const baseDelay = 0.1;     // s
-  const perItemDelay = 0.075;  // s
+  const baseDelay = 0.1;
+  const perItemDelay = 0.075;
 
   return (
     <section
@@ -83,88 +81,19 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
           <SidebarItem icon={<FaProjectDiagram />} label="Proyectos" href="/admin/projects" index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <Permission user={user} allow={logisticsTypes}>
-            <SidebarItem icon={<FaTruck />} label="Proveedores"    href="/admin/suppliers" index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaTruck />} label="Proveedores" href="/admin/suppliers" index={2} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
           <SidebarItem icon={<FaFileLines />} label="Requerimientos" href="/admin/requests" index={3} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<FaFileInvoiceDollar />} label="Cotizaciones" href="/admin/quotations" index={4} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<FaUserGroup />} label="Clientes" href="/admin/clients" index={5} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
-
-          {/* Grupo con desplegable */}
-          <div className="w-full flex flex-col">
-            <SidebarItem
-              icon={<FaCubes />}
-              label="Elementos SSOMA"
-              isRoot
-              isOpen={isElementosOpen}
-              onClick={() => setIsElementosOpen((v) => !v)}
-              index={6}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-            />
-
-            {/* Submenú animado abrir/cerrar */}
-            <AnimatePresence initial={false}>
-              {isElementosOpen && (
-                <motion.div
-                  className="w-full flex flex-col pl-2 overflow-hidden"
-                  initial="collapsed"
-                  animate="open"
-                  exit="collapsed"
-                  variants={{
-                    open: {
-                      opacity: 1,
-                      height: "auto",
-                      transition: { when: "beforeChildren", staggerChildren: 0.06 }
-                    },
-                    collapsed: {
-                      opacity: 0,
-                      height: 0,
-                      transition: { when: "afterChildren", duration: 0.2 }
-                    }
-                  }}
-                >
-                  {/* hijos con su propia animación */}
-                  <motion.div
-                    variants={{ hidden: { opacity: 0, x: -10 }, open: { opacity: 1, x: 0, transition: { duration: 0.2 } } }}
-                  >
-                    <SidebarItem
-                      icon={<FaHelmetSafety />}
-                      label="EPP"
-                      href="/admin/elements/type/epp"
-                      // si quieres más delay agrega index relativos
-                      index={0}
-                      baseDelay={0}
-                      perItemDelay={0.05}
-                      onClick={() => isMobile && setIsOpen?.(false)}
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    variants={{ hidden: { opacity: 0, x: -10 }, open: { opacity: 1, x: 0, transition: { duration: 0.2 } } }}
-                  >
-                    <SidebarItem
-                      icon={<FaTools />}
-                      label="Operativos"
-                      href="/admin/elements/type/operative"
-                      index={1}
-                      baseDelay={0}
-                      perItemDelay={0.05}
-                      onClick={() => isMobile && setIsOpen?.(false)}
-                    />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <SidebarItem icon={<FaCubes />} label="Inventario" href="/admin/inventory" index={6} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           <Permission user={user} allow={logisticsTypes}>
             <SidebarItem icon={<FaBoxOpen />} label="Recursos Ord. Compra" href="/admin/resources" index={7} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
-          
-          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
+          <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
-          
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           <Permission user={user} allow={monthlyEvaluationTypes}>
@@ -174,12 +103,9 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <Permission user={user} allow={adminTypes}>
             <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={12} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
-          
         </div>
 
-        {/* Sección inferior: Usuario y Logout */}
         <div className="flex flex-col border-t border-gray-300 py-4 px-4">
-          {/* Info del usuario - clickeable */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -201,7 +127,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <NotificationBell />
           </motion.div>
 
-          {/* Botón de logout - aparece al hacer clic en usuario */}
           <AnimatePresence initial={false}>
             {isUserMenuOpen && (
               <motion.div
@@ -213,7 +138,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
               >
                 <SidebarItem
                   icon={<IoMdSettings />}
-                  label="Configuración"
+                  label="Configuracion"
                   onClick={() => {
                     setIsUserSettingsOpen(true);
                     setIsUserMenuOpen(false);

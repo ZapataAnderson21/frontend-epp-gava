@@ -9,14 +9,18 @@ import { useApiAction } from "../../../../hooks/useApiAction";
 import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
 import Button from "../../../../components/Button";
 import { FaSave } from "react-icons/fa";
+import {
+  getInventoryBackendPayload,
+  type InventoryFamilyTabKey,
+} from "../../../Elements/inventoryCatalog";
 
 interface ContentModalProps {
-  typeElement: string;
+  familyKey: InventoryFamilyTabKey;
   onSelected: (els: ElementType[], reqs: ElementRequestType[]) => void;
   onClose: () => void;
 }
 
-export default function ContentModal({ typeElement, onSelected, onClose }: ContentModalProps) {
+export default function ContentModal({ familyKey, onSelected, onClose }: ContentModalProps) {
   const [elements, setElements] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [originalIds, setOriginalIds] = useState<number[]>([]);
@@ -36,7 +40,11 @@ export default function ContentModal({ typeElement, onSelected, onClose }: Conte
   const isNewRequest = location.pathname.endsWith("/new");
 
   // ✅ Hooks para API
-  const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(`${elementApi}type/${typeElement}`, [typeElement]);
+  const backendPayload = getInventoryBackendPayload(familyKey);
+  const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(
+    `${elementApi}family/${backendPayload.family}`,
+    [backendPayload.family],
+  );
   const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(id ? `${elementRequestApi}request/${id}` : "", [id]);
 
   const { execute: createElementRequest } = useApiAction<any>();

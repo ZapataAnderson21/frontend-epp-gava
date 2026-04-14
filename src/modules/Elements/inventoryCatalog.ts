@@ -1,0 +1,218 @@
+import type { ElementType } from "../../data/types";
+
+export type InventoryFamilyKey = "all" | "operative" | "epp" | "epi" | "ese" | "em" | "consumibles";
+export type InventoryFamilyTabKey = Exclude<InventoryFamilyKey, "all">;
+
+export type InventoryControlType = "consumable" | "returnable" | "individual";
+export type InventoryBackendType = "epp" | "operative";
+export type InventoryBackendFamily = "epp" | "epi" | "ese" | "measurement" | "consumible";
+
+export interface InventorySourceLike {
+  type?: string | null;
+  controlType?: string | null;
+  code?: string | null;
+  family?: string | null;
+}
+
+export type InventoryElementLike = ElementType & {
+  deletedAt?: string | null;
+  family?: string | null;
+};
+
+export interface InventoryFamilyConfig {
+  key: InventoryFamilyTabKey;
+  label: string;
+  shortLabel: string;
+  description: string;
+  backendType: InventoryBackendType;
+  backendFamily: InventoryBackendFamily;
+  backendControlType: InventoryControlType;
+  requiresCode: boolean;
+  returnsToOffice: boolean;
+  unique: boolean;
+  consumable: boolean;
+}
+
+export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
+  {
+    key: "epp",
+    label: "EPP",
+    shortLabel: "EPP",
+    description: "Elementos de proteccion personal",
+    backendType: "epp",
+    backendFamily: "epp",
+    backendControlType: "returnable",
+    requiresCode: false,
+    returnsToOffice: true,
+    unique: false,
+    consumable: false,
+  },
+  {
+    key: "epi",
+    label: "EPI",
+    shortLabel: "EPI",
+    description: "Elementos de proteccion individual",
+    backendType: "epp",
+    backendFamily: "epi",
+    backendControlType: "individual",
+    requiresCode: false,
+    returnsToOffice: false,
+    unique: false,
+    consumable: false,
+  },
+  {
+    key: "ese",
+    label: "ESE",
+    shortLabel: "ESE",
+    description: "Equipos de seguridad y/o emergencia",
+    backendType: "operative",
+    backendFamily: "ese",
+    backendControlType: "returnable",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+  },
+  {
+    key: "em",
+    label: "EM",
+    shortLabel: "EM",
+    description: "Equipos de medicion",
+    backendType: "operative",
+    backendFamily: "measurement",
+    backendControlType: "individual",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+  },
+  {
+    key: "consumibles",
+    label: "Consumibles SSOMA",
+    shortLabel: "Consumibles",
+    description: "Materiales y consumibles de uso en obra",
+    backendType: "operative",
+    backendFamily: "consumible",
+    backendControlType: "consumable",
+    requiresCode: false,
+    returnsToOffice: true,
+    unique: false,
+    consumable: true,
+  },
+] as const;
+
+export const inventoryFamilyTabs = [
+  { key: "all" as const, label: "Todos" },
+  { key: "operative" as const, label: "Operative" },
+  ...inventoryFamilies.map((family) => ({
+    key: family.key,
+    label: family.label,
+  })),
+] as const;
+
+export function getInventoryFamilyConfig(family: InventoryFamilyKey) {
+  if (family === "all") {
+    return null;
+  }
+
+  return inventoryFamilies.find((item) => item.key === family) ?? null;
+}
+
+export function resolveInventoryRouteFamily(
+  rawValue?: string | null,
+): InventoryFamilyKey {
+  const normalized = rawValue?.trim().toLowerCase();
+
+  if (!normalized) return "all";
+  if (normalized === "all") return "all";
+  if (normalized === "operative") return "operative";
+
+  const knownFamily = inventoryFamilies.find((family) => family.key === normalized);
+  if (knownFamily) return knownFamily.key;
+
+  return "all";
+}
+
+export function isLegacyOperativeSource(source?: InventorySourceLike | null) {
+  return !source?.family && source?.type?.trim().toLowerCase() === "operative";
+}
+
+export function getInventoryFamilyFromSource(
+  source?: InventorySourceLike | null,
+): InventoryFamilyTabKey {
+  const familyField = source?.family?.trim().toLowerCase();
+  const explicitFamily = inventoryFamilies.find(
+    (item) => item.key === familyField || item.backendFamily === familyField,
+  );
+  if (explicitFamily) return explicitFamily.key;
+
+  const type = source?.type?.trim().toLowerCase();
+  const controlType = source?.controlType?.trim().toLowerCase();
+
+  if (controlType === "consumable") {
+    return "consumibles";
+  }
+
+  if (type === "operative") {
+    return controlType === "individual" ? "em" : "ese";
+  }
+
+  if (controlType === "individual") {
+    return "epi";
+  }
+
+  return "epp";
+}
+
+export function getInventoryCatalogTabFromSource(
+  source?: InventorySourceLike | null,
+): InventoryFamilyTabKey {
+  if (isLegacyOperativeSource(source)) {
+    return "operative";
+  }
+
+  return getInventoryFamilyFromSource(source);
+}
+
+export function getInventoryFamilyLabel(family: InventoryFamilyKey) {
+  if (family === "all") return "Todos";
+  if (family === "operative") return "Operative";
+  return getInventoryFamilyConfig(family)?.label ?? "Inventario";
+}
+
+export function getInventoryRuleLabel(source?: InventorySourceLike | null) {
+  const family = getInventoryFamilyFromSource(source);
+  const config = getInventoryFamilyConfig(family);
+
+  if (!config) return "Stock";
+  if (config.consumable) return "Consumible";
+  if (config.unique) return "Unico";
+  return "Stock";
+}
+
+export function getInventoryCodeRequirementLabel(family: InventoryFamilyKey) {
+  const config = getInventoryFamilyConfig(family);
+  if (!config) return "Opcional";
+  return config.requiresCode ? "Obligatorio" : "Opcional";
+}
+
+export function getInventoryBackendPayload(family: InventoryFamilyKey) {
+  const config = getInventoryFamilyConfig(family);
+  if (!config) {
+    return {
+      type: "epp" as InventoryBackendType,
+      family: "epp" as InventoryBackendFamily,
+      controlType: "returnable" as InventoryControlType,
+    };
+  }
+
+  return {
+    type: config.backendType,
+    family: config.backendFamily,
+    controlType: config.backendControlType,
+  };
+}
+
+export function formatInventoryQuantity(value: number) {
+  return Number.isInteger(value) ? `${value}` : value.toFixed(2).replace(/\.00$/, "");
+}

@@ -1,18 +1,21 @@
-export default function HeaderNewRequest() {
+interface HeaderNewRequestProps {
+  showDetailsColumn?: boolean;
+}
+
+export default function HeaderNewRequest({
+  showDetailsColumn = false,
+}: HeaderNewRequestProps) {
   return (
-    <div className="flex flex-row items-center justify-between w-full py-4 px-2 font-bold gap-4">
-      <span className="flex items-start justify-start w-48">
-        <a href="#">ELEMENTO</a>
+    <div className="flex w-full flex-row items-center justify-between gap-4 px-2 py-4 font-bold">
+      <span className="flex min-w-0 flex-1 items-start justify-start">
+        ELEMENTO
       </span>
-      <span className="flex items-start justify-start w-28">
-        <a href="#">UNIDAD</a>
+      <span className="flex w-28 items-start justify-start">UNIDAD</span>
+      <span className="flex w-28 items-start justify-start">CANTIDAD</span>
+      <span className="flex w-[72px] items-start justify-start">
+        {showDetailsColumn ? "DETALLE" : ""}
       </span>
-      <span className="flex items-start justify-start w-28">
-        <a href="#">CANTIDAD</a>
-      </span>
-      <span className="flex items-start justify-start w-6">
-        <a href="#"></a>
-      </span>
+      <span className="flex w-6 items-start justify-start" />
     </div>
   );
 }

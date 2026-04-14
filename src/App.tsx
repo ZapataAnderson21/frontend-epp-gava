@@ -28,6 +28,7 @@ import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
 import Summary from './modules/Projects/routes/Project/outlet/Summary/Summary.tsx';
 import RequestsProject from './modules/Projects/routes/Project/outlet/Requests.tsx';
 import EmergenciesProject from './modules/Projects/routes/Project/outlet/Emergencies.tsx';
+import ProjectInventory from './modules/Projects/routes/Project/outlet/Inventory.tsx';
 import { WorkerMonthlyEvaluations } from './modules/WorkerMonthlyEvaluations';
 
 export default function App() {
@@ -55,11 +56,16 @@ export default function App() {
             <Route path='payrolls' element={<Payrolls />} />
             <Route path='petty-cash' element={<PettyCashes />} />
             <Route path='requests' element={<RequestsProject />} />
+            <Route path='inventory' element={<ProjectInventory />} />
             <Route path='payrolls/attendances' element={<Attendances />} />
             <Route path='payrolls/weekly' element={<WeeklyPayroll  />} />
             <Route path='emergencies' element={<EmergenciesProject  />} />
           </Route>
           {/* End projects routes */}
+          {/* Inventory routes */}
+          <Route path='inventory' element={<Elements />} />
+          <Route path='inventory/:family' element={<Elements />} />
+          {/* End inventory routes */}
           {/* Requests routes */}
           <Route path='requests' element={<Requests />} />
           <Route path='requests/:id' element={<Request />} />
@@ -67,6 +73,7 @@ export default function App() {
           <Route path='requests/edit/:id' element={<RequestDraft />} />
           {/* End requests routes */}
           {/* Elements routes */}
+          <Route path='elements' element={<Elements />} />
           <Route path='elements/type/:type' element={<Elements />} />
           <Route path='elements/:id' element={<Element />} />
           <Route path='elements/new' element={<NewElement />} />

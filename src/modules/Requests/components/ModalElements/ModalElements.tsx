@@ -1,34 +1,27 @@
 import type { ElementRequestType, ElementType } from "../../../../data/types";
 import ModalSelect from "../ModalSelect";
 import ContentModal from "./ContentModal";
+import {
+  getInventoryFamilyConfig,
+  type InventoryFamilyTabKey,
+} from "../../../Elements/inventoryCatalog";
 
 interface ModalElementsProps {
-  typeElement: string;
+  familyKey: InventoryFamilyTabKey;
   isOpen?: boolean;
   onClose: () => void;
   onSelected: (els: ElementType[], reqs: ElementRequestType[]) => void;
 }
 
-export default function ModalElements({ typeElement, isOpen, onClose, onSelected }: ModalElementsProps) {
+export default function ModalElements({ familyKey, isOpen, onClose, onSelected }: ModalElementsProps) {
 
   if (!isOpen) return null;
-
-  let title = "";
-
-  switch (typeElement) {
-    case "epp":
-      title = "Elementos de Seguridad";
-      break;
-    case "operative":
-      title = "Elementos Operativos";
-      break;
-    default:
-      title = "Elementos";
-  }
+  const familyConfig = getInventoryFamilyConfig(familyKey);
+  const title = familyConfig?.description ?? "Elementos";
 
   return (
     <ModalSelect title={title} isOpen={isOpen} onClose={onClose}>
-      <ContentModal typeElement={typeElement} onSelected={onSelected} onClose={onClose} />
+      <ContentModal familyKey={familyKey} onSelected={onSelected} onClose={onClose} />
     </ModalSelect>
   );
 } 

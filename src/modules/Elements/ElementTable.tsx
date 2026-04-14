@@ -1,52 +1,76 @@
 import { useNavigate } from "react-router-dom";
-import { ErrorMessage } from "../../common/error";
-import { LoadingSkeletonTable } from "../../common/loading";
+import { SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
-import { elementApi } from "../../data/apiUrl";
 import type { ElementType } from "../../data/types";
-import { useFetch } from "../../hooks";
-import { EditButton } from "../../common/button";
+import {
+  getInventoryCatalogTabFromSource,
+  getInventoryFamilyLabel,
+  getInventoryRuleLabel,
+  isLegacyOperativeSource,
+} from "./inventoryCatalog";
 
 interface ElementTableProps {
-  filter: string;
+  elements: ElementType[];
 }
 
-export default function ElementTable({ filter }: ElementTableProps) {
-
-  const { data: elements, loading, error } = useFetch<ElementType[]>(elementApi + (filter !== "all" ? `type/${filter}` : ""), [filter]);
-  
+export default function ElementTable({ elements }: ElementTableProps) {
   const navigate = useNavigate();
 
   const columns = [
     { key: "elementId", label: "Id", width: "4rem" },
     { key: "name", label: "Nombre", width: "16rem" },
-    { key: "type", label: "Tipo", width: "9rem" },
-    { key: "description", label: "Descripción", width: "36rem", truncate: true },
+    {
+      key: "code",
+      label: "Codigo",
+      width: "8rem",
+      render: (row: ElementType) => row.code || "Sin codigo",
+    },
+    {
+      key: "type",
+      label: "Familia",
+      width: "12rem",
+      render: (row: ElementType) => {
+        const family = getInventoryCatalogTabFromSource(row);
+        const legacyOperative = isLegacyOperativeSource(row);
+        return (
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              legacyOperative
+                ? "bg-amber-50 text-amber-800"
+                : "bg-blue-50 text-[#0047a3]"
+            }`}
+          >
+            {legacyOperative ? "Operative legado" : getInventoryFamilyLabel(family)}
+          </span>
+        );
+      },
+    },
+    {
+      key: "categoryName",
+      label: "Categoria",
+      width: "11rem",
+      render: (row: ElementType) => row.categoryName || "Sin categoria",
+    },
+    {
+      key: "controlType",
+      label: "Regla",
+      width: "10rem",
+      render: (row: ElementType) => getInventoryRuleLabel(row),
+    },
+    {
+      key: "description",
+      label: "Descripcion",
+      width: "24rem",
+      truncate: true,
+    },
     {
       label: "Acciones",
       width: "8rem",
-      render: (row: ElementType) => {
-        return <EditButton onClick={() => navigate(`/admin/elements/${row.elementId}`)} />;
-      }
-    }
+      render: (row: ElementType) => (
+        <SeeButton onClick={() => navigate(`/admin/elements/${row.elementId}`)} />
+      ),
+    },
   ] as const;
 
-  if(loading) {
-    return <LoadingSkeletonTable />;
-  }
-
-  if (error) {
-    return <ErrorMessage errorMessage={error} />;
-  }
-
-  if (!elements || elements.length === 0) {
-    return <div className="text-gray-500">No hay elementos disponibles.</div>;
-  }
-
-  return (
-    <Table<ElementType>
-      data={elements}
-      columns={columns}
-    />
-  );
+  return <Table<ElementType> data={elements} columns={columns} />;
 }

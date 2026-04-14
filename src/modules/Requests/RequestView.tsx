@@ -20,6 +20,8 @@ import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { adminTypes, gerencyTypes, logisticsTypes } from "../../utils";
 import { ButtonContainer } from "../../common/form";
 import Select from "../../components/Select";
+import { getInventoryBackendPayload, type InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
+import { requestFamilyTabs } from "./requestFamilies";
 
 interface RequestViewProps {
   requestId: number;
@@ -35,7 +37,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
-  const [newElementType, setNewElementType] = useState<"epp" | "operative">("epp");
+  const [newElementFamily, setNewElementFamily] = useState<InventoryFamilyTabKey>("epp");
   const [newElementId, setNewElementId] = useState<number>(0);
   const [newUnit, setNewUnit] = useState("");
   const [newQuantity, setNewQuantity] = useState<number>(1);
@@ -55,9 +57,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
     [requestId]
   );
 
+  const backendFamilyPayload = getInventoryBackendPayload(newElementFamily);
   const { data: elementsByType, loading: loadingElements, error: errorElements } = useFetch<ElementType[]>(
-    `${elementApi}type/${newElementType}`,
-    [newElementType]  
+    `${elementApi}family/${backendFamilyPayload.family}`,
+    [backendFamilyPayload.family]  
   );
 
   // ✅ useFetch para traer la RequestResponse
@@ -69,7 +72,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
   // Roles (coherentes con Permission/user.userType)
   const adminOnlyTypes = adminTypes.filter((t) => !gerencyTypes.includes(t));
   const logisticsOnlyTypes = logisticsTypes.filter((t) => !adminTypes.includes(t));
-  const isEmployee = !!user && !adminTypes.includes(user.userType) && !logisticsOnlyTypes.includes(user.userType);
+  const isRequestResponsible = !!user && request?.userId === user.userId;
 
   // Estados (derivados de la request)
   const isInProgress = request?.status === "En progreso";
@@ -115,13 +118,18 @@ export default function RequestView({ requestId }: RequestViewProps) {
   // Cambiar estado
   const handleChangeStatus = async (newStatus: string) => {
     if (!request) return;
+    const payload =
+      newStatus === "completed" && user
+        ? { status: newStatus, actorUserId: user.userId }
+        : { status: newStatus };
+
     await toast.promise(
-      updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: newStatus }),
+      updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", payload),
       {
         loading: "Actualizando estado...",
-        success: () => {
+        success: (result) => {
           setTimeout(() => navigate(0), 1200);
-          return "Estado actualizado exitosamente.";
+          return result.message || "Estado actualizado exitosamente.";
         },
         error: (err) => err.message || "Error al actualizar el estado.",
       }
@@ -130,7 +138,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   const handleAddElement = () => {
     setIsAddRowOpen(true);
-    setNewElementType("epp");
+    setNewElementFamily("epp");
     setNewElementId(0);
     setNewUnit("");
     setNewQuantity(1);
@@ -347,20 +355,20 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 {isAddRowOpen && (
                   <div className="w-full border border-gray-200 rounded-md p-3 bg-gray-50 mt-2">
                     <div className="flex flex-wrap gap-2 mb-3">
-                      <button
-                        type="button"
-                        className={`px-3 py-1 rounded-md border ${newElementType === "epp" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
-                        onClick={() => setNewElementType("epp")}
-                      >
-                        Seguridad
-                      </button>
-                      <button
-                        type="button"
-                        className={`px-3 py-1 rounded-md border ${newElementType === "operative" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300"}`}
-                        onClick={() => setNewElementType("operative")}
-                      >
-                        Operativo
-                      </button>
+                      {requestFamilyTabs.map((tab) => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          className={`rounded-md border px-3 py-1 ${
+                            newElementFamily === tab.key
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-gray-300 bg-white text-gray-700"
+                          }`}
+                          onClick={() => setNewElementFamily(tab.key)}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
                     </div>
 
                     <div className="grid w-full text-[14px] text-gray-700 gap-1" style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}>
@@ -371,7 +379,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
                           onChange={(value) => setNewElementId(Number(value))}
                           options={(elementsByType || [])
                             .filter((el) => !elementRequests.some((er) => er.elementId === el.elementId))
-                            .map((el) => ({ value: el.elementId, label: el.name }))}
+                            .map((el) => ({
+                              value: el.elementId,
+                              label: el.code ? `${el.name} - ${el.code}` : el.name,
+                            }))}
                           placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
                           disabled={loadingElements || !!errorElements}
                         />
@@ -387,7 +398,8 @@ export default function RequestView({ requestId }: RequestViewProps) {
                         type="number"
                         className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
                         placeholder="Cantidad"
-                        min={1}
+                        min={0}
+                        step={newElementFamily === "consumibles" ? "0.01" : "1"}
                         value={newQuantity}
                         onChange={(e) => setNewQuantity(Number(e.target.value))}
                       />
@@ -490,10 +502,17 @@ export default function RequestView({ requestId }: RequestViewProps) {
             )}
           </Permission>
 
-          {/* Acción de Empleado */}
-          {isEmployee && isAddressed && (
+          {/* Confirmacion final del responsable del requerimiento */}
+          {isRequestResponsible && isAddressed && (
             <ButtonContainer>
-              <Button icon={<FaCheck />} label="Culminado" onClick={() => handleChangeStatus("completed")} bgColor="#ad46ff" bgHoverColor="#9b3bff" type="button" />
+              <Button
+                icon={<FaCheck />}
+                label="Confirmar recepcion total"
+                onClick={() => handleChangeStatus("completed")}
+                bgColor="#ad46ff"
+                bgHoverColor="#9b3bff"
+                type="button"
+              />
             </ButtonContainer>
           )}
         </div>

@@ -3,81 +3,147 @@ import { useNavigate } from "react-router-dom";
 import { elementApi } from "../../data/apiUrl";
 import { useApiAction } from "../../hooks";
 import { ReturnButton, SaveButton } from "../../common/button";
-import { ButtonContainer, Form, InputForm, SelectForm, TextAreaForm } from "../../common/form";
+import {
+  ButtonContainer,
+  Form,
+  InputForm,
+  SelectForm,
+  TextAreaForm,
+} from "../../common/form";
 import toast, { Toaster } from "react-hot-toast";
+import type { InventoryFamilyKey } from "./inventoryCatalog";
+import {
+  getInventoryBackendPayload,
+  getInventoryCodeRequirementLabel,
+  getInventoryFamilyConfig,
+  getInventoryFamilyLabel,
+  resolveInventoryRouteFamily,
+} from "./inventoryCatalog";
 
 interface ElementResponse {
   name: string;
   type: string;
   description: string;
+  code?: string | null;
+  categoryName?: string | null;
+  controlType?: string;
 }
 
 export default function NewEpp() {
-  const typeRoot = new URLSearchParams(window.location.search).get("type") || "";
+  const searchParams = new URLSearchParams(window.location.search);
+  const familyRoot = resolveInventoryRouteFamily(searchParams.get("family") || searchParams.get("type"));
+  const initialFamily: InventoryFamilyKey = familyRoot === "all" || familyRoot === "operative"
+    ? "epp"
+    : familyRoot;
 
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [categoryName, setCategoryName] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState(typeRoot);
+  const [family, setFamily] = useState<InventoryFamilyKey>(initialFamily);
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
-  
+
+  const familyConfig = getInventoryFamilyConfig(family);
+
   const navigateToElements = () => {
-    if (type) {
-      navigate(`/admin/elements/type/${type}`);
-    } else {
-      navigate("/admin/elements/type/all");
-    }
+    navigate(`/admin/inventory/${family}`);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const elementData = { name, type, description };
+    if (familyConfig?.requiresCode && !code.trim()) {
+      toast.error("El codigo es obligatorio para ESE y EM.");
+      return;
+    }
 
-    toast.promise(
-      execute(elementApi, "POST", elementData),
-      {
-        loading: 'Creando elemento...',
-        success: (result) => {
-          setTimeout(() => navigateToElements(), 1200);
-          return result.message || 'Elemento creado con éxito';
-        },
-        error: (err) => err.message || 'Error al crear el elemento',
-      }
-    );
+    const backendPayload = getInventoryBackendPayload(family);
+    const elementData = {
+      name,
+      type: backendPayload.type,
+      family: backendPayload.family,
+      description,
+      code: code.trim() || null,
+      categoryName: categoryName.trim() || null,
+      controlType: backendPayload.controlType,
+    };
+
+    toast.promise(execute(elementApi, "POST", elementData), {
+      loading: "Creando item de inventario...",
+      success: (result) => {
+        setTimeout(() => navigateToElements(), 1200);
+        return result.message || "Item creado con exito";
+      },
+      error: (err) => err.message || "Error al crear el item",
+    });
   };
 
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
-      <Form name="REGISTRAR ELEMENTO" handleSubmit={handleSubmit}>
-        <InputForm 
+      <Form name="REGISTRAR ITEM DE INVENTARIO" handleSubmit={handleSubmit}>
+        <InputForm
           label="Nombre"
           name="name"
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)} 
+          onChange={(e) => setName(e.target.value)}
           optional={false}
         />
 
-        <TextAreaForm 
-          label="Descripción"
+        <InputForm
+          label="Codigo"
+          name="code"
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          optional={!familyConfig?.requiresCode}
+        />
+
+        <InputForm
+          label="Categoria"
+          name="categoryName"
+          type="text"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          optional={true}
+        />
+
+        <TextAreaForm
+          label="Descripcion"
           name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           optional={false}
         />
-          
-        <SelectForm label="Tipo" name="type" value={type} onChange={(value) => setType(value as string)}
+
+        <SelectForm
+          label="Familia"
+          name="family"
+          value={family}
+          onChange={(value) => setFamily(value as InventoryFamilyKey)}
           options={[
-            { value: "epp", label: "Elementos de Protección Personal (EPP)" },
-            { value: "operative", label: "Elementos Operativos" }
+            { value: "epp", label: "EPP - Elementos de proteccion personal" },
+            { value: "epi", label: "EPI - Elementos de proteccion individual" },
+            { value: "ese", label: "ESE - Equipos de seguridad y/o emergencia" },
+            { value: "em", label: "EM - Equipos de medicion" },
+            { value: "consumibles", label: "Consumibles SSOMA" },
           ]}
         />
 
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="font-semibold">
+            {getInventoryFamilyLabel(family)}
+          </p>
+          <p>
+            Codigo {getInventoryCodeRequirementLabel(family).toLowerCase()}.
+          </p>
+        </div>
+
         <ButtonContainer>
-          <ReturnButton onClick={() => navigate(`/admin/elements/type/${type}`)} />
+          <ReturnButton onClick={() => navigate("/admin/inventory")} />
           <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>
