@@ -1,6 +1,7 @@
 import getAuthHeaders from "./getAuthHeaders";
 import { useEffect, useState, useCallback } from "react";
 import { redirectToLoginPreservingURL } from "../auth-redirect";
+import formatApiErrorMessage from "../utils/apiErrorMessage";
 
 interface ApiResponse<T> {
   statusCode?: number;
@@ -60,7 +61,10 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
           setData((responseData ?? null) as T | null);
           setError(null);
         } else {
-          const message = json?.message || res.statusText || "Error en la solicitud";
+          const message = formatApiErrorMessage(
+            json?.message,
+            res.statusText || "Error en la solicitud",
+          );
           setError(message);
           setData(null);
         }

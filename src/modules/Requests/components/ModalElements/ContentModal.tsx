@@ -1,18 +1,25 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { type ElementType, type ElementRequestType } from "../../../../data/types";
-import HeaderModal from "./HeaderModal";
-import { FaDeleteLeft } from "react-icons/fa6";
-import LoadingSkeletonTable from "../../../../common/loading/LoadingSkeletonTable";
-import { useFetch } from "../../../../hooks/useFetch";
-import { useApiAction } from "../../../../hooks/useApiAction";
-import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
-import Button from "../../../../components/Button";
 import { FaSave } from "react-icons/fa";
+import { FaDeleteLeft } from "react-icons/fa6";
+
+import type { ElementRequestType, ElementType } from "../../../../data/types";
+import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
+import LoadingSkeletonTable from "../../../../common/loading/LoadingSkeletonTable";
+import Button from "../../../../components/Button";
+import { useApiAction } from "../../../../hooks/useApiAction";
+import { useFetch } from "../../../../hooks/useFetch";
 import {
   getInventoryBackendPayload,
+  getInventoryFamilyFromSource,
   type InventoryFamilyTabKey,
 } from "../../../Elements/inventoryCatalog";
+import {
+  attachRequestLineKeys,
+  createElementRequestLine,
+  getUniqueElementsFromLines,
+} from "../../requestLineUtils";
+import HeaderModal from "./HeaderModal";
 
 interface ContentModalProps {
   familyKey: InventoryFamilyTabKey;
@@ -20,8 +27,12 @@ interface ContentModalProps {
   onClose: () => void;
 }
 
-export default function ContentModal({ familyKey, onSelected, onClose }: ContentModalProps) {
-  const [elements, setElements] = useState<any[]>([]);
+export default function ContentModal({
+  familyKey,
+  onSelected,
+  onClose,
+}: ContentModalProps) {
+  const [elements, setElements] = useState<ElementType[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [originalIds, setOriginalIds] = useState<number[]>([]);
   const [searchItem, setSearchItem] = useState("");
@@ -39,200 +50,208 @@ export default function ContentModal({ familyKey, onSelected, onClose }: Content
   const location = useLocation();
   const isNewRequest = location.pathname.endsWith("/new");
 
-  // ✅ Hooks para API
   const backendPayload = getInventoryBackendPayload(familyKey);
+  const isProtectionGroup = familyKey === "epp";
   const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(
-    `${elementApi}family/${backendPayload.family}`,
-    [backendPayload.family],
+    isProtectionGroup ? elementApi : `${elementApi}family/${backendPayload.family}`,
+    [backendPayload.family, isProtectionGroup],
   );
-  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(id ? `${elementRequestApi}request/${id}` : "", [id]);
+  const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(
+    id ? `${elementRequestApi}request/${id}` : "",
+    [id],
+  );
 
   const { execute: createElementRequest } = useApiAction<any>();
   const { execute: deleteElementRequest } = useApiAction<any>();
 
-  // ✅ Cargar elementos
   useEffect(() => {
-    if (fetchedElements) {
-      setElements(fetchedElements);
-      setPages(Math.ceil(fetchedElements.length / itemsPerPage));
-    }
-  }, [fetchedElements]);
+    if (!fetchedElements) return;
+    const visibleElements = isProtectionGroup
+      ? fetchedElements.filter((element) =>
+          ["epp", "epi", "uniform"].includes(getInventoryFamilyFromSource(element)),
+        )
+      : fetchedElements;
+    setElements(visibleElements);
+    setPages(Math.max(1, Math.ceil(visibleElements.length / itemsPerPage)));
+  }, [fetchedElements, isProtectionGroup]);
 
-  // ✅ Cargar selección inicial
   useEffect(() => {
     if (isNewRequest) {
       const saved = localStorage.getItem("selectedElements");
       if (saved) {
         const parsed: ElementType[] = JSON.parse(saved);
         setSelectedIds(
-          parsed.map((item) => item.elementId).filter((id): id is number => id !== undefined)
+          parsed
+            .map((item) => item.elementId)
+            .filter((elementId): elementId is number => elementId !== undefined),
         );
       }
-    } else if (fetchedElementRequests) {
-      const ids = fetchedElementRequests.map((er) => er.elementId);
-      setSelectedIds(ids);
-      setOriginalIds(ids);
+      return;
     }
+
+    if (!fetchedElementRequests) return;
+    const ids = fetchedElementRequests.map((elementRequest) => elementRequest.elementId);
+    setSelectedIds(ids);
+    setOriginalIds(ids);
   }, [isNewRequest, fetchedElementRequests]);
 
-  // ✅ Checkbox
-  const handleCheckboxChange = (id?: number) => {
-    if (id === undefined) return;
+  const handleCheckboxChange = (elementId?: number) => {
+    if (elementId === undefined) return;
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(elementId)
+        ? prev.filter((id) => id !== elementId)
+        : [...prev, elementId],
     );
+  };
+
+  const handleNewRequestSelection = () => {
+    const previousLines = attachRequestLineKeys(
+      JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
+    );
+    const modalElementIds = new Set(elements.map((element) => element.elementId));
+    const selectedElements = elements.filter((element) => selectedIds.includes(element.elementId));
+    const selectedElementIds = new Set(selectedElements.map((element) => element.elementId));
+
+    const keepFromOtherGroups = previousLines.filter(
+      (requestLine) => !modalElementIds.has(requestLine.elementId),
+    );
+    const keptSelectedLines = previousLines
+      .filter((requestLine) => modalElementIds.has(requestLine.elementId))
+      .filter((requestLine) => selectedElementIds.has(requestLine.elementId))
+      .map((requestLine) => ({
+        ...requestLine,
+        element:
+          selectedElements.find((element) => element.elementId === requestLine.elementId) ??
+          requestLine.element,
+      }));
+    const newLines = selectedElements
+      .filter(
+        (element) =>
+          !keptSelectedLines.some((requestLine) => requestLine.elementId === element.elementId),
+      )
+      .map((element) => createElementRequestLine(element));
+
+    const nextReqs = attachRequestLineKeys([
+      ...keepFromOtherGroups,
+      ...keptSelectedLines,
+      ...newLines,
+    ]);
+    const nextElements = getUniqueElementsFromLines(nextReqs, selectedElements);
+
+    onSelected(nextElements, nextReqs);
+    onClose();
+  };
+
+  const handleDraftSelection = async () => {
+    if (!id) return;
+
+    const requestId = Number(id);
+    const added = selectedIds.filter((selectedId) => !originalIds.includes(selectedId));
+    const removed = originalIds.filter((originalId) => !selectedIds.includes(originalId));
+    const createdResponses: ElementRequestType[] = [];
+
+    for (const addId of added) {
+      const response = await createElementRequest(`${elementRequestApi}`, "POST", {
+        elementId: addId,
+        quantityRequested: 0,
+        unit: "",
+        lineItemOrder: (fetchedElementRequests?.length || 0) + createdResponses.length + 1,
+        requestId,
+      });
+
+      if (response?.statusCode === 201) {
+        createdResponses.push(response.data);
+      }
+    }
+
+    if (fetchedElementRequests) {
+      for (const removeId of removed) {
+        const linesToDelete = fetchedElementRequests.filter(
+          (requestLine) => requestLine.elementId === removeId,
+        );
+
+        for (const itemToDelete of linesToDelete) {
+          if (itemToDelete.elementRequestId !== undefined) {
+            await deleteElementRequest(
+              `${elementRequestApi}${itemToDelete.elementRequestId}`,
+              "DELETE",
+            );
+          }
+        }
+      }
+    }
+
+    const baseLines = attachRequestLineKeys(
+      (fetchedElementRequests || []).filter(
+        (requestLine) => !removed.includes(requestLine.elementId),
+      ),
+    );
+    const nextReqs = attachRequestLineKeys([...baseLines, ...createdResponses]);
+    const nextElements = getUniqueElementsFromLines(nextReqs, elements);
+
+    onSelected(nextElements, nextReqs);
+    setOriginalIds(selectedIds);
+    onClose();
   };
 
   const onClick = async () => {
     if (isNewRequest) {
-      // ---------- NUEVA SOLICITUD (sin id en la URL) ----------
-      // 1) Lo que ya había guardado
-      const prevReqs: ElementRequestType[] = JSON.parse(
-        localStorage.getItem("selectedElementRequest") || "[]"
-      );
-
-      // 2) Mapa para buscar rápido por elementId (para conservar cantidad/unidad)
-      const prevReqsMap = new Map(prevReqs.map(r => [r.elementId, r]));
-
-      // 3) Elementos que quedaron seleccionados en este modal (checkboxes)
-      const selectedElements = elements.filter(
-        (item) => item.elementId !== undefined && selectedIds.includes(item.elementId!)
-      );
-
-      // 4) Mantener requests de elementos que NO pertenecen a este modal (otros grupos)
-      const keepFromOtherGroups = prevReqs.filter(
-        (r) => !elements.some((e) => e.elementId === r.elementId)
-      );
-
-      // 5) Para los elementos de ESTE modal seleccionados:
-      //    si ya existían en prevReqs, los mergeamos para NO perder quantityRequested/unit.
-      const mergedForThisGroup = selectedElements.map((el) => {
-        const existing = prevReqsMap.get(el.elementId!);
-        return {
-          ...(existing ?? {}),
-          elementId: el.elementId!,                 // asegura id
-          requestId: existing?.requestId ?? 0,     // preserva si existía
-          unit: existing?.unit ?? "",              // NO pisar si ya había valor
-          quantityRequested: existing?.quantityRequested ?? 0,
-          element: el,                             // referencia al elemento
-        } as ElementRequestType;
-      });
-
-      // 6) Resultado final
-      const updatedReqs = [
-        ...keepFromOtherGroups,
-        ...mergedForThisGroup,
-      ] as ElementRequestType[];
-
-      const updatedEls = updatedReqs
-        .map((r) => r.element)
-        .filter((el): el is ElementType => el !== undefined);
-
-      // 7) Sube al padre (él actualiza estado y localStorage) y cierra
-      onSelected(updatedEls, updatedReqs);
-      onClose();
+      handleNewRequestSelection();
       return;
     }
 
-    // ---------- EDICIÓN (hay id en la URL) ----------
-    if (id) {
-      const requestId = Number(id);
-      const added = selectedIds.filter((sid) => !originalIds.includes(sid));
-      const removed = originalIds.filter((oid) => !selectedIds.includes(oid));
-
-      // 1) Crear los nuevos (payload correcto camelCase)
-      const createdResponses: ElementRequestType[] = [];
-      for (const addId of added) {
-        const res = await createElementRequest(`${elementRequestApi}`, "POST", {
-          elementId: addId,
-          quantityRequested: 0,
-          unit: "",
-          requestId,
-        });
-
-        console.log("Created ElementRequest:", res);
-
-        if (res?.statusCode === 201) {
-          createdResponses.push(res.data);
-        }
-      }
-
-      // 2) Borrar los quitados (URL sin doble slash)
-      if (fetchedElementRequests) {
-        for (const removeId of removed) {
-          const itemToDelete = fetchedElementRequests.find((e) => e.elementId === removeId);
-          if (itemToDelete?.elementRequestId !== undefined) {
-            await deleteElementRequest(`${elementRequestApi}${itemToDelete.elementRequestId}`, "DELETE");
-          }
-        }
-      }
-
-      // 3) Construir la lista final y ENVIARLA AL PADRE
-      const base = (fetchedElementRequests || []).filter(er => !removed.includes(er.elementId));
-      const nextReqs = [...base, ...createdResponses] as ElementRequestType[];
-
-      const nextEls = nextReqs
-        .map((r) => r.element)
-        .filter((el): el is ElementType => el !== undefined);
-
-      // <- ESTA LLAMADA ES LA CLAVE para que RequestDraft se re-renderice
-      onSelected(nextEls, nextReqs);
-
-      // Actualiza referencia local del modal para próximos guardados
-      setOriginalIds(selectedIds);
-
-      onClose();
-    }
+    await handleDraftSelection();
   };
 
-
   if (loading) return <LoadingSkeletonTable />;
-  if (error)
-    return (
-      <div className="flex items-center justify-center w-full h-full">
-        {error}
-      </div>
-    );
+  if (error) {
+    return <div className="flex h-full w-full items-center justify-center">{error}</div>;
+  }
 
   return (
     <>
       <div className="px-3">
-        <div className="flex flex-row items-center justify-between border border-gray-300 rounded-md px-2 py-1 w-full">
+        <div className="flex w-full flex-row items-center justify-between rounded-md border border-gray-300 px-2 py-1">
           <input
             type="text"
-            className="outline-none size-full p-1"
+            className="size-full p-1 outline-none"
             placeholder="Buscar por nombre..."
             value={searchItem}
             onChange={(e) => setSearchItem(e.target.value)}
           />
           <FaDeleteLeft
-            className="size-6 hover:scale-110 cursor-pointer"
+            className="size-6 cursor-pointer hover:scale-110"
             onClick={() => setSearchItem("")}
           />
         </div>
       </div>
       <HeaderModal />
-      <div className="flex flex-col items-center justify-between w-full pt-4 px-6 gap-4 text-[14px] md:text-[16px]">
+      <div className="flex w-full flex-col items-center justify-between gap-4 px-6 pt-4 text-[14px] md:text-[16px]">
         {currentElements.map((item) => (
-          <div key={item.elementId ?? item.name} className="flex items-center justify-between w-full">
-            <span className="flex items-center justify-start w-12">{item.elementId}</span>
-            <span className="flex items-center justify-start w-full">{item.name}</span>
+          <div
+            key={item.elementId ?? item.name}
+            className="flex w-full items-center justify-between"
+          >
+            <span className="flex w-12 items-center justify-start">{item.elementId}</span>
+            <span className="flex w-full items-center justify-start">{item.name}</span>
             <input
               type="checkbox"
-              className="p-2 size-4"
+              className="size-4 p-2"
               checked={item.elementId !== undefined && selectedIds.includes(item.elementId)}
               onChange={() => handleCheckboxChange(item.elementId)}
             />
           </div>
         ))}
-        <div className="flex flex-row justify-end w-full font-bold mt-4 gap-2">
-          {Array.from({ length: pages }, (_, i) => (
+        <div className="mt-4 flex w-full flex-row justify-end gap-2 font-bold">
+          {Array.from({ length: pages }, (_, index) => (
             <div
-              key={i}
-              className={`flex items-center px-3 py-2 border-2 rounded-md hover:bg-gray-100 cursor-pointer ${currentPage === i + 1 ? "bg-gray-300" : ""}`}
-              onClick={() => setCurrentPage(i + 1)}
+              key={index}
+              className={`cursor-pointer rounded-md border-2 px-3 py-2 hover:bg-gray-100 ${
+                currentPage === index + 1 ? "bg-gray-300" : ""
+              }`}
+              onClick={() => setCurrentPage(index + 1)}
             >
-              {i + 1}
+              {index + 1}
             </div>
           ))}
         </div>
@@ -240,7 +259,7 @@ export default function ContentModal({ familyKey, onSelected, onClose }: Content
           icon={<FaSave />}
           label="Guardar"
           type="button"
-          bgColor="#0047a3" 
+          bgColor="#0047a3"
           bgHoverColor="#003366"
           onClick={onClick}
         />

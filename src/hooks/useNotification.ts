@@ -24,6 +24,16 @@ export interface Notification {
   purchaseOrder?: { purchaseOrderId: number; code: string };
 }
 
+export interface RequestMailProgressEvent {
+  operationId: string;
+  requestId?: number;
+  step: string;
+  status: 'running' | 'success' | 'error';
+  message: string;
+  timestamp: string;
+  data?: unknown;
+}
+
 interface UseNotificationsOptions {
   apiUrl: string;
   wsUrl: string;
@@ -71,6 +81,14 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     socket.on('notification', (notification: Notification) => {
       console.log('📬 Nueva notificación:', notification);
       setNotifications((prev) => [notification, ...prev]);
+    });
+
+    socket.on('requestMailProgress', (progress: RequestMailProgressEvent) => {
+      window.dispatchEvent(
+        new CustomEvent<RequestMailProgressEvent>('requestMailProgress', {
+          detail: progress,
+        }),
+      );
     });
 
     // Escuchar actualización del contador

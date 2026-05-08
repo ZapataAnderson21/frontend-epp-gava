@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
-import type { ElementRequestType, ElementType, RequestResponseType, RequestType } from "../../data/types";
+import type {
+  ElementRequestType,
+  ElementType,
+  FallProtectionGroupType,
+  OfficeInventoryEntry,
+  RequestResponseType,
+  RequestType,
+} from "../../data/types";
 
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { FaTimes, FaFilePdf } from "react-icons/fa";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 import Button from "../../components/Button";
-import HeaderTableSummary from "./components/TableSummary/HeaderTableSummary";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
 import ErrorMessage from "../../common/error/ErrorMessage";
 import toast, { Toaster } from "react-hot-toast";
 
-import { elementApi, elementRequestApi, requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
+import { elementApi, elementRequestApi, inventoryApi, requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { AddButton, ReturnButton } from "../../common/button";
@@ -22,9 +28,39 @@ import { ButtonContainer } from "../../common/form";
 import Select from "../../components/Select";
 import { getInventoryBackendPayload, type InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
 import { requestFamilyTabs } from "./requestFamilies";
+import { getRequestLineFamily } from "./requestLineUtils";
 
 interface RequestViewProps {
   requestId: number;
+}
+
+function isFallProtectionGroupPickerItem(
+  item: ElementType | FallProtectionGroupType,
+): item is FallProtectionGroupType {
+  return "harnessElementId" in item && "fallProtectionGroupId" in item;
+}
+
+function isElementPickerItem(
+  item: ElementType | FallProtectionGroupType,
+): item is ElementType {
+  return "elementId" in item;
+}
+
+type OfficeInventoryPayload =
+  | OfficeInventoryEntry[]
+  | {
+      entries?: OfficeInventoryEntry[];
+      items?: OfficeInventoryEntry[];
+      data?: OfficeInventoryEntry[];
+    };
+
+function normalizeOfficeEntries(payload?: OfficeInventoryPayload | null) {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+  if (Array.isArray(payload.entries)) return payload.entries;
+  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.data)) return payload.data;
+  return [];
 }
 
 export default function RequestView({ requestId }: RequestViewProps) {
@@ -33,6 +69,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [managementDescription, setManagementDescription] = useState("");
   const [logisticsDescription, setLogisticsDescription] = useState("");
   const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
+  const [selectedSafetyElementIds, setSelectedSafetyElementIds] = useState<{ [key: number]: number[] }>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
@@ -57,10 +94,27 @@ export default function RequestView({ requestId }: RequestViewProps) {
     [requestId]
   );
 
+  const { data: fallProtectionGroupsForRequest } = useFetch<FallProtectionGroupType[]>(
+    `${elementApi}fall-protection-groups`,
+    [requestId]
+  );
+  const { data: safetyElements } = useFetch<ElementType[]>(
+    `${elementApi}family/ese`,
+    [requestId],
+  );
+  const { data: officeInventoryPayload } = useFetch<OfficeInventoryPayload>(
+    `${inventoryApi}office`,
+    [requestId],
+  );
+
   const backendFamilyPayload = getInventoryBackendPayload(newElementFamily);
-  const { data: elementsByType, loading: loadingElements, error: errorElements } = useFetch<ElementType[]>(
-    `${elementApi}family/${backendFamilyPayload.family}`,
-    [backendFamilyPayload.family]  
+  const elementPickerUrl =
+    newElementFamily === "harness"
+      ? `${elementApi}fall-protection-groups`
+      : `${elementApi}family/${backendFamilyPayload.family}`;
+  const { data: elementsByType, loading: loadingElements, error: errorElements } = useFetch<Array<ElementType | FallProtectionGroupType>>(
+    elementPickerUrl,
+    [elementPickerUrl]
   );
 
   // ✅ useFetch para traer la RequestResponse
@@ -90,8 +144,66 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   useEffect(() => {
     if (request?.elementRequests) {
-      setElementRequests(request.elementRequests);
+      const groups = fallProtectionGroupsForRequest || [];
+      setElementRequests(
+        request.elementRequests.map((line) => {
+          if (line.fallProtectionGroup || !line.elementId) return line;
+
+          const inferredGroup = groups.find((group) =>
+            [
+              group.harnessElementId,
+              group.anchorBandElementId,
+              group.lifelineElementId,
+              group.positioningLanyardElementId,
+            ].includes(line.elementId),
+          );
+
+          if (!inferredGroup) return line;
+
+          return {
+            ...line,
+            fallProtectionGroupId: inferredGroup.fallProtectionGroupId,
+            fallProtectionGroup: inferredGroup,
+          };
+        }),
+      );
     }
+  }, [request, fallProtectionGroupsForRequest]);
+
+  useEffect(() => {
+    if (!request?.elementRequests) return;
+
+    const nextQuantities: { [key: number]: number } = {};
+    const nextSafetySelections: { [key: number]: number[] } = {};
+
+    request.elementRequests.forEach((line) => {
+      if (typeof line.elementRequestId !== "number") return;
+
+      const responseLine = line.elementRequestResponses?.[0];
+      const family = getRequestLineFamily(line);
+
+      if (family === "ese") {
+        nextSafetySelections[line.elementRequestId] =
+          responseLine?.selectedElementIds || [];
+        nextQuantities[line.elementRequestId] =
+          responseLine?.selectedElementIds?.length ??
+          responseLine?.quantityAccepted ??
+          0;
+        return;
+      }
+
+      if (family === "harness") {
+        nextQuantities[line.elementRequestId] =
+          responseLine?.quantityAccepted ?? 1;
+        return;
+      }
+
+      nextQuantities[line.elementRequestId] =
+        responseLine?.quantityAccepted ?? 0;
+    });
+
+    setAcceptedQuantities(nextQuantities);
+    setSelectedSafetyElementIds(nextSafetySelections);
   }, [request]);
 
   // Cargar PDF
@@ -169,8 +281,21 @@ export default function RequestView({ requestId }: RequestViewProps) {
     }
 
     try {
+      const selectedItem = (elementsByType || []).find((item) =>
+        newElementFamily === "harness"
+          ? isFallProtectionGroupPickerItem(item) && item.fallProtectionGroupId === newElementId
+          : isElementPickerItem(item) && item.elementId === newElementId,
+      );
+      const selectedGroup =
+        newElementFamily === "harness" && selectedItem && isFallProtectionGroupPickerItem(selectedItem)
+          ? selectedItem
+          : null;
+      const selectedElement =
+        selectedItem && isElementPickerItem(selectedItem) ? selectedItem : null;
+
       const response = await createElementRequest(`${elementRequestApi}`, "POST", {
-        elementId: newElementId,
+        elementId: selectedGroup?.harnessElementId ?? selectedElement?.elementId ?? newElementId,
+        fallProtectionGroupId: selectedGroup?.fallProtectionGroupId ?? null,
         quantityRequested: newQuantity,
         unit: newUnit.trim(),
         requestId: request.requestId,
@@ -180,10 +305,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
         throw new Error(response?.message || "No se pudo agregar el elemento.");
       }
 
-      const elementRef = (elementsByType || []).find((el) => el.elementId === newElementId);
+      const elementRef = selectedGroup?.harnessElement ?? selectedElement ?? undefined;
       const created: ElementRequestType = {
         ...response.data,
         element: response.data.element ?? elementRef,
+        fallProtectionGroup: response.data.fallProtectionGroup ?? selectedGroup ?? null,
       };
 
       setElementRequests((prev) => [...prev, created]);
@@ -197,6 +323,30 @@ export default function RequestView({ requestId }: RequestViewProps) {
   };
 
   // Revisado
+  const getAcceptedQuantityForLine = (
+    elementRequest: ElementRequestType,
+    family: ReturnType<typeof getRequestLineFamily>,
+    selectedElementIds: number[],
+  ) => {
+    if (family === "ese") {
+      return selectedElementIds.length;
+    }
+
+    if (family === "harness") {
+      return elementRequest.elementRequestId !== undefined
+        ? acceptedQuantities[elementRequest.elementRequestId] ??
+            elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
+            1
+        : 1;
+    }
+
+    return elementRequest.elementRequestId !== undefined
+      ? acceptedQuantities[elementRequest.elementRequestId] ??
+          elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
+          0
+      : 0;
+  };
+
   const handleReviewed = async () => {
     if (!user) return;
     await toast.promise(
@@ -210,15 +360,22 @@ export default function RequestView({ requestId }: RequestViewProps) {
         if (!request) throw new Error("No se encontró la solicitud.");
 
         for (const elementRequest of request.elementRequests || []) {
-          const acceptedQuantity =
+          const family = getRequestLineFamily(elementRequest);
+          const selectedElementIds =
             elementRequest.elementRequestId !== undefined
-              ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
-              : elementRequest.quantityRequested;
+              ? selectedSafetyElementIds[elementRequest.elementRequestId] || []
+              : [];
+          const acceptedQuantity = getAcceptedQuantityForLine(
+            elementRequest,
+            family,
+            selectedElementIds,
+          );
 
           if (elementRequest.elementRequestId !== undefined) {
             await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
               elementRequestId: elementRequest.elementRequestId,
               quantityAccepted: acceptedQuantity,
+              selectedElementIds: family === "ese" ? selectedElementIds : [],
               requestResponseId: response.data.requestResponseId,
             });
           }
@@ -258,10 +415,16 @@ export default function RequestView({ requestId }: RequestViewProps) {
         if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
 
         for (const elementRequest of request.elementRequests || []) {
-          const acceptedQuantity =
+          const family = getRequestLineFamily(elementRequest);
+          const selectedElementIds =
             elementRequest.elementRequestId !== undefined
-              ? acceptedQuantities[elementRequest.elementRequestId] ?? elementRequest.quantityRequested
-              : elementRequest.quantityRequested;
+              ? selectedSafetyElementIds[elementRequest.elementRequestId] || []
+              : [];
+          const acceptedQuantity = getAcceptedQuantityForLine(
+            elementRequest,
+            family,
+            selectedElementIds,
+          );
 
           if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
             await updateElementRequestResponse(
@@ -270,6 +433,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               {
                 elementRequestId: elementRequest.elementRequestId,
                 quantityAccepted: acceptedQuantity,
+                selectedElementIds: family === "ese" ? selectedElementIds : [],
                 requestResponseId: requestResponse.requestResponseId,
               }
             );
@@ -351,7 +515,6 @@ export default function RequestView({ requestId }: RequestViewProps) {
           <div className="flex flex-col items-start justify-start w-full">
             <div className="w-full overflow-x-auto pb-1">
               <div className="min-w-[720px]">
-                <HeaderTableSummary />
                 {isAddRowOpen && (
                   <div className="w-full border border-gray-200 rounded-md p-3 bg-gray-50 mt-2">
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -378,10 +541,20 @@ export default function RequestView({ requestId }: RequestViewProps) {
                           value={newElementId}
                           onChange={(value) => setNewElementId(Number(value))}
                           options={(elementsByType || [])
-                            .filter((el) => !elementRequests.some((er) => er.elementId === el.elementId))
-                            .map((el) => ({
-                              value: el.elementId,
-                              label: el.code ? `${el.name} - ${el.code}` : el.name,
+                            .filter((item) =>
+                              newElementFamily === "harness"
+                                ? isFallProtectionGroupPickerItem(item) &&
+                                  !elementRequests.some((er) => er.fallProtectionGroupId === item.fallProtectionGroupId)
+                                : isElementPickerItem(item) &&
+                                  !elementRequests.some((er) => er.elementId === item.elementId)
+                            )
+                            .map((item) => ({
+                              value: isFallProtectionGroupPickerItem(item) ? item.fallProtectionGroupId : item.elementId,
+                              label: isFallProtectionGroupPickerItem(item)
+                                ? item.code
+                                : item.code
+                                  ? `${item.name} - ${item.code}`
+                                  : item.name,
                             }))}
                           placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
                           disabled={loadingElements || !!errorElements}
@@ -399,7 +572,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
                         className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
                         placeholder="Cantidad"
                         min={0}
-                        step={newElementFamily === "consumibles" ? "0.01" : "1"}
+                        step="1"
                         value={newQuantity}
                         onChange={(e) => setNewQuantity(Number(e.target.value))}
                       />
@@ -440,6 +613,14 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   request={request}
                   elementRequests={elementRequests}
                   onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                  onSafetySelectionChange={(id, selectedIds) =>
+                    setSelectedSafetyElementIds((prev) => ({
+                      ...prev,
+                      [id]: selectedIds,
+                    }))
+                  }
+                  safetyElements={safetyElements || []}
+                  officeEntries={normalizeOfficeEntries(officeInventoryPayload)}
                 />
               </div>
             </div>

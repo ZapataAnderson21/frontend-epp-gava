@@ -9,6 +9,7 @@ import { TiArrowBack } from "react-icons/ti";
 import type {
   ElementRequestType,
   ElementRequestWorkerPlan,
+  ElementType,
   Project,
   RequestType,
   RequestWorker,
@@ -25,21 +26,26 @@ import {
 } from "../../data/apiUrl";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
-import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
 import RequestFamilyTabs from "./components/RequestFamilyTabs";
 import EpiPlanningModal from "./components/EpiPlanningModal";
+import RequestItemPicker from "./components/RequestItemPicker";
 import {
   formatInventoryQuantity,
   getInventoryFamilyConfig,
   getInventoryFamilyFromSource,
   type InventoryFamilyTabKey,
 } from "../Elements/inventoryCatalog";
-import { getRequestFamilyDescription, getRequestFamilyTab } from "./requestFamilies";
+import { getRequestFamilyDescription } from "./requestFamilies";
 import {
   buildRequestWorkersFromPlans,
   prunePlansByElementRequests,
   type ElementPlanState,
 } from "./requestPlanning";
+import {
+  attachRequestLineKeys,
+  createElementRequestLine,
+  getRequestLineKey,
+} from "./requestLineUtils";
 import { toDatetimeLocalValue } from "../../utils";
 
 function buildPlanState(elementRequests: ElementRequestType[]) {
@@ -86,7 +92,7 @@ export default function RequestDraft() {
       request.deliveryDueDate ? toDatetimeLocalValue(request.deliveryDueDate) : "",
     );
 
-    const nextElementRequests = request.elementRequests || [];
+    const nextElementRequests = attachRequestLineKeys(request.elementRequests || []);
     const nextRequestWorkers = request.requestWorkers || [];
     setElementRequests(nextElementRequests);
     setRequestWorkers(nextRequestWorkers);
@@ -111,48 +117,99 @@ export default function RequestDraft() {
     _nextElements: any[],
     nextElementRequests: ElementRequestType[],
   ) => {
-    setElementRequests(nextElementRequests);
+    const normalizedLines = attachRequestLineKeys(nextElementRequests);
+    setElementRequests(normalizedLines);
 
-    const nextPlans = prunePlansByElementRequests(elementPlans, nextElementRequests);
+    const nextPlans = prunePlansByElementRequests(elementPlans, normalizedLines);
     const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
   };
 
-  const handleRemoveElement = async (element: any) => {
-    try {
-      const current = elementRequests.find((item) => item.elementId === element.elementId);
-      if (!current?.elementRequestId) return;
-
-      const response = await deleteElementRequest(
-        `${elementRequestApi}${current.elementRequestId}`,
-        "DELETE",
+  const handleAddElementFromPanel = (element: ElementType) => {
+    if (activeFamily === "harness" && element.fallProtectionGroupId) {
+      const existingLine = elementRequests.find(
+        (elementRequest) =>
+          elementRequest.fallProtectionGroupId === element.fallProtectionGroupId,
       );
 
-      if (response.statusCode === 200) {
-        const nextElementRequests = elementRequests.filter(
-          (item) => item.elementId !== element.elementId,
+      if (existingLine) return;
+    }
+
+    if (activeFamily === "ese") {
+      const existingLine = elementRequests.find(
+        (elementRequest) => elementRequest.elementId === element.elementId,
+      );
+
+      if (existingLine) {
+        const nextElementRequests = elementRequests.map((elementRequest) =>
+          getRequestLineKey(elementRequest) === getRequestLineKey(existingLine)
+            ? {
+                ...elementRequest,
+                element,
+                quantityRequested: Number(elementRequest.quantityRequested || 0) + 1,
+              }
+            : elementRequest,
         );
-        const nextPlans = { ...elementPlans };
-        delete nextPlans[String(element.elementId)];
-        const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
-        setElementRequests(nextElementRequests);
-        setElementPlans(nextPlans);
-        setRequestWorkers(nextRequestWorkers);
+
+        handleSelectionElementsUpdate([], nextElementRequests);
+        return;
       }
+    }
+
+    const nextElementRequests = attachRequestLineKeys([
+      ...elementRequests,
+      createElementRequestLine(element, requestId),
+    ]);
+
+    handleSelectionElementsUpdate([], nextElementRequests);
+  };
+
+  const handleRemoveElement = async (lineKey: string) => {
+    try {
+      const current = elementRequests.find(
+        (item) => getRequestLineKey(item) === lineKey,
+      );
+      if (!current) return;
+
+      if (current.elementRequestId) {
+        const response = await deleteElementRequest(
+          `${elementRequestApi}${current.elementRequestId}`,
+          "DELETE",
+        );
+
+        if (response.statusCode !== 200) {
+          return;
+        }
+      }
+
+      const nextElementRequests = elementRequests.filter(
+        (item) => getRequestLineKey(item) !== lineKey,
+      );
+      const nextPlans = { ...elementPlans };
+      if (
+        current &&
+        !nextElementRequests.some((item) => item.elementId === current.elementId)
+      ) {
+        delete nextPlans[String(current.elementId)];
+      }
+      const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+      setElementRequests(nextElementRequests);
+      setElementPlans(nextPlans);
+      setRequestWorkers(nextRequestWorkers);
     } catch (err: any) {
       toast.error(err?.message || "No se pudo eliminar el item.");
     }
   };
 
   const handleChangeElementRequest = (
-    elementId: number,
+    lineKey: string,
     field: keyof ElementRequestType,
-    value: string | number,
+    value: string | number | null,
   ) => {
     setElementRequests((current) =>
       current.map((elementRequest) =>
-        elementRequest.elementId === elementId
+        getRequestLineKey(elementRequest) === lineKey
           ? {
               ...elementRequest,
               [field]:
@@ -182,58 +239,72 @@ export default function RequestDraft() {
   const handleUpdateRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    await toast.promise(
-      handleUpdate(
-        requestId,
-        projectId,
-        elementRequests,
-        deliveryDueDate,
-        description,
-        requestWorkers,
-        request?.requestWorkers || [],
-        elementPlans,
-      ),
-      {
-        loading: "Actualizando solicitud...",
-        success: () => {
-          setTimeout(() => navigateToBack(), 1200);
-          return "Solicitud actualizada exitosamente.";
+    try {
+      await toast.promise(
+        handleUpdate(
+          requestId,
+          projectId,
+          elementRequests,
+          deliveryDueDate,
+          description,
+          requestWorkers,
+          request?.requestWorkers || [],
+          elementPlans,
+        ),
+        {
+          loading: "Actualizando solicitud...",
+          success: () => {
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud actualizada exitosamente.";
+          },
+          error: (err) => err.message || "No se pudo actualizar la solicitud.",
         },
-        error: (err) => err.message || "No se pudo actualizar la solicitud.",
-      },
-    );
+      );
+    } catch {
+      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+    }
   };
 
   const handleUpdateAndSendRequest = async () => {
     setOpenPasswordModal(false);
 
-    await toast.promise(
-      handleUpdateAndSend(
-        requestId,
-        projectId,
-        elementRequests,
-        passwordCPanel,
-        deliveryDueDate,
-        description,
-        requestWorkers,
-        request?.requestWorkers || [],
-        elementPlans,
-      ),
-      {
-        loading: "Actualizando y enviando solicitud...",
-        success: () => {
-          setTimeout(() => navigateToBack(), 1200);
-          return "Solicitud actualizada y enviada exitosamente.";
+    try {
+      await toast.promise(
+        handleUpdateAndSend(
+          requestId,
+          projectId,
+          elementRequests,
+          passwordCPanel,
+          deliveryDueDate,
+          description,
+          requestWorkers,
+          request?.requestWorkers || [],
+          elementPlans,
+        ),
+        {
+          loading: "Actualizando y enviando solicitud...",
+          success: () => {
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud actualizada y enviada exitosamente.";
+          },
+          error: (err) => err.message || "No se pudo actualizar y enviar la solicitud.",
         },
-        error: (err) => err.message || "No se pudo actualizar y enviar la solicitud.",
-      },
-    );
+      );
+    } catch {
+      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+    }
   };
 
   const visibleElementRequests = useMemo(
     () =>
       elementRequests.filter(
-        (elementRequest) => getInventoryFamilyFromSource(elementRequest.element) === activeFamily,
+        (elementRequest) => {
+          const family = getInventoryFamilyFromSource(elementRequest.element);
+          if (activeFamily === "epp") {
+            return ["epp", "epi", "uniform"].includes(family);
+          }
+          return family === activeFamily;
+        },
       ),
     [activeFamily, elementRequests],
   );
@@ -247,7 +318,6 @@ export default function RequestDraft() {
   };
 
   const selectedFamilyConfig = getInventoryFamilyConfig(activeFamily);
-  const activeFamilyCard = getRequestFamilyTab(activeFamily);
 
   if (loading) return <ErrorMessage errorMessage="Cargando requerimiento..." />;
   if (error || !request) {
@@ -311,7 +381,7 @@ export default function RequestDraft() {
 
             <RequestFamilyTabs activeFamily={activeFamily} onChange={setActiveFamily} />
 
-            <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-bold text-gray-900">
                   {getRequestFamilyDescription(activeFamily)}
@@ -319,48 +389,46 @@ export default function RequestDraft() {
                 <p className="text-sm text-gray-500">
                   {selectedFamilyConfig?.requiresCode
                     ? "Mantiene unidades unicas con codigo obligatorio."
+                    : activeFamily === "harness"
+                      ? "Selecciona el grupo EPA."
                     : selectedFamilyConfig?.consumable
                       ? "Permite cantidades decimales y retornos parciales."
                       : "Puedes ajustar cantidades y mantener la trazabilidad del borrador."}
                 </p>
               </div>
 
-              {activeFamilyCard ? (
-                <div className="max-w-sm">
-                  <RequestTypeCard
-                    icon={activeFamilyCard.icon}
-                    title={`Seleccionar ${activeFamilyCard.label}`}
-                    familyKey={activeFamily}
-                    onSelected={handleSelectionElementsUpdate}
-                  />
-                </div>
-              ) : null}
-
-              <div className="flex flex-col gap-2 overflow-x-auto">
-                {visibleElementRequests.length > 0 ? (
-                  <div className="w-full min-w-xl">
-                    <span className="pb-4 pt-2 font-semibold">Items seleccionados:</span>
-                    <HeaderNewRequest showDetailsColumn={activeFamily === "epi"} />
-                    {visibleElementRequests.map((elementRequest) => (
-                      <RowElementRequest
-                        key={`${activeFamily}-${elementRequest.elementId}`}
-                        elementRequest={elementRequest}
-                        handleRemoveElement={handleRemoveElement}
-                        handleChangeElementRequest={handleChangeElementRequest}
-                        showPlanningButton={activeFamily === "epi"}
-                        planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
-                        onOpenPlanning={setPlanningElement}
-                        allowDecimals={activeFamily === "consumibles"}
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+                <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
+                  {visibleElementRequests.length > 0 ? (
+                    <div className="w-full">
+                      <HeaderNewRequest
+                        showDetailsColumn={activeFamily === "epi"}
+                        showQuantityColumn={activeFamily !== "harness"}
                       />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mb-4 flex w-full flex-col gap-2">
-                    <div className="flex w-full border border-gray-100" />
-                    <ErrorMessage errorMessage={`No hay items seleccionados en ${selectedFamilyConfig?.label || "esta familia"}.`} />
-                    <div className="flex w-full border border-gray-100" />
-                  </div>
-                )}
+                      {visibleElementRequests.map((elementRequest) => (
+                        <RowElementRequest
+                          key={getRequestLineKey(elementRequest)}
+                          elementRequest={elementRequest}
+                          handleRemoveElement={handleRemoveElement}
+                          handleChangeElementRequest={handleChangeElementRequest}
+                          showPlanningButton={activeFamily === "epi"}
+                          planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
+                          onOpenPlanning={setPlanningElement}
+                          showQuantityField={activeFamily !== "harness"}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500">
+                      No hay items seleccionados en {selectedFamilyConfig?.label || "esta familia"}.
+                    </div>
+                  )}
+                </div>
+
+                <RequestItemPicker
+                  familyKey={activeFamily}
+                  onAddElement={handleAddElementFromPanel}
+                />
               </div>
             </div>
           </div>

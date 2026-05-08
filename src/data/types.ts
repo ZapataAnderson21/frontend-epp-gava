@@ -1,3 +1,19 @@
+export interface ElementVariantType {
+  elementVariantId: number;
+  label: string;
+  normalizedLabel: string;
+  code?: string | null;
+  description?: string | null;
+}
+
+export interface InventoryAssetSummary {
+  totalAssets: number;
+  availableAssets: number;
+  assignedAssets: number;
+  maintenanceAssets: number;
+  retiredAssets: number;
+}
+
 export interface ElementType {
   elementId: number;
   name: string;
@@ -7,13 +23,45 @@ export interface ElementType {
   family?: string | null;
   familyLabel?: string | null;
   categoryName?: string | null;
+  stockMinimum?: number;
   controlType?: string;
+  brand?: string | null;
+  model?: string | null;
+  size?: string | null;
+  serialNumber?: string | null;
+  technicalSheetLink?: string | null;
+  operationalStatus?: string | null;
+  manufactureDate?: string | null;
+  expirationDate?: string | null;
   typeLabel?: string;
   controlTypeLabel?: string;
   deletedAt?: string | null;
   isLegacy?: boolean;
   isArchived?: boolean;
   legacyWarning?: string | null;
+  supportsVariants?: boolean;
+  variants?: ElementVariantType[];
+  variantCount?: number;
+  assetSummary?: InventoryAssetSummary;
+  fallProtectionGroupId?: number | null;
+  fallProtectionGroup?: FallProtectionGroupType | null;
+}
+
+export interface FallProtectionGroupType {
+  fallProtectionGroupId: number;
+  code: string;
+  description?: string | null;
+  harnessElementId: number;
+  anchorBandElementId: number;
+  lifelineElementId: number;
+  positioningLanyardElementId: number;
+  harnessElement?: ElementType;
+  anchorBandElement?: ElementType;
+  lifelineElement?: ElementType;
+  positioningLanyardElement?: ElementType;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface CreateElementDto {
@@ -23,7 +71,17 @@ export interface CreateElementDto {
   code?: string | null;
   family?: string | null;
   categoryName?: string | null;
+  stockMinimum?: number;
   controlType?: string;
+  brand?: string | null;
+  model?: string | null;
+  size?: string | null;
+  serialNumber?: string | null;
+  technicalSheetLink?: string | null;
+  operationalStatus?: string | null;
+  manufactureDate?: string | null;
+  expirationDate?: string | null;
+  variantLabels?: string[];
 }
 
 export interface UpdateElementDto {
@@ -33,24 +91,45 @@ export interface UpdateElementDto {
   code?: string | null;
   family?: string | null;
   categoryName?: string | null;
+  stockMinimum?: number;
   controlType?: string;
+  brand?: string | null;
+  model?: string | null;
+  size?: string | null;
+  serialNumber?: string | null;
+  technicalSheetLink?: string | null;
+  operationalStatus?: string | null;
+  manufactureDate?: string | null;
+  expirationDate?: string | null;
+  variantLabels?: string[];
 }
 
 export interface ElementRequestType {
   elementRequestId?: number
   quantityRequested: number
-  unit: string
-  elementId: number
+    unit: string
+    elementId: number
+    elementVariantId?: number | null
+    fallProtectionGroupId?: number | null
+    lineItemOrder?: number
+  notes?: string | null
+  lineKey?: string
   requestId: number
-  element?: ElementType
-  elementRequestResponses?: ElementRequestResponseType[]
+    element?: ElementType
+    elementVariant?: ElementVariantType | null
+    fallProtectionGroup?: FallProtectionGroupType | null
+    elementRequestResponses?: ElementRequestResponseType[]
   epiPlans?: ElementRequestWorkerPlan[]
 }
 
 export interface CreateElementRequestDto {
   quantityRequested: number
   unit: string
-  elementId: number
+    elementId: number
+    elementVariantId?: number | null
+    fallProtectionGroupId?: number | null
+    lineItemOrder?: number
+  notes?: string | null
   requestId: number
 }
 
@@ -58,7 +137,11 @@ export interface UpdateElementRequestDto {
   elementRequestId?: number
   quantityRequested: number
   unit: string
-  elementId: number
+    elementId: number
+    elementVariantId?: number | null
+    fallProtectionGroupId?: number | null
+    lineItemOrder?: number
+  notes?: string | null
   requestId: number
 }
 
@@ -66,6 +149,7 @@ export interface ElementRequestResponseType {
   elementRequestResponseId: number
   elementRequestId: number
   quantityAccepted: number
+  selectedElementIds?: number[]
   requestResponseId: number
   elementRequest?: ElementRequestType
   requestResponse?: RequestResponseType
@@ -74,12 +158,14 @@ export interface ElementRequestResponseType {
 export interface CreateElementRequestResponseDto {
   elementRequestId: number
   quantityAccepted: number
+  selectedElementIds?: number[]
   requestResponseId: number
 }
 
 export interface UpdateElementRequestResponseDto {
   elementRequestId?: number
   quantityAccepted: number
+  selectedElementIds?: number[]
   requestResponseId: number
 }
 
@@ -173,6 +259,11 @@ export interface ProjectInventoryEntry {
   projectCode?: string | null;
   requestId: number;
   elementId: number;
+  elementVariantId?: number | null;
+  fallProtectionGroupId?: number | null;
+  fallProtectionGroup?: FallProtectionGroupType | null;
+  fallProtectionParts?: string[];
+  elementVariantLabel?: string | null;
   elementName: string;
   elementCode?: string | null;
   elementType: string;
@@ -191,9 +282,17 @@ export interface ProjectInventoryEntry {
   quantityReceived: number;
   quantityReturned: number;
   quantityPending: number;
+  quantityAssignedToWorkers?: number;
+  quantityAvailableForAssignment?: number;
+  quantityAvailableForReturn?: number;
+  quantityRequiredForProjectClosure?: number;
+  workerAssignments?: WorkerInventoryAssignment[];
+  projectInventoryEntryIds?: number[];
+  requestIds?: number[];
   blocksProjectInactivation: boolean;
   responsibleUserId: number;
   responsibleUserName?: string | null;
+  responsibleUserNames?: string[];
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -223,22 +322,83 @@ export interface InventoryMovement {
   quantity: number;
   notes?: string | null;
   createdAt: string;
-  projectId: number;
+  projectId?: number | null;
   projectName?: string | null;
   projectCode?: string | null;
+  workerId?: number | null;
+  workerName?: string | null;
   requestId?: number | null;
   elementId: number;
+  elementName?: string | null;
+  elementCode?: string | null;
+  elementVariantId?: number | null;
+  elementVariantLabel?: string | null;
   performedByUserName?: string | null;
   responsibleUserName?: string | null;
+}
+
+export interface OfficeInventoryEntry {
+  officeInventoryEntryId: number;
+  elementId: number;
+  elementVariantId?: number | null;
+  elementVariantLabel?: string | null;
+  elementName: string;
+  elementCode?: string | null;
+  elementType: string;
+  family?: string | null;
+  familyLabel?: string | null;
+  categoryName?: string | null;
+  unit: string;
+  currentStock: number;
+  status: string;
+  purchaseOrderId?: number | null;
+  purchaseOrderCode?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string | null;
+}
+
+export interface InventoryDashboardDeliveredItem {
+  elementId: number;
+  elementName: string;
+  family?: string | null;
+  familyLabel: string;
+  deliveredQuantity: number;
+}
+
+export interface InventoryDashboardMinimumStockItem {
+  elementId: number;
+  elementName: string;
+  family?: string | null;
+  familyLabel: string;
+  categoryName?: string | null;
+  officeStock: number;
+  projectStock: number;
+  totalStock: number;
+  stockMinimum: number;
+  distanceToMinimum: number;
+}
+
+export interface InventoryDashboardResponse {
+  period: {
+    month: number;
+    year: number;
+  };
+  mostDelivered: InventoryDashboardDeliveredItem[];
+  minimumStock: InventoryDashboardMinimumStockItem[];
+  latestMovements: InventoryMovement[];
 }
 
 export interface ElementInventoryDetail {
   element: ElementType;
   summary: {
+    totalOfficeStock?: number;
     totalReceived: number;
     totalReturned: number;
     totalPending: number;
   };
+  officeEntries: OfficeInventoryEntry[];
   currentLocations: ProjectInventoryEntry[];
   movementHistory: InventoryMovement[];
 }
@@ -305,8 +465,10 @@ export interface User {
   name: string,
   lastName: string,
   email: string,
+  phone?: string | null,
   password?: string,
   userType: string;
+  deletedAt?: string | null,
 }
 
 export interface CreateUserTypeDto {
@@ -487,6 +649,49 @@ export interface RequestWorker {
   worker?: Worker
   workerName?: string
   request?: RequestType
+}
+
+export interface WorkerInventoryAssignment {
+  workerInventoryAssignmentId: number;
+  workerId: number;
+  workerName?: string | null;
+  projectId: number;
+  projectName?: string | null;
+  projectCode?: string | null;
+  elementId: number;
+  elementName?: string | null;
+  elementCode?: string | null;
+  elementVariantId?: number | null;
+  elementVariantLabel?: string | null;
+  family?: string | null;
+  familyLabel?: string | null;
+  controlType?: string | null;
+  categoryName?: string | null;
+  inventoryAssetId?: number | null;
+  assetCode?: string | null;
+  serialNumber?: string | null;
+  sourceProjectInventoryEntryId?: number | null;
+  quantityAssigned: number;
+  quantityReturned: number;
+  quantityPending: number;
+  status: string;
+  assignedAt: string;
+  returnedAt?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkerInventoryHistoryResponse {
+  worker: {
+    workerId: number;
+    fullName: string;
+    dni: string;
+  };
+  summary: {
+    totalQuantity: number;
+    activeQuantity: number;
+    totalAssignments: number;
+  };
+  assignments: WorkerInventoryAssignment[];
 }
 
 export interface ElementRequestWorkerPlan {

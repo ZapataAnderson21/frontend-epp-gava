@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { elementApi } from "../../data/apiUrl";
-import { useApiAction } from "../../hooks";
+import { elementApi, inventoryApi } from "../../data/apiUrl";
+import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton, SaveButton } from "../../common/button";
 import {
   ButtonContainer,
@@ -18,6 +18,7 @@ import {
   getInventoryFamilyConfig,
   getInventoryFamilyLabel,
   resolveInventoryRouteFamily,
+  usesInventoryStockFields,
 } from "./inventoryCatalog";
 
 interface ElementResponse {
@@ -25,13 +26,19 @@ interface ElementResponse {
   type: string;
   description: string;
   code?: string | null;
+  family?: string | null;
   categoryName?: string | null;
+  stockMinimum?: number;
   controlType?: string;
+  elementId?: number;
 }
+
+const NEW_SAFETY_TYPE_VALUE = "__new_safety_type__";
 
 export default function NewEpp() {
   const searchParams = new URLSearchParams(window.location.search);
   const familyRoot = resolveInventoryRouteFamily(searchParams.get("family") || searchParams.get("type"));
+  const isFallProtectionGroupMode = searchParams.get("mode") === "group";
   const initialFamily: InventoryFamilyKey = familyRoot === "all" || familyRoot === "operative"
     ? "epp"
     : familyRoot;
@@ -39,13 +46,67 @@ export default function NewEpp() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [categoryName, setCategoryName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [size, setSize] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
+  const [technicalSheetLink, setTechnicalSheetLink] = useState("");
+  const [operationalStatus, setOperationalStatus] = useState("operativo");
+  const [manufactureDate, setManufactureDate] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
+  const [stockMinimum, setStockMinimum] = useState(0);
+  const [initialQuantity, setInitialQuantity] = useState(0);
+  const unit = "unidad";
   const [description, setDescription] = useState("");
   const [family, setFamily] = useState<InventoryFamilyKey>(initialFamily);
+  const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
+  const [groupCode, setGroupCode] = useState("");
+  const [groupHarnessElementId, setGroupHarnessElementId] = useState("");
+  const [groupAnchorBandElementId, setGroupAnchorBandElementId] = useState("");
+  const [groupLifelineElementId, setGroupLifelineElementId] = useState("");
+  const [groupPositioningLanyardElementId, setGroupPositioningLanyardElementId] = useState("");
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
+  const { execute: registerOfficeEntry } = useApiAction<unknown>();
+  const { user } = useCurrentUser();
+  const { data: existingElements } = useFetch<ElementResponse[]>(elementApi, []);
 
   const familyConfig = getInventoryFamilyConfig(family);
+  const usesStockFields = usesInventoryStockFields(family);
+  const isSafetyEquipment = family === "ese";
+  const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
+  const isFallProtection = family === "harness";
+  const existingSafetyTypes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (existingElements || [])
+            .filter((element) => element.family === "ese")
+            .map((element) => element.categoryName || element.name)
+            .filter((value): value is string => Boolean(value?.trim())),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [existingElements],
+  );
+  const fallProtectionElementsByCategory = useMemo(() => {
+    const normalize = (value?: string | null) =>
+      value
+        ?.normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase() ?? "";
+
+    const elements = (existingElements || []).filter((element) => element.family === "harness");
+    const categoryOf = (element: ElementResponse) => normalize(element.categoryName || element.name);
+
+    return {
+      harness: elements.filter((element) => categoryOf(element).includes("arnes")),
+      anchorBand: elements.filter((element) => categoryOf(element).includes("banda")),
+      lifeline: elements.filter((element) => categoryOf(element).includes("linea")),
+      positioningLanyard: elements.filter((element) => categoryOf(element).includes("eslinga")),
+    };
+  }, [existingElements]);
 
   const navigateToElements = () => {
     navigate(`/admin/inventory/${family}`);
@@ -55,22 +116,103 @@ export default function NewEpp() {
     e.preventDefault();
 
     if (familyConfig?.requiresCode && !code.trim()) {
-      toast.error("El codigo es obligatorio para ESE y EM.");
+      toast.error(`El codigo es obligatorio para ${getInventoryFamilyLabel(family)}.`);
+      return;
+    }
+
+    if (isFallProtectionGroupMode) {
+      if (
+        !groupCode.trim() ||
+        !groupHarnessElementId ||
+        !groupAnchorBandElementId ||
+        !groupLifelineElementId ||
+        !groupPositioningLanyardElementId
+      ) {
+        toast.error("El grupo EPA debe tener codigo y un elemento de cada categoria.");
+        return;
+      }
+
+      const groupData = {
+        code: groupCode.trim(),
+        harnessElementId: Number(groupHarnessElementId),
+        anchorBandElementId: Number(groupAnchorBandElementId),
+        lifelineElementId: Number(groupLifelineElementId),
+        positioningLanyardElementId: Number(groupPositioningLanyardElementId),
+        description,
+      };
+
+      toast.promise(execute(`${elementApi}fall-protection-groups`, "POST", groupData), {
+        loading: "Creando grupo EPA...",
+        success: (result) => {
+          setTimeout(() => navigate("/admin/inventory/harness"), 1200);
+          return result.message || "Grupo EPA creado con exito";
+        },
+        error: (err) => err.message || "Error al crear el grupo EPA",
+      });
       return;
     }
 
     const backendPayload = getInventoryBackendPayload(family);
+    const selectedSafetyType = safetyTypeSelection === NEW_SAFETY_TYPE_VALUE
+      ? name.trim()
+      : safetyTypeSelection;
+    const normalizedFallProtectionCategory = categoryName.trim();
+    const normalizedName = isSafetyEquipment
+      ? selectedSafetyType
+      : isFallProtection
+        ? normalizedFallProtectionCategory || code.trim()
+        : name.trim();
+
+    if (isSafetyEquipment && !normalizedName) {
+      toast.error("Selecciona un tipo de equipo o registra uno nuevo.");
+      return;
+    }
+
+    if (isFallProtection && (!code.trim() || !normalizedFallProtectionCategory)) {
+      toast.error("Indica el codigo del elemento y la categoria EPA.");
+      return;
+    }
+
     const elementData = {
-      name,
+      name: normalizedName,
       type: backendPayload.type,
       family: backendPayload.family,
       description,
-      code: code.trim() || null,
-      categoryName: categoryName.trim() || null,
+      code: isSafetyEquipment ? serialNumber.trim() || null : code.trim() || null,
+      categoryName: isSafetyEquipment
+        ? normalizedName
+        : categoryName.trim() || null,
+      stockMinimum: usesStockFields ? stockMinimum : 0,
       controlType: backendPayload.controlType,
+      brand: brand.trim() || null,
+      model: model.trim() || null,
+      size: size.trim() || null,
+      serialNumber: isSafetyEquipment
+        ? serialNumber.trim() || null
+        : isFallProtection
+          ? serialNumber.trim() || null
+          : null,
+      technicalSheetLink: technicalSheetLink.trim() || null,
+      operationalStatus: isSafetyEquipment || isFallProtection ? operationalStatus : null,
+      manufactureDate: manufactureDate || null,
+      expirationDate: expirationDate || null,
     };
 
-    toast.promise(execute(elementApi, "POST", elementData), {
+    const createWithInitialStock = async () => {
+      const result = await execute(elementApi, "POST", elementData);
+      if (usesStockFields && initialQuantity > 0 && result.data?.elementId && user?.userId) {
+        await registerOfficeEntry(`${inventoryApi}office/entry`, "POST", {
+          elementId: result.data.elementId,
+          unit,
+          quantity: initialQuantity,
+          performedByUserId: user.userId,
+          notes: "Stock inicial registrado desde catalogo.",
+        });
+      }
+      return result;
+    };
+
+    toast.promise(createWithInitialStock(), {
       loading: "Creando item de inventario...",
       success: (result) => {
         setTimeout(() => navigateToElements(), 1200);
@@ -83,33 +225,354 @@ export default function NewEpp() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
-      <Form name="REGISTRAR ITEM DE INVENTARIO" handleSubmit={handleSubmit}>
-        <InputForm
-          label="Nombre"
-          name="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          optional={false}
-        />
+      <Form
+        name={isFallProtectionGroupMode ? "REGISTRAR GRUPO EPA" : "REGISTRAR ITEM DE INVENTARIO"}
+        handleSubmit={handleSubmit}
+      >
+        {isFallProtectionGroupMode ? (
+          <>
+            <InputForm
+              label="Codigo del Equipo"
+              name="groupCode"
+              type="text"
+              value={groupCode}
+              onChange={(e) => setGroupCode(e.target.value)}
+              optional={false}
+            />
 
-        <InputForm
-          label="Codigo"
-          name="code"
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          optional={!familyConfig?.requiresCode}
-        />
+            <div className="grid gap-4 md:grid-cols-2">
+              <FallProtectionPartSelect
+                label="Arnes"
+                value={groupHarnessElementId}
+                onChange={setGroupHarnessElementId}
+                elements={fallProtectionElementsByCategory.harness}
+              />
+              <FallProtectionPartSelect
+                label="Banda de Anclaje"
+                value={groupAnchorBandElementId}
+                onChange={setGroupAnchorBandElementId}
+                elements={fallProtectionElementsByCategory.anchorBand}
+              />
+            </div>
 
-        <InputForm
-          label="Categoria"
-          name="categoryName"
-          type="text"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          optional={true}
-        />
+            <div className="grid gap-4 md:grid-cols-2">
+              <FallProtectionPartSelect
+                label="Linea de vida"
+                value={groupLifelineElementId}
+                onChange={setGroupLifelineElementId}
+                elements={fallProtectionElementsByCategory.lifeline}
+              />
+              <FallProtectionPartSelect
+                label="Eslinga de posicionamiento"
+                value={groupPositioningLanyardElementId}
+                onChange={setGroupPositioningLanyardElementId}
+                elements={fallProtectionElementsByCategory.positioningLanyard}
+              />
+            </div>
+          </>
+        ) : isProtectionElement ? (
+          <div className="flex flex-col gap-2">
+            <InputForm
+              label="Nombre"
+              name="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              optional={false}
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Marca"
+                name="brand"
+                type="text"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                optional={true}
+              />
+              <InputForm
+                label="Modelo"
+                name="model"
+                type="text"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                optional={true}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Cantidad Inicial"
+                name="initialQuantity"
+                type="number"
+                value={initialQuantity}
+                onChange={(e) => setInitialQuantity(Number(e.target.value))}
+                optional={true}
+              />
+              <InputForm
+                label="Stock Minimo"
+                name="stockMinimum"
+                type="number"
+                value={stockMinimum}
+                onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
+                optional={true}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-gray-700" htmlFor="unit">
+                  Unidad de medida
+                </label>
+                <div
+                  id="unit"
+                  className="min-h-[2.75rem] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-700"
+                >
+                  unidad
+                </div>
+              </div>
+              <InputForm
+                label="Talla"
+                name="size"
+                type="text"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                optional={true}
+              />
+            </div>
+
+            <SelectForm
+              label="Categoria"
+              name="family"
+              value={family}
+              onChange={(value) => setFamily(value as InventoryFamilyKey)}
+              options={[
+                { value: "epp", label: "EPP" },
+                { value: "epi", label: "EPI" },
+                { value: "uniform", label: "Uniforme" },
+              ]}
+            />
+
+            <div className="flex flex-col gap-2">
+              <span className="font-semibold text-gray-700">
+                Retorno obligatorio
+              </span>
+              <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={family !== "uniform"} readOnly />
+                  Si
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={family === "uniform"} readOnly />
+                  No
+                </label>
+              </div>
+            </div>
+          </div>
+        ) : isSafetyEquipment ? (
+          <div className="flex flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
+            <label htmlFor="safetyType" className="font-semibold text-nowrap">
+              Tipo de Equipo
+            </label>
+            <select
+              id="safetyType"
+              name="safetyType"
+              className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+              value={safetyTypeSelection}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSafetyTypeSelection(value);
+                setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
+              }}
+              required
+            >
+              <option value="">Seleccionar...</option>
+              {existingSafetyTypes.map((typeName) => (
+                <option key={typeName} value={typeName}>
+                  {typeName}
+                </option>
+              ))}
+              <option value={NEW_SAFETY_TYPE_VALUE}>Registrar nuevo tipo</option>
+            </select>
+
+            {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
+              <input
+                id="name"
+                name="name"
+                type="text"
+                className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ej: Extintor"
+                required
+              />
+            ) : null}
+          </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Marca"
+                name="brand"
+                type="text"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                optional={true}
+              />
+              <InputForm
+                label="Modelo"
+                name="model"
+                type="text"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                optional={true}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Serie"
+                name="serialNumber"
+                type="text"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                optional={true}
+              />
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-gray-700">
+                  Estado de Operat.
+                </span>
+                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="operationalStatus"
+                      checked={operationalStatus === "operativo"}
+                      onChange={() => setOperationalStatus("operativo")}
+                    />
+                    Operativo
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="operationalStatus"
+                      checked={operationalStatus === "inoperativo"}
+                      onChange={() => setOperationalStatus("inoperativo")}
+                    />
+                    Inoperativo
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <InputForm
+              label="Link de ficha tecnica"
+              name="technicalSheetLink"
+              type="text"
+              value={technicalSheetLink}
+              onChange={(e) => setTechnicalSheetLink(e.target.value)}
+              optional={true}
+            />
+          </div>
+        ) : isFallProtection ? (
+          <>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Codigo del Elemento"
+                name="code"
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                optional={false}
+              />
+              <SelectForm
+                label="Categoria"
+                name="categoryName"
+                value={categoryName}
+                onChange={(value) => setCategoryName(value)}
+                options={[
+                  { value: "Arnes", label: "Arnes" },
+                  { value: "Banda de Anclaje", label: "Banda de Anclaje" },
+                  { value: "Linea de Vida", label: "Linea de Vida" },
+                  { value: "Eslinga de posicionamiento", label: "Eslinga de posicionamiento" },
+                ]}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Serie"
+                name="serialNumber"
+                type="text"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+                optional={true}
+              />
+              <InputForm
+                label="Marca"
+                name="brand"
+                type="text"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                optional={true}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-gray-700">
+                  Estado de Operatividad
+                </span>
+                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="operationalStatus"
+                      checked={operationalStatus === "operativo"}
+                      onChange={() => setOperationalStatus("operativo")}
+                    />
+                    Operativo
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="operationalStatus"
+                      checked={operationalStatus === "inoperativo"}
+                      onChange={() => setOperationalStatus("inoperativo")}
+                    />
+                    Inoperativo
+                  </label>
+                </div>
+              </div>
+              <InputForm
+                label="Link de ficha tecnica"
+                name="technicalSheetLink"
+                type="text"
+                value={technicalSheetLink}
+                onChange={(e) => setTechnicalSheetLink(e.target.value)}
+                optional={true}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Fecha de fabricacion"
+                name="manufactureDate"
+                type="date"
+                value={manufactureDate}
+                onChange={(e) => setManufactureDate(e.target.value)}
+                optional={true}
+              />
+              <InputForm
+                label="Fecha de vencimiento"
+                name="expirationDate"
+                type="date"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+                optional={true}
+              />
+            </div>
+          </>
+        ) : null}
 
         <TextAreaForm
           label="Descripcion"
@@ -119,19 +582,17 @@ export default function NewEpp() {
           optional={false}
         />
 
-        <SelectForm
-          label="Familia"
-          name="family"
-          value={family}
-          onChange={(value) => setFamily(value as InventoryFamilyKey)}
-          options={[
-            { value: "epp", label: "EPP - Elementos de proteccion personal" },
-            { value: "epi", label: "EPI - Elementos de proteccion individual" },
-            { value: "ese", label: "ESE - Equipos de seguridad y/o emergencia" },
-            { value: "em", label: "EM - Equipos de medicion" },
-            { value: "consumibles", label: "Consumibles SSOMA" },
-          ]}
-        />
+        {!isProtectionElement && !isSafetyEquipment && !isFallProtection ? (
+          <SelectForm
+            label="Familia"
+            name="family"
+            value={family}
+            onChange={(value) => setFamily(value as InventoryFamilyKey)}
+            options={[
+              { value: "quality", label: "Calidad - Activo unico" },
+            ]}
+          />
+        ) : null}
 
         <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
           <p className="font-semibold">
@@ -140,6 +601,15 @@ export default function NewEpp() {
           <p>
             Codigo {getInventoryCodeRequirementLabel(family).toLowerCase()}.
           </p>
+          {isSafetyEquipment ? (
+            <p className="mt-1">
+              El tipo de equipo se reutiliza en requerimientos. Puedes seleccionar uno existente o registrar un tipo nuevo.
+            </p>
+          ) : familyConfig?.unique ? (
+            <p className="mt-1">
+              Esta familia se usa como catalogo base para activos unicos; las unidades fisicas se registraran despues.
+            </p>
+          ) : null}
         </div>
 
         <ButtonContainer>
@@ -149,4 +619,42 @@ export default function NewEpp() {
       </Form>
     </>
   );
+}
+
+function FallProtectionPartSelect({
+  label,
+  value,
+  onChange,
+  elements,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  elements: ElementResponse[];
+}) {
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <label className="font-semibold text-nowrap">{label}</label>
+      <select
+        className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required
+      >
+        <option value="">Seleccionar...</option>
+        {elements.map((element) => (
+          <option key={element.elementId} value={element.elementId}>
+            {element.code ? `${element.name} - ${element.code}` : element.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function parseOptionalNumber(value: string) {
+  if (!value.trim()) return 0;
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
 }

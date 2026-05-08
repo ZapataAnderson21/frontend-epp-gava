@@ -15,15 +15,46 @@ import {
 
 type ElementPlanState = Record<string, ElementRequestWorkerPlan[]>;
 
+export interface SendRequestOptions {
+  operationId?: string;
+  progressUserId?: number;
+}
+
+interface SaveRequestOptions {
+  clearDraft?: boolean;
+}
+
+function getStoredUserId() {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return Number(user.userId || user.user_id || user.id || 0) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function getTypeFromElements(elements: ElementType[]) {
-  const types = elements.map((el: ElementType) => el.type);
-  const hasSecurity = types.includes("EPP") || types.includes("epp");
-  const hasOperative = types.includes("Operativo") || types.includes("operative");
+  const families = elements.map((element) => element.family?.toLowerCase() || "");
+  const types = elements.map((element) => element.type?.toLowerCase() || "");
+  const hasSecurity =
+    families.some((family) => ["epp", "epi", "uniform"].includes(family)) ||
+    types.some((type) => ["epp", "epps"].includes(type));
+  const hasOperative =
+    families.some((family) => ["ese", "harness", "measurement"].includes(family)) ||
+    types.some((type) => ["operative", "operativo"].includes(type));
 
   if (hasSecurity && hasOperative) return "eppAndOperative";
   if (hasSecurity) return "epp";
   if (hasOperative) return "operative";
   return "";
+}
+
+function getTypeFromRequestLines(elementRequests: ElementRequestType[]) {
+  return getTypeFromElements(
+    elementRequests
+      .map((elementRequest) => elementRequest.element)
+      .filter((element): element is ElementType => Boolean(element)),
+  );
 }
 
 function parseStoredPlans(): ElementPlanState {
@@ -207,11 +238,15 @@ export function useHandleForm() {
     selectedElementRequests: ElementRequestType[],
   ) => {
     const responses = await Promise.all(
-      selectedElementRequests.map((elementRequest) => {
+      selectedElementRequests.map((elementRequest, index) => {
         const payload = {
           quantityRequested: Number(elementRequest.quantityRequested || 0),
-          unit: elementRequest.unit,
+          unit: "unidad",
           elementId: elementRequest.elementId,
+          elementVariantId: null,
+          fallProtectionGroupId: elementRequest.fallProtectionGroupId ?? null,
+          lineItemOrder: index + 1,
+          notes: elementRequest.notes?.trim() || null,
           requestId,
         };
 
@@ -225,8 +260,12 @@ export function useHandleForm() {
 
         const createPayload: CreateElementRequestDto = {
           quantityRequested: Number(elementRequest.quantityRequested || 0),
-          unit: elementRequest.unit ?? "",
+          unit: "unidad",
           elementId: elementRequest.elementId,
+          elementVariantId: null,
+          fallProtectionGroupId: elementRequest.fallProtectionGroupId ?? null,
+          lineItemOrder: index + 1,
+          notes: elementRequest.notes?.trim() || null,
           requestId,
         };
 
@@ -236,7 +275,17 @@ export function useHandleForm() {
 
     return responses.map((response, index) => ({
       ...(response.data as ElementRequestType),
+      lineKey: selectedElementRequests[index].lineKey,
       element: response.data?.element ?? selectedElementRequests[index].element,
+      elementVariant: null,
+      fallProtectionGroup:
+        response.data?.fallProtectionGroup ??
+        selectedElementRequests[index].fallProtectionGroup ??
+        null,
+      fallProtectionGroupId:
+        response.data?.fallProtectionGroupId ??
+        selectedElementRequests[index].fallProtectionGroupId ??
+        null,
       epiPlans:
         response.data?.epiPlans ??
         selectedElementRequests[index].epiPlans ??
@@ -248,6 +297,7 @@ export function useHandleForm() {
     projectId: number,
     deliveryDueDate: string,
     description?: string,
+    options: SaveRequestOptions = {},
   ) => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const selectedElements: ElementType[] = JSON.parse(
@@ -261,7 +311,16 @@ export function useHandleForm() {
     );
     const selectedElementRequestPlans = parseStoredPlans();
 
-    const type = getTypeFromElements(selectedElements);
+    const type =
+      getTypeFromRequestLines(selectedElementRequest) ||
+      getTypeFromElements(selectedElements);
+
+    if (!type) {
+      throw new Error(
+        "Selecciona al menos un elemento de proteccion, equipo de seguridad o grupo EPA antes de guardar.",
+      );
+    }
+
     const requestData = {
       userId: Number(user.userId),
       projectId,
@@ -295,7 +354,9 @@ export function useHandleForm() {
       selectedElementRequestPlans,
     );
 
-    clearRequestDraftStorage();
+    if (options.clearDraft !== false) {
+      clearRequestDraftStorage();
+    }
 
     return {
       loading: false,
@@ -308,7 +369,11 @@ export function useHandleForm() {
     };
   };
 
-  const handleSend = async (requestId: number, passwordCPanel: string) => {
+  const handleSend = async (
+    requestId: number,
+    passwordCPanel: string,
+    options: SendRequestOptions = {},
+  ) => {
     if (!passwordCPanel) {
       throw new Error("La contraseña del panel de control es requerida.");
     }
@@ -316,6 +381,8 @@ export function useHandleForm() {
     const response = await sendRequestToLogistics(`${requestApi}sendLogistics`, "POST", {
       requestId,
       passwordCPanel,
+      operationId: options.operationId,
+      progressUserId: options.progressUserId ?? getStoredUserId(),
     });
 
     if (response.statusCode !== 200) {
@@ -330,17 +397,41 @@ export function useHandleForm() {
     deliveryDueDate: string,
     description?: string,
     passwordCPanel?: string,
+    options: SendRequestOptions = {},
   ) => {
     if (!passwordCPanel) {
       throw new Error("La contraseña del panel de control es requerida.");
     }
 
-    const result = await handleSave(projectId, deliveryDueDate, description);
+    let result: Awaited<ReturnType<typeof handleSave>> | null = null;
+
+    try {
+      result = await handleSave(projectId, deliveryDueDate, description, {
+        clearDraft: false,
+      });
+    } catch (error) {
+      throw error;
+    }
+
     if (!result?.data) {
       throw new Error("Error al guardar la solicitud.");
     }
 
-    return await handleSend(result.data.request.requestId, passwordCPanel);
+    try {
+      const sent = await handleSend(
+        result.data.request.requestId,
+        passwordCPanel,
+        options,
+      );
+      clearRequestDraftStorage();
+      return sent;
+    } catch (error) {
+      clearRequestDraftStorage();
+      const message = error instanceof Error ? error.message : "Error desconocido";
+      throw new Error(
+        `La solicitud N° ${result.data.request.requestId} fue guardada, pero no se pudo enviar por correo. ${message}`,
+      );
+    }
   };
 
   const handleUpdate = async (
@@ -409,6 +500,7 @@ export function useHandleForm() {
     selectedRequestWorkers: RequestWorker[] = [],
     existingRequestWorkers: RequestWorker[] = [],
     selectedElementRequestPlans: ElementPlanState = parseStoredPlans(),
+    options: SendRequestOptions = {},
   ) => {
     const updateResult = await handleUpdate(
       requestId,
@@ -426,7 +518,7 @@ export function useHandleForm() {
     }
 
     clearRequestDraftStorage();
-    return await handleSend(requestId, passwordCPanel);
+    return await handleSend(requestId, passwordCPanel, options);
   };
 
   return {

@@ -1,18 +1,25 @@
 import { IoIosCloseCircle } from "react-icons/io";
-import type { ElementRequestType, ElementType } from "../../../data/types";
+import type { ElementRequestType } from "../../../data/types";
+import {
+  getRequestLineFamily,
+  getRequestLineKey,
+  shouldShowRequestLineNotes,
+  usesUniqueRequestQuantity,
+} from "../requestLineUtils";
 
 interface RowElementRequestProps {
   elementRequest: ElementRequestType;
-  handleRemoveElement: (element: ElementType) => void;
+  handleRemoveElement: (lineKey: string) => void;
   handleChangeElementRequest: (
-    elementId: number,
+    lineKey: string,
     field: keyof ElementRequestType,
-    value: string | number,
+    value: string | number | null,
   ) => void;
   showPlanningButton?: boolean;
   planningSummary?: string;
   onOpenPlanning?: (elementRequest: ElementRequestType) => void;
   allowDecimals?: boolean;
+  showQuantityField?: boolean;
 }
 
 export default function RowElementRequest({
@@ -23,62 +30,110 @@ export default function RowElementRequest({
   planningSummary,
   onOpenPlanning,
   allowDecimals = false,
+  showQuantityField = true,
 }: RowElementRequestProps) {
-  const elementLabel = elementRequest.element?.code
-    ? `${elementRequest.element.name} - ${elementRequest.element.code}`
-    : elementRequest.element?.name;
+  const lineKey = getRequestLineKey(elementRequest);
+  const family = getRequestLineFamily(elementRequest);
+  const isUnique = usesUniqueRequestQuantity(elementRequest);
+  const showNotesField = shouldShowRequestLineNotes(elementRequest);
+  const groupParts = getFallProtectionGroupParts(elementRequest);
+  const elementLabel = elementRequest.fallProtectionGroup?.code
+    || (elementRequest.element?.code
+      ? `${elementRequest.element.name} - ${elementRequest.element.code}`
+      : elementRequest.element?.name);
+  const helperText =
+    family === "harness" ? groupParts : planningSummary;
+  const gridClass = getRowGridClass(showQuantityField);
 
   return (
-    <div className="flex flex-row items-center justify-between w-full gap-4 border-b border-gray-200 p-2 hover:rounded-lg hover:bg-[#eff2ff]">
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate">{elementLabel}</span>
-        {planningSummary ? (
-          <span className="text-xs text-gray-500">{planningSummary}</span>
+    <div className="w-full max-w-4xl border-b border-gray-200 p-3 hover:rounded-lg hover:bg-[#eff2ff]">
+      <div className={`grid w-full grid-cols-1 items-start gap-3 lg:items-center lg:gap-4 ${gridClass}`}>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate font-medium">{elementLabel}</span>
+          {helperText ? (
+            <span className="text-xs text-gray-500">{helperText}</span>
+          ) : null}
+        </div>
+
+        {showQuantityField ? (
+          <input
+            type="number"
+            min="0"
+            step={allowDecimals ? "0.01" : "1"}
+            disabled={isUnique}
+            className={`w-28 rounded-md border border-gray-300 px-2 py-1 ${
+              isUnique ? "cursor-not-allowed bg-gray-100 text-gray-500" : ""
+            }`}
+            placeholder="Cantidad"
+            value={isUnique ? 1 : elementRequest.quantityRequested ?? 0}
+            onChange={(e) =>
+              handleChangeElementRequest(
+                lineKey,
+                "quantityRequested",
+                Number(e.target.value || 0),
+              )
+            }
+          />
         ) : null}
+
+        {showNotesField ? (
+          <input
+            type="text"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm lg:px-2 lg:py-1"
+            placeholder="Descripcion..."
+            value={elementRequest.notes ?? ""}
+            onChange={(e) =>
+              handleChangeElementRequest(lineKey, "notes", e.target.value)
+            }
+          />
+        ) : (
+          <span className="hidden lg:block" />
+        )}
+
+        <div className="flex w-[116px] items-center justify-end gap-2">
+          {showPlanningButton ? (
+            <button
+              type="button"
+              className="rounded-md border border-[#0047a3] px-3 py-1 text-xs font-semibold text-[#0047a3] hover:bg-[#eff6ff]"
+              onClick={() => onOpenPlanning?.(elementRequest)}
+            >
+              Detalles
+            </button>
+          ) : null}
+        </div>
+
+        <IoIosCloseCircle
+          className="size-6 cursor-pointer text-red-500 hover:scale-110"
+          onClick={() => handleRemoveElement(lineKey)}
+        />
       </div>
-
-      <input
-        type="text"
-        className="w-28 rounded-md border border-gray-300 px-2 py-1"
-        placeholder="Unidad"
-        value={elementRequest.unit ?? ""}
-        onChange={(e) =>
-          handleChangeElementRequest(elementRequest.elementId, "unit", e.target.value)
-        }
-      />
-
-      <input
-        type="number"
-        min="0"
-        step={allowDecimals ? "0.01" : "1"}
-        className="w-28 rounded-md border border-gray-300 px-2 py-1"
-        placeholder="Cantidad"
-        value={elementRequest.quantityRequested ?? 0}
-        onChange={(e) =>
-          handleChangeElementRequest(
-            elementRequest.elementId,
-            "quantityRequested",
-            Number(e.target.value || 0),
-          )
-        }
-      />
-
-      {showPlanningButton ? (
-        <button
-          type="button"
-          className="rounded-md border border-[#0047a3] px-3 py-1 text-xs font-semibold text-[#0047a3] hover:bg-[#eff6ff]"
-          onClick={() => onOpenPlanning?.(elementRequest)}
-        >
-          Detalles
-        </button>
-      ) : (
-        <span className="w-[72px]" />
-      )}
-
-      <IoIosCloseCircle
-        className="size-6 cursor-pointer text-red-500 hover:scale-110"
-        onClick={() => handleRemoveElement(elementRequest.element!)}
-      />
     </div>
   );
+}
+
+function getRowGridClass(showQuantityField: boolean) {
+  if (showQuantityField) {
+    return "lg:grid-cols-[minmax(10rem,1fr)_7rem_minmax(12rem,18rem)_5rem_1.5rem]";
+  }
+
+  return "lg:grid-cols-[minmax(10rem,1fr)_minmax(12rem,18rem)_5rem_1.5rem]";
+}
+
+function getFallProtectionGroupParts(elementRequest: ElementRequestType) {
+  const group = elementRequest.fallProtectionGroup;
+  if (!group) return null;
+
+  const parts = [
+    getGroupPartLabel("Arnes", group.harnessElement),
+    getGroupPartLabel("Banda de anclaje", group.anchorBandElement),
+    getGroupPartLabel("Linea de vida", group.lifelineElement),
+    getGroupPartLabel("Eslinga de posicionamiento", group.positioningLanyardElement),
+  ];
+
+  return parts.join(" | ");
+}
+
+function getGroupPartLabel(label: string, element?: ElementRequestType["element"]) {
+  if (!element) return `${label}: pendiente`;
+  return `${label}: ${element.code || element.name}`;
 }

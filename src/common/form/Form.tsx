@@ -54,7 +54,7 @@ export default function Form({
         animate="visible"
       >
         <motion.form
-          className="flex flex-col gap-4 w-full max-w-2xl"
+          className="flex flex-col gap-4 w-full max-w-xl"
           onSubmit={handleSubmit}
           variants={containerVariants}
           initial="hidden"

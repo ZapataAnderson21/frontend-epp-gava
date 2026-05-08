@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import Home from './sections/Home.tsx';
+import Dashboard from './modules/Dashboard/Dashboard.tsx';
 
 import { Login, ResetPassword } from './modules/Login';
 import { Users, User, NewUser} from './modules/Users';
@@ -39,7 +40,8 @@ export default function App() {
         <Route path='/' element={<Login />} />
         <Route path='/reset-password' element={<ResetPassword />} />
         <Route path='/admin' element={<RequireAuth><Home /></RequireAuth>}>
-          <Route path='' element={<Projects />} />
+          <Route path='' element={<Dashboard />} />
+          <Route path='dashboard' element={<Dashboard />} />
           {/* Projects routes */}
           <Route path='projects' element={<Projects />} />
           <Route path='projects/new' element={<NewProject />} />

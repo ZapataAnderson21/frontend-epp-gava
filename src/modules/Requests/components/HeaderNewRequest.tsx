@@ -1,21 +1,31 @@
 interface HeaderNewRequestProps {
   showDetailsColumn?: boolean;
+  showQuantityColumn?: boolean;
 }
 
 export default function HeaderNewRequest({
   showDetailsColumn = false,
+  showQuantityColumn = true,
 }: HeaderNewRequestProps) {
+  const gridClass = getHeaderGridClass(showQuantityColumn);
+
   return (
-    <div className="flex w-full flex-row items-center justify-between gap-4 px-2 py-4 font-bold">
-      <span className="flex min-w-0 flex-1 items-start justify-start">
-        ELEMENTO
-      </span>
-      <span className="flex w-28 items-start justify-start">UNIDAD</span>
-      <span className="flex w-28 items-start justify-start">CANTIDAD</span>
-      <span className="flex w-[72px] items-start justify-start">
-        {showDetailsColumn ? "DETALLE" : ""}
-      </span>
-      <span className="flex w-6 items-start justify-start" />
+    <div className={`hidden w-full max-w-4xl items-center gap-4 px-2 py-4 font-bold lg:grid ${gridClass}`}>
+      <span>ELEMENTO</span>
+      {showQuantityColumn ? (
+        <span>CANTIDAD</span>
+      ) : null}
+      <span>DESCRIPCION</span>
+      <span>{showDetailsColumn ? "DETALLE" : ""}</span>
+      <span />
     </div>
   );
+}
+
+function getHeaderGridClass(showQuantityColumn: boolean) {
+  if (showQuantityColumn) {
+    return "lg:grid-cols-[minmax(10rem,1fr)_7rem_minmax(12rem,18rem)_5rem_1.5rem]";
+  }
+
+  return "lg:grid-cols-[minmax(10rem,1fr)_minmax(12rem,18rem)_5rem_1.5rem]";
 }

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { FaHelmetSafety, FaPersonDigging } from "react-icons/fa6";
-import { FaFireExtinguisher, FaRulerCombined } from "react-icons/fa";
-import { MdInventory2 } from "react-icons/md";
+import { FaHelmetSafety } from "react-icons/fa6";
+import { FaFireExtinguisher, FaLink } from "react-icons/fa";
 import type { InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
 import { getInventoryFamilyConfig } from "../Elements/inventoryCatalog";
 
@@ -13,33 +12,21 @@ export const requestFamilyTabs: {
 }[] = [
   {
     key: "epp",
-    label: "EPP",
-    title: "Elementos de proteccion personal",
+    label: "Elem. de Proteccion",
+    title: "Elementos de proteccion personal, individual y uniforme",
     icon: <FaHelmetSafety className="size-12" />,
   },
   {
-    key: "epi",
-    label: "EPI",
-    title: "Elementos de proteccion individual",
-    icon: <FaPersonDigging className="size-12" />,
-  },
-  {
     key: "ese",
-    label: "ESE",
+    label: "Eq. Seg. y Emerg.",
     title: "Equipos de seguridad y/o emergencia",
     icon: <FaFireExtinguisher className="size-12" />,
   },
   {
-    key: "em",
-    label: "EM",
-    title: "Equipos de medicion",
-    icon: <FaRulerCombined className="size-12" />,
-  },
-  {
-    key: "consumibles",
-    label: "Consumibles SSOMA",
-    title: "Consumibles SSOMA",
-    icon: <MdInventory2 className="size-12" />,
+    key: "harness",
+    label: "Eq. Protecc. Anticaida",
+    title: "Equipos de proteccion anticaida agrupados",
+    icon: <FaLink className="size-12" />,
   },
 ];
 

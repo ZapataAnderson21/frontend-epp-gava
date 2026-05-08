@@ -5,7 +5,7 @@ import { Table } from "../../common/table";
 import { requestApi } from "../../data/apiUrl";
 import type { RequestType } from "../../data/types";
 import { useFetch } from "../../hooks";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import SeeButton from "../../common/button/SeeButton";
 import { EditButton } from "../../common/button";
 import StatusTag from "./components/StatusTag";
@@ -24,14 +24,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
     catch { return {}; }
   }, []);
 
-  const role = String(stored.userType ?? stored.type ?? "").toUpperCase().trim();
-  const isManager = role === "GERENTE" || role === "ADMINISTRADORA" || role === "LOGISTICA";
   const myUserId = Number(stored.userId);
-
-  const effectiveUserId = useMemo(() => {
-    const idNum = Number(stored.userId);
-    return !isManager && Number.isFinite(idNum) && idNum > 0 ? idNum : undefined;
-  }, [isManager, stored.userId]);
 
   const urlFetch = useMemo(() => {
     const params = new URLSearchParams();
@@ -39,12 +32,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
     if (filter && filter !== "all") params.set("status", filter);
     if (projectId) params.set("projectId", String(projectId));
 
-    // Usuarios normales: filtra por su userId
-    if (!isManager && Number.isFinite(myUserId)) {
-      params.set("userId", String(myUserId));
-    }
-
-    // SIEMPRE pasar viewerId (clave para ocultar borradores ajenos en el backend)
+    // The backend uses viewerId only to keep drafts private.
     if (Number.isFinite(myUserId)) {
       params.set("viewerId", String(myUserId));
     }
@@ -52,16 +40,10 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
     const qs = params.toString();
     return qs ? `${requestApi}?${qs}` : requestApi;
     // 👇 DEPENDENCIAS REALES USADAS ADENTRO
-  }, [filter, projectId, isManager, myUserId]);
+  }, [filter, projectId, myUserId]);
 
 
   const { data: requests, loading, error } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
-
-  useEffect(() => {
-    console.log("role:", role, "isManager:", isManager, "effectiveUserId:", effectiveUserId);
-    console.log("Fetch URL:", urlFetch);
-    console.log("Requests:", requests);
-  }, [role, isManager, effectiveUserId, urlFetch, requests]);
 
   const navigate = useNavigate();
 

@@ -1,11 +1,26 @@
 import type { ElementType } from "../../data/types";
 
-export type InventoryFamilyKey = "all" | "operative" | "epp" | "epi" | "ese" | "em" | "consumibles";
+export type InventoryFamilyKey =
+  | "all"
+  | "operative"
+  | "epp"
+  | "epi"
+  | "uniform"
+  | "ese"
+  | "harness"
+  | "quality";
 export type InventoryFamilyTabKey = Exclude<InventoryFamilyKey, "all">;
 
 export type InventoryControlType = "consumable" | "returnable" | "individual";
 export type InventoryBackendType = "epp" | "operative";
-export type InventoryBackendFamily = "epp" | "epi" | "ese" | "measurement" | "consumible";
+export type InventoryBackendFamily =
+  | "epp"
+  | "epi"
+  | "uniform"
+  | "ese"
+  | "harness"
+  | "measurement";
+export type InventoryCatalogSection = "ssoma" | "quality" | "legacy";
 
 export interface InventorySourceLike {
   type?: string | null;
@@ -31,6 +46,8 @@ export interface InventoryFamilyConfig {
   returnsToOffice: boolean;
   unique: boolean;
   consumable: boolean;
+  supportsVariants: boolean;
+  section: InventoryCatalogSection;
 }
 
 export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
@@ -46,6 +63,23 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     returnsToOffice: true,
     unique: false,
     consumable: false,
+    supportsVariants: false,
+    section: "ssoma",
+  },
+  {
+    key: "uniform",
+    label: "Uniforme",
+    shortLabel: "Uniforme",
+    description: "Uniformes y prendas no retornables a oficina",
+    backendType: "epp",
+    backendFamily: "uniform",
+    backendControlType: "consumable",
+    requiresCode: false,
+    returnsToOffice: false,
+    unique: false,
+    consumable: false,
+    supportsVariants: false,
+    section: "ssoma",
   },
   {
     key: "epi",
@@ -56,9 +90,11 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     backendFamily: "epi",
     backendControlType: "individual",
     requiresCode: false,
-    returnsToOffice: false,
+    returnsToOffice: true,
     unique: false,
     consumable: false,
+    supportsVariants: false,
+    section: "ssoma",
   },
   {
     key: "ese",
@@ -68,36 +104,42 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     backendType: "operative",
     backendFamily: "ese",
     backendControlType: "returnable",
-    requiresCode: true,
-    returnsToOffice: true,
-    unique: true,
-    consumable: false,
-  },
-  {
-    key: "em",
-    label: "EM",
-    shortLabel: "EM",
-    description: "Equipos de medicion",
-    backendType: "operative",
-    backendFamily: "measurement",
-    backendControlType: "individual",
-    requiresCode: true,
-    returnsToOffice: true,
-    unique: true,
-    consumable: false,
-  },
-  {
-    key: "consumibles",
-    label: "Consumibles SSOMA",
-    shortLabel: "Consumibles",
-    description: "Materiales y consumibles de uso en obra",
-    backendType: "operative",
-    backendFamily: "consumible",
-    backendControlType: "consumable",
     requiresCode: false,
     returnsToOffice: true,
     unique: false,
-    consumable: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "ssoma",
+  },
+  {
+    key: "harness",
+    label: "ARNES",
+    shortLabel: "ARNES",
+    description: "Arneses y sus partes trazables",
+    backendType: "operative",
+    backendFamily: "harness",
+    backendControlType: "individual",
+    requiresCode: false,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "ssoma",
+  },
+  {
+    key: "quality",
+    label: "Calidad",
+    shortLabel: "Calidad",
+    description: "Equipos de medicion y control de calibracion",
+    backendType: "operative",
+    backendFamily: "measurement",
+    backendControlType: "individual",
+    requiresCode: false,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "quality",
   },
 ] as const;
 
@@ -108,6 +150,52 @@ export const inventoryFamilyTabs = [
     key: family.key,
     label: family.label,
   })),
+] as const;
+
+export const inventoryFamilyTabGroups = [
+  {
+    key: "all" as const,
+    label: "Catalogo",
+    tabs: [{ key: "all" as const, label: "Todos" }],
+  },
+  {
+    key: "protection" as const,
+    label: "Elementos de Proteccion",
+    tabs: inventoryFamilies
+      .filter((family) => ["epp", "epi", "uniform"].includes(family.key))
+      .map((family) => ({ key: family.key, label: family.label })),
+  },
+  {
+    key: "safety" as const,
+    label: "Equipos SSOMA",
+    tabs: inventoryFamilies
+      .filter((family) => family.key === "ese")
+      .map((family) => ({ key: family.key, label: family.label })),
+  },
+  {
+    key: "fall_protection" as const,
+    label: "Proteccion Anticaida",
+    tabs: inventoryFamilies
+      .filter((family) => family.key === "harness")
+      .map((family) => ({ key: family.key, label: family.label })),
+  },
+  {
+    key: "quality" as const,
+    label: "Inventario de Calidad",
+    tabs: inventoryFamilies
+      .filter((family) => family.section === "quality")
+      .map((family) => ({ key: family.key, label: family.label })),
+  },
+  {
+    key: "legacy" as const,
+    label: "Legado",
+    tabs: [
+      { key: "operative" as const, label: "Operative" },
+      ...inventoryFamilies
+        .filter((family) => family.section === "legacy")
+        .map((family) => ({ key: family.key, label: family.label })),
+    ],
+  },
 ] as const;
 
 export function getInventoryFamilyConfig(family: InventoryFamilyKey) {
@@ -150,11 +238,14 @@ export function getInventoryFamilyFromSource(
   const controlType = source?.controlType?.trim().toLowerCase();
 
   if (controlType === "consumable") {
-    return "consumibles";
+    if (type === "epp") {
+      return "uniform";
+    }
+    return "operative";
   }
 
   if (type === "operative") {
-    return controlType === "individual" ? "em" : "ese";
+    return controlType === "individual" ? "quality" : "ese";
   }
 
   if (controlType === "individual") {
@@ -186,8 +277,12 @@ export function getInventoryRuleLabel(source?: InventorySourceLike | null) {
 
   if (!config) return "Stock";
   if (config.consumable) return "Consumible";
-  if (config.unique) return "Unico";
+  if (config.unique) return "Activo unico";
   return "Stock";
+}
+
+export function usesInventoryStockFields(family: InventoryFamilyKey) {
+  return family === "epp" || family === "epi" || family === "uniform";
 }
 
 export function getInventoryCodeRequirementLabel(family: InventoryFamilyKey) {
@@ -211,6 +306,20 @@ export function getInventoryBackendPayload(family: InventoryFamilyKey) {
     family: config.backendFamily,
     controlType: config.backendControlType,
   };
+}
+
+export function getInventorySectionLabel(family: InventoryFamilyKey) {
+  const config = getInventoryFamilyConfig(family);
+  if (!config) return "Catalogo";
+
+  switch (config.section) {
+    case "ssoma":
+      return "Inventario SSOMA";
+    case "quality":
+      return "Inventario de Calidad";
+    default:
+      return "Legado";
+  }
 }
 
 export function formatInventoryQuantity(value: number) {

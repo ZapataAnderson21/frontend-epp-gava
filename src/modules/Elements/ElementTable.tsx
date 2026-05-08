@@ -4,9 +4,7 @@ import { Table } from "../../common/table";
 import type { ElementType } from "../../data/types";
 import {
   getInventoryCatalogTabFromSource,
-  getInventoryFamilyLabel,
-  getInventoryRuleLabel,
-  isLegacyOperativeSource,
+  getInventoryFamilyConfig,
 } from "./inventoryCatalog";
 
 interface ElementTableProps {
@@ -15,48 +13,33 @@ interface ElementTableProps {
 
 export default function ElementTable({ elements }: ElementTableProps) {
   const navigate = useNavigate();
+  const isSafetyEquipmentTable =
+    elements.length > 0 &&
+    elements.every((element) =>
+      getInventoryCatalogTabFromSource(element) === "ese",
+    );
+  const isFallProtectionTable =
+    elements.length > 0 &&
+    elements.every((element) =>
+      getInventoryCatalogTabFromSource(element) === "harness",
+    );
+  const categoryColumn = {
+    key: "categoryName",
+    label: "Categoria",
+    width: "11rem",
+    render: (row: ElementType) => getDisplayCategory(row, isFallProtectionTable),
+  } as const;
 
   const columns = [
-    { key: "elementId", label: "Id", width: "4rem" },
-    { key: "name", label: "Nombre", width: "16rem" },
+    { key: "elementId", label: "N°", width: "4rem" },
+    { key: "name", label: isSafetyEquipmentTable ? "Tipo" : "Nombre", width: "16rem" },
     {
       key: "code",
-      label: "Codigo",
+      label: isSafetyEquipmentTable ? "Serie" : "Codigo",
       width: "8rem",
       render: (row: ElementType) => row.code || "Sin codigo",
     },
-    {
-      key: "type",
-      label: "Familia",
-      width: "12rem",
-      render: (row: ElementType) => {
-        const family = getInventoryCatalogTabFromSource(row);
-        const legacyOperative = isLegacyOperativeSource(row);
-        return (
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              legacyOperative
-                ? "bg-amber-50 text-amber-800"
-                : "bg-blue-50 text-[#0047a3]"
-            }`}
-          >
-            {legacyOperative ? "Operative legado" : getInventoryFamilyLabel(family)}
-          </span>
-        );
-      },
-    },
-    {
-      key: "categoryName",
-      label: "Categoria",
-      width: "11rem",
-      render: (row: ElementType) => row.categoryName || "Sin categoria",
-    },
-    {
-      key: "controlType",
-      label: "Regla",
-      width: "10rem",
-      render: (row: ElementType) => getInventoryRuleLabel(row),
-    },
+    ...(!isSafetyEquipmentTable ? [categoryColumn] : []),
     {
       key: "description",
       label: "Descripcion",
@@ -73,4 +56,18 @@ export default function ElementTable({ elements }: ElementTableProps) {
   ] as const;
 
   return <Table<ElementType> data={elements} columns={columns} />;
+}
+
+function getDisplayCategory(row: ElementType, isFallProtectionTable: boolean) {
+  const familyKey = getInventoryCatalogTabFromSource(row);
+
+  if (familyKey === "epp" || familyKey === "epi" || familyKey === "uniform") {
+    return getInventoryFamilyConfig(familyKey)?.label || row.familyLabel || "Sin categoria";
+  }
+
+  if (isFallProtectionTable) {
+    return row.categoryName || row.name || "Sin categoria";
+  }
+
+  return row.categoryName || row.familyLabel || "Sin categoria";
 }

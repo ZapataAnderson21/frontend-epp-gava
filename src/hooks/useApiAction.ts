@@ -1,12 +1,28 @@
 import getAuthHeaders from "./getAuthHeaders";
 import { useState } from "react";
 import { redirectToLoginPreservingURL } from "../auth-redirect";
+import formatApiErrorMessage from "../utils/apiErrorMessage";
 
 interface ApiResponse<T> {
   statusCode: number;
   message: string;
   data: T;
 }
+
+const shouldRedirectToLogin = (statusCode: number, message: string) => {
+  if (statusCode !== 401) return false;
+
+  const normalizedMessage = message
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return (
+    normalizedMessage === "unauthorized" ||
+    normalizedMessage.includes("token") ||
+    normalizedMessage.includes("sesion") ||
+    normalizedMessage.includes("sesión")
+  );
+};
 
 export function useApiAction<T>() {
   const [loading, setLoading] = useState(false);
@@ -26,11 +42,6 @@ export function useApiAction<T>() {
         headers: getAuthHeaders(),
         body: body ? JSON.stringify(body) : undefined,
       });
-      
-      if (res.status === 401) {
-        redirectToLoginPreservingURL();
-        throw new Error("Unauthorized");
-      }
 
       const contentType = res.headers.get("content-type") || "";
       const hasJsonBody = contentType.includes("application/json");
@@ -38,9 +49,10 @@ export function useApiAction<T>() {
 
       const statusCode =
         typeof raw?.statusCode === "number" ? raw.statusCode : res.status;
-      const message =
-        raw?.message ||
-        (res.ok ? "Operaci\u00f3n completada correctamente" : res.statusText || "Error en la solicitud");
+      const fallbackMessage = res.ok
+        ? "Operaci\u00f3n completada correctamente"
+        : res.statusText || "Error en la solicitud";
+      const message = formatApiErrorMessage(raw?.message, fallbackMessage);
       const data = (raw && "data" in raw ? raw.data : raw) as T;
 
       const normalizedResponse: ApiResponse<T> = {
@@ -53,7 +65,12 @@ export function useApiAction<T>() {
 
       console.log("API Action Response:", normalizedResponse);
 
-      if (normalizedResponse.statusCode === 401) {
+      if (
+        shouldRedirectToLogin(
+          normalizedResponse.statusCode,
+          normalizedResponse.message
+        )
+      ) {
         redirectToLoginPreservingURL();
         throw new Error("Unauthorized");
       }

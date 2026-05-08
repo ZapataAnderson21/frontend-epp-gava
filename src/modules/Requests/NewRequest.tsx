@@ -21,21 +21,27 @@ import { useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
 import { Button } from "../../components";
 import { ReturnButton, SaveButton } from "../../common/button";
-import RequestTypeCard from "./components/ModalElements/RequestTypeCard";
 import RequestFamilyTabs from "./components/RequestFamilyTabs";
 import EpiPlanningModal from "./components/EpiPlanningModal";
+import RequestItemPicker from "./components/RequestItemPicker";
 import {
   formatInventoryQuantity,
   getInventoryFamilyConfig,
   getInventoryFamilyFromSource,
   type InventoryFamilyTabKey,
 } from "../Elements/inventoryCatalog";
-import { getRequestFamilyDescription, getRequestFamilyTab } from "./requestFamilies";
+import { getRequestFamilyDescription } from "./requestFamilies";
 import {
   buildRequestWorkersFromPlans,
   prunePlansByElementRequests,
   type ElementPlanState,
 } from "./requestPlanning";
+import {
+  attachRequestLineKeys,
+  createElementRequestLine,
+  getRequestLineKey,
+  getUniqueElementsFromLines,
+} from "./requestLineUtils";
 
 function parsePlansFromStorage() {
   try {
@@ -57,7 +63,9 @@ export default function NewRequest() {
   const [planningElement, setPlanningElement] = useState<ElementRequestType | null>(null);
 
   const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
-  const selectedElementRequest: ElementRequestType[] = JSON.parse(localStorage.getItem("selectedElementRequest") || "[]");
+  const selectedElementRequest: ElementRequestType[] = attachRequestLineKeys(
+    JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
+  );
   const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
 
   const [elements, setElements] = useState<ElementType[]>(selectedElements);
@@ -76,17 +84,65 @@ export default function NewRequest() {
     nextElements: ElementType[],
     nextElementRequests: ElementRequestType[],
   ) => {
-    const nextPlans = prunePlansByElementRequests(elementPlans, nextElementRequests);
+    const normalizedLines = attachRequestLineKeys(nextElementRequests);
+    const normalizedElements = getUniqueElementsFromLines(normalizedLines, nextElements);
+    const nextPlans = prunePlansByElementRequests(elementPlans, normalizedLines);
     const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
 
-    setElements(nextElements);
-    setElementRequests(nextElementRequests);
+    setElements(normalizedElements);
+    setElementRequests(normalizedLines);
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-    localStorage.setItem("selectedElements", JSON.stringify(nextElements));
-    localStorage.setItem("selectedElementRequest", JSON.stringify(nextElementRequests));
+    localStorage.setItem("selectedElements", JSON.stringify(normalizedElements));
+    localStorage.setItem("selectedElementRequest", JSON.stringify(normalizedLines));
     localStorage.setItem("selectedElementRequestPlans", JSON.stringify(nextPlans));
     localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
+  };
+
+  const handleAddElementFromPanel = (element: ElementType) => {
+    if (activeFamily === "harness" && element.fallProtectionGroupId) {
+      const existingLine = elementRequests.find(
+        (requestLine) =>
+          requestLine.fallProtectionGroupId === element.fallProtectionGroupId,
+      );
+
+      if (existingLine) return;
+    }
+
+    if (activeFamily === "ese") {
+      const existingLine = elementRequests.find(
+        (requestLine) => requestLine.elementId === element.elementId,
+      );
+
+      if (existingLine) {
+        const nextElementRequests = elementRequests.map((requestLine) =>
+          getRequestLineKey(requestLine) === getRequestLineKey(existingLine)
+            ? {
+                ...requestLine,
+                element,
+                quantityRequested: Number(requestLine.quantityRequested || 0) + 1,
+              }
+            : requestLine,
+        );
+        const nextElements = getUniqueElementsFromLines(nextElementRequests, [
+          ...elements,
+          element,
+        ]);
+        handleSelectionElementsUpdate(nextElements, nextElementRequests);
+        return;
+      }
+    }
+
+    const nextElementRequests = attachRequestLineKeys([
+      ...elementRequests,
+      createElementRequestLine(element),
+    ]);
+    const nextElements = getUniqueElementsFromLines(nextElementRequests, [
+      ...elements,
+      element,
+    ]);
+
+    handleSelectionElementsUpdate(nextElements, nextElementRequests);
   };
 
   const navigateToBack = () => {
@@ -101,7 +157,11 @@ export default function NewRequest() {
   useEffect(() => {
     const handleStorageChange = () => {
       setElements(JSON.parse(localStorage.getItem("selectedElements") || "[]"));
-      setElementRequests(JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"));
+      setElementRequests(
+        attachRequestLineKeys(
+          JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
+        ),
+      );
       setRequestWorkers(JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]"));
       setElementPlans(parsePlansFromStorage());
     };
@@ -110,11 +170,23 @@ export default function NewRequest() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const handleRemoveElement = (element: ElementType) => {
-    const updatedElements = elements.filter((item) => item.elementId !== element.elementId);
-    const updatedElementRequests = elementRequests.filter((item) => item.elementId !== element.elementId);
+  const handleRemoveElement = (lineKey: string) => {
+    const updatedElementRequests = elementRequests.filter(
+      (requestLine) => getRequestLineKey(requestLine) !== lineKey,
+    );
+    const updatedElements = getUniqueElementsFromLines(updatedElementRequests, elements);
+    const removedLine = elementRequests.find(
+      (requestLine) => getRequestLineKey(requestLine) === lineKey,
+    );
     const nextPlans = { ...elementPlans };
-    delete nextPlans[String(element.elementId)];
+    if (
+      removedLine &&
+      !updatedElementRequests.some(
+        (requestLine) => requestLine.elementId === removedLine.elementId,
+      )
+    ) {
+      delete nextPlans[String(removedLine.elementId)];
+    }
     const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
 
     setElements(updatedElements);
@@ -129,12 +201,12 @@ export default function NewRequest() {
   };
 
   const handleChangeElementRequest = (
-    elementId: number,
+    lineKey: string,
     field: keyof ElementRequestType,
-    value: string | number,
+    value: string | number | null,
   ) => {
     const updated = elementRequests.map((requestLine) =>
-      requestLine.elementId === elementId
+      getRequestLineKey(requestLine) === lineKey
         ? {
             ...requestLine,
             [field]:
@@ -173,24 +245,28 @@ export default function NewRequest() {
       return;
     }
 
-    await toast.promise(handleSave(projectId, deliveryDueDate, description), {
-      loading: "Guardando solicitud...",
-      success: (result) => {
-        if (result?.data && !result?.loading && !result?.error) {
-          setElements([]);
-          setElementRequests([]);
-          setRequestWorkers([]);
-          setElementPlans({});
-          localStorage.removeItem("projectId");
-          localStorage.removeItem("deliveryDueDate");
-          setTimeout(() => navigateToBack(), 1200);
-          return result?.data.request.message || "Solicitud guardada exitosamente.";
-        }
+    try {
+      await toast.promise(handleSave(projectId, deliveryDueDate, description), {
+        loading: "Guardando solicitud...",
+        success: (result) => {
+          if (result?.data && !result?.loading && !result?.error) {
+            setElements([]);
+            setElementRequests([]);
+            setRequestWorkers([]);
+            setElementPlans({});
+            localStorage.removeItem("projectId");
+            localStorage.removeItem("deliveryDueDate");
+            setTimeout(() => navigateToBack(), 1200);
+            return result?.data.request.message || "Solicitud guardada exitosamente.";
+          }
 
-        throw new Error("Error al guardar la solicitud.");
-      },
-      error: (err) => err.message || "Error al guardar la solicitud.",
-    });
+          throw new Error("Error al guardar la solicitud.");
+        },
+        error: (err) => err.message || "Error al guardar la solicitud.",
+      });
+    } catch {
+      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+    }
   };
 
   const handleSaveAndSendRequest = async () => {
@@ -201,29 +277,39 @@ export default function NewRequest() {
       return;
     }
 
-    await toast.promise(
-      handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel),
-      {
-        loading: "Guardando y enviando solicitud...",
-        success: () => {
-          setElements([]);
-          setElementRequests([]);
-          setRequestWorkers([]);
-          setElementPlans({});
-          localStorage.removeItem("projectId");
-          localStorage.removeItem("deliveryDueDate");
-          setTimeout(() => navigateToBack(), 1200);
-          return "Solicitud guardada y enviada exitosamente.";
+    try {
+      await toast.promise(
+        handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel),
+        {
+          loading: "Guardando y enviando solicitud...",
+          success: () => {
+            setElements([]);
+            setElementRequests([]);
+            setRequestWorkers([]);
+            setElementPlans({});
+            localStorage.removeItem("projectId");
+            localStorage.removeItem("deliveryDueDate");
+            setTimeout(() => navigateToBack(), 1200);
+            return "Solicitud guardada y enviada exitosamente.";
+          },
+          error: (err) => err.message || "Error al guardar y enviar la solicitud.",
         },
-        error: (err) => err.message || "Error al guardar y enviar la solicitud.",
-      },
-    );
+      );
+    } catch {
+      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+    }
   };
 
   const visibleElementRequests = useMemo(
     () =>
       elementRequests.filter(
-        (requestLine) => getInventoryFamilyFromSource(requestLine.element) === activeFamily,
+        (requestLine) => {
+          const family = getInventoryFamilyFromSource(requestLine.element);
+          if (activeFamily === "epp") {
+            return ["epp", "epi", "uniform"].includes(family);
+          }
+          return family === activeFamily;
+        },
       ),
     [activeFamily, elementRequests],
   );
@@ -237,7 +323,6 @@ export default function NewRequest() {
   };
 
   const selectedFamilyConfig = getInventoryFamilyConfig(activeFamily);
-  const activeFamilyCard = getRequestFamilyTab(activeFamily);
 
   if (!projects) {
     return <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente mas tarde." />;
@@ -245,59 +330,63 @@ export default function NewRequest() {
 
   return (
     <>
-      <form onSubmit={handleSaveRequest} className="max-w-7xl p-10 text-gray-800">
+      <form onSubmit={handleSaveRequest} className="w-full p-10 text-gray-800">
         <h1 className="mb-4 text-2xl font-bold">REGISTRAR SOLICITUD</h1>
 
         <div className="flex h-full w-full flex-col items-start justify-start gap-4">
-          <div className="flex w-full flex-col gap-4 lg:flex-row">
-            <SelectForm
-              label="Proyecto"
-              name="projectId"
-              value={projectId}
-              onChange={(value) => setProjectId(Number(value))}
-              options={[
-                ...projects.map((project) => ({
-                  value: project.projectId,
-                  label: project.name,
-                })),
-              ]}
-              disabled={!!projectIdParam}
-            />
+          <div className="flex max-w-4xl w-full flex-col gap-4">
+            <div className="w-full flex flex-row gap-4">
+              <SelectForm
+                label="Proyecto"
+                name="projectId"
+                value={projectId}
+                onChange={(value) => setProjectId(Number(value))}
+                options={[
+                  ...projects.map((project) => ({
+                    value: project.projectId,
+                    label: project.name,
+                  })),
+                ]}
+                disabled={!!projectIdParam}
+              />
 
-            <InputForm
-              label="Fecha y Hora de Entrega"
-              name="deliveryDueDate"
-              type="datetime-local"
-              value={deliveryDueDate}
-              onChange={(e) => setDeliveryDueDate(e.target.value)}
-            >
-              <div className="relative flex w-full justify-end">
-                <RiQuestionFill
-                  className="inline-flex size-5 cursor-pointer text-amber-500"
-                  onClick={() => setOpenWarning(!openWarning)}
-                />
-                {openWarning ? (
-                  <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
-                    <IoWarning className="mt-1 w-8" />
-                    Recuerda que si el requerimiento es para mañana, la hora limite para pedirlo es 1 PM. Si es para pasado mañana, el limite es 5 PM.
-                  </p>
-                ) : null}
-              </div>
-            </InputForm>
+              <InputForm
+                label="Fecha y Hora de Entrega"
+                name="deliveryDueDate"
+                type="datetime-local"
+                value={deliveryDueDate}
+                onChange={(e) => setDeliveryDueDate(e.target.value)}
+              >
+                <div className="relative flex w-full justify-end">
+                  <RiQuestionFill
+                    className="inline-flex size-5 cursor-pointer text-amber-500"
+                    onClick={() => setOpenWarning(!openWarning)}
+                  />
+                  {openWarning ? (
+                    <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
+                      <IoWarning className="mt-1 w-8" />
+                      Recuerda que si el requerimiento es para mañana, la hora limite para pedirlo es 1 PM. Si es para pasado mañana, el limite es 5 PM.
+                    </p>
+                  ) : null}
+                </div>
+              </InputForm>
+            </div>
+            <div className="w-full">
+              <TextAreaForm
+                label="Descripcion"
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                optional={true}
+              />
+            </div>
           </div>
 
-          <div className="flex w-full flex-col gap-4">
-            <TextAreaForm
-              label="Descripcion"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              optional={true}
-            />
+          <div className="flex flex-col gap-4 w-full">
 
             <RequestFamilyTabs activeFamily={activeFamily} onChange={setActiveFamily} />
 
-            <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-bold text-gray-900">
                   {getRequestFamilyDescription(activeFamily)}
@@ -305,48 +394,46 @@ export default function NewRequest() {
                 <p className="text-sm text-gray-500">
                   {selectedFamilyConfig?.requiresCode
                     ? "Selecciona unidades con codigo obligatorio."
-                    : selectedFamilyConfig?.consumable
-                      ? "Puedes registrar cantidades decimales para consumibles."
-                      : "Trabaja esta familia sin perder el historial del requerimiento."}
+                    : activeFamily === "ese"
+                      ? "Se pide el tipo y la cantidad; el stock disponible no bloquea el pedido."
+                      : activeFamily === "harness"
+                        ? "Selecciona el grupo EPA."
+                        : "Unidad fija: unidad. Registra cantidad y una descripcion opcional."}
                 </p>
               </div>
 
-              {activeFamilyCard ? (
-                <div className="max-w-sm">
-                  <RequestTypeCard
-                    icon={activeFamilyCard.icon}
-                    title={`Seleccionar ${activeFamilyCard.label}`}
-                    familyKey={activeFamily}
-                    onSelected={handleSelectionElementsUpdate}
-                  />
-                </div>
-              ) : null}
-
-              <div className="flex flex-col gap-2 overflow-x-auto">
-                {visibleElementRequests.length > 0 ? (
-                  <div className="w-full min-w-xl">
-                    <span className="pb-4 pt-2 font-semibold">Items seleccionados:</span>
-                    <HeaderNewRequest showDetailsColumn={activeFamily === "epi"} />
-                    {visibleElementRequests.map((elementRequest) => (
-                      <RowElementRequest
-                        key={`${activeFamily}-${elementRequest.elementId}`}
-                        elementRequest={elementRequest}
-                        handleRemoveElement={handleRemoveElement}
-                        handleChangeElementRequest={handleChangeElementRequest}
-                        showPlanningButton={activeFamily === "epi"}
-                        planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
-                        onOpenPlanning={setPlanningElement}
-                        allowDecimals={activeFamily === "consumibles"}
+              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+                <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
+                  {visibleElementRequests.length > 0 ? (
+                    <div className="w-full">
+                      <HeaderNewRequest
+                        showDetailsColumn={activeFamily === "epi"}
+                        showQuantityColumn={activeFamily !== "harness"}
                       />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mb-4 flex w-full flex-col gap-2">
-                    <div className="flex w-full border border-gray-100" />
-                    <ErrorMessage errorMessage={`No hay items seleccionados en ${selectedFamilyConfig?.label || "esta familia"}.`} />
-                    <div className="flex w-full border border-gray-100" />
-                  </div>
-                )}
+                      {visibleElementRequests.map((elementRequest) => (
+                        <RowElementRequest
+                          key={getRequestLineKey(elementRequest)}
+                          elementRequest={elementRequest}
+                          handleRemoveElement={handleRemoveElement}
+                          handleChangeElementRequest={handleChangeElementRequest}
+                          showPlanningButton={activeFamily === "epi"}
+                          planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
+                          onOpenPlanning={setPlanningElement}
+                          showQuantityField={activeFamily !== "harness"}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500">
+                      No hay items seleccionados en {selectedFamilyConfig?.label || "esta familia"}.
+                    </div>
+                  )}
+                </div>
+
+                <RequestItemPicker
+                  familyKey={activeFamily}
+                  onAddElement={handleAddElementFromPanel}
+                />
               </div>
             </div>
           </div>
