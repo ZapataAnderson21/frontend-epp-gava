@@ -55,20 +55,49 @@ function getSafetyEquipmentType(element: ElementType) {
   return (element.categoryName || element.name || "Sin tipo").trim();
 }
 
-function getOfficeStockForElement(
+function getSafetyEquipmentCode(element: ElementType) {
+  return element.code || element.serialNumber || null;
+}
+
+function isOperationalSafetyEquipment(element: ElementType) {
+  const status = (element.operationalStatus || "operativo").trim().toLowerCase();
+  return status !== "inoperativo" && status !== "inoperative";
+}
+
+function hasAnyOfficeEntry(
   elementId: number,
   officeEntries: OfficeInventoryEntry[] = [],
 ) {
   const entries = Array.isArray(officeEntries) ? officeEntries : [];
 
-  return entries
-    .filter(
-      (entry) =>
-        entry.elementId === elementId &&
-        entry.status !== "disposed" &&
-        entry.currentStock > 0,
-    )
-    .reduce((total, entry) => total + Number(entry.currentStock || 0), 0);
+  return entries.some((entry) => entry.elementId === elementId);
+}
+
+function hasAvailableOfficeEntry(
+  elementId: number,
+  officeEntries: OfficeInventoryEntry[] = [],
+) {
+  const entries = Array.isArray(officeEntries) ? officeEntries : [];
+
+  return entries.some(
+    (entry) =>
+      entry.elementId === elementId &&
+      entry.status !== "disposed" &&
+      Number(entry.currentStock || 0) > 0,
+  );
+}
+
+function getAvailableSafetyUnitCount(
+  element: ElementType,
+  officeEntries: OfficeInventoryEntry[] = [],
+) {
+  if (!isOperationalSafetyEquipment(element)) return 0;
+
+  if (hasAvailableOfficeEntry(element.elementId, officeEntries)) return 1;
+
+  // Existing ESE records created before location tracking are physical units.
+  // If they have no office row yet, treat them as available in office once.
+  return hasAnyOfficeEntry(element.elementId, officeEntries) ? 0 : 1;
 }
 
 function groupSafetyEquipmentByType(
@@ -86,14 +115,13 @@ function groupSafetyEquipmentByType(
   return Array.from(groups.values()).map<PickerElement>((items) => {
     const [representative] = items;
     const typeLabel = getSafetyEquipmentType(representative);
-    const availableCodes = items
-      .filter((item) => getOfficeStockForElement(item.elementId, officeEntries) > 0)
-      .map((item) => item.code)
-      .filter((code): code is string => Boolean(code));
-    const availableCount = items.reduce(
-      (total, item) => total + getOfficeStockForElement(item.elementId, officeEntries),
-      0,
+    const availableItems = items.filter(
+      (item) => getAvailableSafetyUnitCount(item, officeEntries) > 0,
     );
+    const availableCodes = availableItems
+      .map((item) => getSafetyEquipmentCode(item))
+      .filter((code): code is string => Boolean(code));
+    const availableCount = availableItems.length;
 
     return {
       ...representative,
@@ -104,10 +132,7 @@ function groupSafetyEquipmentByType(
       availableCount,
       availableCodes,
       assetSummary: {
-        totalAssets: items.reduce(
-          (total, item) => total + getOfficeStockForElement(item.elementId, officeEntries),
-          0,
-        ),
+        totalAssets: items.length,
         availableAssets: availableCount,
         assignedAssets: items.reduce(
           (total, item) => total + (item.assetSummary?.assignedAssets ?? 0),

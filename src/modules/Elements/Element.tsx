@@ -115,6 +115,7 @@ export default function Element() {
   const isSafetyEquipment = family === "ese";
   const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
   const isFallProtection = family === "harness";
+  const canRegisterStockMovements = !familyConfig?.unique && !isSafetyEquipment;
   const isLegacyOperative = isLegacyOperativeSource(element);
   const existingSafetyTypes = useMemo(
     () =>
@@ -299,6 +300,11 @@ export default function Element() {
     reason?: string;
     notes?: string;
   }) => {
+    if (!canRegisterStockMovements) {
+      toast.error("Este item es unico; no permite ingresos, salidas ni ajustes manuales de stock.");
+      return;
+    }
+
     if (!movementModal || !user?.userId) {
       toast.error("No se pudo identificar al usuario que registra el movimiento.");
       return;
@@ -561,7 +567,7 @@ export default function Element() {
           </section>
         </div>
 
-        {movementModal ? (
+        {movementModal && canRegisterStockMovements ? (
           <InventoryMovementModal
             mode={movementModal}
             elementName={element?.name || "Elemento"}
@@ -730,28 +736,9 @@ export default function Element() {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMovementModal("entry")}
-                    className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
-                  >
-                    Registrar ingreso
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMovementModal("disposal")}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
-                  >
-                    Registrar salida
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMovementModal("adjustment")}
-                    className="rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
-                  >
-                    Registrar ajuste
-                  </button>
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                  Este equipo es un item fisico unico. Su movimiento se registra al enviarlo por
+                  requerimiento y al retornarlo desde la obra.
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -790,7 +777,7 @@ export default function Element() {
           </section>
         </div>
 
-        {movementModal ? (
+        {movementModal && canRegisterStockMovements ? (
           <InventoryMovementModal
             mode={movementModal}
             elementName={element?.name || "Elemento"}
@@ -1002,29 +989,31 @@ export default function Element() {
                 Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setMovementModal("entry")}
-                className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
-              >
-                Registrar ingreso
-              </button>
-              <button
-                type="button"
-                onClick={() => setMovementModal("disposal")}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
-              >
-                Registrar salida
-              </button>
-              <button
-                type="button"
-                onClick={() => setMovementModal("adjustment")}
-                className="rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
-              >
-                Registrar ajuste
-              </button>
-            </div>
+            {canRegisterStockMovements ? (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMovementModal("entry")}
+                  className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
+                >
+                  Registrar ingreso
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMovementModal("disposal")}
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
+                >
+                  Registrar salida
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMovementModal("adjustment")}
+                  className="rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
+                >
+                  Registrar ajuste
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {familyConfig?.unique ? (
@@ -1096,7 +1085,7 @@ export default function Element() {
           ) : null}
         </section>
       </div>
-      {movementModal ? (
+      {movementModal && canRegisterStockMovements ? (
         <InventoryMovementModal
           mode={movementModal}
           elementName={element?.name || "Elemento"}

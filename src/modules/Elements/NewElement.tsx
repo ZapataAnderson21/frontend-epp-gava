@@ -200,13 +200,18 @@ export default function NewEpp() {
 
     const createWithInitialStock = async () => {
       const result = await execute(elementApi, "POST", elementData);
-      if (usesStockFields && initialQuantity > 0 && result.data?.elementId && user?.userId) {
+      const shouldCreateOfficeEntry =
+        (usesStockFields && initialQuantity > 0) || isSafetyEquipment;
+
+      if (shouldCreateOfficeEntry && result.data?.elementId && user?.userId) {
         await registerOfficeEntry(`${inventoryApi}office/entry`, "POST", {
           elementId: result.data.elementId,
           unit,
-          quantity: initialQuantity,
+          quantity: isSafetyEquipment ? 1 : initialQuantity,
           performedByUserId: user.userId,
-          notes: "Stock inicial registrado desde catalogo.",
+          notes: isSafetyEquipment
+            ? "Ubicacion inicial registrada desde catalogo."
+            : "Stock inicial registrado desde catalogo.",
         });
       }
       return result;

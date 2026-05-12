@@ -3,12 +3,15 @@ import { useParams } from "react-router-dom";
 import { useCurrentUser, useFetch } from "../../../../../../hooks";
 import { pettyCashApi } from "../../../../../../data/apiUrl";
 import { AddButton } from "../../../../../../common/button";
+import { Button } from "../../../../../../components";
 import { ErrorMessage } from "../../../../../../common/error";
 import { adminTypes } from "../../../../../../utils";
 import { PettyCash, NewPettyCash, PettyCashTable }  from "./";
 import Permission from "../../../../../../common/auth/Permission";
 import { CgSpinner } from "react-icons/cg";
+import { FaFileExcel } from "react-icons/fa6";
 import { motion } from "framer-motion";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function PettyCashes() {
   const { user } = useCurrentUser();
@@ -16,6 +19,7 @@ export default function PettyCashes() {
   const { id: projectId } = useParams<{ id: string }>();
 
   const [reFetch, setReFetch] = useState(0);
+  const [exporting, setExporting] = useState(false);
   const {data: mealsAmount, loading: mealsAmountLoading} = useFetch<number>(`${pettyCashApi}sum/${projectId}/meals`, [projectId, reFetch]);
   const {data: fuelAmount, loading: fuelAmountLoading} = useFetch<number>(`${pettyCashApi}sum/${projectId}/fuel`, [projectId, reFetch]);
   const {data: transportAmount, loading: transportAmountLoading} = useFetch<number>(`${pettyCashApi}sum/${projectId}/transport`, [projectId, reFetch]);
@@ -40,8 +44,49 @@ export default function PettyCashes() {
     setSelectedPettyCashId(null);
   };
 
+  const handleExportExcel = async () => {
+    const exportPromise = async () => {
+      setExporting(true);
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(`${pettyCashApi}project/${projectId}/excel`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al generar el Excel");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Caja chica proyecto ${projectId}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return "Excel descargado exitosamente";
+    };
+
+    try {
+      await toast.promise(exportPromise(), {
+        loading: "Generando Excel...",
+        success: (msg) => msg,
+        error: (err) => err.message || "Error al generar el Excel",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
+      <Toaster position="top-center" />
       <div className="flex flex-col max-w-full w-full gap-6">
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full">
@@ -152,7 +197,16 @@ export default function PettyCashes() {
 
         </section>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button
+            icon={exporting ? <CgSpinner className="animate-spin" /> : <FaFileExcel />}
+            label={exporting ? "Exportando..." : "Exportar"}
+            type="button"
+            bgColor="#1d6f42"
+            bgHoverColor="#155a34"
+            onClick={handleExportExcel}
+            disabled={exporting}
+          />
           <AddButton onClick={() => setShowRightPanel("new")} />
         </div>
 
