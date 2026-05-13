@@ -23,7 +23,11 @@ import {
   getInventoryFamilyLabel,
 } from "../../../../Elements/inventoryCatalog";
 
-type ProjectInventoryTab = "protection" | "safety" | "fallProtection";
+type ProjectInventoryTab =
+  | "protection"
+  | "safety"
+  | "fallProtection"
+  | "officeMaterial";
 type AssignmentDraft = {
   localId: number;
   workerId: number;
@@ -60,6 +64,11 @@ const projectInventoryTabs: Array<{
     key: "fallProtection",
     label: "Eq. Protecc. Anticaida",
     title: "Equipo de Proteccion Anticaida - Grupos",
+  },
+  {
+    key: "officeMaterial",
+    label: "Materiales de Oficina",
+    title: "Materiales de Oficina",
   },
 ];
 
@@ -120,6 +129,7 @@ export default function ProjectInventory() {
     if (["epp", "epi", "uniform"].includes(family)) return "protection";
     if (family === "ese") return "safety";
     if (family === "harness") return "fallProtection";
+    if (family === "officeMaterial") return "officeMaterial";
     return "other";
   };
 
@@ -386,7 +396,7 @@ export default function ProjectInventory() {
       width: "7rem",
       align: "center",
       render: (row: ProjectInventoryEntry) =>
-        getEntryFamily(row) === "uniform" ? (
+        ["uniform", "officeMaterial"].includes(getEntryFamily(row)) ? (
           <span className="text-gray-400">No aplica</span>
         ) : (
           formatInventoryQuantity(
@@ -405,7 +415,7 @@ export default function ProjectInventory() {
           row.quantityAvailableForAssignment ?? row.quantityPending;
         const hasAssignments = Boolean(row.workerAssignments?.length);
         const canReturn = canManageInventory
-          && ["epp", "epi", "ese", "harness"].includes(family)
+          && ["epp", "epi", "ese", "harness", "officeMaterial"].includes(family)
           && availableToReturn > 0;
         const canAssign = canAssignInventory
           && ["epp", "epi", "uniform", "harness"].includes(family)

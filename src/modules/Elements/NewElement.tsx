@@ -76,6 +76,8 @@ export default function NewEpp() {
   const usesStockFields = usesInventoryStockFields(family);
   const isSafetyEquipment = family === "ese";
   const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
+  const isOfficeMaterial = family === "officeMaterial";
+  const isStockCatalogElement = isProtectionElement || isOfficeMaterial;
   const isFallProtection = family === "harness";
   const existingSafetyTypes = useMemo(
     () =>
@@ -181,12 +183,14 @@ export default function NewEpp() {
       code: isSafetyEquipment ? serialNumber.trim() || null : code.trim() || null,
       categoryName: isSafetyEquipment
         ? normalizedName
-        : categoryName.trim() || null,
+        : isProtectionElement
+          ? categoryName.trim() || null
+          : null,
       stockMinimum: usesStockFields ? stockMinimum : 0,
       controlType: backendPayload.controlType,
       brand: brand.trim() || null,
       model: model.trim() || null,
-      size: size.trim() || null,
+      size: isProtectionElement ? size.trim() || null : null,
       serialNumber: isSafetyEquipment
         ? serialNumber.trim() || null
         : isFallProtection
@@ -275,7 +279,7 @@ export default function NewEpp() {
               />
             </div>
           </>
-        ) : isProtectionElement ? (
+        ) : isStockCatalogElement ? (
           <div className="flex flex-col gap-2">
             <InputForm
               label="Nombre"
@@ -336,43 +340,53 @@ export default function NewEpp() {
                   unidad
                 </div>
               </div>
-              <InputForm
-                label="Talla"
-                name="size"
-                type="text"
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                optional={true}
-              />
+              {isProtectionElement ? (
+                <InputForm
+                  label="Talla"
+                  name="size"
+                  type="text"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  optional={true}
+                />
+              ) : null}
             </div>
 
-            <SelectForm
-              label="Categoria"
-              name="family"
-              value={family}
-              onChange={(value) => setFamily(value as InventoryFamilyKey)}
-              options={[
-                { value: "epp", label: "EPP" },
-                { value: "epi", label: "EPI" },
-                { value: "uniform", label: "Uniforme" },
-              ]}
-            />
+            {isProtectionElement ? (
+              <>
+                <SelectForm
+                  label="Categoria"
+                  name="family"
+                  value={family}
+                  onChange={(value) => setFamily(value as InventoryFamilyKey)}
+                  options={[
+                    { value: "epp", label: "EPP" },
+                    { value: "epi", label: "EPI" },
+                    { value: "uniform", label: "Uniforme" },
+                  ]}
+                />
 
-            <div className="flex flex-col gap-2">
-              <span className="font-semibold text-gray-700">
-                Retorno obligatorio
-              </span>
-              <div className="flex gap-6 text-sm font-semibold text-gray-700">
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={family !== "uniform"} readOnly />
-                  Si
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={family === "uniform"} readOnly />
-                  No
-                </label>
+                <div className="flex flex-col gap-2">
+                  <span className="font-semibold text-gray-700">
+                    Retorno obligatorio
+                  </span>
+                  <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                    <label className="flex items-center gap-2">
+                      <input type="radio" checked={family !== "uniform"} readOnly />
+                      Si
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="radio" checked={family === "uniform"} readOnly />
+                      No
+                    </label>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                Retorno opcional. Este material puede volver a oficina, pero no bloquea el cierre del proyecto.
               </div>
-            </div>
+            )}
           </div>
         ) : isSafetyEquipment ? (
           <div className="flex flex-col gap-2">
@@ -587,7 +601,7 @@ export default function NewEpp() {
           optional={false}
         />
 
-        {!isProtectionElement && !isSafetyEquipment && !isFallProtection ? (
+        {!isStockCatalogElement && !isSafetyEquipment && !isFallProtection ? (
           <SelectForm
             label="Familia"
             name="family"

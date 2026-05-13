@@ -114,6 +114,8 @@ export default function Element() {
   const usesStockFields = useMemo(() => usesInventoryStockFields(family), [family]);
   const isSafetyEquipment = family === "ese";
   const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
+  const isOfficeMaterial = family === "officeMaterial";
+  const isStockCatalogElement = isProtectionElement || isOfficeMaterial;
   const isFallProtection = family === "harness";
   const canRegisterStockMovements = !familyConfig?.unique && !isSafetyEquipment;
   const isLegacyOperative = isLegacyOperativeSource(element);
@@ -172,13 +174,15 @@ export default function Element() {
       family: backendPayload.family,
       categoryName: isSafetyEquipment
         ? selectedSafetyType
-        : categoryName.trim() || null,
+        : isProtectionElement
+          ? categoryName.trim() || null
+          : null,
       stockMinimum: usesStockFields ? stockMinimum : 0,
       type: backendPayload.type,
       controlType: backendPayload.controlType,
       brand: brand.trim() || null,
       model: model.trim() || null,
-      size: size.trim() || null,
+      size: isProtectionElement ? size.trim() || null : null,
       serialNumber: isSafetyEquipment || isFallProtection
         ? serialNumber.trim() || null
         : null,
@@ -368,7 +372,7 @@ export default function Element() {
     ? buildCurrentLocationRows(inventoryDetail, totalOfficeStock)
     : [];
 
-  if (isProtectionElement) {
+  if (isStockCatalogElement) {
     return (
       <>
         <Toaster position="top-center" reverseOrder={false} />
@@ -406,7 +410,7 @@ export default function Element() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className={`grid gap-4 ${isProtectionElement ? "md:grid-cols-2" : ""}`}>
               <InputForm
                 label="Stock Minimo"
                 name="stockMinimum"
@@ -415,41 +419,47 @@ export default function Element() {
                 onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
                 optional={true}
               />
-              <InputForm
-                label="Talla"
-                name="size"
-                type="text"
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                optional={true}
+              {isProtectionElement ? (
+                <InputForm
+                  label="Talla"
+                  name="size"
+                  type="text"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  optional={true}
+                />
+              ) : null}
+            </div>
+
+            {isProtectionElement ? (
+              <SelectForm
+                label="Categoria"
+                name="family"
+                value={family}
+                onChange={(value) => setFamily(value as InventoryFamilyKey)}
+                options={[
+                  { value: "epp", label: "EPP - Elementos de proteccion personal" },
+                  { value: "epi", label: "EPI - Elementos de proteccion individual" },
+                  { value: "uniform", label: "Uniforme - No retorna a oficina" },
+                ]}
               />
-            </div>
+            ) : null}
 
-            <SelectForm
-              label="Categoria"
-              name="family"
-              value={family}
-              onChange={(value) => setFamily(value as InventoryFamilyKey)}
-              options={[
-                { value: "epp", label: "EPP - Elementos de proteccion personal" },
-                { value: "epi", label: "EPI - Elementos de proteccion individual" },
-                { value: "uniform", label: "Uniforme - No retorna a oficina" },
-              ]}
-            />
-
-            <div className="flex flex-col gap-2">
-              <span className="font-semibold text-gray-700">Retorno obligatorio</span>
-              <div className="flex gap-6 text-sm font-semibold text-gray-700">
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={family !== "uniform"} readOnly />
-                  Si
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" checked={family === "uniform"} readOnly />
-                  No
-                </label>
+            {isProtectionElement ? (
+              <div className="flex flex-col gap-2">
+                <span className="font-semibold text-gray-700">Retorno obligatorio</span>
+                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" checked={family !== "uniform"} readOnly />
+                    Si
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" checked={family === "uniform"} readOnly />
+                    No
+                  </label>
+                </div>
               </div>
-            </div>
+            ) : null}
 
             <TextAreaForm
               label="Descripcion"
@@ -461,10 +471,17 @@ export default function Element() {
 
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
               <p className="font-semibold">{selectedFamilyLabel}</p>
-              <p>
-                Codigo {codeRequirementLabel.toLowerCase()}, registros historicos conservados y
-                movimientos visibles desde esta ficha.
-              </p>
+              {isOfficeMaterial ? (
+                <p>
+                  Retorno opcional, unidad fija: unidad. Puede pedirse por requerimiento,
+                  cargarse a obra y retornar sin bloquear la finalizacion del proyecto.
+                </p>
+              ) : (
+                <p>
+                  Codigo {codeRequirementLabel.toLowerCase()}, registros historicos conservados y
+                  movimientos visibles desde esta ficha.
+                </p>
+              )}
             </div>
 
             <ButtonContainer>
@@ -931,6 +948,7 @@ export default function Element() {
               { value: "epp", label: "EPP - Elementos de proteccion personal" },
               { value: "epi", label: "EPI - Elementos de proteccion individual" },
               { value: "uniform", label: "Uniforme - No retorna a oficina" },
+              { value: "officeMaterial", label: "Materiales de Oficina - Retorno opcional" },
               { value: "ese", label: "ESE - Equipos de seguridad y/o emergencia" },
               { value: "harness", label: "EPA - Proteccion anticaida" },
               { value: "quality", label: "Calidad - Activo unico" },

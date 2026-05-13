@@ -6,6 +6,7 @@ export type InventoryFamilyKey =
   | "epp"
   | "epi"
   | "uniform"
+  | "officeMaterial"
   | "ese"
   | "harness"
   | "quality";
@@ -17,10 +18,11 @@ export type InventoryBackendFamily =
   | "epp"
   | "epi"
   | "uniform"
+  | "officeMaterial"
   | "ese"
   | "harness"
   | "measurement";
-export type InventoryCatalogSection = "ssoma" | "quality" | "legacy";
+export type InventoryCatalogSection = "ssoma" | "office" | "quality" | "legacy";
 
 export interface InventorySourceLike {
   type?: string | null;
@@ -95,6 +97,21 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     consumable: false,
     supportsVariants: false,
     section: "ssoma",
+  },
+  {
+    key: "officeMaterial",
+    label: "Materiales de Oficina",
+    shortLabel: "Mat. Oficina",
+    description: "Materiales de oficina con stock y retorno opcional",
+    backendType: "epp",
+    backendFamily: "officeMaterial",
+    backendControlType: "consumable",
+    requiresCode: false,
+    returnsToOffice: false,
+    unique: false,
+    consumable: false,
+    supportsVariants: false,
+    section: "office",
   },
   {
     key: "ese",
@@ -180,21 +197,18 @@ export const inventoryFamilyTabGroups = [
       .map((family) => ({ key: family.key, label: family.label })),
   },
   {
+    key: "office" as const,
+    label: "Materiales de Oficina",
+    tabs: inventoryFamilies
+      .filter((family) => family.section === "office")
+      .map((family) => ({ key: family.key, label: family.label })),
+  },
+  {
     key: "quality" as const,
     label: "Inventario de Calidad",
     tabs: inventoryFamilies
       .filter((family) => family.section === "quality")
       .map((family) => ({ key: family.key, label: family.label })),
-  },
-  {
-    key: "legacy" as const,
-    label: "Legado",
-    tabs: [
-      { key: "operative" as const, label: "Operative" },
-      ...inventoryFamilies
-        .filter((family) => family.section === "legacy")
-        .map((family) => ({ key: family.key, label: family.label })),
-    ],
   },
 ] as const;
 
@@ -215,7 +229,9 @@ export function resolveInventoryRouteFamily(
   if (normalized === "all") return "all";
   if (normalized === "operative") return "operative";
 
-  const knownFamily = inventoryFamilies.find((family) => family.key === normalized);
+  const knownFamily = inventoryFamilies.find(
+    (family) => family.key.toLowerCase() === normalized,
+  );
   if (knownFamily) return knownFamily.key;
 
   return "all";
@@ -230,7 +246,9 @@ export function getInventoryFamilyFromSource(
 ): InventoryFamilyTabKey {
   const familyField = source?.family?.trim().toLowerCase();
   const explicitFamily = inventoryFamilies.find(
-    (item) => item.key === familyField || item.backendFamily === familyField,
+    (item) =>
+      item.key.toLowerCase() === familyField ||
+      item.backendFamily.toLowerCase() === familyField,
   );
   if (explicitFamily) return explicitFamily.key;
 
@@ -282,7 +300,12 @@ export function getInventoryRuleLabel(source?: InventorySourceLike | null) {
 }
 
 export function usesInventoryStockFields(family: InventoryFamilyKey) {
-  return family === "epp" || family === "epi" || family === "uniform";
+  return (
+    family === "epp" ||
+    family === "epi" ||
+    family === "uniform" ||
+    family === "officeMaterial"
+  );
 }
 
 export function getInventoryCodeRequirementLabel(family: InventoryFamilyKey) {
@@ -315,6 +338,8 @@ export function getInventorySectionLabel(family: InventoryFamilyKey) {
   switch (config.section) {
     case "ssoma":
       return "Inventario SSOMA";
+    case "office":
+      return "Materiales de Oficina";
     case "quality":
       return "Inventario de Calidad";
     default:

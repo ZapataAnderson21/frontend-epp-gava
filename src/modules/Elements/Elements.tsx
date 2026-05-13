@@ -16,7 +16,7 @@ import {
   resolveInventoryRouteFamily,
 } from "./inventoryCatalog";
 
-type InventoryMainTab = "protection" | "safety" | "fall" | "quality" | "legacy";
+type InventoryMainTab = "protection" | "safety" | "fall" | "office" | "quality" | "legacy";
 type InventoryFilter = "all" | InventoryFamilyTabKey;
 type EpaView = "groups" | "elements";
 
@@ -37,14 +37,14 @@ const mainTabs: { key: InventoryMainTab; label: string; title: string }[] = [
     title: "Equipo de Proteccion Anticaida",
   },
   {
+    key: "office",
+    label: "Materiales de Oficina",
+    title: "Materiales de Oficina",
+  },
+  {
     key: "quality",
     label: "Inventario de Calidad",
     title: "Inventario de Calidad",
-  },
-  {
-    key: "legacy",
-    label: "Legado",
-    title: "Elementos Legados",
   },
 ];
 
@@ -52,6 +52,7 @@ const tabFamilies: Record<InventoryMainTab, InventoryFamilyTabKey[]> = {
   protection: ["epp", "epi", "uniform"],
   safety: ["ese"],
   fall: ["harness"],
+  office: ["officeMaterial"],
   quality: ["quality"],
   legacy: ["operative"],
 };
@@ -61,6 +62,7 @@ const filterLabels: Record<string, string> = {
   epp: "EPP",
   epi: "EPI",
   uniform: "Uniforme",
+  officeMaterial: "Materiales de Oficina",
   ese: "ESE",
   harness: "Todos",
   quality: "Calidad",
@@ -70,8 +72,9 @@ const filterLabels: Record<string, string> = {
 function getInitialTab(family: ReturnType<typeof resolveInventoryRouteFamily>): InventoryMainTab {
   if (family === "ese") return "safety";
   if (family === "harness") return "fall";
+  if (family === "officeMaterial") return "office";
   if (family === "quality") return "quality";
-  if (family === "operative") return "legacy";
+  if (family === "operative") return "protection";
   return "protection";
 }
 
@@ -223,6 +226,8 @@ export default function Elements() {
         ? "ese"
         : activeTab === "fall"
           ? "harness"
+          : activeTab === "office"
+            ? "officeMaterial"
           : activeTab === "quality"
             ? "quality"
             : activeTab === "legacy"

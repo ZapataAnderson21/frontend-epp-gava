@@ -37,7 +37,9 @@ function getTypeFromElements(elements: ElementType[]) {
   const families = elements.map((element) => element.family?.toLowerCase() || "");
   const types = elements.map((element) => element.type?.toLowerCase() || "");
   const hasSecurity =
-    families.some((family) => ["epp", "epi", "uniform"].includes(family)) ||
+    families.some((family) =>
+      ["epp", "epi", "uniform", "officematerial"].includes(family),
+    ) ||
     types.some((type) => ["epp", "epps"].includes(type));
   const hasOperative =
     families.some((family) => ["ese", "harness", "measurement"].includes(family)) ||

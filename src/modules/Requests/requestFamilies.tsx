@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { FaHelmetSafety } from "react-icons/fa6";
-import { FaFireExtinguisher, FaLink } from "react-icons/fa";
+import { FaBoxOpen, FaFireExtinguisher, FaLink } from "react-icons/fa";
 import type { InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
 import { getInventoryFamilyConfig } from "../Elements/inventoryCatalog";
 
@@ -27,6 +27,12 @@ export const requestFamilyTabs: {
     label: "Eq. Protecc. Anticaida",
     title: "Equipos de proteccion anticaida agrupados",
     icon: <FaLink className="size-12" />,
+  },
+  {
+    key: "officeMaterial",
+    label: "Mat. Oficina",
+    title: "Materiales de oficina",
+    icon: <FaBoxOpen className="size-12" />,
   },
 ];
 

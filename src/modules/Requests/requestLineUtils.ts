@@ -34,12 +34,17 @@ export function attachRequestLineKeys(
   }));
 }
 
-export type RequestLineSectionKey = "protection" | "safety" | "fallProtection";
+export type RequestLineSectionKey =
+  | "protection"
+  | "safety"
+  | "fallProtection"
+  | "officeMaterial";
 
 export const requestLineSectionLabels: Record<RequestLineSectionKey, string> = {
   protection: "Elementos de Proteccion",
   safety: "Equipos de Seguridad y Emergencia",
   fallProtection: "Equipos de Proteccion Anticaida",
+  officeMaterial: "Materiales de Oficina",
 };
 
 export function getRequestLineFamily(
@@ -59,6 +64,7 @@ export function getRequestLineSectionKey(
 
   if (family === "harness") return "fallProtection";
   if (family === "ese") return "safety";
+  if (family === "officeMaterial") return "officeMaterial";
   return "protection";
 }
 
@@ -71,6 +77,7 @@ export function groupRequestLinesBySection(lines: ElementRequestType[]) {
     { key: "protection", label: requestLineSectionLabels.protection, rows: [] },
     { key: "safety", label: requestLineSectionLabels.safety, rows: [] },
     { key: "fallProtection", label: requestLineSectionLabels.fallProtection, rows: [] },
+    { key: "officeMaterial", label: requestLineSectionLabels.officeMaterial, rows: [] },
   ];
 
   const byKey = new Map<RequestLineSectionKey, ElementRequestType[]>(
@@ -110,7 +117,7 @@ export function shouldShowRequestLineNotes(
   line?: Pick<ElementRequestType, "element"> | null,
 ) {
   const family = getRequestLineFamily(line);
-  return ["epp", "epi", "uniform", "ese", "harness"].includes(family);
+  return ["epp", "epi", "uniform", "ese", "harness", "officeMaterial"].includes(family);
 }
 
 export function createElementRequestLine(

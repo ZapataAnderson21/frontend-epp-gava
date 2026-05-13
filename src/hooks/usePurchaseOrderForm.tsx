@@ -42,6 +42,11 @@ interface Params {
 }
 
 export function usePurchaseOrderForm({ projectId, navigate }: Params) {
+  const roundMoney = (value: number) =>
+    Math.round((value + Number.EPSILON) * 100) / 100;
+  const lineAmount = (quantity: number | string, unitPrice: number | string) =>
+    roundMoney((Number(quantity) || 0) * (Number(unitPrice) || 0));
+
   // --- fetch ---
   const { data: project, loading: projectLoading, error: projectError } =
     useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
@@ -120,9 +125,10 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         (next[index] as any)[field] = value;
       }
 
-      const qty = Number(next[index].quantity) || 0;
-      const up = Number(next[index].unitPurchasePrice) || 0;
-      next[index].subtotal = qty * up;
+      next[index].subtotal = lineAmount(
+        next[index].quantity,
+        next[index].unitPurchasePrice,
+      );
 
       return normalizeOrderNumbers(next);
     });
@@ -158,11 +164,24 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
 
   // montos
   const sale_amount = useMemo(
-    () => items.reduce((acc, it) => acc + (Number(it.unitSalesPrice) || 0) * (Number(it.quantity) || 0), 0),
+    () =>
+      roundMoney(
+        items.reduce(
+          (acc, it) => acc + lineAmount(it.quantity, it.unitSalesPrice),
+          0,
+        ),
+      ),
     [items]
   );
   const purchase_amount = useMemo(
-    () => items.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0),
+    () =>
+      roundMoney(
+        items.reduce(
+          (acc, it) =>
+            acc + lineAmount(it.quantity, it.unitPurchasePrice),
+          0,
+        ),
+      ),
     [items]
   );
   
@@ -269,7 +288,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         generalConditions: generalConditions.join("| "),
         qualityConditions: qualityConditions.join("| "),
         paymentMethod,
-        saleAmount: sale_amount * 1.18,
+        saleAmount: roundMoney(sale_amount + roundMoney(sale_amount * 0.18)),
         purchaseAmount: purchase_amount,
         carePerson,
         dniCarePerson,
