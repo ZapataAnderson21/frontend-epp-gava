@@ -1,5 +1,5 @@
 import Permission from "../../../../../../common/auth/Permission"
-import { adminTypes } from "../../../../../../utils";
+import { adminTypes, lineAmount, roundMoney, totalFromRoundedLines } from "../../../../../../utils";
 import { useApiAction, useCurrentUser, useFetch } from "../../../../../../hooks";
 import { ErrorMessage } from "../../../../../../common/error";
 import { purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../../../../../../data/apiUrl";
@@ -107,7 +107,7 @@ export default function EditPurchaseOrder() {
       quantity: String(rpo.quantity ?? ""),
       unitSalesPrice: String(rpo.unitSalesPrice ?? ""),
       unitPurchasePrice: String(rpo.unitPurchasePrice ?? ""),
-      subtotal: (rpo.quantity || 0) * (rpo.unitPurchasePrice || 0),
+      subtotal: lineAmount(rpo.quantity, rpo.unitPurchasePrice),
     }));
     setItems(normalizeOrderNumbers(itemRows));
     setRpoIds(sorted.map(r => r.resourcePurchaseOrderId));
@@ -140,9 +140,10 @@ export default function EditPurchaseOrder() {
         (next[index] as any)[field] = value;
       }
 
-      const qty = Number(next[index].quantity) || 0;
-      const up = Number(next[index].unitPurchasePrice) || 0;
-      next[index].subtotal = qty * up;
+      next[index].subtotal = lineAmount(
+        next[index].quantity,
+        next[index].unitPurchasePrice,
+      );
       return normalizeOrderNumbers(next);
     });
   };
@@ -197,12 +198,12 @@ export default function EditPurchaseOrder() {
 
   // ---- montos ----
   const sale_amount = useMemo(
-    () => items.reduce((acc, it) => acc + (Number(it.unitSalesPrice) || 0) * (Number(it.quantity) || 0), 0),
+    () => totalFromRoundedLines(items, (it) => it.unitSalesPrice),
     [items]
   );
 
   const purchase_amount = useMemo(
-    () => items.reduce((acc, it) => acc + ((Number(it.unitPurchasePrice) || 0) * (Number(it.quantity) || 0)), 0),
+    () => totalFromRoundedLines(items, (it) => it.unitPurchasePrice),
     [items]
   );
 
@@ -309,7 +310,7 @@ export default function EditPurchaseOrder() {
         generalConditions: generalConditions.join("| "),
         qualityConditions: qualityConditions.join("| "),
         paymentMethod,
-        saleAmount: sale_amount * 1.18,
+        saleAmount: roundMoney(sale_amount + roundMoney(sale_amount * 0.18)),
         purchaseAmount: purchase_amount,
         carePerson,
         dniCarePerson,

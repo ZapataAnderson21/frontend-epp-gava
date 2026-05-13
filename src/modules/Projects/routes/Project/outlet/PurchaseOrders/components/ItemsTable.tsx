@@ -1,6 +1,7 @@
 import { FaMinus, FaPlus } from "react-icons/fa";
 import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
+import { lineAmount, roundMoney } from "../../../../../../../utils";
 
 type ItemRow = {
   orderNumber: number;
@@ -165,7 +166,7 @@ export default function ItemsTable({
 
                 {/* PR PARC VENT */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap">
-                  <p>{sym} {((Number(item.unitSalesPrice) || 0) * (Number(item.quantity) || 0)).toFixed(2)}</p>
+                  <p>{sym} {lineAmount(item.quantity, item.unitSalesPrice).toFixed(2)}</p>
                 </td>
 
                 {/* ACCIONES */}
@@ -201,15 +202,15 @@ export default function ItemsTable({
           </tr>
           <tr>
             <td colSpan={5} className="p-2 pr-8 font-bold text-right">IGV</td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(purchaseAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {roundMoney(purchaseAmount * 0.18).toFixed(2)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {(saleAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {roundMoney(saleAmount * 0.18).toFixed(2)}</td>
           </tr>
           <tr>
             <td colSpan={5} className="p-2 pr-8 font-bold text-right">TOTAL</td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(purchaseAmount * 1.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {roundMoney(purchaseAmount + roundMoney(purchaseAmount * 0.18)).toFixed(2)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {(saleAmount * 1.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {roundMoney(saleAmount + roundMoney(saleAmount * 0.18)).toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>

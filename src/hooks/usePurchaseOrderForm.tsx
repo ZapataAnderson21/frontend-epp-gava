@@ -3,6 +3,7 @@ import { useFetch, useApiAction } from "../hooks";
 import type { Project, Resource, Supplier } from "../data/types";
 import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
 import toast from "react-hot-toast";
+import { lineAmount, roundMoney, totalFromRoundedLines } from "../utils";
 
 export type ItemRow = {
   orderNumber: number;
@@ -42,11 +43,6 @@ interface Params {
 }
 
 export function usePurchaseOrderForm({ projectId, navigate }: Params) {
-  const roundMoney = (value: number) =>
-    Math.round((value + Number.EPSILON) * 100) / 100;
-  const lineAmount = (quantity: number | string, unitPrice: number | string) =>
-    roundMoney((Number(quantity) || 0) * (Number(unitPrice) || 0));
-
   // --- fetch ---
   const { data: project, loading: projectLoading, error: projectError } =
     useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
@@ -164,24 +160,11 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
 
   // montos
   const sale_amount = useMemo(
-    () =>
-      roundMoney(
-        items.reduce(
-          (acc, it) => acc + lineAmount(it.quantity, it.unitSalesPrice),
-          0,
-        ),
-      ),
+    () => totalFromRoundedLines(items, (it) => it.unitSalesPrice),
     [items]
   );
   const purchase_amount = useMemo(
-    () =>
-      roundMoney(
-        items.reduce(
-          (acc, it) =>
-            acc + lineAmount(it.quantity, it.unitPurchasePrice),
-          0,
-        ),
-      ),
+    () => totalFromRoundedLines(items, (it) => it.unitPurchasePrice),
     [items]
   );
   
