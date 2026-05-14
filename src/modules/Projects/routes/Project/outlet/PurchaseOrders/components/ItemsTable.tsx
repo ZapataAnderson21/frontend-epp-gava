@@ -50,7 +50,18 @@ export default function ItemsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="text-center w-full">
+      <table className="text-center w-full min-w-[1180px] table-fixed">
+        <colgroup>
+          <col className="w-[44px]" />
+          <col className="w-[470px]" />
+          <col className="w-[58px]" />
+          <col className="w-[100px]" />
+          <col className="w-[104px]" />
+          <col className="w-[92px]" />
+          <col className="w-[132px]" />
+          <col className="w-[132px]" />
+          <col className="w-[90px]" />
+        </colgroup>
         <thead className="bg-[#14519d] border-1 border-[#14519d] text-white">
           <tr>
             <th className="p-2 border-r-1 border-[#f3f4f6] text-nowrap">N°</th>
@@ -84,13 +95,13 @@ export default function ItemsTable({
             return (
               <tr key={index}>
                 {/* N° */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <p>{item.orderNumber}</p>
                 </td>
 
                 {/* DESCRIPCIÓN / RECURSO */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap min-w-80 max-w-120">
-                  <div className="flex flex-col">
+                <td className="p-2 border-1 border-gray-400 align-top">
+                  <div className="flex min-w-0 flex-col">
                     <Select
                       name={`resource-${index}`}
                       value={item.resourceId || ""}
@@ -102,18 +113,19 @@ export default function ItemsTable({
                         })),
                       ]}
                       error={!!ie?.resourceId}
+                      className="w-full min-w-0"
                     />
                     {errorText(ie?.resourceId)}
                   </div>
                 </td>
 
                 {/* UND */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
-                  <p>{item.unit}</p>
+                <td className="p-2 border-1 border-gray-400 align-top">
+                  <p className="truncate" title={item.unit}>{item.unit}</p>
                 </td>
 
                 {/* CANT */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <div className="flex flex-col">
                     <input
                       className={numberCls(!!ie?.quantity)}
@@ -129,7 +141,7 @@ export default function ItemsTable({
                 </td>
 
                 {/* PR UNIT COMP */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <div className="flex flex-col">
                     <input
                       className={inputCls(!!ie?.unitPurchasePrice)}
@@ -144,12 +156,12 @@ export default function ItemsTable({
                 </td>
 
                 {/* PR PARC COMP */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <p>{sym} {item.subtotal.toFixed(2)}</p>
                 </td>
 
                 {/* PR UNIT VENT */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <div className="flex flex-col">
                     <input
                       className={numberCls(!!ie?.unitSalesPrice)}
@@ -165,13 +177,13 @@ export default function ItemsTable({
                 </td>
 
                 {/* PR PARC VENT */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <p>{sym} {lineAmount(item.quantity, item.unitSalesPrice).toFixed(2)}</p>
                 </td>
 
                 {/* ACCIONES */}
-                <td className="p-2 border-1 border-gray-400 text-nowrap">
-                  <div className="flex gap-2">
+                <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
+                  <div className="flex justify-center gap-2">
                     <button
                       type="button"
                       className="bg-red-500 text-white p-2 rounded-md cursor-pointer"

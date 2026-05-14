@@ -14,6 +14,7 @@ interface SelectProps<T extends Primitive = string> {
   value: T;
   onChange: (value: T) => void;
   options: Option<T>[];
+  className?: string;
   error?: boolean;
   placeholder?: string;
   openDurationMs?: number;
@@ -26,6 +27,7 @@ export default function Select<T extends Primitive = string>({
   value,
   onChange,
   options,
+  className = "",
   error,
   placeholder = "Seleccionar ...",
   openDurationMs = 200,
@@ -80,19 +82,22 @@ export default function Select<T extends Primitive = string>({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative min-w-0 ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => !disabled && setIsOpen((v) => !v)}
         disabled={disabled}
-        className={`w-full flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} min-w-[180px] p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={`w-full min-w-0 flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        title={selectedLabel || placeholder}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={`${name}-menu`}
       >
-        {selectedLabel || placeholder}
+        <span className="block min-w-0 flex-1 truncate text-left">
+          {selectedLabel || placeholder}
+        </span>
         <IoMdArrowDropdown
-          className={`ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`ml-2 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -123,11 +128,12 @@ export default function Select<T extends Primitive = string>({
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`px-3 py-2 hover:bg-[#eff2ff] hover:text-[#0047a3] cursor-pointer ${
+                title={option.label}
+                className={`min-w-0 px-3 py-2 hover:bg-[#eff2ff] hover:text-[#0047a3] cursor-pointer ${
                   value === option.value ? "bg-[#eff2ff] font-semibold text-[#0047a3]" : ""
                 }`}
               >
-                <span>{option.label}</span>
+                <span className="block truncate">{option.label}</span>
               </motion.div>
             ))}
           </motion.div>
