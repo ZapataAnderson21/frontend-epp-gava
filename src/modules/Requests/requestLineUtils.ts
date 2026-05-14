@@ -2,10 +2,7 @@ import type {
   ElementRequestType,
   ElementType,
 } from "../../data/types";
-import {
-  getInventoryFamilyConfig,
-  getInventoryFamilyFromSource,
-} from "../Elements/inventoryCatalog";
+import { getInventoryFamilyFromSource } from "../Elements/inventoryCatalog";
 
 function randomLineToken() {
   return Math.random().toString(36).slice(2, 10);
@@ -108,9 +105,10 @@ export function getFallProtectionGroupParts(line: Pick<ElementRequestType, "fall
   ];
 }
 
-export function usesUniqueRequestQuantity(line?: Pick<ElementRequestType, "element"> | null) {
-  const family = getRequestLineFamily(line);
-  return Boolean(getInventoryFamilyConfig(family)?.unique);
+export function usesUniqueRequestQuantity(
+  line?: Pick<ElementRequestType, "element" | "fallProtectionGroup" | "fallProtectionGroupId"> | null,
+) {
+  return Boolean(line?.fallProtectionGroup || line?.fallProtectionGroupId);
 }
 
 export function shouldShowRequestLineNotes(

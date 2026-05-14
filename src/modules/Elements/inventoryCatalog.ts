@@ -63,7 +63,7 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     backendControlType: "returnable",
     requiresCode: false,
     returnsToOffice: true,
-    unique: true,
+    unique: false,
     consumable: false,
     supportsVariants: false,
     section: "ssoma",
