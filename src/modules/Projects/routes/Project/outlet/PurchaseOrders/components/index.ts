@@ -9,3 +9,4 @@ export { default as DuplicateModal } from "./DuplicateModal";
 export { default as NavbarProject } from "./Navbar"
 export { default as InfoField } from "./InfoField";
 export { default as SectionCard } from "./SectionCard";
+export { default as UnitValuesModal } from "./UnitValuesModal";

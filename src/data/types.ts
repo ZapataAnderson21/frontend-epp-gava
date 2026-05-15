@@ -585,6 +585,19 @@ export interface PurchaseOrder {
   resources?: ResourcePurchaseOrder[];
 }
 
+export interface PurchaseOrderUnitValue {
+  resourcePurchaseOrderId: number;
+  purchaseOrderId: number;
+  purchaseOrderCode: string;
+  purchaseOrderType: "materials" | "services";
+  description: string;
+  supplierId: number;
+  supplierName: string;
+  currency?: string | null;
+  unitPurchasePrice: number;
+  orderNumber?: number;
+}
+
 export interface PettyCashType {
   pettyCashId: number;
   projectId: number;
