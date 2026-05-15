@@ -12,6 +12,7 @@ interface ContentTableSummaryProps {
   request: RequestType;
   onQuantityChange: (id: number, quantity: number) => void;
   onSafetySelectionChange?: (id: number, selectedElementIds: number[]) => void;
+  selectedSafetyElementIds?: { [key: number]: number[] };
   elementRequests?: ElementRequestType[];
   safetyElements?: ElementType[];
   officeEntries?: OfficeInventoryEntry[];
@@ -21,6 +22,7 @@ export default function ContentTableSummary({
   request,
   onQuantityChange,
   onSafetySelectionChange,
+  selectedSafetyElementIds,
   elementRequests,
   safetyElements,
   officeEntries,
@@ -41,6 +43,11 @@ export default function ContentTableSummary({
                 elementRequest={item}
                 onQuantityChange={onQuantityChange}
                 onSafetySelectionChange={onSafetySelectionChange}
+                selectedSafetyElementIds={
+                  typeof item.elementRequestId === 'number'
+                    ? selectedSafetyElementIds?.[item.elementRequestId]
+                    : undefined
+                }
                 safetyElements={safetyElements}
                 officeEntries={officeEntries}
               />

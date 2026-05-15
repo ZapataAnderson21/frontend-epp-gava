@@ -347,6 +347,15 @@ export default function RequestView({ requestId }: RequestViewProps) {
       : 0;
   };
 
+  const getSelectedSafetyElementIdsForLine = (elementRequest: ElementRequestType) => {
+    if (typeof elementRequest.elementRequestId !== "number") return [];
+
+    const selectedIds = selectedSafetyElementIds[elementRequest.elementRequestId];
+    if (Array.isArray(selectedIds)) return selectedIds;
+
+    return elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [];
+  };
+
   const handleReviewed = async () => {
     if (!user) return;
     await toast.promise(
@@ -359,12 +368,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
         if (!request) throw new Error("No se encontró la solicitud.");
 
-        for (const elementRequest of request.elementRequests || []) {
+        const currentElementRequests = elementRequests.length > 0 ? elementRequests : request.elementRequests || [];
+
+        for (const elementRequest of currentElementRequests) {
           const family = getRequestLineFamily(elementRequest);
-          const selectedElementIds =
-            elementRequest.elementRequestId !== undefined
-              ? selectedSafetyElementIds[elementRequest.elementRequestId] || []
-              : [];
+          const selectedElementIds = getSelectedSafetyElementIdsForLine(elementRequest);
           const acceptedQuantity = getAcceptedQuantityForLine(
             elementRequest,
             family,
@@ -414,28 +422,36 @@ export default function RequestView({ requestId }: RequestViewProps) {
       (async () => {
         if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
 
-        for (const elementRequest of request.elementRequests || []) {
+        const currentElementRequests = elementRequests.length > 0 ? elementRequests : request.elementRequests || [];
+
+        for (const elementRequest of currentElementRequests) {
           const family = getRequestLineFamily(elementRequest);
-          const selectedElementIds =
-            elementRequest.elementRequestId !== undefined
-              ? selectedSafetyElementIds[elementRequest.elementRequestId] || []
-              : [];
+          const selectedElementIds = getSelectedSafetyElementIdsForLine(elementRequest);
           const acceptedQuantity = getAcceptedQuantityForLine(
             elementRequest,
             family,
             selectedElementIds,
           );
 
-          if (elementRequest.elementRequestResponses?.length && elementRequest.elementRequestResponses.length > 0) {
+          const existingResponse = elementRequest.elementRequestResponses?.[0];
+          const responsePayload = {
+            elementRequestId: elementRequest.elementRequestId,
+            quantityAccepted: acceptedQuantity,
+            selectedElementIds: family === "ese" ? selectedElementIds : [],
+            requestResponseId: requestResponse.requestResponseId,
+          };
+
+          if (existingResponse?.elementRequestResponseId) {
             await updateElementRequestResponse(
-              `${elementRequestResponseApi}${elementRequest.elementRequestResponses[0].elementRequestResponseId}`,
+              `${elementRequestResponseApi}${existingResponse.elementRequestResponseId}`,
               "PATCH",
-              {
-                elementRequestId: elementRequest.elementRequestId,
-                quantityAccepted: acceptedQuantity,
-                selectedElementIds: family === "ese" ? selectedElementIds : [],
-                requestResponseId: requestResponse.requestResponseId,
-              }
+              responsePayload
+            );
+          } else if (elementRequest.elementRequestId !== undefined) {
+            await createElementRequestResponse(
+              `${elementRequestResponseApi}`,
+              "POST",
+              responsePayload,
             );
           }
         }
@@ -613,6 +629,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   request={request}
                   elementRequests={elementRequests}
                   onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                  selectedSafetyElementIds={selectedSafetyElementIds}
                   onSafetySelectionChange={(id, selectedIds) =>
                     setSelectedSafetyElementIds((prev) => ({
                       ...prev,

@@ -11,6 +11,7 @@ interface RowTableSummaryProps {
   elementRequest: ElementRequestType;
   onQuantityChange: (id: number, quantity: number) => void;
   onSafetySelectionChange?: (id: number, selectedElementIds: number[]) => void;
+  selectedSafetyElementIds?: number[];
   safetyElements?: ElementType[];
   officeEntries?: OfficeInventoryEntry[];
 }
@@ -67,6 +68,7 @@ export default function RowTableSummary({
   elementRequest,
   onQuantityChange,
   onSafetySelectionChange,
+  selectedSafetyElementIds: controlledSelectedElementIds,
   safetyElements = [],
   officeEntries = [],
 }: RowTableSummaryProps) {
@@ -75,19 +77,24 @@ export default function RowTableSummary({
     elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
     (family === 'harness' ? 1 : 0);
   const [quantityAccepted, setQuantityAccepted] = useState<number>(initialQuantity);
-  const [selectedElementIds, setSelectedElementIds] = useState<number[]>(
-    elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [],
-  );
+  const savedSelectedElementIds =
+    elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [];
+  const savedSelectedElementIdsKey = savedSelectedElementIds.join(',');
+  const [localSelectedElementIds, setLocalSelectedElementIds] =
+    useState<number[]>(savedSelectedElementIds);
+  const selectedElementIds =
+    family === 'ese' && Array.isArray(controlledSelectedElementIds)
+      ? controlledSelectedElementIds
+      : localSelectedElementIds;
 
   useEffect(() => {
     setQuantityAccepted(initialQuantity);
   }, [initialQuantity]);
 
   useEffect(() => {
-    setSelectedElementIds(
-      elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [],
-    );
-  }, [elementRequest.elementRequestResponses]);
+    if (Array.isArray(controlledSelectedElementIds)) return;
+    setLocalSelectedElementIds(savedSelectedElementIds);
+  }, [controlledSelectedElementIds, savedSelectedElementIdsKey]);
   const fallProtectionParts = getFallProtectionGroupParts(elementRequest);
   const requestedSafetyType = getSafetyTypeName(elementRequest.element);
   const safetyOptions = safetyElements.filter(
@@ -120,7 +127,9 @@ export default function RowTableSummary({
       ? Array.from(new Set([...selectedElementIds, elementId]))
       : selectedElementIds.filter((selectedElementId) => selectedElementId !== elementId);
 
-    setSelectedElementIds(selectedIds);
+    if (!Array.isArray(controlledSelectedElementIds)) {
+      setLocalSelectedElementIds(selectedIds);
+    }
     setQuantityAccepted(selectedIds.length);
     if (typeof elementRequest.elementRequestId === 'number') {
       onSafetySelectionChange?.(elementRequest.elementRequestId, selectedIds);
