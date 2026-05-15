@@ -23,10 +23,18 @@ function formatMoney(value: number, currency?: string | null) {
     currency?.toUpperCase() === "PEN"
       ? "S/."
       : currency?.toUpperCase() === "EUR"
-        ? "€"
+        ? "\u20ac"
         : "$";
 
   return `${symbol} ${Number(value || 0).toFixed(4)}`;
+}
+
+function formatCurrencyLabel(currency?: string | null) {
+  const normalized = currency?.toUpperCase();
+  if (normalized === "USD") return "D\u00f3lares";
+  if (normalized === "PEN") return "soles";
+  if (normalized === "EUR") return "Euros";
+  return currency || "-";
 }
 
 export default function UnitValuesModal({
@@ -40,7 +48,9 @@ export default function UnitValuesModal({
   const [query, setQuery] = useState("");
 
   const { data, loading, error } = useFetch<PurchaseOrderUnitValue[]>(
-    isOpen && projectId ? `${purchaseOrderApi}project/${projectId}/unit-values` : "",
+    isOpen && projectId
+      ? `${purchaseOrderApi}project/${projectId}/unit-values`
+      : "",
     [isOpen, projectId],
   );
 
@@ -83,7 +93,7 @@ export default function UnitValuesModal({
               Valores unitarios registrados
             </h2>
             <p className="text-sm text-gray-500">
-              Ítems de órdenes de compra dentro de este proyecto.
+              Items de ordenes de compra dentro de este proyecto.
             </p>
           </div>
           <button
@@ -120,7 +130,7 @@ export default function UnitValuesModal({
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Descripción, OC o proveedor"
+              placeholder="Descripcion, OC o proveedor"
               className="rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
             />
           </div>
@@ -128,7 +138,9 @@ export default function UnitValuesModal({
 
         <div className="min-h-0 flex-1 overflow-auto p-5">
           {loading ? (
-            <p className="py-8 text-center text-gray-500">Cargando valores unitarios...</p>
+            <p className="py-8 text-center text-gray-500">
+              Cargando valores unitarios...
+            </p>
           ) : error ? (
             <ErrorMessage errorMessage={error} />
           ) : filteredData.length === 0 ? (
@@ -136,58 +148,58 @@ export default function UnitValuesModal({
               No hay valores unitarios para este filtro.
             </p>
           ) : (
-            <Table<PurchaseOrderUnitValue>
-              data={filteredData}
-              itemsPerPage={8}
-              columns={[
-                {
-                  key: "purchaseOrderCode",
-                  label: "Código OC",
-                  width: "13rem",
-                },
-                {
-                  label: "Descripción",
-                  width: "28rem",
-                  render: (row) => (
-                    <span className="block max-w-[34rem] whitespace-normal text-left">
-                      {row.description}
-                    </span>
-                  ),
-                },
-                {
-                  key: "supplierName",
-                  label: "Proveedor",
-                  width: "15rem",
-                },
-                {
-                  key: "currency",
-                  label: "Moneda",
-                  width: "7rem",
-                  align: "center",
-                },
-                {
-                  label: "Valor unitario",
-                  width: "10rem",
-                  align: "right",
-                  render: (row) => formatMoney(row.unitPurchasePrice, row.currency),
-                },
-                {
-                  label: "Acciones",
-                  width: "10rem",
-                  align: "center",
-                  render: (row) => (
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-bold text-white transition hover:bg-black"
-                      onClick={() => handleSeePurchaseOrder(row.purchaseOrderId)}
-                    >
-                      <FaExternalLinkAlt />
-                      Ver OC
-                    </button>
-                  ),
-                },
-              ] as const}
-            />
+            <div className="text-[13px]">
+              <Table<PurchaseOrderUnitValue>
+                data={filteredData}
+                itemsPerPage={8}
+                columns={[
+                  {
+                    label: "Descripcion",
+                    width: "34rem",
+                    render: (row) => (
+                      <span className="block max-w-[42rem] whitespace-normal text-left leading-snug">
+                        {row.description}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: "Proveedor",
+                    width: "15rem",
+                    render: (row) => (
+                      <span className="leading-snug">{row.supplierName}</span>
+                    ),
+                  },
+                  {
+                    label: "Moneda",
+                    width: "8rem",
+                    align: "center",
+                    render: (row) => formatCurrencyLabel(row.currency),
+                  },
+                  {
+                    label: "Valor unitario",
+                    width: "10rem",
+                    align: "right",
+                    render: (row) =>
+                      formatMoney(row.unitPurchasePrice, row.currency),
+                  },
+                  {
+                    label: "Acciones",
+                    width: "10rem",
+                    align: "center",
+                    render: (row) => (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-bold text-white transition hover:bg-black"
+                        onClick={() => handleSeePurchaseOrder(row.purchaseOrderId)}
+                      >
+                        <FaExternalLinkAlt />
+                        Ver OC
+                      </button>
+                    ),
+                  },
+                ] as const}
+              />
+            </div>
           )}
         </div>
       </div>
