@@ -8,7 +8,10 @@ import { useFetch } from "../../hooks";
 import { useMemo } from "react";
 import SeeButton from "../../common/button/SeeButton";
 import { EditButton } from "../../common/button";
-import StatusTag from "./components/StatusTag";
+import StatusTag, { type RequestStatusValue } from "./components/StatusTag";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useApiAction } from "../../hooks/useApiAction";
+import toast, { Toaster } from "react-hot-toast";
 
 interface RequestTableProps {
   filter: string;
@@ -43,9 +46,13 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
   }, [filter, projectId, myUserId]);
 
 
-  const { data: requests, loading, error } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
+  const { data: requests, loading, error, refetch } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
+  const { user } = useCurrentUser();
+  const { execute: updateRequestStatus } = useApiAction<any>();
 
   const navigate = useNavigate();
+  const canEditRequestStatus =
+    user?.userType === "ADMINISTRADORA" || user?.userType === "GERENTE";
 
   const navigateToRequest = (requestId: number) => {
     if (projectId) {
@@ -63,6 +70,26 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
     }
   }
 
+  const handleStatusChange = async (
+    requestId: number,
+    newStatus: RequestStatusValue,
+  ) => {
+    await toast.promise(
+      updateRequestStatus(`${requestApi}${requestId}/status`, "PATCH", {
+        status: newStatus,
+      }).then((result) => {
+        refetch();
+        return result;
+      }),
+      {
+        loading: "Actualizando estado...",
+        success: (result) =>
+          result.message || "Estado actualizado correctamente.",
+        error: (err) => err.message || "No se pudo actualizar el estado.",
+      },
+    );
+  };
+
   const columns = [
     { key: "requestId", label: "Id", width: "4rem" },
     { key: "createdAt", label: "F y H de Registro", width: "8rem" },
@@ -76,7 +103,15 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
       label: "Estado",
       width: "8rem",
       render: (row: RequestType) => {
-        return <StatusTag status={row.status} />
+        return (
+          <StatusTag
+            status={row.status}
+            editable={canEditRequestStatus && row.status !== "Completada"}
+            onStatusChange={(newStatus) =>
+              handleStatusChange(row.requestId, newStatus)
+            }
+          />
+        );
      }
     },
     {
@@ -114,9 +149,12 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
   }));
 
   return (
-    <Table<RequestType>
-      data={processedRequests}
-      columns={columns}
-    />
+    <>
+      <Table<RequestType>
+        data={processedRequests}
+        columns={columns}
+      />
+      <Toaster position="top-center" />
+    </>
   );
 }

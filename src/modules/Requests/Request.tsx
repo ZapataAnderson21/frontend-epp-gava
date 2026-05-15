@@ -26,7 +26,7 @@ export default function Request() {
 
   return (
     <>
-      {request.status === "draft" ? (
+      {request.status === "draft" || request.status === "Borrador" ? (
         <RequestDraft />
       ) : (
         <RequestView requestId={Number(requestId)} />
