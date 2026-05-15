@@ -12,6 +12,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { useCurrentUser } from "../../hooks";
 import { elementApi, inventoryApi } from "../../data/apiUrl";
+import { DeleteConfirmDialog } from "../../components";
 import {
   ButtonContainer,
   Form,
@@ -19,7 +20,7 @@ import {
   SelectForm,
   TextAreaForm,
 } from "../../common/form";
-import { ReturnButton, SaveButton, SeeButton } from "../../common/button";
+import { DeleteButton, ReturnButton, SaveButton, SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
 import toast, { Toaster } from "react-hot-toast";
 import { FaFileLines } from "react-icons/fa6";
@@ -68,6 +69,7 @@ export default function Element() {
   const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
   const [movementModal, setMovementModal] = useState<MovementModalMode | null>(null);
   const [selectedMovement, setSelectedMovement] = useState<InventoryMovement | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const {
     data: element,
@@ -83,6 +85,7 @@ export default function Element() {
   } = useFetch<ElementInventoryDetail>(`${inventoryApi}element/${elementId}`, [elementId]);
 
   const { execute: updateElement, loading: updating } = useApiAction<ElementType>();
+  const { execute: deleteElement, loading: deleting } = useApiAction<ElementType>();
   const { execute: executeMovement, loading: registeringMovement } = useApiAction<unknown>();
   const { user } = useCurrentUser();
 
@@ -199,6 +202,18 @@ export default function Element() {
         return result.message || "Item actualizado con exito";
       },
       error: (err) => err.message || "Error al actualizar el item",
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    toast.promise(deleteElement(`${elementApi}${elementId}`, "DELETE"), {
+      loading: "Eliminando item de inventario...",
+      success: (result) => {
+        setIsDeleteDialogOpen(false);
+        setTimeout(() => navigateToInventory(isLegacyOperative ? "operative" : family), 1000);
+        return result.message || "Item eliminado correctamente";
+      },
+      error: (err) => err.message || "Error al eliminar el item",
     });
   };
 
@@ -371,6 +386,17 @@ export default function Element() {
   const currentLocationRows = inventoryDetail
     ? buildCurrentLocationRows(inventoryDetail, totalOfficeStock)
     : [];
+  const deleteDialog = (
+    <DeleteConfirmDialog
+      isOpen={isDeleteDialogOpen}
+      title="Eliminar item de inventario"
+      message={`Se archivara "${element?.name || "este item"}" mediante soft delete. No se perdera el historial de requerimientos, movimientos ni trazabilidad asociados. Desea continuar?`}
+      confirmText="Eliminar"
+      loading={deleting}
+      onConfirm={handleConfirmDelete}
+      onCancel={() => setIsDeleteDialogOpen(false)}
+    />
+  );
 
   if (isStockCatalogElement) {
     return (
@@ -486,6 +512,10 @@ export default function Element() {
 
             <ButtonContainer>
               <ReturnButton onClick={() => navigateToInventory(family)} />
+              <DeleteButton
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={deleting}
+              />
               <SaveButton loading={updating} />
             </ButtonContainer>
           </form>
@@ -600,6 +630,7 @@ export default function Element() {
             onClose={() => setSelectedMovement(null)}
           />
         ) : null}
+        {deleteDialog}
       </>
     );
   }
@@ -715,6 +746,10 @@ export default function Element() {
 
             <ButtonContainer>
               <ReturnButton onClick={() => navigateToInventory(family)} />
+              <DeleteButton
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={deleting}
+              />
               <SaveButton loading={updating} />
             </ButtonContainer>
           </form>
@@ -810,6 +845,7 @@ export default function Element() {
             onClose={() => setSelectedMovement(null)}
           />
         ) : null}
+        {deleteDialog}
       </>
     );
   }
@@ -974,6 +1010,10 @@ export default function Element() {
             <ReturnButton
               onClick={() => navigateToInventory(isLegacyOperative ? "operative" : family)}
             />
+            <DeleteButton
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={deleting}
+            />
             <SaveButton loading={updating} />
           </ButtonContainer>
         </Form>
@@ -1119,6 +1159,7 @@ export default function Element() {
           onClose={() => setSelectedMovement(null)}
         />
       ) : null}
+      {deleteDialog}
     </>
   );
 }
