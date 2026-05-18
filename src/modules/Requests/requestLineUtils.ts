@@ -34,12 +34,14 @@ export function attachRequestLineKeys(
 export type RequestLineSectionKey =
   | "protection"
   | "safety"
+  | "ssomaSupply"
   | "fallProtection"
   | "officeMaterial";
 
 export const requestLineSectionLabels: Record<RequestLineSectionKey, string> = {
   protection: "Elementos de Proteccion",
   safety: "Equipos de Seguridad y Emergencia",
+  ssomaSupply: "Insumos SSOMA",
   fallProtection: "Equipos de Proteccion Anticaida",
   officeMaterial: "Materiales de Oficina",
 };
@@ -61,6 +63,7 @@ export function getRequestLineSectionKey(
 
   if (family === "harness") return "fallProtection";
   if (family === "ese") return "safety";
+  if (family === "ssomaSupply") return "ssomaSupply";
   if (family === "officeMaterial") return "officeMaterial";
   return "protection";
 }
@@ -73,6 +76,7 @@ export function groupRequestLinesBySection(lines: ElementRequestType[]) {
   }> = [
     { key: "protection", label: requestLineSectionLabels.protection, rows: [] },
     { key: "safety", label: requestLineSectionLabels.safety, rows: [] },
+    { key: "ssomaSupply", label: requestLineSectionLabels.ssomaSupply, rows: [] },
     { key: "fallProtection", label: requestLineSectionLabels.fallProtection, rows: [] },
     { key: "officeMaterial", label: requestLineSectionLabels.officeMaterial, rows: [] },
   ];
@@ -115,7 +119,7 @@ export function shouldShowRequestLineNotes(
   line?: Pick<ElementRequestType, "element"> | null,
 ) {
   const family = getRequestLineFamily(line);
-  return ["epp", "epi", "uniform", "ese", "harness", "officeMaterial"].includes(family);
+  return ["epp", "epi", "uniform", "ese", "harness", "officeMaterial", "ssomaSupply"].includes(family);
 }
 
 export function createElementRequestLine(

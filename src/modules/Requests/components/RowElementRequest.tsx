@@ -58,7 +58,7 @@ export default function RowElementRequest({
         {showQuantityField ? (
           <input
             type="number"
-            min="0"
+            min={family === "ssomaSupply" ? "1" : "0"}
             step={allowDecimals ? "0.01" : "1"}
             disabled={isUnique}
             className={`w-28 rounded-md border border-gray-300 px-2 py-1 ${

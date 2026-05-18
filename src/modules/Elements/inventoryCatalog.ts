@@ -7,6 +7,7 @@ export type InventoryFamilyKey =
   | "epi"
   | "uniform"
   | "officeMaterial"
+  | "ssomaSupply"
   | "ese"
   | "harness"
   | "quality";
@@ -19,6 +20,7 @@ export type InventoryBackendFamily =
   | "epi"
   | "uniform"
   | "officeMaterial"
+  | "ssomaSupply"
   | "ese"
   | "harness"
   | "measurement";
@@ -114,6 +116,21 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     section: "office",
   },
   {
+    key: "ssomaSupply",
+    label: "Insumos SSOMA",
+    shortLabel: "Insumos",
+    description: "Insumos SSOMA controlados por cantidad",
+    backendType: "operative",
+    backendFamily: "ssomaSupply",
+    backendControlType: "consumable",
+    requiresCode: false,
+    returnsToOffice: false,
+    unique: false,
+    consumable: true,
+    supportsVariants: false,
+    section: "ssoma",
+  },
+  {
     key: "ese",
     label: "ESE",
     shortLabel: "ESE",
@@ -186,7 +203,7 @@ export const inventoryFamilyTabGroups = [
     key: "safety" as const,
     label: "Equipos SSOMA",
     tabs: inventoryFamilies
-      .filter((family) => family.key === "ese")
+      .filter((family) => family.key === "ese" || family.key === "ssomaSupply")
       .map((family) => ({ key: family.key, label: family.label })),
   },
   {
@@ -304,7 +321,8 @@ export function usesInventoryStockFields(family: InventoryFamilyKey) {
     family === "epp" ||
     family === "epi" ||
     family === "uniform" ||
-    family === "officeMaterial"
+    family === "officeMaterial" ||
+    family === "ssomaSupply"
   );
 }
 

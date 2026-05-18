@@ -252,7 +252,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
     setIsAddRowOpen(true);
     setNewElementFamily("epp");
     setNewElementId(0);
-    setNewUnit("");
+    setNewUnit("unidad");
     setNewQuantity(1);
   };
 
@@ -270,7 +270,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
       return;
     }
 
-    if (!newUnit.trim()) {
+    if (newElementFamily !== "ssomaSupply" && !newUnit.trim()) {
       toast.error("Ingresa la unidad.");
       return;
     }
@@ -297,7 +297,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
         elementId: selectedGroup?.harnessElementId ?? selectedElement?.elementId ?? newElementId,
         fallProtectionGroupId: selectedGroup?.fallProtectionGroupId ?? null,
         quantityRequested: newQuantity,
-        unit: newUnit.trim(),
+        unit: newElementFamily === "ssomaSupply" ? "unidad" : newUnit.trim(),
         requestId: request.requestId,
       });
 
@@ -543,7 +543,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
                               ? "border-blue-600 bg-blue-600 text-white"
                               : "border-gray-300 bg-white text-gray-700"
                           }`}
-                          onClick={() => setNewElementFamily(tab.key)}
+                          onClick={() => {
+                            setNewElementFamily(tab.key);
+                            setNewUnit(tab.key === "ssomaSupply" ? "unidad" : "");
+                          }}
                         >
                           {tab.label}
                         </button>
@@ -580,14 +583,15 @@ export default function RequestView({ requestId }: RequestViewProps) {
                         type="text"
                         className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
                         placeholder="Unidad"
-                        value={newUnit}
+                        value={newElementFamily === "ssomaSupply" ? "unidad" : newUnit}
                         onChange={(e) => setNewUnit(e.target.value)}
+                        disabled={newElementFamily === "ssomaSupply"}
                       />
                       <input
                         type="number"
                         className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
                         placeholder="Cantidad"
-                        min={0}
+                        min={newElementFamily === "ssomaSupply" ? 1 : 0}
                         step="1"
                         value={newQuantity}
                         onChange={(e) => setNewQuantity(Number(e.target.value))}

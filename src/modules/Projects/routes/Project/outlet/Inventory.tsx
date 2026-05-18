@@ -26,6 +26,7 @@ import {
 type ProjectInventoryTab =
   | "protection"
   | "safety"
+  | "ssomaSupply"
   | "fallProtection"
   | "officeMaterial";
 type AssignmentDraft = {
@@ -59,6 +60,11 @@ const projectInventoryTabs: Array<{
     key: "safety",
     label: "Eq. Seg. y Emerg.",
     title: "Equipamiento de Seguridad y Emergencia",
+  },
+  {
+    key: "ssomaSupply",
+    label: "Insumos SSOMA",
+    title: "Insumos SSOMA",
   },
   {
     key: "fallProtection",
@@ -128,6 +134,7 @@ export default function ProjectInventory() {
 
     if (["epp", "epi", "uniform"].includes(family)) return "protection";
     if (family === "ese") return "safety";
+    if (family === "ssomaSupply") return "ssomaSupply";
     if (family === "harness") return "fallProtection";
     if (family === "officeMaterial") return "officeMaterial";
     return "other";
@@ -396,7 +403,7 @@ export default function ProjectInventory() {
       width: "7rem",
       align: "center",
       render: (row: ProjectInventoryEntry) =>
-        ["uniform", "officeMaterial"].includes(getEntryFamily(row)) ? (
+        ["uniform", "officeMaterial", "ssomaSupply"].includes(getEntryFamily(row)) ? (
           <span className="text-gray-400">No aplica</span>
         ) : (
           formatInventoryQuantity(
@@ -446,6 +453,11 @@ export default function ProjectInventory() {
                   );
                 }}
               />
+            ) : null}
+            {family === "ssomaSupply" ? (
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-600">
+                No asignable
+              </span>
             ) : null}
             {canReturn ? (
               <ActionButton
@@ -1055,6 +1067,12 @@ function ProjectInventoryDetailModal({
             label="Tipo"
             value={entry.elementTypeLabel || entry.elementType}
           />
+          {entry.family === "ssomaSupply" ? (
+            <InventoryDetailRow
+              label="Regla"
+              value="No retornable, no asignable, control por cantidad"
+            />
+          ) : null}
         </div>
 
         {entry.fallProtectionGroupId && entry.fallProtectionParts?.length ? (

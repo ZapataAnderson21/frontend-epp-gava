@@ -23,6 +23,12 @@ export const requestFamilyTabs: {
     icon: <FaFireExtinguisher className="size-12" />,
   },
   {
+    key: "ssomaSupply",
+    label: "Insumos SSOMA",
+    title: "Insumos SSOMA controlados por cantidad",
+    icon: <FaBoxOpen className="size-12" />,
+  },
+  {
     key: "harness",
     label: "Eq. Protecc. Anticaida",
     title: "Equipos de proteccion anticaida agrupados",

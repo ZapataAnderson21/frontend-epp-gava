@@ -16,7 +16,14 @@ import {
   resolveInventoryRouteFamily,
 } from "./inventoryCatalog";
 
-type InventoryMainTab = "protection" | "safety" | "fall" | "office" | "quality" | "legacy";
+type InventoryMainTab =
+  | "protection"
+  | "safety"
+  | "ssomaSupply"
+  | "fall"
+  | "office"
+  | "quality"
+  | "legacy";
 type InventoryFilter = "all" | InventoryFamilyTabKey;
 type EpaView = "groups" | "elements";
 
@@ -30,6 +37,11 @@ const mainTabs: { key: InventoryMainTab; label: string; title: string }[] = [
     key: "safety",
     label: "Eq. Seg. y Emerg.",
     title: "Equipamento de Seguridad y Emergencia",
+  },
+  {
+    key: "ssomaSupply",
+    label: "Insumos SSOMA",
+    title: "Insumos SSOMA",
   },
   {
     key: "fall",
@@ -51,6 +63,7 @@ const mainTabs: { key: InventoryMainTab; label: string; title: string }[] = [
 const tabFamilies: Record<InventoryMainTab, InventoryFamilyTabKey[]> = {
   protection: ["epp", "epi", "uniform"],
   safety: ["ese"],
+  ssomaSupply: ["ssomaSupply"],
   fall: ["harness"],
   office: ["officeMaterial"],
   quality: ["quality"],
@@ -63,6 +76,7 @@ const filterLabels: Record<string, string> = {
   epi: "EPI",
   uniform: "Uniforme",
   officeMaterial: "Materiales de Oficina",
+  ssomaSupply: "Insumos SSOMA",
   ese: "ESE",
   harness: "Todos",
   quality: "Calidad",
@@ -71,6 +85,7 @@ const filterLabels: Record<string, string> = {
 
 function getInitialTab(family: ReturnType<typeof resolveInventoryRouteFamily>): InventoryMainTab {
   if (family === "ese") return "safety";
+  if (family === "ssomaSupply") return "ssomaSupply";
   if (family === "harness") return "fall";
   if (family === "officeMaterial") return "office";
   if (family === "quality") return "quality";
@@ -224,15 +239,17 @@ export default function Elements() {
       ? familyFilter
       : activeTab === "safety"
         ? "ese"
-        : activeTab === "fall"
-          ? "harness"
-          : activeTab === "office"
-            ? "officeMaterial"
-          : activeTab === "quality"
-            ? "quality"
-            : activeTab === "legacy"
-              ? "operative"
-          : "epp";
+        : activeTab === "ssomaSupply"
+          ? "ssomaSupply"
+          : activeTab === "fall"
+            ? "harness"
+            : activeTab === "office"
+              ? "officeMaterial"
+              : activeTab === "quality"
+                ? "quality"
+                : activeTab === "legacy"
+                  ? "operative"
+                  : "epp";
 
   const handleTabChange = (tab: InventoryMainTab) => {
     setActiveTab(tab);

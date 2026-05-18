@@ -77,8 +77,10 @@ export default function NewEpp() {
   const isSafetyEquipment = family === "ese";
   const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
   const isOfficeMaterial = family === "officeMaterial";
-  const isStockCatalogElement = isProtectionElement || isOfficeMaterial;
+  const isSsomaSupply = family === "ssomaSupply";
+  const isStockCatalogElement = isProtectionElement || isOfficeMaterial || isSsomaSupply;
   const isFallProtection = family === "harness";
+  const supportsStockMinimum = usesStockFields && !isSsomaSupply;
   const existingSafetyTypes = useMemo(
     () =>
       Array.from(
@@ -183,10 +185,10 @@ export default function NewEpp() {
       code: isSafetyEquipment ? serialNumber.trim() || null : code.trim() || null,
       categoryName: isSafetyEquipment
         ? normalizedName
-        : isProtectionElement
+        : isProtectionElement || isSsomaSupply
           ? categoryName.trim() || null
           : null,
-      stockMinimum: usesStockFields ? stockMinimum : 0,
+      stockMinimum: supportsStockMinimum ? stockMinimum : 0,
       controlType: backendPayload.controlType,
       brand: brand.trim() || null,
       model: model.trim() || null,
@@ -318,14 +320,16 @@ export default function NewEpp() {
                 onChange={(e) => setInitialQuantity(Number(e.target.value))}
                 optional={true}
               />
-              <InputForm
-                label="Stock Minimo"
-                name="stockMinimum"
-                type="number"
-                value={stockMinimum}
-                onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
-                optional={true}
-              />
+              {supportsStockMinimum ? (
+                <InputForm
+                  label="Stock Minimo"
+                  name="stockMinimum"
+                  type="number"
+                  value={stockMinimum}
+                  onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
+                  optional={true}
+                />
+              ) : null}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -382,6 +386,10 @@ export default function NewEpp() {
                   </div>
                 </div>
               </>
+            ) : isSsomaSupply ? (
+              <div className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                Control por cantidad. No asignable a trabajador y no retornable.
+              </div>
             ) : (
               <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                 Retorno opcional. Este material puede volver a oficina, pero no bloquea el cierre del proyecto.
@@ -608,6 +616,7 @@ export default function NewEpp() {
             value={family}
             onChange={(value) => setFamily(value as InventoryFamilyKey)}
             options={[
+              { value: "ssomaSupply", label: "Insumos SSOMA" },
               { value: "quality", label: "Calidad - Activo unico" },
             ]}
           />
