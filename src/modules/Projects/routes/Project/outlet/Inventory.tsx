@@ -34,6 +34,7 @@ type AssignmentDraft = {
   localId: number;
   workerId: number;
   quantity: number;
+  assignedAt: string;
   notes: string;
 };
 
@@ -117,9 +118,14 @@ export default function ProjectInventory() {
   const [returnQuantity, setReturnQuantity] = useState(1);
   const [returnNotes, setReturnNotes] = useState("");
   const [assignmentRows, setAssignmentRows] = useState<AssignmentDraft[]>([
-    { localId: Date.now(), workerId: 0, quantity: 1, notes: "" },
+    {
+      localId: Date.now(),
+      workerId: 0,
+      quantity: 1,
+      assignedAt: getTodayDateInputValue(),
+      notes: "",
+    },
   ]);
-  const [assignmentDate, setAssignmentDate] = useState(getTodayDateInputValue());
   const [activeTab, setActiveTab] = useState<ProjectInventoryTab>("protection");
   const [selectedDetailEntry, setSelectedDetailEntry] =
     useState<ProjectInventoryEntry | null>(null);
@@ -239,14 +245,20 @@ export default function ProjectInventory() {
   }, [selectedEntry]);
 
   useEffect(() => {
+    const emptyRow = {
+      localId: Date.now(),
+      workerId: 0,
+      quantity: 1,
+      assignedAt: getTodayDateInputValue(),
+      notes: "",
+    };
+
     if (!selectedAssignEntry) {
-      setAssignmentRows([{ localId: Date.now(), workerId: 0, quantity: 1, notes: "" }]);
-      setAssignmentDate(getTodayDateInputValue());
+      setAssignmentRows([emptyRow]);
       return;
     }
 
-    setAssignmentRows([{ localId: Date.now(), workerId: 0, quantity: 1, notes: "" }]);
-    setAssignmentDate(getTodayDateInputValue());
+    setAssignmentRows([emptyRow]);
   }, [selectedAssignEntry]);
 
   const canManageInventory = Boolean(
@@ -330,8 +342,8 @@ export default function ProjectInventory() {
       return;
     }
 
-    if (!assignmentDate) {
-      toast.error("Selecciona la fecha de asignacion.");
+    if (cleanRows.some((row) => !row.assignedAt)) {
+      toast.error("Selecciona la fecha de asignacion en cada linea.");
       return;
     }
 
@@ -350,10 +362,10 @@ export default function ProjectInventory() {
         "POST",
         {
           performedByUserId: user.userId,
-          assignedAt: ymdLocalMidnightToUtc(assignmentDate, "America/Lima"),
           assignments: cleanRows.map((row) => ({
             workerId: row.workerId,
             quantity: row.quantity,
+            assignedAt: ymdLocalMidnightToUtc(row.assignedAt, "America/Lima"),
             notes: row.notes || undefined,
           })),
         },
@@ -765,10 +777,8 @@ export default function ProjectInventory() {
           entry={selectedAssignEntry}
           workers={workers || []}
           rows={assignmentRows}
-          assignmentDate={assignmentDate}
           loading={assigning}
           onRowsChange={setAssignmentRows}
-          onAssignmentDateChange={setAssignmentDate}
           onSubmit={handleRegisterAssignment}
           onClose={() => setSelectedAssignEntry(null)}
         />
@@ -1123,20 +1133,16 @@ function ProjectInventoryAssignmentModal({
   entry,
   workers,
   rows,
-  assignmentDate,
   loading,
   onRowsChange,
-  onAssignmentDateChange,
   onSubmit,
   onClose,
 }: {
   entry: ProjectInventoryEntry;
   workers: Worker[];
   rows: AssignmentDraft[];
-  assignmentDate: string;
   loading: boolean;
   onRowsChange: (rows: AssignmentDraft[]) => void;
-  onAssignmentDateChange: (date: string) => void;
   onSubmit: () => void;
   onClose: () => void;
 }) {
@@ -1162,13 +1168,27 @@ function ProjectInventoryAssignmentModal({
   const addRow = () => {
     onRowsChange([
       ...rows,
-      { localId: Date.now(), workerId: 0, quantity: 1, notes: "" },
+      {
+        localId: Date.now(),
+        workerId: 0,
+        quantity: 1,
+        assignedAt: getTodayDateInputValue(),
+        notes: "",
+      },
     ]);
   };
 
   const removeRow = (localId: number) => {
     if (rows.length === 1) {
-      onRowsChange([{ localId: Date.now(), workerId: 0, quantity: 1, notes: "" }]);
+      onRowsChange([
+        {
+          localId: Date.now(),
+          workerId: 0,
+          quantity: 1,
+          assignedAt: getTodayDateInputValue(),
+          notes: "",
+        },
+      ]);
       return;
     }
 
@@ -1269,23 +1289,8 @@ function ProjectInventoryAssignmentModal({
 
           {availableToAssign > 0 ? (
             <>
-              <div className="grid gap-1">
-                <label
-                  htmlFor="assignment-date"
-                  className="text-sm font-extrabold uppercase text-gray-700"
-                >
-                  Fecha de asignacion
-                </label>
-                <input
-                  id="assignment-date"
-                  type="date"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3] sm:w-56"
-                  value={assignmentDate}
-                  onChange={(event) => onAssignmentDateChange(event.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-3 text-sm font-extrabold uppercase text-gray-700 md:grid-cols-[1.6fr_8rem_1.6fr_3rem]">
+              <div className="grid gap-3 text-sm font-extrabold uppercase text-gray-700 md:grid-cols-[10rem_1.5fr_8rem_1.4fr_3rem]">
+                <span>Fecha de asignacion</span>
                 <span>Trabajador</span>
                 <span>Cantidad</span>
                 <span>Observacion</span>
@@ -1295,8 +1300,17 @@ function ProjectInventoryAssignmentModal({
               {rows.map((row) => (
                 <div
                   key={row.localId}
-                  className="grid gap-3 md:grid-cols-[1.6fr_8rem_1.6fr_3rem]"
+                  className="grid gap-3 md:grid-cols-[10rem_1.5fr_8rem_1.4fr_3rem]"
                 >
+                  <input
+                    type="date"
+                    className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
+                    value={row.assignedAt}
+                    onChange={(event) =>
+                      updateRow(row.localId, { assignedAt: event.target.value })
+                    }
+                  />
+
                   <select
                     className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
                     value={row.workerId}
