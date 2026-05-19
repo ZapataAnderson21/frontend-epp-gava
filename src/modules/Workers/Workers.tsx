@@ -6,7 +6,6 @@ import Worker from "./Worker";
 import AddButton from "../../common/button/AddButton";
 import { logisticsTypes } from "../../utils/userUtils";
 import { useCurrentUser } from "../../hooks";
-import Permission from "../../common/auth/Permission";
 import EditWorker from "./Editworker";
 
 export default function Workers() {
@@ -42,9 +41,7 @@ export default function Workers() {
   return (
     <Panel>
       <HeaderPanel name={"Trabajadores"}>
-        <Permission user={user} allow={logisticsTypes}>
-          <AddButton onClick={() => setShowRightPanel("new")} />
-          </Permission>
+        <AddButton onClick={() => setShowRightPanel("new")} />
       </HeaderPanel>
         <WorkerTable reFetch={reFetch} onSee={handleSeeDetail} isAdmin={hasPermission} />
         
