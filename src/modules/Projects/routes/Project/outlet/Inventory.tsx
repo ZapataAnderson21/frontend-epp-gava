@@ -22,6 +22,7 @@ import {
   getInventoryFamilyFromSource,
   getInventoryFamilyLabel,
 } from "../../../../Elements/inventoryCatalog";
+import { formatDate, ymdLocalMidnightToUtc } from "../../../../../utils";
 
 type ProjectInventoryTab =
   | "protection"
@@ -45,6 +46,14 @@ type ReturnBlockerNavigationState = {
 type StoredReturnBlockers = ReturnBlockerNavigationState & {
   createdAt?: number;
 };
+
+const getTodayDateInputValue = () =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
 const projectInventoryTabs: Array<{
   key: ProjectInventoryTab;
@@ -110,6 +119,7 @@ export default function ProjectInventory() {
   const [assignmentRows, setAssignmentRows] = useState<AssignmentDraft[]>([
     { localId: Date.now(), workerId: 0, quantity: 1, notes: "" },
   ]);
+  const [assignmentDate, setAssignmentDate] = useState(getTodayDateInputValue());
   const [activeTab, setActiveTab] = useState<ProjectInventoryTab>("protection");
   const [selectedDetailEntry, setSelectedDetailEntry] =
     useState<ProjectInventoryEntry | null>(null);
@@ -231,10 +241,12 @@ export default function ProjectInventory() {
   useEffect(() => {
     if (!selectedAssignEntry) {
       setAssignmentRows([{ localId: Date.now(), workerId: 0, quantity: 1, notes: "" }]);
+      setAssignmentDate(getTodayDateInputValue());
       return;
     }
 
     setAssignmentRows([{ localId: Date.now(), workerId: 0, quantity: 1, notes: "" }]);
+    setAssignmentDate(getTodayDateInputValue());
   }, [selectedAssignEntry]);
 
   const canManageInventory = Boolean(
@@ -318,6 +330,11 @@ export default function ProjectInventory() {
       return;
     }
 
+    if (!assignmentDate) {
+      toast.error("Selecciona la fecha de asignacion.");
+      return;
+    }
+
     const totalToAssign = cleanRows.reduce((total, row) => total + row.quantity, 0);
 
     if (totalToAssign > availableToAssign) {
@@ -333,6 +350,7 @@ export default function ProjectInventory() {
         "POST",
         {
           performedByUserId: user.userId,
+          assignedAt: ymdLocalMidnightToUtc(assignmentDate, "America/Lima"),
           assignments: cleanRows.map((row) => ({
             workerId: row.workerId,
             quantity: row.quantity,
@@ -747,8 +765,10 @@ export default function ProjectInventory() {
           entry={selectedAssignEntry}
           workers={workers || []}
           rows={assignmentRows}
+          assignmentDate={assignmentDate}
           loading={assigning}
           onRowsChange={setAssignmentRows}
+          onAssignmentDateChange={setAssignmentDate}
           onSubmit={handleRegisterAssignment}
           onClose={() => setSelectedAssignEntry(null)}
         />
@@ -1103,16 +1123,20 @@ function ProjectInventoryAssignmentModal({
   entry,
   workers,
   rows,
+  assignmentDate,
   loading,
   onRowsChange,
+  onAssignmentDateChange,
   onSubmit,
   onClose,
 }: {
   entry: ProjectInventoryEntry;
   workers: Worker[];
   rows: AssignmentDraft[];
+  assignmentDate: string;
   loading: boolean;
   onRowsChange: (rows: AssignmentDraft[]) => void;
+  onAssignmentDateChange: (date: string) => void;
   onSubmit: () => void;
   onClose: () => void;
 }) {
@@ -1180,10 +1204,11 @@ function ProjectInventoryAssignmentModal({
               </p>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[42rem] text-sm">
+              <table className="w-full min-w-[48rem] text-sm">
                 <thead className="bg-gray-100 text-left text-gray-700">
                   <tr>
                     <th className="px-4 py-3">Trabajador</th>
+                    <th className="px-4 py-3">Fecha</th>
                     <th className="px-4 py-3 text-center">Asignado</th>
                     <th className="px-4 py-3 text-center">Retornado</th>
                     <th className="px-4 py-3 text-center">Por retornar</th>
@@ -1199,6 +1224,9 @@ function ProjectInventoryAssignmentModal({
                     >
                       <td className="px-4 py-3 font-semibold text-gray-900">
                         {assignment.workerName || "Sin trabajador"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">
+                        {formatDate(assignment.assignedAt)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {formatInventoryQuantity(assignment.quantityAssigned)}
@@ -1241,6 +1269,22 @@ function ProjectInventoryAssignmentModal({
 
           {availableToAssign > 0 ? (
             <>
+              <div className="grid gap-1">
+                <label
+                  htmlFor="assignment-date"
+                  className="text-sm font-extrabold uppercase text-gray-700"
+                >
+                  Fecha de asignacion
+                </label>
+                <input
+                  id="assignment-date"
+                  type="date"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3] sm:w-56"
+                  value={assignmentDate}
+                  onChange={(event) => onAssignmentDateChange(event.target.value)}
+                />
+              </div>
+
               <div className="grid gap-3 text-sm font-extrabold uppercase text-gray-700 md:grid-cols-[1.6fr_8rem_1.6fr_3rem]">
                 <span>Trabajador</span>
                 <span>Cantidad</span>
