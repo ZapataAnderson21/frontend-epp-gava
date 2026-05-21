@@ -520,7 +520,7 @@ export default function Elements() {
         title="Eliminar categoria"
         message={
           categoryToDelete?.activeElementCount
-            ? `La categoria "${categoryToDelete.name}" tiene ${categoryToDelete.activeElementCount} item(s) activos. Archiva primero esos items para poder eliminar la categoria.`
+            ? `Se archivara la categoria "${categoryToDelete.name}" y tambien ${categoryToDelete.activeElementCount} item(s) activo(s) asociados. Ya no apareceran en inventario ni en requerimientos. Desea continuar?`
             : `Se archivara la categoria "${categoryToDelete?.name || "seleccionada"}". Esta categoria ya no aparecera para nuevos registros. Desea continuar?`
         }
         confirmText="Eliminar"
@@ -562,8 +562,8 @@ function SafetyCategoryModal({
           <div>
             <h2 className="text-xl font-bold text-gray-900">Categorias ESE</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Solo puedes eliminar categorias sin items activos. Si una categoria tiene items,
-              archivalos primero desde la tabla.
+              Al eliminar una categoria tambien se archivan sus items activos asociados,
+              para que no aparezcan en inventario ni en requerimientos.
             </p>
           </div>
           <button
@@ -590,8 +590,6 @@ function SafetyCategoryModal({
         ) : (
           <div className="max-h-[60vh] overflow-y-auto rounded-md border border-gray-200">
             {categories.map((category) => {
-              const hasActiveItems = category.activeElementCount > 0;
-
               return (
                 <div
                   key={category.elementCategoryId}
@@ -605,10 +603,7 @@ function SafetyCategoryModal({
                   </div>
                   <DeleteButton
                     onClick={() => onDelete(category)}
-                    disabled={
-                      hasActiveItems ||
-                      deletingCategoryId === category.elementCategoryId
-                    }
+                    disabled={deletingCategoryId === category.elementCategoryId}
                   />
                 </div>
               );
