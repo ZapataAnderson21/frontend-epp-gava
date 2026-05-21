@@ -66,11 +66,14 @@ export default function ContentModal({
 
   useEffect(() => {
     if (!fetchedElements) return;
+    const activeElements = fetchedElements.filter(
+      (element) => !element.deletedAt && !element.isArchived,
+    );
     const visibleElements = isProtectionGroup
-      ? fetchedElements.filter((element) =>
+      ? activeElements.filter((element) =>
           ["epp", "epi", "uniform"].includes(getInventoryFamilyFromSource(element)),
         )
-      : fetchedElements;
+      : activeElements;
     setElements(visibleElements);
     setPages(Math.max(1, Math.ceil(visibleElements.length / itemsPerPage)));
   }, [fetchedElements, isProtectionGroup]);

@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AddButton } from "../../common/button";
+import { AddButton, DeleteButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { elementApi } from "../../data/apiUrl";
-import type { ElementType, FallProtectionGroupType } from "../../data/types";
+import type {
+  ElementCategoryType,
+  ElementType,
+  FallProtectionGroupType,
+} from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
 import { DeleteConfirmDialog } from "../../components";
 import toast, { Toaster } from "react-hot-toast";
@@ -111,6 +115,8 @@ export default function Elements() {
   const [epaView, setEpaView] = useState<EpaView>("groups");
   const [elementToDelete, setElementToDelete] = useState<ElementType | null>(null);
   const [deletingElementId, setDeletingElementId] = useState<number | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<ElementCategoryType | null>(null);
 
   const isLegacyRoute = Boolean(type);
 
@@ -124,7 +130,17 @@ export default function Elements() {
     `${elementApi}fall-protection-groups`,
     [],
   );
+  const {
+    data: safetyCategories,
+    loading: loadingSafetyCategories,
+    error: safetyCategoriesError,
+    refetch: refetchSafetyCategories,
+  } = useFetch<ElementCategoryType[]>(
+    activeTab === "safety" ? `${elementApi}categories/family/ese` : "",
+    [activeTab],
+  );
   const { execute: deleteElement, loading: deletingElement } = useApiAction<ElementType>();
+  const { execute: deleteCategory, loading: deletingCategory } = useApiAction<ElementCategoryType>();
 
   const familyCounts = useMemo(() => {
     const counts = inventoryFamilyTabs.reduce<Record<string, number>>((acc, item) => {
@@ -287,6 +303,30 @@ export default function Elements() {
     });
   };
 
+  const handleConfirmCategoryDelete = () => {
+    if (!categoryToDelete) return;
+
+    toast.promise(
+      deleteCategory(
+        `${elementApi}categories/${categoryToDelete.elementCategoryId}`,
+        "DELETE",
+      ),
+      {
+        loading: "Eliminando categoria...",
+        success: (result) => {
+          setCategoryToDelete(null);
+          refetchSafetyCategories();
+          refetchElements();
+          if (safetyTypeFilter === categoryToDelete.name) {
+            setSafetyTypeFilter("all");
+          }
+          return result.message || "Categoria eliminada correctamente";
+        },
+        error: (err) => err.message || "No se pudo eliminar la categoria",
+      },
+    );
+  };
+
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
 
@@ -365,6 +405,16 @@ export default function Elements() {
                   className="rounded-md border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   Cambiar a {epaView === "groups" ? "ELEMENTOS" : "GRUPOS"}
+                </button>
+              ) : null}
+
+              {activeTab === "safety" ? (
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  Categorias
                 </button>
               ) : null}
 
@@ -456,12 +506,118 @@ export default function Elements() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setElementToDelete(null)}
       />
+      <SafetyCategoryModal
+        open={isCategoryModalOpen}
+        categories={safetyCategories || []}
+        loading={loadingSafetyCategories}
+        error={safetyCategoriesError}
+        deletingCategoryId={categoryToDelete?.elementCategoryId ?? null}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onDelete={setCategoryToDelete}
+      />
+      <DeleteConfirmDialog
+        isOpen={Boolean(categoryToDelete)}
+        title="Eliminar categoria"
+        message={
+          categoryToDelete?.activeElementCount
+            ? `La categoria "${categoryToDelete.name}" tiene ${categoryToDelete.activeElementCount} item(s) activos. Archiva primero esos items para poder eliminar la categoria.`
+            : `Se archivara la categoria "${categoryToDelete?.name || "seleccionada"}". Esta categoria ya no aparecera para nuevos registros. Desea continuar?`
+        }
+        confirmText="Eliminar"
+        loading={deletingCategory}
+        onConfirm={handleConfirmCategoryDelete}
+        onCancel={() => setCategoryToDelete(null)}
+      />
     </Panel>
   );
 }
 
 function getFallProtectionElementCategory(element: ElementType) {
   return (element.categoryName || element.name || "Sin categoria").trim();
+}
+
+function SafetyCategoryModal({
+  open,
+  categories,
+  loading,
+  error,
+  deletingCategoryId,
+  onClose,
+  onDelete,
+}: {
+  open: boolean;
+  categories: ElementCategoryType[];
+  loading: boolean;
+  error?: string | null;
+  deletingCategoryId?: number | null;
+  onClose: () => void;
+  onDelete: (category: ElementCategoryType) => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="flex w-full max-w-2xl flex-col gap-4 rounded-xl bg-white p-6 shadow-xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Categorias ESE</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Solo puedes eliminar categorias sin items activos. Si una categoria tiene items,
+              archivalos primero desde la tabla.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-gray-300 px-3 py-1 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          >
+            Cerrar
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
+            Cargando categorias...
+          </div>
+        ) : error ? (
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        ) : !categories.length ? (
+          <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+            No hay categorias ESE registradas.
+          </div>
+        ) : (
+          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-gray-200">
+            {categories.map((category) => {
+              const hasActiveItems = category.activeElementCount > 0;
+
+              return (
+                <div
+                  key={category.elementCategoryId}
+                  className="flex items-center justify-between gap-4 border-b border-gray-100 p-4 last:border-b-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-gray-900">{category.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {category.activeElementCount} item(s) activos
+                    </p>
+                  </div>
+                  <DeleteButton
+                    onClick={() => onDelete(category)}
+                    disabled={
+                      hasActiveItems ||
+                      deletingCategoryId === category.elementCategoryId
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function EpaGroupView({

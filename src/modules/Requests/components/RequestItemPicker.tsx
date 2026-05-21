@@ -320,6 +320,7 @@ export default function RequestItemPicker({
     }
 
     const filteredElements = (fetchedElements || [])
+      .filter((element) => !element.deletedAt && !element.isArchived)
       .filter((element) => isVisibleForFamily(element, familyKey))
       .filter((element) => {
         const family = getInventoryFamilyFromSource(element);

@@ -47,6 +47,16 @@ export interface ElementType {
   fallProtectionGroup?: FallProtectionGroupType | null;
 }
 
+export interface ElementCategoryType {
+  elementCategoryId: number;
+  name: string;
+  description?: string | null;
+  activeElementCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+}
+
 export interface FallProtectionGroupType {
   fallProtectionGroupId: number;
   code: string;
