@@ -6,7 +6,9 @@ import { LoadingSkeletonTable } from "../../common/loading";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { elementApi } from "../../data/apiUrl";
 import type { ElementType, FallProtectionGroupType } from "../../data/types";
-import { useFetch } from "../../hooks";
+import { useApiAction, useFetch } from "../../hooks";
+import { DeleteConfirmDialog } from "../../components";
+import toast, { Toaster } from "react-hot-toast";
 import ElementTable from "./ElementTable";
 import {
   getInventoryCatalogTabFromSource,
@@ -107,6 +109,8 @@ export default function Elements() {
   const [safetyTypeFilter, setSafetyTypeFilter] = useState("all");
   const [epaCategoryFilter, setEpaCategoryFilter] = useState("all");
   const [epaView, setEpaView] = useState<EpaView>("groups");
+  const [elementToDelete, setElementToDelete] = useState<ElementType | null>(null);
+  const [deletingElementId, setDeletingElementId] = useState<number | null>(null);
 
   const isLegacyRoute = Boolean(type);
 
@@ -114,11 +118,13 @@ export default function Elements() {
     data: elements,
     loading,
     error,
+    refetch: refetchElements,
   } = useFetch<ElementType[]>(elementApi, []);
   const { data: fallProtectionGroups } = useFetch<FallProtectionGroupType[]>(
     `${elementApi}fall-protection-groups`,
     [],
   );
+  const { execute: deleteElement, loading: deletingElement } = useApiAction<ElementType>();
 
   const familyCounts = useMemo(() => {
     const counts = inventoryFamilyTabs.reduce<Record<string, number>>((acc, item) => {
@@ -262,11 +268,31 @@ export default function Elements() {
     navigate("/admin/inventory", { replace: true });
   };
 
+  const handleConfirmDelete = () => {
+    if (!elementToDelete) return;
+
+    setDeletingElementId(elementToDelete.elementId);
+    toast.promise(deleteElement(`${elementApi}${elementToDelete.elementId}`, "DELETE"), {
+      loading: "Eliminando item de inventario...",
+      success: (result) => {
+        setElementToDelete(null);
+        setDeletingElementId(null);
+        refetchElements();
+        return result.message || "Item eliminado correctamente";
+      },
+      error: (err) => {
+        setDeletingElementId(null);
+        return err.message || "Error al eliminar el item";
+      },
+    });
+  };
+
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
     <Panel>
+      <Toaster position="top-center" reverseOrder={false} />
       <HeaderPanel name="Inventario SSOMA" />
 
       <div className="flex w-full flex-col gap-4">
@@ -413,9 +439,23 @@ export default function Elements() {
               : "Todavia no hay elementos cargados en inventario."}
           </div>
         ) : (
-          <ElementTable elements={filteredElements} />
+          <ElementTable
+            elements={filteredElements}
+            deletingElementId={deletingElementId}
+            onDelete={setElementToDelete}
+          />
         )}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={Boolean(elementToDelete)}
+        title="Eliminar item de inventario"
+        message={`Se archivara "${elementToDelete?.name || "este item"}" mediante soft delete. No se perdera el historial de requerimientos, movimientos ni trazabilidad asociados. Desea continuar?`}
+        confirmText="Eliminar"
+        loading={deletingElement}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setElementToDelete(null)}
+      />
     </Panel>
   );
 }

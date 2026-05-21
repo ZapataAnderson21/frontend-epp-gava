@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { SeeButton } from "../../common/button";
+import { DeleteButton, SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
 import type { ElementType } from "../../data/types";
 import {
@@ -9,9 +9,15 @@ import {
 
 interface ElementTableProps {
   elements: ElementType[];
+  deletingElementId?: number | null;
+  onDelete: (element: ElementType) => void;
 }
 
-export default function ElementTable({ elements }: ElementTableProps) {
+export default function ElementTable({
+  elements,
+  deletingElementId,
+  onDelete,
+}: ElementTableProps) {
   const navigate = useNavigate();
   const isSafetyEquipmentTable =
     elements.length > 0 &&
@@ -50,7 +56,13 @@ export default function ElementTable({ elements }: ElementTableProps) {
       label: "Acciones",
       width: "8rem",
       render: (row: ElementType) => (
-        <SeeButton onClick={() => navigate(`/admin/elements/${row.elementId}`)} />
+        <div className="flex items-center gap-2">
+          <SeeButton onClick={() => navigate(`/admin/elements/${row.elementId}`)} />
+          <DeleteButton
+            onClick={() => onDelete(row)}
+            disabled={deletingElementId === row.elementId}
+          />
+        </div>
       ),
     },
   ] as const;
