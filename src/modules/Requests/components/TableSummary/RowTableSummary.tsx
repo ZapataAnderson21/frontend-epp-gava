@@ -209,8 +209,6 @@ export default function RowTableSummary({
               </div>
               {safetyOptions.map((element) => {
                 const checked = selectedElementIds.includes(element.elementId);
-                const maxReached = requestedQuantity > 0 && selectedElementIds.length >= requestedQuantity;
-                const disabled = !checked && maxReached;
 
                 return (
                   <label
@@ -218,9 +216,7 @@ export default function RowTableSummary({
                     className={`grid cursor-pointer grid-cols-[1fr_96px_88px] items-center gap-2 border-t px-3 py-2 text-sm transition ${
                       checked
                         ? 'border-blue-200 bg-blue-50'
-                        : disabled
-                          ? 'border-gray-200 opacity-60'
-                          : 'border-gray-200 hover:bg-blue-50'
+                        : 'border-gray-200 hover:bg-blue-50'
                     }`}
                   >
                     <span className="min-w-0">
@@ -239,7 +235,6 @@ export default function RowTableSummary({
                         type="checkbox"
                         className="size-4"
                         checked={checked}
-                        disabled={disabled}
                         onChange={(event) =>
                           handleSafetySelectionChange(
                             element.elementId,
