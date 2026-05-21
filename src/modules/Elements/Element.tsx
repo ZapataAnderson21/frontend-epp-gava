@@ -118,7 +118,9 @@ export default function Element() {
   const isSafetyEquipment = family === "ese";
   const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
   const isOfficeMaterial = family === "officeMaterial";
-  const isStockCatalogElement = isProtectionElement || isOfficeMaterial;
+  const isSsomaSupply = family === "ssomaSupply";
+  const isStockCatalogElement = isProtectionElement || isOfficeMaterial || isSsomaSupply;
+  const supportsStockMinimum = usesStockFields && !isSsomaSupply;
   const isFallProtection = family === "harness";
   const canRegisterStockMovements = !familyConfig?.unique && !isSafetyEquipment;
   const isLegacyOperative = isLegacyOperativeSource(element);
@@ -177,10 +179,10 @@ export default function Element() {
       family: backendPayload.family,
       categoryName: isSafetyEquipment
         ? selectedSafetyType
-        : isProtectionElement
+        : isProtectionElement || isSsomaSupply
           ? categoryName.trim() || null
           : null,
-      stockMinimum: usesStockFields ? stockMinimum : 0,
+      stockMinimum: supportsStockMinimum ? stockMinimum : 0,
       type: backendPayload.type,
       controlType: backendPayload.controlType,
       brand: brand.trim() || null,
@@ -436,15 +438,18 @@ export default function Element() {
               />
             </div>
 
-            <div className={`grid gap-4 ${isProtectionElement ? "md:grid-cols-2" : ""}`}>
-              <InputForm
-                label="Stock Minimo"
-                name="stockMinimum"
-                type="number"
-                value={stockMinimum}
-                onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
-                optional={true}
-              />
+            {supportsStockMinimum || isProtectionElement ? (
+              <div className={`grid gap-4 ${isProtectionElement ? "md:grid-cols-2" : ""}`}>
+                {supportsStockMinimum ? (
+                  <InputForm
+                    label="Stock Minimo"
+                    name="stockMinimum"
+                    type="number"
+                    value={stockMinimum}
+                    onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
+                    optional={true}
+                  />
+                ) : null}
               {isProtectionElement ? (
                 <InputForm
                   label="Talla"
@@ -455,7 +460,8 @@ export default function Element() {
                   optional={true}
                 />
               ) : null}
-            </div>
+              </div>
+            ) : null}
 
             {isProtectionElement ? (
               <SelectForm
@@ -501,6 +507,11 @@ export default function Element() {
                 <p>
                   Retorno opcional, unidad fija: unidad. Puede pedirse por requerimiento,
                   cargarse a obra y retornar sin bloquear la finalizacion del proyecto.
+                </p>
+              ) : isSsomaSupply ? (
+                <p>
+                  Control por cantidad, unidad fija: unidad. Puede cargarse a obra y
+                  descontarse mediante ingresos, salidas y ajustes de inventario.
                 </p>
               ) : (
                 <p>
