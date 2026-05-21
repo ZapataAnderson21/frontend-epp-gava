@@ -329,11 +329,12 @@ export default function RequestDraft() {
 
   return (
     <>
-      <form onSubmit={handleUpdateRequest} className="max-w-7xl p-10 text-gray-800">
+      <form onSubmit={handleUpdateRequest} className="w-full p-10 text-gray-800">
         <h1 className="mb-4 text-2xl font-bold">EDITAR SOLICITUD</h1>
 
         <div className="flex h-full w-full flex-col items-start justify-start gap-4">
-          <div className="flex w-full flex-col gap-4 lg:flex-row">
+          <div className="flex max-w-4xl w-full flex-col gap-4">
+            <div className="w-full flex flex-row gap-4">
             <SelectForm
               label="Proyecto"
               name="projectId"
@@ -368,9 +369,8 @@ export default function RequestDraft() {
                 ) : null}
               </div>
             </InputForm>
-          </div>
+            </div>
 
-          <div className="flex w-full flex-col gap-4">
             <TextAreaForm
               label="Descripcion"
               name="description"
@@ -378,7 +378,9 @@ export default function RequestDraft() {
               onChange={(e) => setDescription(e.target.value)}
               optional={true}
             />
+          </div>
 
+          <div className="flex flex-col gap-4 w-full">
             <RequestFamilyTabs activeFamily={activeFamily} onChange={setActiveFamily} />
 
             <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
