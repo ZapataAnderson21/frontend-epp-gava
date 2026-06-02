@@ -15,7 +15,6 @@ import {
   useWorkerMonthlyEvaluationActions,
   useWorkerMonthlyEvaluationPeriodDetail,
 } from "../../hooks";
-import { monthlyEvaluationStatusTypes } from "../../utils";
 import BestWorkerCertificateModal from "./BestWorkerCertificateModal";
 
 interface CreateFromPeriodParams {
@@ -67,7 +66,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
     useWorkerMonthlyEvaluationActions();
 
   const canToggleStatus = useMemo(
-    () => Boolean(user?.userType && monthlyEvaluationStatusTypes.includes(user.userType)),
+    () => Boolean(user),
     [user],
   );
 
