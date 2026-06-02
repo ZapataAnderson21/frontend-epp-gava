@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { FaArrowRotateLeft, FaUserPlus, FaXmark } from "react-icons/fa6";
+import { FaArrowRotateLeft, FaTrash, FaUserPlus, FaXmark } from "react-icons/fa6";
 import { Table } from "../../../../../common/table";
 import { ErrorMessage } from "../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../common/loading";
@@ -15,6 +15,7 @@ import type {
 } from "../../../../../data/types";
 import { SeeButton } from "../../../../../common/button";
 import ActionButton from "../../../../../components/ActionButton";
+import DeleteConfirmDialog from "../../../../../components/DeleteConfirmDialog";
 import { logisticsTypes, riskPreventionTypes } from "../../../../../utils";
 import {
   formatInventoryQuantity,
@@ -108,6 +109,8 @@ export default function ProjectInventory() {
     useApiAction<ProjectInventoryEntry>();
   const { execute: registerAssignment, loading: assigning } =
     useApiAction<WorkerInventoryAssignment>();
+  const { execute: deleteAssignment, loading: deletingAssignment } =
+    useApiAction<WorkerInventoryAssignment>();
 
   const [selectedEntry, setSelectedEntry] = useState<ProjectInventoryEntry | null>(
     null,
@@ -136,6 +139,8 @@ export default function ProjectInventory() {
   const [returnBlockerModalOpen, setReturnBlockerModalOpen] = useState(false);
   const [returnBlockerPromptHandled, setReturnBlockerPromptHandled] =
     useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] =
+    useState<WorkerInventoryAssignment | null>(null);
 
   const getEntryFamily = (entry: ProjectInventoryEntry) =>
     getInventoryFamilyFromSource({
@@ -378,6 +383,27 @@ export default function ProjectInventory() {
           return "Asignaciones registradas exitosamente.";
         },
         error: (err) => err.message || "No se pudieron registrar las asignaciones.",
+      },
+    );
+  };
+
+  const handleDeleteAssignment = async () => {
+    if (!assignmentToDelete) return;
+
+    await toast.promise(
+      deleteAssignment(
+        `${inventoryApi}worker-assignment/${assignmentToDelete.workerInventoryAssignmentId}`,
+        "DELETE",
+      ),
+      {
+        loading: "Eliminando asignacion...",
+        success: () => {
+          setAssignmentToDelete(null);
+          setSelectedAssignEntry(null);
+          refetch();
+          return "Asignacion eliminada exitosamente.";
+        },
+        error: (err) => err.message || "No se pudo eliminar la asignacion.",
       },
     );
   };
@@ -780,9 +806,19 @@ export default function ProjectInventory() {
           loading={assigning}
           onRowsChange={setAssignmentRows}
           onSubmit={handleRegisterAssignment}
+          onDeleteAssignment={setAssignmentToDelete}
           onClose={() => setSelectedAssignEntry(null)}
         />
       ) : null}
+      <DeleteConfirmDialog
+        isOpen={Boolean(assignmentToDelete)}
+        title="Eliminar asignacion"
+        message={`Se eliminara la asignacion de ${assignmentToDelete?.elementName || "este item"} a ${assignmentToDelete?.workerName || "este trabajador"}. Esta accion tambien quitara el movimiento de asignacion del historial.`}
+        confirmText="Eliminar asignacion"
+        loading={deletingAssignment}
+        onCancel={() => setAssignmentToDelete(null)}
+        onConfirm={handleDeleteAssignment}
+      />
       <Toaster position="top-center" />
     </>
   );
@@ -1136,6 +1172,7 @@ function ProjectInventoryAssignmentModal({
   loading,
   onRowsChange,
   onSubmit,
+  onDeleteAssignment,
   onClose,
 }: {
   entry: ProjectInventoryEntry;
@@ -1144,6 +1181,7 @@ function ProjectInventoryAssignmentModal({
   loading: boolean;
   onRowsChange: (rows: AssignmentDraft[]) => void;
   onSubmit: () => void;
+  onDeleteAssignment: (assignment: WorkerInventoryAssignment) => void;
   onClose: () => void;
 }) {
   const availableToAssign =
@@ -1234,37 +1272,59 @@ function ProjectInventoryAssignmentModal({
                     <th className="px-4 py-3 text-center">Por retornar</th>
                     <th className="px-4 py-3">Situacion</th>
                     <th className="px-4 py-3">Observacion</th>
+                    <th className="px-4 py-3 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {assignments.map((assignment) => (
-                    <tr
-                      key={assignment.workerInventoryAssignmentId}
-                      className="border-t border-gray-100"
-                    >
-                      <td className="px-4 py-3 font-semibold text-gray-900">
-                        {assignment.workerName || "Sin trabajador"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {formatDate(assignment.assignedAt)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {formatInventoryQuantity(assignment.quantityAssigned)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {formatInventoryQuantity(assignment.quantityReturned)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {formatInventoryQuantity(assignment.quantityPending)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {getWorkerAssignmentStatusLabel(assignment.status)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {assignment.notes || "-"}
-                      </td>
-                    </tr>
-                  ))}
+                  {assignments.map((assignment) => {
+                    const canDeleteAssignment =
+                      assignment.status === "active" &&
+                      Number(assignment.quantityReturned) <= 0;
+
+                    return (
+                      <tr
+                        key={assignment.workerInventoryAssignmentId}
+                        className="border-t border-gray-100"
+                      >
+                        <td className="px-4 py-3 font-semibold text-gray-900">
+                          {assignment.workerName || "Sin trabajador"}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {formatDate(assignment.assignedAt)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {formatInventoryQuantity(assignment.quantityAssigned)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {formatInventoryQuantity(assignment.quantityReturned)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {formatInventoryQuantity(assignment.quantityPending)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {getWorkerAssignmentStatusLabel(assignment.status)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {assignment.notes || "-"}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            className="inline-flex size-8 items-center justify-center rounded-md bg-red-600 text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                            onClick={() => onDeleteAssignment(assignment)}
+                            disabled={!canDeleteAssignment}
+                            title={
+                              canDeleteAssignment
+                                ? "Eliminar asignacion"
+                                : "No se puede eliminar una asignacion con retornos"
+                            }
+                          >
+                            <FaTrash className="size-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
