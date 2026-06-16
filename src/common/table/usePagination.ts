@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface UsePaginationProps<T> {
   data: T[];
@@ -21,6 +21,10 @@ export function usePagination<T>({
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data.length, itemsPerPage]);
 
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
