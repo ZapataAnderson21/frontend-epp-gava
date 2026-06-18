@@ -1,4 +1,4 @@
-import { FaMinus, FaPlus } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaMinus, FaPlus } from "react-icons/fa";
 import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
 import { lineAmount, roundMoney } from "../../../../../../../utils";
@@ -27,6 +27,7 @@ interface Props {
   onChange: (index: number, field: keyof ItemRow, value: any) => void;
   onAddRow: (rowIndex?: number) => void;
   onRemoveRow: (rowIndex: number) => void;
+  onMoveRow: (rowIndex: number, direction: -1 | 1) => void;
   supplierCurrency?: string;
   saleAmount: number;
   purchaseAmount: number;
@@ -34,7 +35,7 @@ interface Props {
 }
 
 export default function ItemsTable({
-  items, resources, onChange, onAddRow, onRemoveRow,
+  items, resources, onChange, onAddRow, onRemoveRow, onMoveRow,
   supplierCurrency, saleAmount, purchaseAmount, itemErrors
 }: Props) {
   const sym = supplierCurrency?.toUpperCase() === "PEN" ? "S/." : "$";
@@ -60,7 +61,7 @@ export default function ItemsTable({
           <col className="w-[92px]" />
           <col className="w-[132px]" />
           <col className="w-[132px]" />
-          <col className="w-[90px]" />
+          <col className="w-[100px]" />
         </colgroup>
         <thead className="bg-[#14519d] border-1 border-[#14519d] text-white">
           <tr>
@@ -183,7 +184,27 @@ export default function ItemsTable({
 
                 {/* ACCIONES */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
-                  <div className="flex justify-center gap-2">
+                  <div className="grid grid-cols-2 justify-center gap-1">
+                    <button
+                      type="button"
+                      className="bg-[#14519d] text-white p-2 rounded-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                      onClick={() => onMoveRow(index, -1)}
+                      disabled={index === 0}
+                      title="Subir ítem"
+                      aria-label={`Subir ítem ${index + 1}`}
+                    >
+                      <FaArrowUp />
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-[#14519d] text-white p-2 rounded-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                      onClick={() => onMoveRow(index, 1)}
+                      disabled={index === items.length - 1}
+                      title="Bajar ítem"
+                      aria-label={`Bajar ítem ${index + 1}`}
+                    >
+                      <FaArrowDown />
+                    </button>
                     <button
                       type="button"
                       className="bg-red-500 text-white p-2 rounded-md cursor-pointer"

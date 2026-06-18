@@ -51,7 +51,7 @@ export default function NewPurchaseOrder() {
     qualityConditions, addQualityCondition, removeQualityCondition, handleQualityChange,
 
     // items
-    items, handleItemChange, addItem, removeItem,
+    items, handleItemChange, addItem, removeItem, moveItem,
     sale_amount, purchase_amount,
 
     // submit & UI
@@ -156,6 +156,7 @@ export default function NewPurchaseOrder() {
                 onChange={handleItemChange}
                 onAddRow={addItem}
                 onRemoveRow={removeItem}
+                onMoveRow={moveItem}
                 supplierCurrency={supplier?.currency}
                 saleAmount={sale_amount}
                 purchaseAmount={purchase_amount}

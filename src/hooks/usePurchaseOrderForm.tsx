@@ -150,6 +150,17 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     });
   };
 
+  const moveItem = (rowIndex: number, direction: -1 | 1) => {
+    setItems((prev) => {
+      const targetIndex = rowIndex + direction;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+
+      const next = [...prev];
+      [next[rowIndex], next[targetIndex]] = [next[targetIndex], next[rowIndex]];
+      return normalizeOrderNumbers(next);
+    });
+  };
+
   // paymentConditions compuesto (si cambian la 1ra parte y no hay detalle, queda vacío)
   useEffect(() => {
     if (!paymentConditions1) {
@@ -350,7 +361,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     qualityConditions, addQualityCondition, removeQualityCondition, handleQualityChange,
 
     // items
-    items, handleItemChange, addItem, removeItem,
+    items, handleItemChange, addItem, removeItem, moveItem,
     sale_amount, purchase_amount,
 
     // validation

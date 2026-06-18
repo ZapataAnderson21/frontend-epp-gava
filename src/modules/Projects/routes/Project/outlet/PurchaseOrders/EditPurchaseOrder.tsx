@@ -196,6 +196,22 @@ export default function EditPurchaseOrder() {
     });
   };
 
+  const moveItem = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    setItems(prev => {
+      const next = [...prev];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
+    });
+    setRpoIds(prev => {
+      const next = [...prev];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
+  };
+
   // ---- montos ----
   const sale_amount = useMemo(
     () => totalFromRoundedLines(items, (it) => it.unitSalesPrice),
@@ -540,8 +556,9 @@ export default function EditPurchaseOrder() {
                 items={items ?? []}
                 resources={resources ?? []}
                 onChange={handleItemChange}
-                onAddRow={() => addItem()}
+                onAddRow={addItem}
                 onRemoveRow={removeItem}
+                onMoveRow={moveItem}
                 supplierCurrency={supplier?.currency}
                 saleAmount={sale_amount}
                 purchaseAmount={purchase_amount}

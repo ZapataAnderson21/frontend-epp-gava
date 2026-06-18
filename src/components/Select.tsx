@@ -1,5 +1,5 @@
 import { IoMdArrowDropdown } from "react-icons/io";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 type Primitive = string | number;
@@ -35,13 +35,37 @@ export default function Select<T extends Primitive = string>({
   disabled = false,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isSearchEnabled = options.length > 10;
+  const filteredOptions = useMemo(() => {
+    if (!isSearchEnabled || !searchTerm.trim()) return options;
+
+    const normalizedSearch = searchTerm
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase();
+
+    return options.filter(option =>
+      option.label
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase()
+        .includes(normalizedSearch),
+    );
+  }, [isSearchEnabled, options, searchTerm]);
+
+  const closeSelect = () => {
+    setIsOpen(false);
+    setSearchTerm("");
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchTerm("");
       }
     };
 
@@ -85,7 +109,11 @@ export default function Select<T extends Primitive = string>({
     <div className={`relative min-w-0 ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => !disabled && setIsOpen((v) => !v)}
+        onClick={() => {
+          if (disabled) return;
+          if (isOpen) setSearchTerm("");
+          setIsOpen(current => !current);
+        }}
         disabled={disabled}
         className={`w-full min-w-0 flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         title={selectedLabel || placeholder}
@@ -114,8 +142,25 @@ export default function Select<T extends Primitive = string>({
             exit="collapsed"
             variants={dropdownVariants}
           >
+            {isSearchEnabled && (
+              <div className="sticky top-0 z-10 border-b border-gray-200 bg-white p-2">
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={event => setSearchTerm(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === "Escape") closeSelect();
+                  }}
+                  placeholder="Buscar..."
+                  aria-label={`Buscar en ${name}`}
+                  autoFocus
+                  className="w-full rounded-sm border border-gray-400 px-3 py-2 outline-none focus:border-[#0047a3]"
+                />
+              </div>
+            )}
+
             {/* Opciones con stagger */}
-            {options.map((option) => (
+            {filteredOptions.map((option) => (
               <motion.div
                 key={String(option.value)}
                 role="option"
@@ -126,7 +171,7 @@ export default function Select<T extends Primitive = string>({
                 exit="hidden"
                 onClick={() => {
                   onChange(option.value);
-                  setIsOpen(false);
+                  closeSelect();
                 }}
                 title={option.label}
                 className={`min-w-0 px-3 py-2 hover:bg-[#eff2ff] hover:text-[#0047a3] cursor-pointer ${
@@ -136,6 +181,11 @@ export default function Select<T extends Primitive = string>({
                 <span className="block truncate">{option.label}</span>
               </motion.div>
             ))}
+            {filteredOptions.length === 0 && (
+              <p className="px-3 py-4 text-center text-sm text-gray-500">
+                No se encontraron opciones.
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
