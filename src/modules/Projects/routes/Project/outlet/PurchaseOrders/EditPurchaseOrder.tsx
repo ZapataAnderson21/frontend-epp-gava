@@ -327,7 +327,23 @@ export default function EditPurchaseOrder() {
 
       // 2) Sincronizar ítems (POST/PATCH/DELETE)
       const originalIds = new Set<number>((resourcePurchaseOrders || []).map(r => r.resourcePurchaseOrderId));
-      const keptIds = new Set<number>();
+      const keptIds = new Set<number>(
+        rpoIds.filter((id): id is number => id !== null),
+      );
+
+      // Eliminar primero las filas quitadas para liberar su resourceId antes
+      // de que una fila nueva o reordenada intente utilizarlo.
+      for (const originalId of originalIds) {
+        if (!keptIds.has(originalId)) {
+          const deleted = await execute(
+            `${resourcePurchaseOrderApi}${originalId}`,
+            "DELETE",
+          );
+          if (deleted.statusCode < 200 || deleted.statusCode >= 300) {
+            throw new Error("Hubo errores al eliminar algunos ítems.");
+          }
+        }
+      }
 
       // Crear/actualizar los actuales
       for (let i = 0; i < items.length; i++) {
@@ -346,9 +362,7 @@ export default function EditPurchaseOrder() {
         if (id) {
           // PATCH existente
           const upd = await execute(`${resourcePurchaseOrderApi}${id}`, "PATCH", payload);
-          if (upd.statusCode >= 200 && upd.statusCode < 300) {
-            keptIds.add(id);
-          } else {
+          if (upd.statusCode < 200 || upd.statusCode >= 300) {
             throw new Error("Hubo errores al actualizar algunos ítems.");
           }
         } else {
@@ -357,13 +371,6 @@ export default function EditPurchaseOrder() {
           if (crt.statusCode < 200 || crt.statusCode >= 300) {
             throw new Error("Hubo errores al crear algunos ítems.");
           }
-        }
-      }
-
-      // Eliminar los que ya no existen en el formulario
-      for (const oid of originalIds) {
-        if (!keptIds.has(oid)) {
-          await execute(`${resourcePurchaseOrderApi}${oid}`, "DELETE");
         }
       }
 
