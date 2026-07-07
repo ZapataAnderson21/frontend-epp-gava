@@ -1,31 +1,104 @@
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { FaChevronLeft, FaChevronRight, FaUserPlus } from "react-icons/fa6";
 import { IoCloseCircle } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
-import { inventoryApi, workerApi } from "../../data/apiUrl";
+import { inventoryApi, projectApi, workerApi } from "../../data/apiUrl";
 import {
   WorkerType,
+  type Project,
+  type ProjectInventoryEntry,
+  type ProjectInventoryResponse,
   type Worker,
   type WorkerInventoryAssignment,
   type WorkerInventoryHistoryResponse,
 } from "../../data/types";
-import { useFetch } from "../../hooks";
-import { formatDateTime } from "../../utils";
-import { useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
-import { formatInventoryQuantity } from "../Elements/inventoryCatalog";
+import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
+import { formatDateTime, ymdLocalMidnightToUtc } from "../../utils";
+import {
+  formatInventoryQuantity,
+  getInventoryFamilyFromSource,
+  getInventoryFamilyLabel,
+  type InventoryFamilyTabKey,
+} from "../Elements/inventoryCatalog";
 
 interface WorkerProps {
   workerId: number;
   closeAction: () => void;
 }
 
+const assignableFamilies: InventoryFamilyTabKey[] = ["epp", "epi", "uniform", "harness"];
+
+const monthNames = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+const getTodayDateInputValue = () =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+function getEntryFamily(entry: ProjectInventoryEntry) {
+  return getInventoryFamilyFromSource({
+    type: entry.elementType,
+    controlType: entry.controlType,
+    code: entry.elementCode,
+    family: entry.fallProtectionGroupId ? "harness" : entry.family,
+  });
+}
+
+function getEntryAvailableToAssign(entry: ProjectInventoryEntry) {
+  return entry.quantityAvailableForAssignment ?? entry.quantityPending;
+}
+
+function formatBirthDate(value?: string | null) {
+  const datePart = value?.split("T")[0];
+  const [year, month, day] = datePart?.split("-") ?? [];
+  if (!year || !month || !day) return "No especificada";
+  return `${day}/${month}/${year}`;
+}
+
 export default function Worker({ workerId, closeAction }: WorkerProps) {
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
   const today = new Date();
   const [familyFilter, setFamilyFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState(today.getMonth() + 1);
   const [yearFilter, setYearFilter] = useState(today.getFullYear());
+  const [workerPanelCollapsed, setWorkerPanelCollapsed] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(0);
+  const [assignmentFamily, setAssignmentFamily] =
+    useState<InventoryFamilyTabKey>("epp");
+  const [selectedEntryId, setSelectedEntryId] = useState(0);
+  const [assignmentQuantity, setAssignmentQuantity] = useState(1);
+  const [assignmentDate, setAssignmentDate] = useState(getTodayDateInputValue());
+  const [assignmentNotes, setAssignmentNotes] = useState("");
 
-  const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
+  const { data: worker, error, loading } = useFetch<Worker>(`${workerApi}${workerId}`);
+  const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`);
+  const { data: projectInventory, refetch: refetchProjectInventory } =
+    useFetch<ProjectInventoryResponse>(
+      selectedProjectId ? `${inventoryApi}project/${selectedProjectId}` : "",
+      [selectedProjectId],
+    );
+  const { execute: registerAssignment, loading: assigning } =
+    useApiAction<WorkerInventoryAssignment[]>();
+
   const historyUrl = useMemo(() => {
     const params = new URLSearchParams();
     if (familyFilter) params.set("family", familyFilter);
@@ -33,79 +106,215 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
     if (yearFilter) params.set("year", String(yearFilter));
     return `${inventoryApi}worker/${workerId}/history?${params.toString()}`;
   }, [familyFilter, monthFilter, workerId, yearFilter]);
-  const { data: inventoryHistory } =
+  const { data: inventoryHistory, refetch: refetchInventoryHistory } =
     useFetch<WorkerInventoryHistoryResponse>(historyUrl, [historyUrl]);
 
-  // Función para obtener el nombre en español del tipo de trabajador
+  const availableEntries = useMemo(
+    () =>
+      (projectInventory?.entries ?? [])
+        .filter((entry) => {
+          const family = getEntryFamily(entry);
+          return (
+            assignableFamilies.includes(family) &&
+            family === assignmentFamily &&
+            getEntryAvailableToAssign(entry) > 0
+          );
+        })
+        .sort((a, b) => a.elementName.localeCompare(b.elementName)),
+    [assignmentFamily, projectInventory?.entries],
+  );
+
+  const selectedEntry = useMemo(
+    () =>
+      availableEntries.find(
+        (entry) => entry.projectInventoryEntryId === selectedEntryId,
+      ) ?? null,
+    [availableEntries, selectedEntryId],
+  );
+  const selectedEntryAvailable = selectedEntry
+    ? getEntryAvailableToAssign(selectedEntry)
+    : 0;
+
+  useEffect(() => {
+    if (!selectedProjectId && projects?.length) {
+      setSelectedProjectId(projects[0].projectId);
+    }
+  }, [projects, selectedProjectId]);
+
+  useEffect(() => {
+    const selectedStillAvailable = availableEntries.some(
+      (entry) => entry.projectInventoryEntryId === selectedEntryId,
+    );
+
+    if (!selectedStillAvailable) {
+      setSelectedEntryId(availableEntries[0]?.projectInventoryEntryId ?? 0);
+      setAssignmentQuantity(availableEntries.length ? 1 : 0);
+      return;
+    }
+
+    if (selectedEntry && assignmentQuantity > selectedEntryAvailable) {
+      setAssignmentQuantity(selectedEntryAvailable);
+    }
+  }, [
+    assignmentQuantity,
+    availableEntries,
+    selectedEntry,
+    selectedEntryAvailable,
+    selectedEntryId,
+  ]);
+
   const getWorkerTypeLabel = (workerType: string | undefined): string => {
     if (!workerType) return "No especificado";
-    
+
     const typeEntry = Object.values(WorkerType).find(
-      (type) => type[0] === workerType.toLowerCase()
+      (type) => type[0] === workerType.toLowerCase(),
     );
-    
+
     return typeEntry ? typeEntry[1] : workerType;
+  };
+
+  const handleRegisterWorkerAssignment = async () => {
+    if (!user) {
+      toast.error("No se pudo identificar al usuario actual.");
+      return;
+    }
+
+    if (!selectedEntry) {
+      toast.error("Selecciona un elemento disponible en obra.");
+      return;
+    }
+
+    if (!assignmentDate) {
+      toast.error("Selecciona la fecha de asignacion.");
+      return;
+    }
+
+    if (assignmentQuantity <= 0) {
+      toast.error("La cantidad debe ser mayor a 0.");
+      return;
+    }
+
+    if (assignmentQuantity > selectedEntryAvailable) {
+      toast.error(
+        `Solo hay ${formatInventoryQuantity(selectedEntryAvailable)} unidad(es) disponibles para asignar.`,
+      );
+      return;
+    }
+
+    await toast.promise(
+      registerAssignment(
+        `${inventoryApi}project-entry/${selectedEntry.projectInventoryEntryId}/assign-workers`,
+        "POST",
+        {
+          performedByUserId: user.userId,
+          assignments: [
+            {
+              workerId,
+              quantity: assignmentQuantity,
+              assignedAt: ymdLocalMidnightToUtc(assignmentDate, "America/Lima"),
+              notes: assignmentNotes.trim() || undefined,
+            },
+          ],
+        },
+      ),
+      {
+        loading: "Registrando asignacion...",
+        success: () => {
+          setAssignmentQuantity(1);
+          setAssignmentNotes("");
+          refetchInventoryHistory();
+          refetchProjectInventory();
+          return "Asignacion registrada exitosamente.";
+        },
+        error: (err) => err.message || "No se pudo registrar la asignacion.",
+      },
+    );
   };
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <ErrorMessage errorMessage="Error al cargar el trabajador" />;
 
   return (
-    <div className="relative bg-white rounded-xl w-[min(1100px,95vw)] p-8 text-gray-900 overflow-auto max-h-full">
-      <h1 className="text-2xl font-extrabold mb-4">DETALLE DEL TRABAJADOR {worker?.workerId}</h1>
+    <div className="relative max-h-full w-[min(1100px,95vw)] overflow-auto rounded-xl bg-white p-8 text-gray-900">
+      <h1 className="mb-4 text-2xl font-extrabold">
+        DETALLE DEL TRABAJADOR {worker?.workerId}
+      </h1>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(420px,1fr)]">
-        <div className="flex flex-col w-full gap-4">
-          <h2 className="text-xl font-bold">Información Personal</h2>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Nombre completo:</label>
-            <span>{worker?.fullName}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">DNI:</label>
-            <span>{worker?.dni}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Fecha de nacimiento:</label>
-            <span>{`${worker?.birthDate?.split("T")[0].split("-")[2]}/${worker?.birthDate?.split("T")[0].split("-")[1]}/${worker?.birthDate?.split("T")[0].split("-")[0]}`}</span>
-          </div>
-          <h2 className="text-xl font-bold mt-4">Información de contacto</h2>
-          <div className="flex flex-row gap-2">
-              <label className="font-semibold text-nowrap">Correo:</label>
-              <span>{worker?.personalEmail}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Teléfono:</label>
-            <span>{worker?.phone}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Dirección:</label>
-            <span>{worker?.address}</span>
-          </div>
-          <h2 className="text-xl font-bold mt-4">Información laboral</h2>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Grupo de trabajador:</label>
-            <span>{getWorkerTypeLabel(worker?.workerType)}</span>
-          </div>
-          <div className="flex flex-row gap-2">
-            <label className="font-semibold text-nowrap">Fecha y hora de registro:</label>
-            <span>{formatDateTime(worker?.createdAt)}</span>
-          </div>
-          <div className="mt-3">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold"
-              onClick={() => {
-                closeAction();
-                navigate(`/admin/worker-monthly-evaluations?workerId=${workerId}`);
-              }}
-            >
-              Ver evaluaciones mensuales
-            </button>
-          </div>
-        </div>
+      <div
+        className={`grid gap-8 ${
+          workerPanelCollapsed
+            ? "lg:grid-cols-1"
+            : "lg:grid-cols-[minmax(0,1fr)_minmax(420px,1fr)]"
+        }`}
+      >
+        {!workerPanelCollapsed ? (
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">Informacion Personal</h2>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                onClick={() => setWorkerPanelCollapsed(true)}
+              >
+                <FaChevronLeft className="size-3.5" />
+                Ocultar
+              </button>
+            </div>
+            <InfoLine label="Nombre completo" value={worker?.fullName} />
+            <InfoLine label="DNI" value={worker?.dni} />
+            <InfoLine label="Fecha de nacimiento" value={formatBirthDate(worker?.birthDate)} />
 
-        <div className="flex flex-col gap-4 border-t border-gray-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <h2 className="mt-4 text-xl font-bold">Informacion de contacto</h2>
+            <InfoLine label="Correo" value={worker?.personalEmail} />
+            <InfoLine label="Telefono" value={worker?.phone} />
+            <InfoLine label="Direccion" value={worker?.address} />
+
+            <h2 className="mt-4 text-xl font-bold">Informacion laboral</h2>
+            <InfoLine
+              label="Grupo de trabajador"
+              value={getWorkerTypeLabel(worker?.workerType)}
+            />
+            <InfoLine
+              label="Fecha y hora de registro"
+              value={formatDateTime(worker?.createdAt)}
+            />
+            <div className="mt-3">
+              <button
+                type="button"
+                className="rounded-md bg-[#0047a3] px-4 py-2 font-semibold text-white hover:bg-[#003366]"
+                onClick={() => {
+                  closeAction();
+                  navigate(`/admin/worker-monthly-evaluations?workerId=${workerId}`);
+                }}
+              >
+                Ver evaluaciones mensuales
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div
+          className={`flex flex-col gap-4 border-t border-gray-200 pt-6 ${
+            workerPanelCollapsed ? "" : "lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
+          }`}
+        >
+          {workerPanelCollapsed ? (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+              <div>
+                <p className="text-sm font-bold text-gray-500">Trabajador</p>
+                <p className="font-extrabold text-gray-900">{worker?.fullName}</p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                onClick={() => setWorkerPanelCollapsed(false)}
+              >
+                <FaChevronRight className="size-3.5" />
+                Mostrar datos
+              </button>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <h2 className="text-2xl font-extrabold">Historial de EP y EPA</h2>
             <div className="flex flex-wrap gap-2">
@@ -126,8 +335,10 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 onChange={(event) => setMonthFilter(Number(event.target.value))}
               >
                 <option value={0}>Todos los meses</option>
-                {["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"].map((month, index) => (
-                  <option key={month} value={index + 1}>{month}</option>
+                {monthNames.map((month, index) => (
+                  <option key={month} value={index + 1}>
+                    {month}
+                  </option>
                 ))}
               </select>
               <select
@@ -137,7 +348,11 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
               >
                 {[0, 1, 2, 3].map((offset) => {
                   const value = today.getFullYear() - offset;
-                  return <option key={value} value={value}>{value}</option>;
+                  return (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  );
                 })}
               </select>
             </div>
@@ -161,11 +376,20 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 </tr>
               </thead>
               <tbody>
-                {(inventoryHistory?.assignments ?? []).map((assignment: WorkerInventoryAssignment) => (
-                  <tr key={assignment.workerInventoryAssignmentId} className="border-t border-gray-100">
-                    <td className="py-3 pr-4 font-semibold">{assignment.elementName}</td>
-                    <td className="py-3 pr-4">{formatInventoryQuantity(assignment.quantityAssigned)}</td>
-                    <td className="py-3 pr-4">{assignment.assignedAt?.split("T")[0]?.split("-").reverse().join("/")}</td>
+                {(inventoryHistory?.assignments ?? []).map((assignment) => (
+                  <tr
+                    key={assignment.workerInventoryAssignmentId}
+                    className="border-t border-gray-100"
+                  >
+                    <td className="py-3 pr-4 font-semibold">
+                      {assignment.elementName}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {formatInventoryQuantity(assignment.quantityAssigned)}
+                    </td>
+                    <td className="py-3 pr-4">
+                      {assignment.assignedAt?.split("T")[0]?.split("-").reverse().join("/")}
+                    </td>
                     <td className="py-3 pr-4">{assignment.projectName}</td>
                   </tr>
                 ))}
@@ -177,11 +401,156 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
               </p>
             ) : null}
           </div>
+
+          <div className="rounded-lg border border-gray-200 p-4">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold">Asignar EP/EPA</h2>
+                <p className="text-sm text-gray-500">
+                  Selecciona un proyecto activo y un item disponible en obra.
+                </p>
+              </div>
+              <FaUserPlus className="mt-1 size-5 text-emerald-600" />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                Proyecto activo
+                <select
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={selectedProjectId}
+                  onChange={(event) => setSelectedProjectId(Number(event.target.value))}
+                >
+                  <option value={0}>Seleccionar...</option>
+                  {(projects ?? []).map((project) => (
+                    <option key={project.projectId} value={project.projectId}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                Tipo de elemento
+                <select
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={assignmentFamily}
+                  onChange={(event) =>
+                    setAssignmentFamily(event.target.value as InventoryFamilyTabKey)
+                  }
+                >
+                  {assignableFamilies.map((family) => (
+                    <option key={family} value={family}>
+                      {getInventoryFamilyLabel(family)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold md:col-span-2">
+                Elemento disponible
+                <select
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={selectedEntryId}
+                  onChange={(event) => setSelectedEntryId(Number(event.target.value))}
+                  disabled={!availableEntries.length}
+                >
+                  <option value={0}>
+                    {availableEntries.length
+                      ? "Seleccionar..."
+                      : "No hay elementos disponibles"}
+                  </option>
+                  {availableEntries.map((entry) => (
+                    <option
+                      key={entry.projectInventoryEntryId}
+                      value={entry.projectInventoryEntryId}
+                    >
+                      {entry.elementName}
+                      {entry.elementVariantLabel ? ` - ${entry.elementVariantLabel}` : ""}
+                      {entry.fallProtectionGroupId ? ` - ${entry.elementCode || "EPA"}` : ""}
+                      {` | Disponible: ${formatInventoryQuantity(getEntryAvailableToAssign(entry))}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                Fecha
+                <input
+                  type="date"
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={assignmentDate}
+                  onChange={(event) => setAssignmentDate(event.target.value)}
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold">
+                Cantidad
+                <input
+                  type="number"
+                  min={selectedEntry ? 1 : 0}
+                  max={selectedEntryAvailable || 0}
+                  step={1}
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={assignmentQuantity}
+                  onChange={(event) => setAssignmentQuantity(Number(event.target.value))}
+                  disabled={!selectedEntry}
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold md:col-span-2">
+                Observacion
+                <input
+                  type="text"
+                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                  value={assignmentNotes}
+                  onChange={(event) => setAssignmentNotes(event.target.value)}
+                  placeholder="Detalle de entrega"
+                />
+              </label>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p
+                className={`text-sm font-semibold ${
+                  assignmentQuantity > selectedEntryAvailable
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                Disponible en obra: {formatInventoryQuantity(selectedEntryAvailable)}
+              </p>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                onClick={handleRegisterWorkerAssignment}
+                disabled={assigning || !selectedEntry || selectedEntryAvailable <= 0}
+              >
+                <FaUserPlus className="size-4" />
+                {assigning ? "Guardando..." : "Asignar al trabajador"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div className="absolute right-2 top-2">
-        <IoCloseCircle className="size-8 aspect-square cursor-pointer" onClick={closeAction} />
+        <IoCloseCircle className="size-8 cursor-pointer" onClick={closeAction} />
       </div>
+    </div>
+  );
+}
+
+function InfoLine({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | number | null;
+}) {
+  return (
+    <div className="flex flex-row gap-2">
+      <label className="font-semibold text-nowrap">{label}:</label>
+      <span>{value || "No especificado"}</span>
     </div>
   );
 }
