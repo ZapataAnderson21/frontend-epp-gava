@@ -78,7 +78,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   const { user } = useCurrentUser();
   const today = new Date();
   const [familyFilter, setFamilyFilter] = useState("");
-  const [monthFilter, setMonthFilter] = useState(today.getMonth() + 1);
+  const [monthFilter, setMonthFilter] = useState(0);
   const [yearFilter, setYearFilter] = useState(today.getFullYear());
   const [workerPanelCollapsed, setWorkerPanelCollapsed] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(0);
@@ -88,6 +88,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   const [assignmentQuantity, setAssignmentQuantity] = useState(1);
   const [assignmentDate, setAssignmentDate] = useState(getTodayDateInputValue());
   const [assignmentNotes, setAssignmentNotes] = useState("");
+  const [elementSearch, setElementSearch] = useState("");
 
   const { data: worker, error, loading } = useFetch<Worker>(`${workerApi}${workerId}`);
   const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`);
@@ -109,27 +110,50 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   const { data: inventoryHistory, refetch: refetchInventoryHistory } =
     useFetch<WorkerInventoryHistoryResponse>(historyUrl, [historyUrl]);
 
-  const availableEntries = useMemo(
+  const assignmentEntries = useMemo(
     () =>
       (projectInventory?.entries ?? [])
         .filter((entry) => {
           const family = getEntryFamily(entry);
           return (
             assignableFamilies.includes(family) &&
-            family === assignmentFamily &&
-            getEntryAvailableToAssign(entry) > 0
+            family === assignmentFamily
           );
         })
-        .sort((a, b) => a.elementName.localeCompare(b.elementName)),
+        .sort((a, b) => {
+          const availableA = getEntryAvailableToAssign(a);
+          const availableB = getEntryAvailableToAssign(b);
+          if (availableA > 0 && availableB <= 0) return -1;
+          if (availableA <= 0 && availableB > 0) return 1;
+          return a.elementName.localeCompare(b.elementName);
+        }),
     [assignmentFamily, projectInventory?.entries],
   );
 
+  const filteredAssignmentEntries = useMemo(() => {
+    const normalizedSearch = elementSearch.trim().toLowerCase();
+    if (!normalizedSearch) return assignmentEntries;
+
+    return assignmentEntries.filter((entry) =>
+      [
+        entry.elementName,
+        entry.elementCode,
+        entry.elementVariantLabel,
+        entry.categoryName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch),
+    );
+  }, [assignmentEntries, elementSearch]);
+
   const selectedEntry = useMemo(
     () =>
-      availableEntries.find(
+      assignmentEntries.find(
         (entry) => entry.projectInventoryEntryId === selectedEntryId,
       ) ?? null,
-    [availableEntries, selectedEntryId],
+    [assignmentEntries, selectedEntryId],
   );
   const selectedEntryAvailable = selectedEntry
     ? getEntryAvailableToAssign(selectedEntry)
@@ -142,13 +166,19 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   }, [projects, selectedProjectId]);
 
   useEffect(() => {
-    const selectedStillAvailable = availableEntries.some(
+    const selectedStillAvailable = assignmentEntries.some(
       (entry) => entry.projectInventoryEntryId === selectedEntryId,
     );
 
     if (!selectedStillAvailable) {
-      setSelectedEntryId(availableEntries[0]?.projectInventoryEntryId ?? 0);
-      setAssignmentQuantity(availableEntries.length ? 1 : 0);
+      const firstAvailable =
+        assignmentEntries.find((entry) => getEntryAvailableToAssign(entry) > 0) ??
+        assignmentEntries[0];
+      const firstAvailableQuantity = firstAvailable
+        ? getEntryAvailableToAssign(firstAvailable)
+        : 0;
+      setSelectedEntryId(firstAvailable?.projectInventoryEntryId ?? 0);
+      setAssignmentQuantity(firstAvailableQuantity > 0 ? 1 : 0);
       return;
     }
 
@@ -157,7 +187,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
     }
   }, [
     assignmentQuantity,
-    availableEntries,
+    assignmentEntries,
     selectedEntry,
     selectedEntryAvailable,
     selectedEntryId,
@@ -315,7 +345,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div className="order-2 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <h2 className="text-2xl font-extrabold">Historial de EP y EPA</h2>
             <div className="flex flex-wrap gap-2">
               <select
@@ -358,14 +388,14 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             </div>
           </div>
 
-          <div className="w-fit rounded-lg border border-gray-200 bg-gray-100 p-4">
+          <div className="order-2 w-fit rounded-lg border border-gray-200 bg-gray-100 p-4">
             <p className="text-sm font-bold text-gray-600">Cantidad total</p>
             <p className="text-4xl font-extrabold">
               {formatInventoryQuantity(inventoryHistory?.summary.totalQuantity ?? 0)}
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="order-2 max-h-80 overflow-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
                 <tr className="text-gray-900">
@@ -402,7 +432,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             ) : null}
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="order-1 rounded-lg border border-gray-200 p-4">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-extrabold">Asignar EP/EPA</h2>
@@ -447,32 +477,87 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 </select>
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-semibold md:col-span-2">
-                Elemento disponible
-                <select
+              <div className="flex flex-col gap-2 text-sm font-semibold md:col-span-2">
+                <label htmlFor="worker-assignment-element-search">
+                  Buscar elemento
+                </label>
+                <input
+                  id="worker-assignment-element-search"
+                  type="search"
                   className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
-                  value={selectedEntryId}
-                  onChange={(event) => setSelectedEntryId(Number(event.target.value))}
-                  disabled={!availableEntries.length}
-                >
-                  <option value={0}>
-                    {availableEntries.length
-                      ? "Seleccionar..."
-                      : "No hay elementos disponibles"}
-                  </option>
-                  {availableEntries.map((entry) => (
-                    <option
-                      key={entry.projectInventoryEntryId}
-                      value={entry.projectInventoryEntryId}
-                    >
-                      {entry.elementName}
-                      {entry.elementVariantLabel ? ` - ${entry.elementVariantLabel}` : ""}
-                      {entry.fallProtectionGroupId ? ` - ${entry.elementCode || "EPA"}` : ""}
-                      {` | Disponible: ${formatInventoryQuantity(getEntryAvailableToAssign(entry))}`}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  value={elementSearch}
+                  onChange={(event) => setElementSearch(event.target.value)}
+                  placeholder="Escribe nombre, codigo, variante o categoria"
+                />
+                <div className="max-h-48 overflow-y-auto rounded-md border border-gray-200">
+                  {filteredAssignmentEntries.length ? (
+                    filteredAssignmentEntries.map((entry) => {
+                      const available = getEntryAvailableToAssign(entry);
+                      const unavailable = available <= 0;
+                      const selected =
+                        selectedEntryId === entry.projectInventoryEntryId;
+
+                      return (
+                        <button
+                          key={entry.projectInventoryEntryId}
+                          type="button"
+                          className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left text-sm transition-colors last:border-b-0 ${
+                            selected
+                              ? "bg-[#0047a3] text-white"
+                              : unavailable
+                                ? "bg-red-50 text-red-900 hover:bg-red-100"
+                                : "bg-white text-gray-900 hover:bg-emerald-50"
+                          }`}
+                          onClick={() => {
+                            setSelectedEntryId(entry.projectInventoryEntryId);
+                            setAssignmentQuantity(unavailable ? 0 : 1);
+                          }}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-bold">
+                              {entry.elementName}
+                              {entry.elementVariantLabel
+                                ? ` - ${entry.elementVariantLabel}`
+                                : ""}
+                              {entry.fallProtectionGroupId
+                                ? ` - ${entry.elementCode || "EPA"}`
+                                : ""}
+                            </span>
+                            <span
+                              className={`block text-xs ${
+                                selected
+                                  ? "text-white/80"
+                                  : unavailable
+                                    ? "text-red-700"
+                                    : "text-gray-500"
+                              }`}
+                            >
+                              {entry.categoryName || "Sin categoria"}
+                            </span>
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-1 text-xs font-extrabold ${
+                              selected
+                                ? "bg-white/20 text-white"
+                                : unavailable
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-emerald-100 text-emerald-800"
+                            }`}
+                          >
+                            {unavailable
+                              ? "Sin stock"
+                              : `Disp. ${formatInventoryQuantity(available)}`}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="p-3 text-sm font-normal text-gray-500">
+                      No hay elementos que coincidan con la busqueda.
+                    </p>
+                  )}
+                </div>
+              </div>
 
               <label className="flex flex-col gap-1 text-sm font-semibold">
                 Fecha
