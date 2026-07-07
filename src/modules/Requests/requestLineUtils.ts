@@ -101,6 +101,20 @@ export function getFallProtectionGroupParts(line: Pick<ElementRequestType, "fall
   const group = line.fallProtectionGroup;
   if (!group) return [];
 
+  if (group.components?.length) {
+    const roleLabels = {
+      harness: "Arnes",
+      anchorBand: "Banda de anclaje",
+      lifeline: "Linea de vida",
+      positioningLanyard: "Eslinga de posicionamiento",
+    } as const;
+
+    return group.components.map(
+      (component) =>
+        `${roleLabels[component.role]}: ${formatElementNameWithCode(component.element)}`,
+    );
+  }
+
   return [
     `Arnes: ${formatElementNameWithCode(group.harnessElement)}`,
     `Banda de anclaje: ${formatElementNameWithCode(group.anchorBandElement)}`,

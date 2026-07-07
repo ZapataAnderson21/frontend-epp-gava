@@ -168,6 +168,20 @@ function getGroupPartLabel(element?: ElementType) {
 }
 
 function getFallProtectionGroupParts(group: FallProtectionGroupType) {
+  if (group.components?.length) {
+    const roleLabels = {
+      harness: "Arnes",
+      anchorBand: "Banda de anclaje",
+      lifeline: "Linea de vida",
+      positioningLanyard: "Eslinga de posicionamiento",
+    } as const;
+
+    return group.components.map(
+      (component) =>
+        `${roleLabels[component.role]}: ${getGroupPartLabel(component.element)}`,
+    );
+  }
+
   return [
     `Arnes: ${getGroupPartLabel(group.harnessElement)}`,
     `Banda de anclaje: ${getGroupPartLabel(group.anchorBandElement)}`,

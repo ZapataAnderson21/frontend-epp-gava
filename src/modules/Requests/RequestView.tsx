@@ -155,6 +155,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               group.anchorBandElementId,
               group.lifelineElementId,
               group.positioningLanyardElementId,
+              ...(group.components || []).map((component) => component.elementId),
             ].includes(line.elementId),
           );
 

@@ -498,7 +498,7 @@ export default function Element() {
               name="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              optional={false}
+              optional={true}
             />
 
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
@@ -744,7 +744,7 @@ export default function Element() {
               name="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              optional={false}
+              optional={true}
             />
 
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
@@ -983,7 +983,7 @@ export default function Element() {
             name="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            optional={false}
+            optional={true}
           />
 
           <SelectForm

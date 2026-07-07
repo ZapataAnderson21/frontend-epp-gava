@@ -123,6 +123,21 @@ function getFallProtectionGroupParts(elementRequest: ElementRequestType) {
   const group = elementRequest.fallProtectionGroup;
   if (!group) return null;
 
+  if (group.components?.length) {
+    const roleLabels = {
+      harness: "Arnes",
+      anchorBand: "Banda de anclaje",
+      lifeline: "Linea de vida",
+      positioningLanyard: "Eslinga de posicionamiento",
+    } as const;
+
+    return group.components
+      .map((component) =>
+        getGroupPartLabel(roleLabels[component.role], component.element),
+      )
+      .join(" | ");
+  }
+
   const parts = [
     getGroupPartLabel("Arnes", group.harnessElement),
     getGroupPartLabel("Banda de anclaje", group.anchorBandElement),

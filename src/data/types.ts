@@ -69,9 +69,19 @@ export interface FallProtectionGroupType {
   anchorBandElement?: ElementType;
   lifelineElement?: ElementType;
   positioningLanyardElement?: ElementType;
+  components?: FallProtectionGroupComponentType[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+}
+
+export interface FallProtectionGroupComponentType {
+  fallProtectionGroupComponentId: number;
+  fallProtectionGroupId: number;
+  elementId: number;
+  role: "harness" | "anchorBand" | "lifeline" | "positioningLanyard";
+  element?: ElementType;
+  createdAt: string;
 }
 
 export interface CreateElementDto {

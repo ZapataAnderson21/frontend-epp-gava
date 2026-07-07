@@ -249,6 +249,10 @@ export default function Elements() {
         group.lifelineElement?.code || "",
         group.positioningLanyardElement?.name || "",
         group.positioningLanyardElement?.code || "",
+        ...(group.components || []).flatMap((component) => [
+          component.element?.name || "",
+          component.element?.code || "",
+        ]),
       ]
         .join(" ")
         .toLowerCase()
@@ -654,12 +658,25 @@ function EpaGroupView({
 
           <div className="rounded-md border border-gray-200 p-3">
             <p className="mb-2 text-sm font-extrabold uppercase">Partes</p>
-            <GroupPartLine label="Arnes" element={group.harnessElement} />
-            <GroupPartLine label="Banda de anclaje" element={group.anchorBandElement} />
-            <GroupPartLine label="Linea de vida" element={group.lifelineElement} />
-            <GroupPartLine
+            <GroupPartList
+              label="Arnes"
+              elements={getGroupComponentsByRole(group, "harness", group.harnessElement)}
+            />
+            <GroupPartList
+              label="Banda de anclaje"
+              elements={getGroupComponentsByRole(group, "anchorBand", group.anchorBandElement)}
+            />
+            <GroupPartList
+              label="Linea de vida"
+              elements={getGroupComponentsByRole(group, "lifeline", group.lifelineElement)}
+            />
+            <GroupPartList
               label="Eslinga de posicionamiento"
-              element={group.positioningLanyardElement}
+              elements={getGroupComponentsByRole(
+                group,
+                "positioningLanyard",
+                group.positioningLanyardElement,
+              )}
             />
           </div>
 
@@ -677,24 +694,40 @@ function EpaGroupView({
   );
 }
 
-function GroupPartLine({
+function getGroupComponentsByRole(
+  group: FallProtectionGroupType,
+  role: "harness" | "anchorBand" | "lifeline" | "positioningLanyard",
+  fallback?: ElementType,
+) {
+  const elements = (group.components || [])
+    .filter((component) => component.role === role)
+    .map((component) => component.element)
+    .filter((element): element is ElementType => Boolean(element));
+
+  return elements.length ? elements : fallback ? [fallback] : [];
+}
+
+function GroupPartList({
   label,
-  element,
+  elements,
 }: {
   label: string;
-  element?: ElementType;
+  elements: ElementType[];
 }) {
   return (
-    <p className="flex items-center justify-between gap-2 text-sm">
-      <span>
-        <span className="font-semibold">{label}:</span>{" "}
-        {element?.code || element?.name || "Pendiente"}
-      </span>
-      <span
-        className={`inline-flex size-3 shrink-0 rounded-full border ${
-          element ? "border-emerald-500 bg-emerald-100" : "border-red-500 bg-red-100"
-        }`}
-      />
-    </p>
+    <div className="text-sm">
+      <p className="font-semibold">{label}:</p>
+      {elements.length ? (
+        <ul className="ml-3 list-disc text-gray-700">
+          {elements.map((element) => (
+            <li key={`${label}-${element.elementId}`}>
+              {element.code || element.name}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="ml-3 text-red-600">Pendiente</p>
+      )}
+    </div>
   );
 }

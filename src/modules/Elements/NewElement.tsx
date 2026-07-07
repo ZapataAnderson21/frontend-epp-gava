@@ -61,10 +61,10 @@ export default function NewEpp() {
   const [family, setFamily] = useState<InventoryFamilyKey>(initialFamily);
   const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
   const [groupCode, setGroupCode] = useState("");
-  const [groupHarnessElementId, setGroupHarnessElementId] = useState("");
-  const [groupAnchorBandElementId, setGroupAnchorBandElementId] = useState("");
-  const [groupLifelineElementId, setGroupLifelineElementId] = useState("");
-  const [groupPositioningLanyardElementId, setGroupPositioningLanyardElementId] = useState("");
+  const [groupHarnessElementIds, setGroupHarnessElementIds] = useState<string[]>([""]);
+  const [groupAnchorBandElementIds, setGroupAnchorBandElementIds] = useState<string[]>([""]);
+  const [groupLifelineElementIds, setGroupLifelineElementIds] = useState<string[]>([""]);
+  const [groupPositioningLanyardElementIds, setGroupPositioningLanyardElementIds] = useState<string[]>([""]);
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
@@ -125,24 +125,28 @@ export default function NewEpp() {
     }
 
     if (isFallProtectionGroupMode) {
-      if (
-        !groupCode.trim() ||
-        !groupHarnessElementId ||
-        !groupAnchorBandElementId ||
-        !groupLifelineElementId ||
-        !groupPositioningLanyardElementId
-      ) {
-        toast.error("El grupo EPA debe tener codigo y un elemento de cada categoria.");
+      const components = [
+        ...toFallProtectionComponents("harness", groupHarnessElementIds),
+        ...toFallProtectionComponents("anchorBand", groupAnchorBandElementIds),
+        ...toFallProtectionComponents("lifeline", groupLifelineElementIds),
+        ...toFallProtectionComponents("positioningLanyard", groupPositioningLanyardElementIds),
+      ];
+      const hasEachCategory = [
+        "harness",
+        "anchorBand",
+        "lifeline",
+        "positioningLanyard",
+      ].every((role) => components.some((component) => component.role === role));
+
+      if (!groupCode.trim() || !hasEachCategory) {
+        toast.error("El grupo EPA debe tener codigo y al menos un elemento de cada categoria.");
         return;
       }
 
       const groupData = {
         code: groupCode.trim(),
-        harnessElementId: Number(groupHarnessElementId),
-        anchorBandElementId: Number(groupAnchorBandElementId),
-        lifelineElementId: Number(groupLifelineElementId),
-        positioningLanyardElementId: Number(groupPositioningLanyardElementId),
-        description,
+        components,
+        description: description.trim() || undefined,
       };
 
       toast.promise(execute(`${elementApi}fall-protection-groups`, "POST", groupData), {
@@ -252,31 +256,31 @@ export default function NewEpp() {
             />
 
             <div className="grid gap-4 md:grid-cols-2">
-              <FallProtectionPartSelect
+              <FallProtectionPartList
                 label="Arnes"
-                value={groupHarnessElementId}
-                onChange={setGroupHarnessElementId}
+                values={groupHarnessElementIds}
+                onChange={setGroupHarnessElementIds}
                 elements={fallProtectionElementsByCategory.harness}
               />
-              <FallProtectionPartSelect
+              <FallProtectionPartList
                 label="Banda de Anclaje"
-                value={groupAnchorBandElementId}
-                onChange={setGroupAnchorBandElementId}
+                values={groupAnchorBandElementIds}
+                onChange={setGroupAnchorBandElementIds}
                 elements={fallProtectionElementsByCategory.anchorBand}
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <FallProtectionPartSelect
+              <FallProtectionPartList
                 label="Linea de vida"
-                value={groupLifelineElementId}
-                onChange={setGroupLifelineElementId}
+                values={groupLifelineElementIds}
+                onChange={setGroupLifelineElementIds}
                 elements={fallProtectionElementsByCategory.lifeline}
               />
-              <FallProtectionPartSelect
+              <FallProtectionPartList
                 label="Eslinga de posicionamiento"
-                value={groupPositioningLanyardElementId}
-                onChange={setGroupPositioningLanyardElementId}
+                values={groupPositioningLanyardElementIds}
+                onChange={setGroupPositioningLanyardElementIds}
                 elements={fallProtectionElementsByCategory.positioningLanyard}
               />
             </div>
@@ -606,7 +610,7 @@ export default function NewEpp() {
           name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          optional={false}
+          optional={true}
         />
 
         {!isStockCatalogElement && !isSafetyEquipment && !isFallProtection ? (
@@ -649,34 +653,78 @@ export default function NewEpp() {
   );
 }
 
-function FallProtectionPartSelect({
+function FallProtectionPartList({
   label,
-  value,
+  values,
   onChange,
   elements,
 }: {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
+  values: string[];
+  onChange: (value: string[]) => void;
   elements: ElementResponse[];
 }) {
+  const updateValue = (index: number, value: string) => {
+    onChange(values.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  };
+
+  const addValue = () => {
+    onChange([...values, ""]);
+  };
+
+  const removeValue = (index: number) => {
+    if (values.length === 1) {
+      onChange([""]);
+      return;
+    }
+
+    onChange(values.filter((_, itemIndex) => itemIndex !== index));
+  };
+
   return (
     <div className="flex w-full flex-col gap-2">
       <label className="font-semibold text-nowrap">{label}</label>
-      <select
-        className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required
+      {values.map((value, index) => (
+        <div key={`${label}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
+          <select
+            className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+            value={value}
+            onChange={(event) => updateValue(index, event.target.value)}
+            required={index === 0}
+          >
+            <option value="">Seleccionar...</option>
+            {elements.map((element) => (
+              <option key={element.elementId} value={element.elementId}>
+                {element.code ? `${element.name} - ${element.code}` : element.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="rounded-md border border-red-200 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+            onClick={() => removeValue(index)}
+          >
+            Quitar
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="w-fit rounded-md border border-emerald-200 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
+        onClick={addValue}
       >
-        <option value="">Seleccionar...</option>
-        {elements.map((element) => (
-          <option key={element.elementId} value={element.elementId}>
-            {element.code ? `${element.name} - ${element.code}` : element.name}
-          </option>
-        ))}
-      </select>
+        + Anadir {label.toLowerCase()}
+      </button>
     </div>
+  );
+}
+
+function toFallProtectionComponents(
+  role: "harness" | "anchorBand" | "lifeline" | "positioningLanyard",
+  values: string[],
+) {
+  return [...new Set(values.map((value) => Number(value)).filter(Boolean))].map(
+    (elementId) => ({ role, elementId }),
   );
 }
 
