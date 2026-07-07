@@ -22,7 +22,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   const navigate = useNavigate();
   const today = new Date();
   const [familyFilter, setFamilyFilter] = useState("");
-  const [monthFilter, setMonthFilter] = useState(0);
+  const [monthFilter, setMonthFilter] = useState(today.getMonth() + 1);
   const [yearFilter, setYearFilter] = useState(today.getFullYear());
 
   const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
