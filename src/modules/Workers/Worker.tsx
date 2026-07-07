@@ -81,6 +81,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
   const [monthFilter, setMonthFilter] = useState(0);
   const [yearFilter, setYearFilter] = useState(today.getFullYear());
   const [workerPanelCollapsed, setWorkerPanelCollapsed] = useState(false);
+  const [assignmentPanelCollapsed, setAssignmentPanelCollapsed] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(0);
   const [assignmentFamily, setAssignmentFamily] =
     useState<InventoryFamilyTabKey>("epp");
@@ -432,6 +433,28 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             ) : null}
           </div>
 
+          {assignmentPanelCollapsed ? (
+            <div className="order-1 flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-emerald-700">Asignar EP/EPA</p>
+                <p className="truncate font-extrabold text-emerald-950">
+                  {selectedEntry?.elementName || "Sin elemento seleccionado"}
+                </p>
+                <p className="text-sm font-semibold text-emerald-700">
+                  {getInventoryFamilyLabel(assignmentFamily)} · Disponible en obra:{" "}
+                  {formatInventoryQuantity(selectedEntryAvailable)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+                onClick={() => setAssignmentPanelCollapsed(false)}
+              >
+                <FaChevronRight className="size-3.5" />
+                Mostrar asignacion
+              </button>
+            </div>
+          ) : (
           <div className="order-1 rounded-lg border border-gray-200 p-4">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
@@ -440,7 +463,17 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                   Selecciona un proyecto activo y un item disponible en obra.
                 </p>
               </div>
-              <FaUserPlus className="mt-1 size-5 text-emerald-600" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                  onClick={() => setAssignmentPanelCollapsed(true)}
+                >
+                  <FaChevronLeft className="size-3.5" />
+                  Minimizar
+                </button>
+                <FaUserPlus className="size-5 text-emerald-600" />
+              </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
@@ -616,6 +649,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
       <div className="absolute right-2 top-2">
