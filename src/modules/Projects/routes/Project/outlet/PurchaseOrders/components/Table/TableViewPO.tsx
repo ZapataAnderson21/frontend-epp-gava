@@ -66,7 +66,7 @@ export default function TableViewPO({ purchaseOrder, seeSalesPrices }: TableView
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.description}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.resource?.unit}</td>
               <td className='p-2 border-1 border-gray-400 text-nowrap'>{item.quantity}</td>
-              <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitPurchasePrice, 4)}</td>
+              <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitPurchasePrice, 6)}</td>
               <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(lineAmount(item.quantity, item.unitPurchasePrice), 2)}</td>
               {seeSalesPrices && <td className='p-2 border-1 border-gray-400 text-nowrap'>{currencySymbol}{formatPrice(item.unitSalesPrice, 2)}</td>}
               {seeSalesPrices && <td className='p-2 border-1 border-gray-400 bg-gray-100 text-nowrap'>{currencySymbol}{formatPrice(lineAmount(item.quantity, item.unitSalesPrice), 2)}</td>}
