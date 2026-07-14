@@ -410,6 +410,67 @@ export interface InventoryDashboardResponse {
   latestMovements: InventoryMovement[];
 }
 
+export type ExpiringDocumentStatus = "expired" | "upcoming" | "valid";
+
+export interface ExpiringDocumentCategory {
+  expiringDocumentCategoryId: number;
+  name: string;
+  description?: string | null;
+  alertDaysFirst: number;
+  alertDaysSecond: number;
+  alertDaysThird: number;
+  notificationEmails: string[];
+  emailNotificationsEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  _count?: { documents: number };
+}
+
+export interface ExpiringDocument {
+  expiringDocumentId: number;
+  categoryId: number;
+  title: string;
+  documentCode?: string | null;
+  referenceType: string;
+  referenceDescription: string;
+  storageSpace: string;
+  storagePath?: string | null;
+  storageDescription?: string | null;
+  issueDate?: string | null;
+  expirationDate: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  category: ExpiringDocumentCategory;
+  status: ExpiringDocumentStatus;
+  daysRemaining: number;
+  createdBy?: { userId: number; name: string; lastName: string };
+  updatedBy?: { userId: number; name: string; lastName: string };
+}
+
+export interface ExpiringDocumentListResponse {
+  items: ExpiringDocument[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface ExpiringDocumentDashboardResponse {
+  period: { month: number; year: number };
+  counts: Record<ExpiringDocumentStatus, number>;
+  items: ExpiringDocument[];
+}
+
+export interface ExpiringDocumentHistory {
+  expiringDocumentHistoryId: number;
+  action: "created" | "updated" | "deleted" | "restored";
+  snapshot: Record<string, unknown>;
+  createdAt: string;
+  changedBy: { userId: number; name: string; lastName: string };
+}
+
 export interface ElementInventoryDetail {
   element: ElementType;
   summary: {

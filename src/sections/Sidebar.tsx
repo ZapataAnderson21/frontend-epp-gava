@@ -1,4 +1,4 @@
-import { FaFileLines, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck, FaChartColumn } from "react-icons/fa6";
+import { FaFileLines, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck, FaChartColumn, FaCalendarCheck } from "react-icons/fa6";
 import { FaProjectDiagram } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -9,7 +9,7 @@ import { useApiAction } from "../hooks/useApiAction";
 import { userApi } from "../data/apiUrl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCurrentUser } from "../hooks";
-import { adminTypes, logisticsTypes, monthlyEvaluationTypes } from "../utils";
+import { adminTypes, documentExpirationTypes, logisticsTypes, monthlyEvaluationTypes } from "../utils";
 import Permission from "../common/auth/Permission";
 import { NotificationBell } from "../components";
 import { IoMdSettings } from "react-icons/io";
@@ -30,7 +30,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   const navigate = useNavigate();
 
   const accessToken = localStorage.getItem("accessToken");
-  if (!accessToken) return null;
 
   const { execute: logoutAction, loading: loggingOut } = useApiAction<null>();
   const handleLogout = async () => {
@@ -58,6 +57,8 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
   const baseDelay = 0.1;
   const perItemDelay = 0.075;
+
+  if (!accessToken) return null;
 
   return (
     <section
@@ -101,8 +102,12 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <SidebarItem icon={<FaClipboardCheck />} label="Eval. mensuales" href="/admin/worker-monthly-evaluations" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
 
+          <Permission user={user} allow={documentExpirationTypes}>
+            <SidebarItem icon={<FaCalendarCheck />} label="Vencimientos" href="/admin/document-expirations" index={12} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          </Permission>
+
           <Permission user={user} allow={adminTypes}>
-            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={12} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={13} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
         </div>
 

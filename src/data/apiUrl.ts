@@ -58,6 +58,8 @@ export const notificationApi = `${root}notification/`;
 
 export const inventoryApi = `${root}inventory/`;
 
+export const expiringDocumentsApi = `${root}expiring-documents/`;
+
 export const workerMonthlyEvaluationApi = `${root}worker-monthly-evaluation/`;
 
 export const workerMonthlyEvaluationTemplateApi = `${workerMonthlyEvaluationApi}template/`;

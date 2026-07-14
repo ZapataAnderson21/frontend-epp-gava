@@ -11,6 +11,7 @@ import type {
 } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { formatInventoryQuantity } from "../Elements/inventoryCatalog";
+import DocumentExpirationDashboard from "./DocumentExpirationDashboard";
 
 const months = [
   "Enero",
@@ -27,7 +28,7 @@ const months = [
   "Diciembre",
 ];
 
-type DashboardTab = "protection" | "orders" | "birthdays";
+type DashboardTab = "protection" | "orders" | "birthdays" | "expirations";
 
 function formatMovementDate(value: string) {
   const date = new Date(value);
@@ -179,6 +180,12 @@ export default function Dashboard() {
                 onClick={() => setActiveTab("birthdays")}
               >
                 Cumpleaños
+              </TabButton>
+              <TabButton
+                active={activeTab === "expirations"}
+                onClick={() => setActiveTab("expirations")}
+              >
+                Vencimientos
               </TabButton>
             </div>
           </div>
@@ -453,6 +460,10 @@ export default function Dashboard() {
           <section className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
             Aún no hay indicadores configurados para órdenes de compra.
           </section>
+        ) : null}
+
+        {activeTab === "expirations" ? (
+          <DocumentExpirationDashboard month={month} year={year} />
         ) : null}
       </div>
     </Panel>

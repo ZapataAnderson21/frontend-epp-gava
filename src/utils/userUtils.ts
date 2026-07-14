@@ -4,3 +4,4 @@ export const logisticsTypes = [ ...adminTypes, `LOGISTICA`];
 export const riskPreventionTypes = ['PREVENCIONISTA DE RIESGOS'];
 export const monthlyEvaluationTypes = [...gerencyTypes, 'ADMINISTRADORA', ...riskPreventionTypes];
 export const monthlyEvaluationStatusTypes = [...gerencyTypes, 'ADMINISTRADORA'];
+export const documentExpirationTypes = [...gerencyTypes, 'ADMINISTRADORA', 'LOGISTICA', ...riskPreventionTypes];
