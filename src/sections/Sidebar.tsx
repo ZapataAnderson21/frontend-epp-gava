@@ -1,4 +1,4 @@
-import { FaFileLines, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck, FaChartColumn, FaCalendarCheck } from "react-icons/fa6";
+import { FaFileLines, FaUsers, FaCubes, FaTruck, FaBoxOpen, FaUserTie, FaMoneyBillWave, FaFileInvoiceDollar, FaUserGroup, FaClipboardCheck, FaChartColumn, FaCalendarCheck, FaBookOpen } from "react-icons/fa6";
 import { FaProjectDiagram } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
 import SidebarItem from "./SidebarItem";
@@ -96,6 +96,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
 
           <SidebarItem icon={<FaUserTie />} label="Usuarios" href="/admin/users" index={8} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          <SidebarItem icon={<FaBookOpen />} label="Reclamaciones" href="/admin/complaints" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
           <Permission user={user} allow={monthlyEvaluationTypes}>
