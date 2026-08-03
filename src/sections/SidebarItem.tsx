@@ -1,6 +1,6 @@
 // SidebarItem.tsx
 import type React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { MdOutlineArrowDropDown } from "react-icons/md";
 import { motion } from "framer-motion";
 
@@ -8,6 +8,8 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
   href?: string;           // si no hay href, será botón
+  activePaths?: string[];
+  exactActivePaths?: string[];
   isRoot?: boolean;
   isOpen?: boolean;
   onClick?: () => void;
@@ -28,15 +30,22 @@ const rowVariants = {
 };
 
 export default function SidebarItem({
-  icon, label, href, isRoot, isOpen, onClick,
+  icon, label, href, activePaths = [], exactActivePaths = [], isRoot, isOpen, onClick,
   index = 0, baseDelay = 0, perItemDelay = 0.06,
 }: SidebarItemProps) {
+  const { pathname } = useLocation();
   const delay = baseDelay + index * perItemDelay;
+  const sectionPaths = href ? [href, ...activePaths] : activePaths;
+  const isActive = Boolean(href) && (
+    sectionPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+    || exactActivePaths.includes(pathname)
+  );
 
   const content =
-    <div tabIndex={0} className="flex flex-row items-center justify-between gap-4 p-3 hover:bg-primary-50
+    <div className={`flex flex-row items-center justify-between gap-4 p-3 hover:bg-primary-50
                                  hover:text-primary hover:shadow-primary-50 hover:shadow-md focus:bg-primary-50 focus:text-primary
-                                 focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-sm transition-colors duration-200">
+                                 focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-sm transition-all duration-200
+                                 ${isActive ? "bg-primary-50 text-primary shadow-primary-50 shadow-md font-semibold" : ""}`}>
       <div className="flex flex-row items-center gap-4">
         {icon}
         {label}
@@ -52,7 +61,14 @@ export default function SidebarItem({
       initial="hidden"
       animate="visible"
     >
-      <Link className="w-full block" to={href} onClick={onClick}>{content}</Link>
+      <Link
+        className="w-full block rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        to={href}
+        onClick={onClick}
+        aria-current={isActive ? "page" : undefined}
+      >
+        {content}
+      </Link>
     </motion.div>
   ) : (
     <motion.button

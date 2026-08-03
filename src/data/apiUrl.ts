@@ -20,8 +20,6 @@ export const elementRequestResponseApi = `${root}element-request-response/`;
 
 export const emergencyApi = `${root}emergency/`;
 
-export const complaintApi = `${root}complaint/`;
-
 export const resourceApi = `${root}resource/`;
 
 export const categoryResourceApi = `${root}category-resource/`;

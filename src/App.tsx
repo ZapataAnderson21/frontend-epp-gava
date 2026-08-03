@@ -32,7 +32,6 @@ import EmergenciesProject from './modules/Projects/routes/Project/outlet/Emergen
 import ProjectInventory from './modules/Projects/routes/Project/outlet/Inventory.tsx';
 import { WorkerMonthlyEvaluations } from './modules/WorkerMonthlyEvaluations';
 import DocumentExpirations from './modules/DocumentExpirations/DocumentExpirations';
-import { Complaints } from './modules/Complaints';
 
 export default function App() {
 
@@ -118,9 +117,6 @@ export default function App() {
           <Route path='worker-monthly-evaluations' element={<WorkerMonthlyEvaluations />} />
           <Route path='document-expirations' element={<DocumentExpirations />} />
           {/* End workers routes */}
-          {/* Complaints route */}
-          <Route path='complaints' element={<Complaints />} />
-          {/* End complaints route */}
           {/* General Payrolls routes */}
           <Route path='payrolls' element={<GeneralPayrolls />} />
           <Route path='payrolls/:weekId' element={<GeneralWeeklyPayroll />} />
