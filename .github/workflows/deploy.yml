@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-frontend-epp
   cancel-in-progress: false
@@ -14,13 +17,80 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_WS_URL: ${{ vars.VITE_WS_URL }}
+
     steps:
-      - name: Deploy frontend on VPS
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Validar variables de producción
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$VITE_API_URL" ]; then
+            echo "Falta configurar la variable VITE_API_URL."
+            exit 1
+          fi
+
+          if [ -z "$VITE_WS_URL" ]; then
+            echo "Falta configurar la variable VITE_WS_URL."
+            exit 1
+          fi
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit --no-fund
+
+      - name: Generar build
+        run: npm run build
+
+      - name: Validar artefacto
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -s dist/index.html || {
+            echo "Error: no se generó dist/index.html."
+            exit 1
+          }
+
+          find dist/assets -type f -print -quit | grep -q . || {
+            echo "Error: no se generaron assets."
+            exit 1
+          }
+
+      - name: Enviar artefacto al VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "dist"
+          target: "/tmp/frontend-epp-${{ github.sha }}"
+          strip_components: 1
+          rm: true
+          command_timeout: 10m
+
+      - name: Publicar frontend en el VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          command_timeout: 5m
           script: |
-            bash /opt/deploy/deploy-frontend-epp.sh
+            set -euo pipefail
+
+            bash /opt/deploy/publish-frontend-epp.sh \
+              "/tmp/frontend-epp-${{ github.sha }}" \
+              "${{ github.sha }}"
