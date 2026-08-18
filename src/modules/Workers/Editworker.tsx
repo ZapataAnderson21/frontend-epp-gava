@@ -125,9 +125,13 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             <InputForm
               label="DNI"
               name="dni"
-              value={worker ? worker.dni : ""}
+              value={dni}
               type="text"
-              onChange={(e) => setDni(e.target.value)}
+              maxLength={8}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d{0,8}$/.test(value)) setDni(value);
+              }}
               error={errorDni}
             />
 
