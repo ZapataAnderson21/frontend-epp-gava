@@ -134,7 +134,7 @@
   background-color: var(--color-primary-500);
 }
 
-/* Scroll horizontal visible para el grafico del dashboard */
+/* Scroll visible en ambos ejes para el grafico del dashboard */
 .dashboard-chart-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary-300) #eef2f7;
@@ -146,6 +146,7 @@
 }
 
 .dashboard-chart-scrollbar::-webkit-scrollbar {
+  width: 10px;
   height: 10px;
 }
 

@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Panel } from "../../common/panel";
@@ -111,6 +111,7 @@ function getMovementRelatedLabel(movement: InventoryMovement) {
 
 export default function Dashboard() {
   const today = new Date();
+  const chartViewportRef = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
   const [activeTab, setActiveTab] = useState<DashboardTab>("protection");
@@ -140,6 +141,18 @@ export default function Dashboard() {
       ),
     [mostDelivered],
   );
+
+  useEffect(() => {
+    const animationFrame = requestAnimationFrame(() => {
+      const viewport = chartViewportRef.current;
+      if (!viewport) return;
+
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = viewport.scrollHeight - viewport.clientHeight;
+    });
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [mostDelivered]);
 
   const years = Array.from({ length: 5 }, (_, index) => today.getFullYear() - index);
   const birthdayWorkers = useMemo(
@@ -229,11 +242,12 @@ export default function Dashboard() {
                   </h3>
                   {mostDelivered.length ? (
                     <div
-                      className="dashboard-chart-scrollbar w-full max-w-full overflow-x-auto overscroll-x-contain pb-2"
+                      ref={chartViewportRef}
+                      className="dashboard-chart-scrollbar h-72 w-full max-w-full overflow-auto overscroll-contain"
                       tabIndex={0}
                       aria-label="Gráfico desplazable de elementos de protección"
                     >
-                      <div className="flex h-72 w-max min-w-full items-end gap-4 border-b border-l border-gray-200 px-4 pb-8">
+                      <div className="flex h-[22rem] w-max min-w-full items-end gap-4 border-b border-l border-gray-200 px-4 pb-8">
                         {mostDelivered.map((item: InventoryDashboardDeliveredItem) => {
                           const height = Math.max(
                             10,
