@@ -6,6 +6,7 @@ import { workerApi } from "../../data/apiUrl";
 import { type Worker } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { EditButton, SeeButton } from "../../common/button";
+import { formatDate } from "../../utils";
 
 interface ProjectTableProps {
   reFetch: number;
@@ -38,6 +39,7 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
 
   const workerTypeCounts = useMemo(() => {
     const counts = new Map<string, number>();
+    counts.set("Todos", normalizedWorkers.length);
     workerTypeOptions.slice(1).forEach((type) => counts.set(type, 0));
 
     normalizedWorkers.forEach((worker) => {
@@ -69,9 +71,16 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
 
   const columns = [
     { key: "fullName", label: "Nombre Completo", width: "18rem" },
-    { key: "phone", label: "Teléfono", width: "14rem" },
+    { key: "dni", label: "DNI", width: "9rem" },
+    {
+      key: "birthDate",
+      label: "Fecha de Nacimiento",
+      width: "12rem",
+      render: (row: Worker) => formatDate(row.birthDate),
+    },
+    { key: "phone", label: "Teléfono", width: "10rem" },
     { key: "personalEmail", label: "Correo Electrónico", width: "18rem" },
-    { key: "workerType", label: "Tipo", width: "14rem" },
+    { key: "workerType", label: "Tipo", width: "11rem" },
     ...(isAdmin
       ? [
           {
@@ -102,9 +111,9 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {workerTypeOptions.slice(1).map((type) => (
+    <div className="flex w-full flex-col gap-5">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        {workerTypeOptions.map((type) => (
           <button
             key={type}
             type="button"
