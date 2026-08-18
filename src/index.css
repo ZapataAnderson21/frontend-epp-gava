@@ -133,3 +133,33 @@
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-primary-500);
 }
+
+/* Scroll horizontal visible para el grafico del dashboard */
+.dashboard-chart-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-300) #eef2f7;
+}
+
+.dashboard-chart-scrollbar:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 3px;
+}
+
+.dashboard-chart-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+
+.dashboard-chart-scrollbar::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 9999px;
+}
+
+.dashboard-chart-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-300);
+  border: 2px solid #eef2f7;
+  border-radius: 9999px;
+}
+
+.dashboard-chart-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-500);
+}

@@ -219,47 +219,53 @@ export default function Dashboard() {
         {activeTab === "protection" ? (
           <>
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-              <div className="flex flex-col gap-4">
+              <div className="flex min-w-0 flex-col gap-4">
                 <h2 className="text-2xl font-extrabold">
                   Elemento de Protección Personal
                 </h2>
-                <div className="min-h-[360px] rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="min-h-[360px] min-w-0 rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                   <h3 className="mb-5 text-center text-lg font-bold uppercase text-gray-500">
                     Cantidad de EP pedidos - {months[month - 1]}
                   </h3>
                   {mostDelivered.length ? (
-                    <div className="flex h-72 items-end gap-4 overflow-x-auto border-b border-l border-gray-200 px-4 pb-8">
-                      {mostDelivered.map((item: InventoryDashboardDeliveredItem) => {
-                        const height = Math.max(
-                          10,
-                          (Number(item.deliveredQuantity) / maxDelivered) * 240,
-                        );
-                        const isActive = item.elementId === selectedElement?.elementId;
+                    <div
+                      className="dashboard-chart-scrollbar w-full max-w-full overflow-x-auto overscroll-x-contain pb-2"
+                      tabIndex={0}
+                      aria-label="Gráfico desplazable de elementos de protección"
+                    >
+                      <div className="flex h-72 w-max min-w-full items-end gap-4 border-b border-l border-gray-200 px-4 pb-8">
+                        {mostDelivered.map((item: InventoryDashboardDeliveredItem) => {
+                          const height = Math.max(
+                            10,
+                            (Number(item.deliveredQuantity) / maxDelivered) * 240,
+                          );
+                          const isActive = item.elementId === selectedElement?.elementId;
 
-                        return (
-                          <button
-                            key={item.elementId}
-                            type="button"
-                            className="group flex min-w-20 flex-col items-center justify-end gap-2"
-                            onClick={() => setSelectedElementId(item.elementId)}
-                          >
-                            <span className="text-xs font-bold text-gray-500">
-                              {formatInventoryQuantity(item.deliveredQuantity)}
-                            </span>
-                            <span
-                              className={`w-9 rounded-t transition-all ${
-                                isActive
-                                  ? "bg-[#0047a3]"
-                                  : "bg-[#146c8d] group-hover:bg-[#0047a3]"
-                              }`}
-                              style={{ height }}
-                            />
-                            <span className="line-clamp-2 min-h-9 text-center text-xs font-semibold text-gray-600">
-                              {item.elementName}
-                            </span>
-                          </button>
-                        );
-                      })}
+                          return (
+                            <button
+                              key={item.elementId}
+                              type="button"
+                              className="group flex w-28 flex-none flex-col items-center justify-end gap-2"
+                              onClick={() => setSelectedElementId(item.elementId)}
+                            >
+                              <span className="text-xs font-bold text-gray-500">
+                                {formatInventoryQuantity(item.deliveredQuantity)}
+                              </span>
+                              <span
+                                className={`w-9 rounded-t transition-all ${
+                                  isActive
+                                    ? "bg-[#0047a3]"
+                                    : "bg-[#146c8d] group-hover:bg-[#0047a3]"
+                                }`}
+                                style={{ height }}
+                              />
+                              <span className="line-clamp-2 min-h-9 text-center text-xs font-semibold text-gray-600">
+                                {item.elementName}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <div className="flex h-72 items-center justify-center rounded-md border border-dashed border-gray-300 text-gray-500">
