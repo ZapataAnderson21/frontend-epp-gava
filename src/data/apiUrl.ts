@@ -30,6 +30,8 @@ export const clientApi = `${root}client/`;
 
 export const purchaseOrderApi = `${root}purchase-order/`;
 
+export const purchaseOrderConditionApi = `${root}purchase-order-condition/`;
+
 export const quotationApi = `${root}quotation/`;
 
 export const resourcePurchaseOrderApi = `${root}resource-purchase-order/`;

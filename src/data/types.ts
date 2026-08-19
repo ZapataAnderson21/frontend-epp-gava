@@ -639,6 +639,16 @@ export interface Quotation {
   items?: QuotationItem[];
 }
 
+export type PurchaseOrderConditionType = "commercial" | "quality";
+
+export interface PurchaseOrderCondition {
+  purchaseOrderConditionId: number;
+  type: PurchaseOrderConditionType;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PurchaseOrder {
   purchaseOrderId: number;
   code: string;

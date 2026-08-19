@@ -167,6 +167,7 @@ export default function NewPurchaseOrder() {
 
               <ConditionsSection
                 title="CONDICIONES COMERCIALES"
+                conditionType="commercial"
                 values={generalConditions}
                 onAdd={addGeneralCondition}
                 onRemove={removeGeneralCondition}
@@ -176,6 +177,7 @@ export default function NewPurchaseOrder() {
 
               <ConditionsSection
                 title="CONDICIONES DE CALIDAD"
+                conditionType="quality"
                 values={qualityConditions}
                 onAdd={addQualityCondition}
                 onRemove={removeQualityCondition}

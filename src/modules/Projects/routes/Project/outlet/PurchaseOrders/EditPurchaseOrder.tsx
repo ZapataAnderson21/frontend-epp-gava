@@ -224,11 +224,11 @@ export default function EditPurchaseOrder() {
   );
 
   // ---- helpers condiciones ----
-  const addGeneralCondition = () => setGeneralConditions(p => [...p, ""]);
+  const addGeneralCondition = (value = "") => setGeneralConditions(p => [...p, value]);
   const removeGeneralCondition = (idx: number) => setGeneralConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
   const handleGeneralChange = (idx: number, value: string) => setGeneralConditions(p => p.map((v, i) => (i === idx ? value : v)));
 
-  const addQualityCondition = () => setQualityConditions(p => [...p, ""]);
+  const addQualityCondition = (value = "") => setQualityConditions(p => [...p, value]);
   const removeQualityCondition = (idx: number) => setQualityConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
   const handleQualityChange = (idx: number, value: string) => setQualityConditions(p => p.map((v, i) => (i === idx ? value : v)));
 
@@ -568,6 +568,7 @@ export default function EditPurchaseOrder() {
 
               <ConditionsSection
                 title="CONDICIONES COMERCIALES"
+                conditionType="commercial"
                 values={generalConditions}
                 onAdd={addGeneralCondition}
                 onRemove={removeGeneralCondition}
@@ -577,6 +578,7 @@ export default function EditPurchaseOrder() {
 
               <ConditionsSection
                 title="CONDICIONES DE CALIDAD"
+                conditionType="quality"
                 values={qualityConditions}
                 onAdd={addQualityCondition}
                 onRemove={removeQualityCondition}
