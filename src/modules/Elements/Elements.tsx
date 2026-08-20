@@ -472,7 +472,7 @@ export default function Elements() {
                 onClick={() =>
                   navigate(
                     activeTab === "fall" && epaView === "groups"
-                      ? "/admin/elements/new?family=harness&mode=group"
+                      ? "/admin/elements/fall-protection-groups/new"
                       : `/admin/elements/new?family=${nextFamily}`,
                   )
                 }

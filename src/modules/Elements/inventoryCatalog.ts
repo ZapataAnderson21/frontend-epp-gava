@@ -147,9 +147,9 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
   },
   {
     key: "harness",
-    label: "ARNES",
-    shortLabel: "ARNES",
-    description: "Arneses y sus partes trazables",
+    label: "Componentes EPA",
+    shortLabel: "EPA",
+    description: "Componentes trazables de protección anticaída",
     backendType: "operative",
     backendFamily: "harness",
     backendControlType: "individual",

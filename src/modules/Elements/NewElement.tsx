@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { elementApi, inventoryApi } from "../../data/apiUrl";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton, SaveButton } from "../../common/button";
@@ -37,8 +37,16 @@ const NEW_SAFETY_TYPE_VALUE = "__new_safety_type__";
 
 export default function NewEpp() {
   const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get("mode") === "group") {
+    return <Navigate replace to="/admin/elements/fall-protection-groups/new" />;
+  }
+
+  return <NewInventoryElement />;
+}
+
+function NewInventoryElement() {
+  const searchParams = new URLSearchParams(window.location.search);
   const familyRoot = resolveInventoryRouteFamily(searchParams.get("family") || searchParams.get("type"));
-  const isFallProtectionGroupMode = searchParams.get("mode") === "group";
   const initialFamily: InventoryFamilyKey = familyRoot === "all" || familyRoot === "operative"
     ? "epp"
     : familyRoot;
@@ -60,11 +68,6 @@ export default function NewEpp() {
   const [description, setDescription] = useState("");
   const [family, setFamily] = useState<InventoryFamilyKey>(initialFamily);
   const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
-  const [groupCode, setGroupCode] = useState("");
-  const [groupHarnessElementIds, setGroupHarnessElementIds] = useState<string[]>([""]);
-  const [groupAnchorBandElementIds, setGroupAnchorBandElementIds] = useState<string[]>([""]);
-  const [groupLifelineElementIds, setGroupLifelineElementIds] = useState<string[]>([""]);
-  const [groupPositioningLanyardElementIds, setGroupPositioningLanyardElementIds] = useState<string[]>([""]);
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
@@ -93,25 +96,6 @@ export default function NewEpp() {
       ).sort((a, b) => a.localeCompare(b)),
     [existingElements],
   );
-  const fallProtectionElementsByCategory = useMemo(() => {
-    const normalize = (value?: string | null) =>
-      value
-        ?.normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim()
-        .toLowerCase() ?? "";
-
-    const elements = (existingElements || []).filter((element) => element.family === "harness");
-    const categoryOf = (element: ElementResponse) => normalize(element.categoryName || element.name);
-
-    return {
-      harness: elements.filter((element) => categoryOf(element).includes("arnes")),
-      anchorBand: elements.filter((element) => categoryOf(element).includes("banda")),
-      lifeline: elements.filter((element) => categoryOf(element).includes("linea")),
-      positioningLanyard: elements.filter((element) => categoryOf(element).includes("eslinga")),
-    };
-  }, [existingElements]);
-
   const navigateToElements = () => {
     navigate(`/admin/inventory/${family}`);
   };
@@ -119,44 +103,13 @@ export default function NewEpp() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (familyConfig?.requiresCode && !code.trim()) {
-      toast.error(`El codigo es obligatorio para ${getInventoryFamilyLabel(family)}.`);
+    if (isFallProtection && !code.trim()) {
+      toast.error("Ingresa el código del componente EPA.");
       return;
     }
 
-    if (isFallProtectionGroupMode) {
-      const components = [
-        ...toFallProtectionComponents("harness", groupHarnessElementIds),
-        ...toFallProtectionComponents("anchorBand", groupAnchorBandElementIds),
-        ...toFallProtectionComponents("lifeline", groupLifelineElementIds),
-        ...toFallProtectionComponents("positioningLanyard", groupPositioningLanyardElementIds),
-      ];
-      const hasEachCategory = [
-        "harness",
-        "anchorBand",
-        "lifeline",
-        "positioningLanyard",
-      ].every((role) => components.some((component) => component.role === role));
-
-      if (!groupCode.trim() || !hasEachCategory) {
-        toast.error("El grupo EPA debe tener codigo y al menos un elemento de cada categoria.");
-        return;
-      }
-
-      const groupData = {
-        code: groupCode.trim(),
-        components,
-        description: description.trim() || undefined,
-      };
-
-      toast.promise(execute(`${elementApi}fall-protection-groups`, "POST", groupData), {
-        loading: "Creando grupo EPA...",
-        success: (result) => {
-          setTimeout(() => navigate("/admin/inventory/harness"), 1200);
-          return result.message || "Grupo EPA creado con exito";
-        },
-        error: (err) => err.message || "Error al crear el grupo EPA",
-      });
+    if (familyConfig?.requiresCode && !code.trim()) {
+      toast.error(`El codigo es obligatorio para ${getInventoryFamilyLabel(family)}.`);
       return;
     }
 
@@ -176,8 +129,8 @@ export default function NewEpp() {
       return;
     }
 
-    if (isFallProtection && (!code.trim() || !normalizedFallProtectionCategory)) {
-      toast.error("Indica el codigo del elemento y la categoria EPA.");
+    if (isFallProtection && !normalizedFallProtectionCategory) {
+      toast.error("Selecciona el tipo de componente EPA.");
       return;
     }
 
@@ -241,51 +194,10 @@ export default function NewEpp() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <Form
-        name={isFallProtectionGroupMode ? "REGISTRAR GRUPO EPA" : "REGISTRAR ITEM DE INVENTARIO"}
+        name={isFallProtection ? "REGISTRAR COMPONENTE EPA" : "REGISTRAR ITEM DE INVENTARIO"}
         handleSubmit={handleSubmit}
       >
-        {isFallProtectionGroupMode ? (
-          <>
-            <InputForm
-              label="Codigo del Equipo"
-              name="groupCode"
-              type="text"
-              value={groupCode}
-              onChange={(e) => setGroupCode(e.target.value)}
-              optional={false}
-            />
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <FallProtectionPartList
-                label="Arnes"
-                values={groupHarnessElementIds}
-                onChange={setGroupHarnessElementIds}
-                elements={fallProtectionElementsByCategory.harness}
-              />
-              <FallProtectionPartList
-                label="Banda de Anclaje"
-                values={groupAnchorBandElementIds}
-                onChange={setGroupAnchorBandElementIds}
-                elements={fallProtectionElementsByCategory.anchorBand}
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <FallProtectionPartList
-                label="Linea de vida"
-                values={groupLifelineElementIds}
-                onChange={setGroupLifelineElementIds}
-                elements={fallProtectionElementsByCategory.lifeline}
-              />
-              <FallProtectionPartList
-                label="Eslinga de posicionamiento"
-                values={groupPositioningLanyardElementIds}
-                onChange={setGroupPositioningLanyardElementIds}
-                elements={fallProtectionElementsByCategory.positioningLanyard}
-              />
-            </div>
-          </>
-        ) : isStockCatalogElement ? (
+        {isStockCatalogElement ? (
           <div className="flex flex-col gap-2">
             <InputForm
               label="Nombre"
@@ -508,7 +420,7 @@ export default function NewEpp() {
           <>
             <div className="grid gap-4 md:grid-cols-2">
               <InputForm
-                label="Codigo del Elemento"
+                label="Código del componente EPA"
                 name="code"
                 type="text"
                 value={code}
@@ -516,14 +428,14 @@ export default function NewEpp() {
                 optional={false}
               />
               <SelectForm
-                label="Categoria"
+                label="Tipo de componente EPA"
                 name="categoryName"
                 value={categoryName}
                 onChange={(value) => setCategoryName(value)}
                 options={[
-                  { value: "Arnes", label: "Arnes" },
-                  { value: "Banda de Anclaje", label: "Banda de Anclaje" },
-                  { value: "Linea de Vida", label: "Linea de Vida" },
+                  { value: "Arnés", label: "Arnés" },
+                  { value: "Banda de anclaje", label: "Banda de anclaje" },
+                  { value: "Línea de vida", label: "Línea de vida" },
                   { value: "Eslinga de posicionamiento", label: "Eslinga de posicionamiento" },
                 ]}
               />
@@ -650,81 +562,6 @@ export default function NewEpp() {
         </ButtonContainer>
       </Form>
     </>
-  );
-}
-
-function FallProtectionPartList({
-  label,
-  values,
-  onChange,
-  elements,
-}: {
-  label: string;
-  values: string[];
-  onChange: (value: string[]) => void;
-  elements: ElementResponse[];
-}) {
-  const updateValue = (index: number, value: string) => {
-    onChange(values.map((item, itemIndex) => (itemIndex === index ? value : item)));
-  };
-
-  const addValue = () => {
-    onChange([...values, ""]);
-  };
-
-  const removeValue = (index: number) => {
-    if (values.length === 1) {
-      onChange([""]);
-      return;
-    }
-
-    onChange(values.filter((_, itemIndex) => itemIndex !== index));
-  };
-
-  return (
-    <div className="flex w-full flex-col gap-2">
-      <label className="font-semibold text-nowrap">{label}</label>
-      {values.map((value, index) => (
-        <div key={`${label}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
-          <select
-            className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
-            value={value}
-            onChange={(event) => updateValue(index, event.target.value)}
-            required={index === 0}
-          >
-            <option value="">Seleccionar...</option>
-            {elements.map((element) => (
-              <option key={element.elementId} value={element.elementId}>
-                {element.code ? `${element.name} - ${element.code}` : element.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="rounded-md border border-red-200 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
-            onClick={() => removeValue(index)}
-          >
-            Quitar
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        className="w-fit rounded-md border border-emerald-200 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
-        onClick={addValue}
-      >
-        + Anadir {label.toLowerCase()}
-      </button>
-    </div>
-  );
-}
-
-function toFallProtectionComponents(
-  role: "harness" | "anchorBand" | "lifeline" | "positioningLanyard",
-  values: string[],
-) {
-  return [...new Set(values.map((value) => Number(value)).filter(Boolean))].map(
-    (elementId) => ({ role, elementId }),
   );
 }
 

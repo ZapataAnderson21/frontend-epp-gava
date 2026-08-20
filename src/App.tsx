@@ -5,7 +5,12 @@ import Dashboard from './modules/Dashboard/Dashboard.tsx';
 
 import { Login, ResetPassword } from './modules/Login';
 import { Users, User, NewUser} from './modules/Users';
-import { Elements, Element, NewElement } from './modules/Elements';
+import {
+  Elements,
+  Element,
+  NewElement,
+  NewFallProtectionGroup,
+} from './modules/Elements';
 import { Projects, Project, NewProject, EditProject } from './modules/Projects';
 import { ProjectGantt } from './modules/Projects/routes/Project/outlet/ProjectGantt';
 import { Requests, Request, NewRequest } from './modules/Requests';
@@ -78,6 +83,7 @@ export default function App() {
           {/* Elements routes */}
           <Route path='elements' element={<Elements />} />
           <Route path='elements/type/:type' element={<Elements />} />
+          <Route path='elements/fall-protection-groups/new' element={<NewFallProtectionGroup />} />
           <Route path='elements/:id' element={<Element />} />
           <Route path='elements/new' element={<NewElement />} />
           {/* End elements routes */}
