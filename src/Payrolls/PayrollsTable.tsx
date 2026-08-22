@@ -1,74 +1,77 @@
-import { useNavigate } from "react-router-dom";
-import { SeeButton } from "../common/button";
+import { DeleteButton, EditButton } from "../common/button";
 import { Table } from "../common/table";
-import { weekApi } from "../data/apiUrl";
-import { useFetch } from "../hooks";
-import { LoadingSkeletonTable } from "../common/loading";
-import { ErrorMessage } from "../common/error";
-import { formatToLongMonthDate } from "../utils";
+import { formatDate, formatDateTime } from "../utils";
 
-interface WorkersPayroll {
-  workerId: number;
-  workerName: string;
-  workerType: string;
-  attendaces: number;
-  dailyWage: number;
-}
-
-export interface WeeklyPayrollProps {
+export interface PayrollWeek {
   weekId: number;
   startDate: string;
   endDate: string;
-  laborerAmount: number;
-  technicianAmount: number;
-  totalAmount: number;
-  workers: WorkersPayroll[];
+}
+
+export interface ProjectWeeklyPayroll {
+  projectWeeklyPayrollId: number;
+  projectId: number;
+  weekId: number;
+  amount: number;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  week: PayrollWeek;
 }
 
 interface PayrollsTableProps {
-  projectId: number;
+  payrolls: ProjectWeeklyPayroll[];
+  disabled?: boolean;
+  onEdit: (payroll: ProjectWeeklyPayroll) => void;
+  onDelete: (payroll: ProjectWeeklyPayroll) => void;
 }
 
-export default function PayrollsTable({ projectId }: PayrollsTableProps) {
-  const navigate = useNavigate();
-
-  const {data: weekPayrolls, loading, error} = useFetch<WeeklyPayrollProps[]>(`${weekApi}totals/${projectId}`, [projectId]);
-
+export default function PayrollsTable({
+  payrolls,
+  disabled,
+  onEdit,
+  onDelete,
+}: PayrollsTableProps) {
   const columns = [
-    { label: "Semana", width: "12rem",
-      render: (row: WeeklyPayrollProps) => `${formatToLongMonthDate(row.startDate)} - ${formatToLongMonthDate(row.endDate)}`
+    {
+      label: "Semana",
+      width: "18rem",
+      render: (payroll: ProjectWeeklyPayroll) =>
+        `${formatDate(payroll.week.startDate)} - ${formatDate(payroll.week.endDate)}`,
     },
-    { label: "Obreros", 
-      width: "12rem",
-      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.laborerAmount).toFixed(2)}`
+    {
+      label: "Monto",
+      width: "10rem",
+      align: "right" as const,
+      render: (payroll: ProjectWeeklyPayroll) =>
+        `S/ ${Number(payroll.amount).toLocaleString("es-PE", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
     },
-    { label: "Técnicos", 
-      width: "12rem",
-      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.technicianAmount).toFixed(2)}`
+    {
+      label: "Observación",
+      width: "22rem",
+      render: (payroll: ProjectWeeklyPayroll) => payroll.notes || "—",
     },
-    { label: "Total", 
+    {
+      label: "Última actualización",
       width: "12rem",
-      render: (week: WeeklyPayrollProps) => `S/ ${Number(week.totalAmount).toFixed(2)}`
+      render: (payroll: ProjectWeeklyPayroll) =>
+        formatDateTime(payroll.updatedAt),
     },
     {
       label: "Acciones",
       width: "8rem",
-      render: (week: WeeklyPayrollProps) => <SeeButton onClick={() => navigate(`/admin/projects/${projectId}/payrolls/weekly`, { state: { week } })} />
-    }
+      align: "center" as const,
+      render: (payroll: ProjectWeeklyPayroll) => (
+        <div className="flex justify-center gap-2">
+          <EditButton onClick={() => onEdit(payroll)} disabled={disabled} />
+          <DeleteButton onClick={() => onDelete(payroll)} disabled={disabled} />
+        </div>
+      ),
+    },
   ] as const;
 
-  if (loading) {
-    return <LoadingSkeletonTable />;
-  }
-
-  if (error) {
-    return <ErrorMessage errorMessage={error} />;
-  }
-
-  return (
-    <Table<WeeklyPayrollProps>
-      data={weekPayrolls || []}
-      columns={columns}
-    />
-  )
+  return <Table data={payrolls} columns={columns} />;
 }

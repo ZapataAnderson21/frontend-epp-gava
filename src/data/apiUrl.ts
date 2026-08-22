@@ -54,6 +54,8 @@ export const dailyWageApi = `${root}daily-wage/`;
 
 export const weeklyWageApi = `${root}weekly-wage/`;
 
+export const projectWeeklyPayrollApi = `${root}project-weekly-payroll/`;
+
 export const taskApi = `${root}task/`;
 
 export const notificationApi = `${root}notification/`;

@@ -29,7 +29,6 @@ import EditPurchaseOrder from './modules/Projects/routes/Project/outlet/Purchase
 import RequestDraft from './modules/Requests/RequestDraft.tsx';
 import Payrolls from './Payrolls/Payrolls.tsx';
 import Attendances from './Payrolls/Attendances.tsx';
-import WeeklyPayroll from './Payrolls/WeeklyPayroll.tsx';
 import { GeneralPayrolls, GeneralWeeklyPayroll } from './modules/Payrolls';
 import Summary from './modules/Projects/routes/Project/outlet/Summary/Summary.tsx';
 import RequestsProject from './modules/Projects/routes/Project/outlet/Requests.tsx';
@@ -66,7 +65,7 @@ export default function App() {
             <Route path='requests' element={<RequestsProject />} />
             <Route path='inventory' element={<ProjectInventory />} />
             <Route path='payrolls/attendances' element={<Attendances />} />
-            <Route path='payrolls/weekly' element={<WeeklyPayroll  />} />
+            <Route path='payrolls/weekly' element={<Payrolls />} />
             <Route path='emergencies' element={<EmergenciesProject  />} />
           </Route>
           {/* End projects routes */}
@@ -132,4 +131,3 @@ export default function App() {
     </BrowserRouter>
   )
 }
-
