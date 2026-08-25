@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Form, InputForm, ButtonSubmit, ButtonContainer } from "../../../common/form";
 import { useApiAction } from "../../../hooks/useApiAction";
 import { userTypeApi } from "../../../data/apiUrl";
-import { IoClose } from "react-icons/io5";
+import { X as IoClose } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion"; // 👈 usa framer-motion, no motion/react
 
 type CreatedUserType = { userTypeId: number; name: string };

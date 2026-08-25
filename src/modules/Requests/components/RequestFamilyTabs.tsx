@@ -20,7 +20,7 @@ export default function RequestFamilyTabs({
             key={tab.key}
             type="button"
             onClick={() => onChange(tab.key)}
-            className={`rounded-t-md border-b-2 px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`rounded-t-md border-b-2 px-4 py-2 text-xs font-semibold transition-colors ${
               active
                 ? "border-[#0047a3] text-[#0047a3]"
                 : "border-transparent text-gray-400 hover:text-gray-700"

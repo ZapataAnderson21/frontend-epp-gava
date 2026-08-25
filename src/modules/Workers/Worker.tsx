@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { FaChevronLeft, FaChevronRight, FaUserPlus } from "react-icons/fa6";
-import { IoCloseCircle } from "react-icons/io5";
+import {
+  ChevronLeft as FaChevronLeft,
+  ChevronRight as FaChevronRight,
+  CircleX as IoCloseCircle,
+  UserPlus as FaUserPlus,
+} from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { inventoryApi, projectApi, workerApi } from "../../data/apiUrl";
@@ -267,7 +272,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
 
   return (
     <div className="relative max-h-full w-[min(1100px,95vw)] overflow-auto rounded-xl bg-white p-8 text-gray-900">
-      <h1 className="mb-4 text-2xl font-extrabold">
+      <h1 className="mb-4 text-xl font-extrabold">
         DETALLE DEL TRABAJADOR {worker?.workerId}
       </h1>
 
@@ -281,10 +286,10 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
         {!workerPanelCollapsed ? (
           <div className="flex w-full flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-bold">Informacion Personal</h2>
+              <h2 className="text-lg font-bold">Informacion Personal</h2>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                 onClick={() => setWorkerPanelCollapsed(true)}
               >
                 <FaChevronLeft className="size-3.5" />
@@ -295,12 +300,12 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             <InfoLine label="DNI" value={worker?.dni} />
             <InfoLine label="Fecha de nacimiento" value={formatBirthDate(worker?.birthDate)} />
 
-            <h2 className="mt-4 text-xl font-bold">Informacion de contacto</h2>
+            <h2 className="mt-4 text-lg font-bold">Informacion de contacto</h2>
             <InfoLine label="Correo" value={worker?.personalEmail} />
             <InfoLine label="Telefono" value={worker?.phone} />
             <InfoLine label="Direccion" value={worker?.address} />
 
-            <h2 className="mt-4 text-xl font-bold">Informacion laboral</h2>
+            <h2 className="mt-4 text-lg font-bold">Informacion laboral</h2>
             <InfoLine
               label="Grupo de trabajador"
               value={getWorkerTypeLabel(worker?.workerType)}
@@ -332,12 +337,12 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           {workerPanelCollapsed ? (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
               <div>
-                <p className="text-sm font-bold text-gray-500">Trabajador</p>
+                <p className="text-xs font-bold text-gray-500">Trabajador</p>
                 <p className="font-extrabold text-gray-900">{worker?.fullName}</p>
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                 onClick={() => setWorkerPanelCollapsed(false)}
               >
                 <FaChevronRight className="size-3.5" />
@@ -347,10 +352,10 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           ) : null}
 
           <div className="order-2 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-            <h2 className="text-2xl font-extrabold">Historial de EP y EPA</h2>
+            <h2 className="text-xl font-extrabold">Historial de EP y EPA</h2>
             <div className="flex flex-wrap gap-2">
               <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm font-semibold"
+                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
                 value={familyFilter}
                 onChange={(event) => setFamilyFilter(event.target.value)}
               >
@@ -361,7 +366,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 <option value="harness">EPA</option>
               </select>
               <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm font-semibold"
+                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
                 value={monthFilter}
                 onChange={(event) => setMonthFilter(Number(event.target.value))}
               >
@@ -373,7 +378,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 ))}
               </select>
               <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm font-semibold"
+                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
                 value={yearFilter}
                 onChange={(event) => setYearFilter(Number(event.target.value))}
               >
@@ -390,14 +395,14 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           </div>
 
           <div className="order-2 w-fit rounded-lg border border-gray-200 bg-gray-100 p-4">
-            <p className="text-sm font-bold text-gray-600">Cantidad total</p>
-            <p className="text-4xl font-extrabold">
+            <p className="text-xs font-bold text-gray-600">Cantidad total</p>
+            <p className="text-3xl font-extrabold">
               {formatInventoryQuantity(inventoryHistory?.summary.totalQuantity ?? 0)}
             </p>
           </div>
 
           <div className="order-2 max-h-80 overflow-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
+            <table className="w-full min-w-[560px] text-left text-xs">
               <thead>
                 <tr className="text-gray-900">
                   <th className="py-2 pr-4">EP/EPA</th>
@@ -427,7 +432,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
               </tbody>
             </table>
             {!inventoryHistory?.assignments?.length ? (
-              <p className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              <p className="rounded-md border border-dashed border-gray-300 p-4 text-xs text-gray-500">
                 No hay entregas registradas con estos filtros.
               </p>
             ) : null}
@@ -436,18 +441,18 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           {assignmentPanelCollapsed ? (
             <div className="order-1 flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
               <div className="min-w-0">
-                <p className="text-sm font-bold text-emerald-700">Asignar EP/EPA</p>
+                <p className="text-xs font-bold text-emerald-700">Asignar EP/EPA</p>
                 <p className="truncate font-extrabold text-emerald-950">
                   {selectedEntry?.elementName || "Sin elemento seleccionado"}
                 </p>
-                <p className="text-sm font-semibold text-emerald-700">
+                <p className="text-xs font-semibold text-emerald-700">
                   {getInventoryFamilyLabel(assignmentFamily)} · Disponible en obra:{" "}
                   {formatInventoryQuantity(selectedEntryAvailable)}
                 </p>
               </div>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+                className="inline-flex items-center gap-2 rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
                 onClick={() => setAssignmentPanelCollapsed(false)}
               >
                 <FaChevronRight className="size-3.5" />
@@ -458,15 +463,15 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           <div className="order-1 rounded-lg border border-gray-200 p-4">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold">Asignar EP/EPA</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-lg font-extrabold">Asignar EP/EPA</h2>
+                <p className="text-xs text-gray-500">
                   Selecciona un proyecto activo y un item disponible en obra.
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+                  className="inline-flex items-center gap-2 rounded-md border border-emerald-300 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
                   onClick={() => setAssignmentPanelCollapsed(true)}
                 >
                   <FaChevronLeft className="size-3.5" />
@@ -477,7 +482,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex flex-col gap-1 text-sm font-semibold">
+              <label className="flex flex-col gap-1 text-xs font-semibold">
                 Proyecto activo
                 <select
                   className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
@@ -493,7 +498,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 </select>
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-semibold">
+              <label className="flex flex-col gap-1 text-xs font-semibold">
                 Tipo de elemento
                 <select
                   className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
@@ -510,7 +515,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 </select>
               </label>
 
-              <div className="flex flex-col gap-2 text-sm font-semibold md:col-span-2">
+              <div className="flex flex-col gap-2 text-xs font-semibold md:col-span-2">
                 <label htmlFor="worker-assignment-element-search">
                   Buscar elemento
                 </label>
@@ -534,7 +539,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                         <button
                           key={entry.projectInventoryEntryId}
                           type="button"
-                          className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left text-sm transition-colors last:border-b-0 ${
+                          className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left text-xs transition-colors last:border-b-0 ${
                             selected
                               ? "bg-[#0047a3] text-white"
                               : unavailable
@@ -557,7 +562,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                                 : ""}
                             </span>
                             <span
-                              className={`block text-xs ${
+                              className={`block text-2xs ${
                                 selected
                                   ? "text-white/80"
                                   : unavailable
@@ -569,7 +574,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                             </span>
                           </span>
                           <span
-                            className={`shrink-0 rounded-full px-2 py-1 text-xs font-extrabold ${
+                            className={`shrink-0 rounded-full px-2 py-1 text-2xs font-extrabold ${
                               selected
                                 ? "bg-white/20 text-white"
                                 : unavailable
@@ -585,14 +590,14 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                       );
                     })
                   ) : (
-                    <p className="p-3 text-sm font-normal text-gray-500">
+                    <p className="p-3 text-xs font-normal text-gray-500">
                       No hay elementos que coincidan con la busqueda.
                     </p>
                   )}
                 </div>
               </div>
 
-              <label className="flex flex-col gap-1 text-sm font-semibold">
+              <label className="flex flex-col gap-1 text-xs font-semibold">
                 Fecha
                 <input
                   type="date"
@@ -602,7 +607,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 />
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-semibold">
+              <label className="flex flex-col gap-1 text-xs font-semibold">
                 Cantidad
                 <input
                   type="number"
@@ -616,7 +621,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
                 />
               </label>
 
-              <label className="flex flex-col gap-1 text-sm font-semibold md:col-span-2">
+              <label className="flex flex-col gap-1 text-xs font-semibold md:col-span-2">
                 Observacion
                 <input
                   type="text"
@@ -630,7 +635,7 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
 
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p
-                className={`text-sm font-semibold ${
+                className={`text-xs font-semibold ${
                   assignmentQuantity > selectedEntryAvailable
                     ? "text-red-600"
                     : "text-gray-600"

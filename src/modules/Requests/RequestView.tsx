@@ -8,8 +8,13 @@ import type {
   RequestType,
 } from "../../data/types";
 
-import { FaArrowRight, FaCheck } from "react-icons/fa6";
-import { FaTimes, FaFilePdf } from "react-icons/fa";
+import {
+  ArrowRight as FaArrowRight,
+  Check as FaCheck,
+  FileText as FaFilePdf,
+  X as FaTimes,
+} from "lucide-react";
+
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 
 import Button from "../../components/Button";
@@ -511,7 +516,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
       <div className="flex flex-col items-start justify-start w-full h-full p-10 text-gray-800 gap-8">
         <div className="flex flex-col items-start justify-start w-full max-w-4xl gap-4 text-gray-800">
           <div className="flex flex-row flex-wrap gap-2 items-start justify-between w-full text-[12px] md:text-[14px]">
-            <h1 className="text-2xl font-bold mb-4">SOLICITUD N° {requestId}</h1>
+            <h1 className="text-xl font-bold mb-4">SOLICITUD N° {requestId}</h1>
             <div className="flex gap-2">
               {pdfUrl && (
                 <button
@@ -606,7 +611,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
                     </div>
 
                     {errorElements && (
-                      <p className="text-red-600 text-sm mt-2">{errorElements}</p>
+                      <p className="text-red-600 text-xs mt-2">{errorElements}</p>
                     )}
 
                     <div className="flex flex-wrap gap-2 mt-3">
@@ -731,13 +736,13 @@ export default function RequestView({ requestId }: RequestViewProps) {
             `}
           >
             <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
-              <h2 className="text-lg font-bold">Requerimiento PDF</h2>
+              <h2 className="text-base font-bold">Requerimiento PDF</h2>
               <button
                 onClick={() => setIsPdfOpen(false)}
                 className="p-2 hover:bg-gray-200 rounded-full transition-colors cursor-pointer"
                 type="button"
               >
-                <FaTimes className="text-xl" />
+                <FaTimes className="text-lg" />
               </button>
             </div>
             <iframe 

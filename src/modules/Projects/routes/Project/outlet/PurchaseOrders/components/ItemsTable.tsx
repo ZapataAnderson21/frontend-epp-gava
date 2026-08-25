@@ -1,4 +1,9 @@
-import { FaArrowDown, FaArrowUp, FaMinus, FaPlus } from "react-icons/fa";
+import {
+  ArrowDown as FaArrowDown,
+  ArrowUp as FaArrowUp,
+  Minus as FaMinus,
+  Plus as FaPlus,
+} from "lucide-react";
 import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
 import { lineAmount, roundMoney } from "../../../../../../../utils";
@@ -47,7 +52,7 @@ export default function ItemsTable({
     `w-full min-w-16 p-2 bg-gray-50 rounded-md border ${hasError ? "border-red-600 ring-1 ring-red-300" : "border-gray-400 focus:outline-[#0047a3]"}`;
 
   const errorText = (msg?: string) =>
-    msg ? <p className="text-xs text-red-600 mt-1 text-left">{msg}</p> : null;
+    msg ? <p className="text-2xs text-red-600 mt-1 text-left">{msg}</p> : null;
 
   return (
     <div className="overflow-x-auto">

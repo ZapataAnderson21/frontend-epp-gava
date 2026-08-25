@@ -131,7 +131,7 @@ export default function QuotationTable() {
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col sm:flex-row gap-3 md:items-end md:justify-between mb-4">
         <div className="flex flex-col w-full gap-1">
-          <label className="text-sm text-gray-700">Buscar por código</label>
+          <label className="text-xs text-gray-700">Buscar por código</label>
           <input
             type="text"
             value={codeQuery}
@@ -141,7 +141,7 @@ export default function QuotationTable() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-700">Cliente</label>
+          <label className="text-xs text-gray-700">Cliente</label>
           <Select
             name="client-filter"
             value={clientFilter}

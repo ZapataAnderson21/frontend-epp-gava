@@ -11,9 +11,9 @@ import { ConditionsSection, DeliveryInfoCard, DuplicateModal, ItemsTable, Paymen
 import type { ItemRow } from "../../../../../../hooks/usePurchaseOrderForm";
 import { ButtonContainer } from "../../../../../../common/form";
 import { Button } from "../../../../../../components";
-import { TiStarOutline } from "react-icons/ti";
+import { Copy as FaRegCopy, Star as TiStarOutline } from "lucide-react";
 import { Loading } from "../../../../../../common/loading";
-import { FaRegCopy } from "react-icons/fa6";
+
 import toast, { Toaster } from "react-hot-toast";
 
 export default function EditPurchaseOrder() {

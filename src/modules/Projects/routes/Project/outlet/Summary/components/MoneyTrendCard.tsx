@@ -1,5 +1,5 @@
 // components/MoneyTrendCard.tsx
-import { CgSpinner } from "react-icons/cg";
+import { LoaderCircle as CgSpinner } from "lucide-react";
 
 export type Currency = "PEN" | "USD" | "EUR";
 

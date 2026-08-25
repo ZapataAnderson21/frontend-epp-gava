@@ -1,4 +1,4 @@
-import { IoIosCloseCircle } from "react-icons/io";
+import { CircleX as IoIosCloseCircle } from "lucide-react";
 
 interface ModalElementsProps {
   title: string;
@@ -17,7 +17,7 @@ export default function ModalSelect({ title, isOpen, onClose, children }: ModalE
         <div className="absolute top-3 right-3 cursor-pointer text-[#d80027] hover:text-gray-800" onClick={onClose}>
           <IoIosCloseCircle size={24} />
         </div>
-        <h1 className="text-2xl text-gray-800 font-bold mb-4 px-3">{title}</h1>
+        <h1 className="text-xl text-gray-800 font-bold mb-4 px-3">{title}</h1>
         {children}
       </div>
     </div>

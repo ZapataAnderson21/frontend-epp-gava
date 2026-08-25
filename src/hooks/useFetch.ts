@@ -21,6 +21,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
 
     const fetchData = async () => {
       if (!url) {
@@ -34,7 +35,10 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
 
       setLoading(true);
       try {
-        const res = await fetch(url, { headers: getAuthHeaders() });
+        const res = await fetch(url, {
+          headers: getAuthHeaders(),
+          signal: controller.signal,
+        });
 
         if (res.status === 401) {
           redirectToLoginPreservingURL();
@@ -69,6 +73,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
           setData(null);
         }
       } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         const message = err instanceof Error ? err.message : "Error desconocido";
         if (active) setError(message);
       } finally {
@@ -79,6 +84,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
     fetchData();
     return () => {
       active = false;
+      controller.abort();
     };
   }, [url, refetchTrigger, ...extraDeps]);
 

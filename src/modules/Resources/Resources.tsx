@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { AddButton } from "../../common/button";
 import { Button } from "../../components";
 import { useState } from "react";
-import { CgSpinner } from "react-icons/cg";
-import { FaFileExcel } from "react-icons/fa6";
+import { FileSpreadsheet as FaFileExcel, LoaderCircle as CgSpinner } from "lucide-react";
+
 import toast, { Toaster } from "react-hot-toast";
 import { resourceApi } from "../../data/apiUrl";
 

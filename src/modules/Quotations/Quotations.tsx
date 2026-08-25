@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { AddButton } from "../../common/button";
 import QuotationTable from "./QuotationTable";
-import { FaUserGroup } from "react-icons/fa6";
+import { UsersRound as FaUserGroup } from "lucide-react";
 import { Button } from "../../components";
 
 export default function Quotations() {

@@ -1,8 +1,16 @@
 import { useNavigate, useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { FaCreditCard, FaLocationDot, FaPencil, FaRegFilePdf } from "react-icons/fa6";
-import { FaGlobe, FaPhoneAlt } from "react-icons/fa";
-import { IoIosMail } from "react-icons/io";
+import {
+  CreditCard as FaCreditCard,
+  FileText as FaRegFilePdf,
+  Globe as FaGlobe,
+  Mail as IoIosMail,
+  MapPin as FaLocationDot,
+  Pencil as FaPencil,
+  Phone as FaPhoneAlt,
+} from "lucide-react";
+
+
 import { Button } from "../../components";
 import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
@@ -110,17 +118,17 @@ export default function Quotation() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <p className="text-[#03045a] font-bold italic text-xl">"Seguridad y Calidad a su Servicio"</p>
-                <h1 className="text-[#c00000] font-extrabold text-2xl">COTIZACIÓN</h1>
+                <p className="text-[#03045a] font-bold italic text-lg">"Seguridad y Calidad a su Servicio"</p>
+                <h1 className="text-[#c00000] font-extrabold text-xl">COTIZACIÓN</h1>
                 <div className="border-t-4 border-[#c00000]" />
-                <h2 className="text-[#c00000] text-3xl font-bold">{quotation.code}</h2>
-                <p className="self-end text-xl">
+                <h2 className="text-[#c00000] text-2xl font-bold">{quotation.code}</h2>
+                <p className="self-end text-lg">
                   <span className="font-bold">Fecha:</span> {displayDate}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-2xl px-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xl px-1">
               <p><span className="font-bold">Servicio:</span> {quotation.serviceDescription ?? "-"}</p>
               <p><span className="font-bold">RUC:</span> {quotation.client?.ruc ?? "-"}</p>
               <p><span className="font-bold">Nombre del Cliente:</span> {quotation.client?.name ?? "-"}</p>
@@ -128,7 +136,7 @@ export default function Quotation() {
             </div>
 
             <div className="overflow-x-auto rounded-sm">
-              <table className="w-full text-xl">
+              <table className="w-full text-lg">
                 <thead className="bg-[#c90000] text-white">
                   <tr>
                     <th className="p-3 text-left">Ítem</th>
@@ -155,7 +163,7 @@ export default function Quotation() {
             </div>
 
             <div className="flex justify-end mt-1">
-              <div className="w-full md:w-[48%] text-2xl">
+              <div className="w-full md:w-[48%] text-xl">
                 <div className="flex justify-between py-2 border-b border-gray-300 font-semibold">
                   <span>COSTO DIRECTO</span>
                   <span>{Number(quotation.costDirectAmount).toFixed(2)}</span>
@@ -172,35 +180,35 @@ export default function Quotation() {
             </div>
 
             <div className="pt-1">
-              <h3 className="text-2xl font-bold mb-2">Condiciones Comerciales:</h3>
+              <h3 className="text-xl font-bold mb-2">Condiciones Comerciales:</h3>
               {commercialTerms.length > 0 ? (
-                <ol className="list-decimal list-inside text-xl space-y-1">
+                <ol className="list-decimal list-inside text-lg space-y-1">
                   {commercialTerms.map((term, idx) => (
                     <li key={`${term}-${idx}`}>{term}</li>
                   ))}
                 </ol>
               ) : (
-                <p className="text-xl">-</p>
+                <p className="text-lg">-</p>
               )}
             </div>
 
             <div className="bg-[#c90000] text-white p-8 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-lg">
                 <div className="space-y-4">
-                  <p className="font-bold text-xl">INFORMACIÓN BANCARIA:</p>
+                  <p className="font-bold text-lg">INFORMACIÓN BANCARIA:</p>
                   <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta BBVA:</span> 0011-0216-0100000630</span></p>
                   <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta Interbancaria:</span> 011216000100000630 92</span></p>
                   <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta de detracción B. NACIÓN:</span> 230-003181</span></p>
                 </div>
                 <div className="space-y-4">
-                  <p className="font-bold text-xl">CONTACTO:</p>
+                  <p className="font-bold text-lg">CONTACTO:</p>
                   <p className="flex items-center gap-3"><FaPhoneAlt className="shrink-0" /><span><span className="font-bold">Teléfono:</span> 978 994 903 / 950 528 865</span></p>
                   <p className="flex items-center gap-3"><FaGlobe className="shrink-0" /><span><span className="font-bold">Página web:</span> www.gavacycelectricidad.com</span></p>
-                  <p className="flex items-center gap-3"><IoIosMail className="shrink-0 text-2xl" /><span><span className="font-bold">Correo:</span> logistica@gavacyc.com</span></p>
+                  <p className="flex items-center gap-3"><IoIosMail className="shrink-0 text-xl" /><span><span className="font-bold">Correo:</span> logistica@gavacyc.com</span></p>
                 </div>
               </div>
-              <div className="mt-8 text-xl">
-                <p className="font-bold text-xl mb-2">DIRECCIÓN:</p>
+              <div className="mt-8 text-lg">
+                <p className="font-bold text-lg mb-2">DIRECCIÓN:</p>
                 <p className="flex items-start gap-3"><FaLocationDot className="shrink-0 mt-1" /><span>Calle Vicente de la Vega No 1488 - 5to piso, Chiclayo</span></p>
                 <p className="flex items-start gap-3"><FaLocationDot className="shrink-0 mt-1" /><span>Mz C Dpto 206 Torre 4 Condominio Garden 360. Urb Las Palmeras del Chipre, Piura.</span></p>
               </div>

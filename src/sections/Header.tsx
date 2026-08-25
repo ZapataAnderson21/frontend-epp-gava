@@ -13,7 +13,7 @@ export default function Header() {
               <NotificationBell />              
               <div className="flex flex-col items-end justify-center">
                 <span className="text-gray-700 font-bold text-nowrap">{parsedUser?.name} {parsedUser?.last_name}</span>
-                <span className="text-gray-800 text-sm font-extrabold">{parsedUser?.userType}</span>
+                <span className="text-gray-800 text-xs font-extrabold">{parsedUser?.userType}</span>
               </div>
               <div className="flex items-center justify-center border border-gray-300 rounded-full size-14">
                 <img src="/buho-gava.webp" alt="Logo-Buho" className="h-14" />

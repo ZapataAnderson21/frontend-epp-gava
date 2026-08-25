@@ -35,10 +35,10 @@ function SummaryCard({ title, amount, color = "text-gray-800", isDiscount = fals
         boxShadow:
           "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
       }}
-      className="border border-gray-100 text-lg font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+      className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
     >
-      <h4 className="text-xl font-bold text-gray-600">{title}</h4>
-      <p className={`flex-1 text-2xl font-extrabold ${color}`}>
+      <h4 className="text-lg font-bold text-gray-600">{title}</h4>
+      <p className={`flex-1 text-xl font-extrabold ${color}`}>
         {isDiscount && amount > 0 ? "-" : ""}S/ {amount.toFixed(2)}
       </p>
     </motion.div>

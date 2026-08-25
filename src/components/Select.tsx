@@ -1,4 +1,4 @@
-import { IoMdArrowDropdown } from "react-icons/io";
+import { ChevronDown as IoMdArrowDropdown } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -182,7 +182,7 @@ export default function Select<T extends Primitive = string>({
               </motion.div>
             ))}
             {filteredOptions.length === 0 && (
-              <p className="px-3 py-4 text-center text-sm text-gray-500">
+              <p className="px-3 py-4 text-center text-xs text-gray-500">
                 No se encontraron opciones.
               </p>
             )}

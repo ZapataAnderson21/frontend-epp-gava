@@ -21,14 +21,14 @@ export default function PurchaseOrderHeader({ projectName, code, onChangeCode, e
       </div>
 
       <div className="flex flex-col gap-4">
-        <h1 className="font-extrabold text-xl">{projectName}</h1>
+        <h1 className="font-extrabold text-lg">{projectName}</h1>
 
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-2 bg-[#14519d] text-white p-6 text-2xl font-bold">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-2 bg-[#14519d] text-white p-6 text-xl font-bold">
           <h1>CODIGO DE ORDEN DE COMPRA</h1>
           <div className="relative">
             <input
               className={[
-                "cursor-text bg-gray-50 border text-gray-900 text-xl rounded-md focus-visible:ring-2 focus:outline-none block max-w-80 p-2.5",
+                "cursor-text bg-gray-50 border text-gray-900 text-lg rounded-md focus-visible:ring-2 focus:outline-none block max-w-80 p-2.5",
                 hasError
                   ? "border-red-500 focus-visible:ring-red-600"
                   : "border-gray-400 focus-visible:ring-gray-600"
@@ -39,7 +39,7 @@ export default function PurchaseOrderHeader({ projectName, code, onChangeCode, e
               aria-describedby={hasError ? errorId : undefined}
             />
             {hasError && (
-            <p id={errorId} role="alert" className="absolute right-0 top-11 text-left text-sm text-red-600 mt-1">
+            <p id={errorId} role="alert" className="absolute right-0 top-11 text-left text-xs text-red-600 mt-1">
               {errorCode}
             </p>)}
           </div>

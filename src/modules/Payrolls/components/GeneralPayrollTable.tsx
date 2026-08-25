@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FaSearch } from "react-icons/fa";
+import { Search as FaSearch } from "lucide-react";
 import { Table } from "../../../common/table";
 import type { WorkerPayrollDetail } from "../types";
 
@@ -79,7 +79,7 @@ export function GeneralPayrollTable({
   return (
     <section className="w-full mb-10">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <h2 className="text-lg font-bold">{title}</h2>
+        <h2 className="text-base font-bold">{title}</h2>
 
         <div className="max-w-xs w-full">
           <div className="relative">
@@ -88,7 +88,7 @@ export function GeneralPayrollTable({
               placeholder={searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border border-gray-300 rounded-md py-2 pl-3 pr-10 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
@@ -99,7 +99,7 @@ export function GeneralPayrollTable({
 
       {/* Fila de totales */}
       {filteredWorkers.length > 0 && (
-        <div className="mt-2 bg-gray-100 rounded-md p-3 flex flex-wrap gap-4 justify-end text-sm font-semibold">
+        <div className="mt-2 bg-gray-100 rounded-md p-3 flex flex-wrap gap-4 justify-end text-xs font-semibold">
           <span>Total Asist.: {totals.attendances}</span>
           <span>Bruto: S/ {totals.gross.toFixed(2)}</span>
           <span className="text-green-700">Neto: S/ {totals.net.toFixed(2)}</span>

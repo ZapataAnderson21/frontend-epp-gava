@@ -34,7 +34,7 @@ export default function ContentTableSummary({
     <div className="flex flex-col items-start justify-start w-full gap-6">
       {sections.map((section) => (
         <section key={section.key} className="w-full">
-          <h2 className="text-base font-extrabold text-gray-900 mb-2">{section.label}</h2>
+          <h2 className="text-sm font-extrabold text-gray-900 mb-2">{section.label}</h2>
           <HeaderTableSummary />
           <div className="flex flex-col items-start justify-start w-full">
             {section.rows.map((item, index) => (

@@ -12,9 +12,9 @@ export default function ProjectTimelineCard({ loading, status, startDate, endDat
   return (
     <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between mb-4">
-        <h3 className="text-xl font-extrabold text-gray-800">Tiempo del Proyecto</h3>
+        <h3 className="text-lg font-extrabold text-gray-800">Tiempo del Proyecto</h3>
         <span 
-          className="px-2 py-1 rounded-full text-white font-semibold text-sm" 
+          className="px-2 py-1 rounded-full text-white font-semibold text-xs"
           style={{ backgroundColor: statusColor[status as keyof typeof statusColor] || '#9ca3af' }}
         >
           {status?.toUpperCase()}

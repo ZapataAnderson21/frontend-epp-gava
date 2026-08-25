@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { IoCloseCircle } from "react-icons/io5";
+import { CircleX as IoCloseCircle } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
 import { workerApi } from "../../data/apiUrl";
@@ -321,20 +321,20 @@ export default function WorkerMonthlyEvaluationForm({
 
   return (
     <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
-      <h2 className="text-2xl font-extrabold mb-4">
+      <h2 className="text-xl font-extrabold mb-4">
         {mode === "create" ? "Nueva evaluacion mensual" : `Evaluacion #${evaluationId}`}
       </h2>
 
       {mode === "edit" && evaluation ? (
         <div className="flex flex-wrap gap-3 mb-4">
-          <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold text-sm">
+          <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 font-semibold text-xs">
             Estado: {evaluation.status.toUpperCase()}
           </span>
-          <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm">
+          <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-xs">
             Score: {evaluation.totalScore ?? 0} / {evaluation.maxScore ?? 0}
           </span>
           {evaluation.performanceLabel ? (
-            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-sm">
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-xs">
               {evaluation.performanceLabel}
             </span>
           ) : null}
@@ -345,18 +345,18 @@ export default function WorkerMonthlyEvaluationForm({
         {isContextReadOnly ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-              <p className="text-xs font-semibold text-gray-500">Trabajador</p>
-              <p className="text-lg font-bold">{workerLabel || "-"}</p>
+              <p className="text-2xs font-semibold text-gray-500">Trabajador</p>
+              <p className="text-base font-bold">{workerLabel || "-"}</p>
             </div>
 
             <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-              <p className="text-xs font-semibold text-gray-500">Anio</p>
-              <p className="text-lg font-bold">{year || "-"}</p>
+              <p className="text-2xs font-semibold text-gray-500">Anio</p>
+              <p className="text-base font-bold">{year || "-"}</p>
             </div>
 
             <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-              <p className="text-xs font-semibold text-gray-500">Mes</p>
-              <p className="text-lg font-bold">{formatMonthName(month)}</p>
+              <p className="text-2xs font-semibold text-gray-500">Mes</p>
+              <p className="text-base font-bold">{formatMonthName(month)}</p>
             </div>
           </div>
         ) : (
@@ -449,7 +449,7 @@ export default function WorkerMonthlyEvaluationForm({
             key={section.monthlyEvaluationSectionId}
             className="border border-gray-200 rounded-md shadow-sm bg-white"
           >
-            <h3 className="font-bold text-lg mb-3 bg-slate-200 rounded-t-md px-3 py-2">
+            <h3 className="font-bold text-base mb-3 bg-slate-200 rounded-t-md px-3 py-2">
               {section.title}
             </h3>
 
@@ -520,7 +520,7 @@ export default function WorkerMonthlyEvaluationForm({
         ))}
 
         {mode === "edit" && evaluation?.scoreLegend?.length ? (
-          <div className="border border-blue-100 bg-blue-50 rounded-md p-3 text-sm text-blue-800">
+          <div className="border border-blue-100 bg-blue-50 rounded-md p-3 text-xs text-blue-800">
             <strong>Leyenda 0-3:</strong>
             <ul className="list-disc list-inside mt-2">
               {evaluation.scoreLegend.map((item, idx) => (
@@ -531,7 +531,7 @@ export default function WorkerMonthlyEvaluationForm({
         ) : null}
 
         {mode === "edit" && evaluation?.performanceScale?.length ? (
-          <div className="border border-emerald-100 bg-emerald-50 rounded-md p-3 text-sm text-emerald-800">
+          <div className="border border-emerald-100 bg-emerald-50 rounded-md p-3 text-xs text-emerald-800">
             <strong>Escala de desempeno:</strong>
             <ul className="list-disc list-inside mt-2">
               {evaluation.performanceScale.map((item, idx) => (

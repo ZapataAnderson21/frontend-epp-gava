@@ -22,7 +22,7 @@ export default function SupplierSelectCard({
 }: Props) {
   return (
     <div className="grid-cols-1 flex flex-col h-full">
-      <h1 className="text-xl font-bold">DATOS DEL PROVEEDOR</h1>
+      <h1 className="text-lg font-bold">DATOS DEL PROVEEDOR</h1>
       <div className="flex flex-col gap-4 p-4 shadow-md shadow-gray-300 h-full">
         <div className="flex flex-row flex-wrap items-center gap-2">
           <SelectForm
@@ -34,7 +34,7 @@ export default function SupplierSelectCard({
             error={Boolean(errorSupplier)}
           />
         </div>
-        {errorSupplier && <p className="text-xs text-red-600">{errorSupplier}</p>}
+        {errorSupplier && <p className="text-2xs text-red-600">{errorSupplier}</p>}
 
         {supplier && (
           <>

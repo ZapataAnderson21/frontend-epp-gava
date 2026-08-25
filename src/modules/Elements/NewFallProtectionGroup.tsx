@@ -145,7 +145,7 @@ export default function NewFallProtectionGroup() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <Form name="REGISTRAR GRUPO EPA" handleSubmit={handleSubmit}>
-        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
           <p className="font-bold">¿Qué se registrará?</p>
           <p className="mt-1">
             Un Grupo EPA reúne componentes de protección anticaída ya registrados.
@@ -174,17 +174,17 @@ export default function NewFallProtectionGroup() {
             }}
           />
           {errors.code ? (
-            <p id="groupCode-error" className="text-xs text-red-600">
+            <p id="groupCode-error" className="text-2xs text-red-600">
               {errors.code}
             </p>
           ) : (
-            <p className="text-xs text-gray-500">Ejemplo: EPA-001.</p>
+            <p className="text-2xs text-gray-500">Ejemplo: EPA-001.</p>
           )}
         </div>
 
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-extrabold text-gray-900">Componentes del grupo</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-base font-extrabold text-gray-900">Componentes del grupo</h2>
+          <p className="text-xs text-gray-500">
             Selecciona al menos un componente de cada categoría.
           </p>
         </div>
@@ -288,7 +288,7 @@ function FallProtectionPartList({
     <div className="flex w-full flex-col gap-2">
       <label className="font-semibold">{label}</label>
       {!elements.length ? (
-        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-2xs text-amber-900">
           No hay {emptyLabel} registrados. Registra primero el componente desde la vista
           Elementos EPA.
         </p>
@@ -312,17 +312,17 @@ function FallProtectionPartList({
           </select>
           <button
             type="button"
-            className="rounded-md border border-red-200 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+            className="rounded-md border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"
             onClick={() => removeValue(index)}
           >
             Quitar
           </button>
         </div>
       ))}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-2xs text-red-600">{error}</p> : null}
       <button
         type="button"
-        className="w-fit rounded-md border border-emerald-200 px-3 py-2 text-sm font-bold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-fit rounded-md border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
         disabled={!elements.length}
         onClick={() => onChange([...values, ""])}
       >

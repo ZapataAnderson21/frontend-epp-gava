@@ -147,9 +147,9 @@ export default function User() {
 
         {(() => {
           
-          if (loadingRoles)  return <span className="text-sm text-gray-500">Cargando roles...</span>;
+          if (loadingRoles)  return <span className="text-xs text-gray-500">Cargando roles...</span>;
         
-          if (errorRoles) return <span className="text-sm text-red-500">Error al cargar los roles</span>;
+          if (errorRoles) return <span className="text-xs text-red-500">Error al cargar los roles</span>;
 
           if (userTypes && userTypes.length > 0) {
             return (

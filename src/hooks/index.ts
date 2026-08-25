@@ -6,6 +6,8 @@ export { useHandleForm } from "./HandleForm";
 export { useCurrentUser } from "./useCurrentUser";
 export { useNotifications, type Notification } from "./useNotification";
 export { useRequestMailProgress } from "./useRequestMailProgress";
+export { default as useDebouncedValue } from "./useDebouncedValue";
+export { default as usePaginatedFetch } from "./usePaginatedFetch";
 export {
 	useMonthlyEvaluationTemplate,
 	useMonthlyEvaluationTemplates,

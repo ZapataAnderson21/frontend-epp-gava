@@ -19,8 +19,8 @@ export default function StatCard({ label, bgColor, color, value, icon, highlight
       }`}
     >
       {icon}
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-lg font-bold" style={{ color }}>
+      <p className="text-2xs text-gray-500">{label}</p>
+      <p className="text-base font-bold" style={{ color }}>
         {value}
       </p>
     </div>

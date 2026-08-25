@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { TbAlertTriangle, TbX } from "react-icons/tb";
+import { TriangleAlert as TbAlertTriangle, X as TbX } from "lucide-react";
 import type { Task } from "./types";
 
 interface DeleteConfirmModalProps {
@@ -40,12 +40,12 @@ export default function DeleteConfirmModal({
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Eliminar tarea</h2>
+            <h2 className="text-base font-semibold text-gray-800">Eliminar tarea</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <TbX className="text-xl text-gray-500" />
+              <TbX className="text-lg text-gray-500" />
             </button>
           </div>
 
@@ -53,7 +53,7 @@ export default function DeleteConfirmModal({
           <div className="p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-red-100 rounded-full">
-                <TbAlertTriangle className="text-2xl text-red-600" />
+                <TbAlertTriangle className="text-xl text-red-600" />
               </div>
               <div className="flex-1">
                 <p className="text-gray-700 font-medium mb-2">
@@ -61,13 +61,13 @@ export default function DeleteConfirmModal({
                 </p>
                 {hasSubtasks && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-amber-800">
+                    <p className="text-xs text-amber-800">
                       <strong>Advertencia:</strong> Esta tarea tiene{" "}
                       {task.subtasks!.length} subtarea(s) que también serán eliminadas.
                     </p>
                   </div>
                 )}
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   Esta acción no se puede deshacer.
                 </p>
               </div>

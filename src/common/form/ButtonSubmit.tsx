@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FaSave } from "react-icons/fa";
+import { Save as FaSave } from "lucide-react";
 
 interface ButtonSubmitProps {
   label: string;
@@ -16,7 +16,7 @@ export default function ButtonSubmit({ loading, label, loadingLabel }: ButtonSub
       whileTap={{ scale: 0.95 }}
       type="submit"
       disabled={loading}
-      className="bg-[#0047a3] text-white px-4 py-2 rounded-md hover:bg-[#003366] cursor-pointer hover:scale-[101%] font-bold disabled:opacity-50"
+      className="bg-[#0047a3] text-white px-4 py-2 rounded-lg hover:bg-[#003366] cursor-pointer hover:scale-[101%] font-bold disabled:opacity-50"
     >
       <div className="flex flex-row flex-nowrap gap-2 items-center"><FaSave /> {loading ? loadingLabel : label}</div>
     </motion.button>

@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiChevronRight, FiChevronDown, FiPlus, FiX, FiSearch } from "react-icons/fi";
+import {
+  ChevronDown as FiChevronDown,
+  ChevronRight as FiChevronRight,
+  Plus as FiPlus,
+  Search as FiSearch,
+  X as FiX,
+} from "lucide-react";
 import { useApiAction, useFetch } from "../../../hooks"; // ajusta el path si es necesario
 import { categoryResourceApi } from "../../../data/apiUrl";
 import type { CategoryResource } from "../../../data/types";
@@ -121,7 +127,7 @@ export default function CategoryPickerModal({ open, onClose, onSelect }: Categor
       <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Categorías</h2>
+          <h2 className="text-xl font-bold">Categorías</h2>
           <button onClick={onClose} className="p-2 rounded hover:bg-gray-100" aria-label="Cerrar">
             <FiX size={20} />
           </button>

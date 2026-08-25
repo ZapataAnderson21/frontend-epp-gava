@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { FaBookmark, FaCheck, FaMinus, FaPlus, FaSearch } from "react-icons/fa";
+import {
+  Bookmark as FaBookmark,
+  Check as FaCheck,
+  Minus as FaMinus,
+  Plus as FaPlus,
+  Search as FaSearch,
+} from "lucide-react";
 import { purchaseOrderConditionApi } from "../../../../../../../data/apiUrl";
 import type {
   PurchaseOrderCondition,
@@ -106,11 +112,11 @@ function ConditionsSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <h1 className="text-xl font-bold">{title}</h1>
+      <h1 className="text-lg font-bold">{title}</h1>
 
       <div className="rounded-md border border-blue-100 bg-blue-50/60 p-3">
         <label
-          className="mb-2 block text-sm font-bold text-gray-700"
+          className="mb-2 block text-xs font-bold text-gray-700"
           htmlFor={`saved-condition-search-${conditionType}`}
         >
           Buscar una condición {conditionLabel} guardada
@@ -123,39 +129,39 @@ function ConditionsSection({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={`Buscar condición ${conditionLabel}...`}
-            className="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#0047a3]"
+            className="w-full rounded-md border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-xs outline-none focus:border-[#0047a3]"
           />
         </div>
 
         {search.trim() ? (
           <div className="mt-2 max-h-52 overflow-y-auto rounded-md border border-gray-200 bg-white">
             {loading ? (
-              <p className="p-3 text-sm text-gray-500">Buscando condiciones...</p>
+              <p className="p-3 text-xs text-gray-500">Buscando condiciones...</p>
             ) : filteredConditions.length ? (
               filteredConditions.map((condition) => (
                 <button
                   key={condition.purchaseOrderConditionId}
                   type="button"
                   onClick={() => addSavedCondition(condition.content)}
-                  className="flex w-full items-start justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-blue-50"
+                  className="flex w-full items-start justify-between gap-3 border-b border-gray-100 px-3 py-2 text-left text-xs last:border-b-0 hover:bg-blue-50"
                 >
                   <span>{condition.content}</span>
                   <span className="shrink-0 font-bold text-[#0047a3]">Agregar</span>
                 </button>
               ))
             ) : (
-              <p className="p-3 text-sm text-gray-500">
+              <p className="p-3 text-xs text-gray-500">
                 No se encontraron condiciones guardadas con ese texto.
               </p>
             )}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-2xs text-gray-500">
             Escribe para buscar o redacta una condición nueva debajo.
           </p>
         )}
 
-        {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
+        {error ? <p className="mt-2 text-2xs text-red-600">{error}</p> : null}
       </div>
 
       <div className="flex flex-col items-center gap-2">
@@ -170,7 +176,7 @@ function ConditionsSection({
               maxLength={500}
             />
 
-            <div className="flex shrink-0 gap-2 text-sm">
+            <div className="flex shrink-0 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => saveCondition(idx, val)}
@@ -242,7 +248,7 @@ function SelectInline({
           <option value="" disabled>Seleccionar...</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        {purchaseOrderTypeError && <span className="absolute text-nowrap text-xs top-12 left-0 text-red-500">{purchaseOrderTypeError}</span>}
+        {purchaseOrderTypeError && <span className="absolute text-nowrap text-2xs top-12 left-0 text-red-500">{purchaseOrderTypeError}</span>}
       </div>
     </div>
   );

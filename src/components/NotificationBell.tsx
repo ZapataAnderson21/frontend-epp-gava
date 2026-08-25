@@ -1,6 +1,6 @@
 // components/NotificationBell.tsx
 import { useState, useRef, useEffect } from "react";
-import { LuBell, LuCheck, LuTrash2 } from "react-icons/lu";
+import { Bell as LuBell, Check as LuCheck, Trash2 as LuTrash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications, type Notification } from "../hooks";
 import { formatDistanceToNow } from "date-fns";
@@ -107,7 +107,7 @@ export default function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                  className="text-2xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                 >
                   <LuCheck className="size-3" />
                   Marcar todas
@@ -120,12 +120,12 @@ export default function NotificationBell() {
               {isLoading ? (
                 <div className="px-4 py-8 text-center text-gray-500">
                   <div className="animate-spin size-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
-                  <p className="text-sm">Cargando...</p>
+                  <p className="text-xs">Cargando...</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-gray-500">
                   <LuBell className="size-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-sm">No tienes notificaciones</p>
+                  <p className="text-xs">No tienes notificaciones</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
@@ -149,10 +149,10 @@ export default function NotificationBell() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-xs font-medium text-gray-900 truncate">
                           {notification.title}
                         </p>
-                        <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                        <p className="text-2xs text-gray-600 mt-0.5 line-clamp-2">
                           {notification.message}
                         </p>
                         <p className="text-[10px] text-gray-400 mt-1">
@@ -179,7 +179,7 @@ export default function NotificationBell() {
             {/* Footer del dropdown */}
             {notifications.length > 0 && (
               <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-                <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-1 cursor-pointer">
+                <button className="w-full text-center text-xs text-blue-600 hover:text-blue-700 font-medium py-1 cursor-pointer">
                   Ver todas las notificaciones
                 </button>
               </div>

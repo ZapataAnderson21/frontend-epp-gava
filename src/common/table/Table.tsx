@@ -1,8 +1,9 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { usePagination } from "./usePagination";
+import { AnimatePresence, motion } from "framer-motion";
 import Pagination from "./Pagination";
+import type { PaginationMeta } from "./pagination.types";
+import { usePagination } from "./usePagination";
 
-type Column<T> = {
+export type Column<T> = {
   key?: keyof T;
   label: string;
   width?: string;
@@ -16,105 +17,130 @@ interface TableProps<T> {
   columns: readonly Column<T>[];
   itemsPerPage?: number;
   enablePagination?: boolean;
+  pagination?: PaginationMeta | null;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  loading?: boolean;
   rowClassName?: (row: T, index: number) => string | undefined;
+  getRowKey?: (row: T, index: number) => React.Key;
 }
 
-export default function Table<T>({ 
-  data, 
-  columns, 
+export default function Table<T>({
+  data,
+  columns,
   itemsPerPage = 10,
   enablePagination = true,
+  pagination,
+  onPageChange,
+  onPageSizeChange,
+  loading = false,
   rowClassName,
+  getRowKey,
 }: TableProps<T>) {
-  const { currentPage, totalPages, paginatedData, goToPage } = usePagination({
-    data,
-    itemsPerPage,
-  });
-
-  // Usar datos paginados si la paginación está habilitada, de lo contrario usar todos los datos
-  const displayData = enablePagination ? paginatedData : data;
-
-  const baseDelayMs = 0;
-  const perRowDelayMs = 60;
+  const localPagination = usePagination({ data, itemsPerPage });
+  const usesServerPagination = Boolean(pagination && onPageChange);
+  const displayData = usesServerPagination
+    ? data
+    : enablePagination
+      ? localPagination.paginatedData
+      : data;
+  const currentPage = pagination?.currentPage ?? localPagination.currentPage;
+  const totalPages = pagination?.totalPages ?? localPagination.totalPages;
+  const totalItems = pagination?.totalItems ?? data.length;
+  const pageSize = pagination?.pageSize ?? itemsPerPage;
+  const changePage = onPageChange ?? localPagination.goToPage;
 
   const rowVariants = {
     hidden: { opacity: 0, y: 1 },
-    visible: (i: number) => ({
-      opacity: 1, y: 0,
-      transition: { duration: 0.2, delay: (baseDelayMs + i * perRowDelayMs) / 1000 }
-    })
+    visible: (index: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2, delay: (index * 40) / 1000 },
+    }),
   };
 
-  const cellAlign = (align?: "left"|"center"|"right") =>
-    align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left";
+  const cellAlign = (align?: "left" | "center" | "right") =>
+    align === "right"
+      ? "text-right"
+      : align === "center"
+        ? "text-center"
+        : "text-left";
 
   return (
-    <div className="w-full text-nowrap">
-      <div className="overflow-auto">
-        <div className="table w-full border border-gray-100 text-gray-700 rounded-lg">
-          <div className="table-header-group bg-gray-100 font-semibold">
-            <div className="table-row">
-              {columns.map((col, i) => (
-                <div
-                  key={String(col.key ?? `col-${i}`)}
-                  className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""} ${cellAlign(col.align)}`}
-                  style={{ width: col.width }}
+    <div className="w-full min-w-0">
+      <div className="w-full min-w-0 overflow-x-auto rounded-lg border border-gray-100 bg-white">
+        <table className="w-full min-w-full whitespace-nowrap text-gray-700">
+          <colgroup>
+            {columns.map((column, index) => (
+              <col key={String(column.key ?? `col-${index}`)} style={{ width: column.width }} />
+            ))}
+          </colgroup>
+          <thead className="bg-gray-100 font-semibold">
+            <tr>
+              {columns.map((column, index) => (
+                <th
+                  key={String(column.key ?? `head-${index}`)}
+                  scope="col"
+                  className={`px-4 py-3 font-semibold ${
+                    column.truncate ? "truncate" : ""
+                  } ${cellAlign(column.align)}`}
                 >
-                  {col.label}
-                </div>
+                  {column.label}
+                </th>
               ))}
-            </div>
-          </div>
-
-          <div className="table-row-group">
-            <AnimatePresence>
-              {displayData.map((item, idx) => {
-                const customClass = rowClassName?.(item, idx);
+            </tr>
+          </thead>
+          <tbody aria-busy={loading}>
+            <AnimatePresence initial={false}>
+              {displayData.map((item, index) => {
+                const customClass = rowClassName?.(item, index);
                 const rowClasses = customClass
-                  ? `hover:bg-[#eff2ff] table-row ${customClass}`
-                  : `hover:bg-[#eff2ff] table-row ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`;
-                const cells = (
-                  <>
-                    {columns.map((col, i) => (
-                      <div
-                        key={String(col.key ?? `c-${i}`)}
-                        className={`table-cell px-4 py-3 ${col.truncate ? "truncate" : ""} ${cellAlign(col.align)}`}
-                        style={{ width: col.width }}
-                      >
-                        {col.render ? col.render(item) : String(item[col.key as keyof T] ?? "")}
-                      </div>
-                    ))}
-                  </>
-                );
+                  ? `border-t border-gray-100 hover:bg-[#eff2ff] ${customClass}`
+                  : `border-t border-gray-100 hover:bg-[#eff2ff] ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    }`;
 
-                // Si NO quieres que la fila entera navegue, no pases getHref
                 return (
-                  <motion.div
-                    key={idx}
+                  <motion.tr
+                    key={getRowKey?.(item, index) ?? index}
                     className={rowClasses}
                     variants={rowVariants}
                     initial="hidden"
                     animate="visible"
                     exit={{ opacity: 0 }}
-                    custom={idx}
+                    custom={index}
                   >
-                    {cells}
-                  </motion.div>
+                    {columns.map((column, columnIndex) => (
+                      <td
+                        key={String(column.key ?? `cell-${columnIndex}`)}
+                        className={`px-4 py-3 ${
+                          column.truncate ? "max-w-0 truncate" : ""
+                        } ${cellAlign(column.align)}`}
+                      >
+                        {column.render
+                          ? column.render(item)
+                          : String(item[column.key as keyof T] ?? "")}
+                      </td>
+                    ))}
+                  </motion.tr>
                 );
               })}
             </AnimatePresence>
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
-      
-      {/* Componente de paginación */}
-      {enablePagination && (
+
+      {enablePagination ? (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={goToPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={changePage}
+          onPageSizeChange={usesServerPagination ? onPageSizeChange : undefined}
+          disabled={loading}
         />
-      )}
+      ) : null}
     </div>
   );
 }

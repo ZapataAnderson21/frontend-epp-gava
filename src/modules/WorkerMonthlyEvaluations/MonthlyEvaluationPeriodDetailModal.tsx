@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DeleteConfirmDialog from "../../components/DeleteConfirmDialog";
 import toast, { Toaster } from "react-hot-toast";
-import { IoCloseCircle } from "react-icons/io5";
+import { CircleX as IoCloseCircle, Trophy } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
 import { Table } from "../../common/table";
@@ -168,7 +168,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
       render: (row: WorkerMonthlyEvaluationPeriodWorker) => {
         if (!row.evaluated) {
           return (
-            <span className="px-2 py-1 rounded-full text-xs font-semibold text-gray-700 bg-gray-100">
+            <span className="px-2 py-1 rounded-full text-2xs font-semibold text-gray-700 bg-gray-100">
               PENDIENTE
             </span>
           );
@@ -177,7 +177,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
         const isOpen = row.status === "open";
         return (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold text-white ${isOpen ? "bg-emerald-600" : "bg-gray-500"}`}
+            className={`px-2 py-1 rounded-full text-2xs font-semibold text-white ${isOpen ? "bg-emerald-600" : "bg-gray-500"}`}
           >
             {isOpen ? "ABIERTA" : "CERRADA"}
           </span>
@@ -206,7 +206,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
           return (
             <button
               type="button"
-              className="px-3 py-1 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white text-sm font-semibold"
+              className="px-3 py-1 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white text-xs font-semibold"
               onClick={() => onEditEvaluation(row.workerMonthlyEvaluationId!)}
             >
               Ver / Evaluar
@@ -217,7 +217,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
         return (
           <button
             type="button"
-            className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={() =>
               onCreateEvaluation({
                 workerId: row.workerId,
@@ -261,26 +261,26 @@ export default function MonthlyEvaluationPeriodDetailModal({
 
   return (
     <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
-      <h2 className="text-2xl font-extrabold mb-2">
+      <h2 className="text-xl font-extrabold mb-2">
         Periodo: {formatMonthName(detail.month)} {detail.year}
       </h2>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <span
-          className={`px-3 py-1 rounded-full text-sm font-semibold text-white ${detail.status === "open" ? "bg-emerald-600" : "bg-gray-500"}`}
+          className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${detail.status === "open" ? "bg-emerald-600" : "bg-gray-500"}`}
         >
           {detail.status === "open" ? "ABIERTA" : "CERRADA"}
         </span>
 
         {detail.templateSuggestion ? (
           hasEvaluations ? (
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-700">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
               Plantilla del periodo: {detail.templateSuggestion.templateName}
             </span>
           ) : null
         ) : (
           hasEvaluations ? (
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
               No se encontro la plantilla del periodo
             </span>
           ) : null
@@ -288,9 +288,9 @@ export default function MonthlyEvaluationPeriodDetailModal({
 
         {!hasEvaluations ? (
           <div className="flex items-center gap-2">
-            <label className="font-semibold text-sm">Plantilla del mes</label>
+            <label className="font-semibold text-xs">Plantilla del mes</label>
             <select
-              className="border border-gray-300 rounded-sm p-2 text-sm min-w-[22rem]"
+              className="border border-gray-300 rounded-sm p-2 text-xs min-w-[22rem]"
               value={selectedTemplateId}
               onChange={(event) => setSelectedTemplateId(Number(event.target.value) || 0)}
               disabled={loadingTemplates}
@@ -341,15 +341,16 @@ export default function MonthlyEvaluationPeriodDetailModal({
         {isPeriodClosed && hasEvaluations ? (
           <button
             type="button"
-            className="px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-semibold"
+            className="px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-semibold inline-flex items-center gap-2"
             onClick={() => setShowCertificate(true)}
           >
-            🏆 Certificado Mejor Trabajador
+            <Trophy className="size-5" aria-hidden="true" />
+            Certificado Mejor Trabajador
           </button>
         ) : null}
 
         {!hasEvaluations ? (
-          <span className="px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
             Aun no hay evaluaciones creadas en este periodo
           </span>
         ) : null}
@@ -357,20 +358,20 @@ export default function MonthlyEvaluationPeriodDetailModal({
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-500">Promedio de notas</p>
-          <p className="text-2xl font-extrabold">{formatKpi(detail.kpis.averageScore)}</p>
+          <p className="text-2xs font-semibold text-gray-500">Promedio de notas</p>
+          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.averageScore)}</p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-500">Nota mas alta</p>
-          <p className="text-2xl font-extrabold">{formatKpi(detail.kpis.highestScore)}</p>
+          <p className="text-2xs font-semibold text-gray-500">Nota mas alta</p>
+          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.highestScore)}</p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-500">Nota mas baja</p>
-          <p className="text-2xl font-extrabold">{formatKpi(detail.kpis.lowestScore)}</p>
+          <p className="text-2xs font-semibold text-gray-500">Nota mas baja</p>
+          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.lowestScore)}</p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-500">Evaluados / Pendientes</p>
-          <p className="text-2xl font-extrabold">
+          <p className="text-2xs font-semibold text-gray-500">Evaluados / Pendientes</p>
+          <p className="text-xl font-extrabold">
             {detail.kpis.evaluatedWorkers} / {detail.kpis.pendingWorkers}
           </p>
         </div>

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { IoCloseCircle } from "react-icons/io5";
+import { CircleX as IoCloseCircle, Printer, Trophy } from "lucide-react";
 import type {
   WorkerMonthlyEvaluationPeriodDetail,
   WorkerMonthlyEvaluationPeriodWorker,
@@ -105,7 +105,7 @@ export default function BestWorkerCertificateModal({
     return (
       <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center">
         <div className="bg-white rounded-xl w-[min(500px,92vw)] p-6 relative">
-          <h2 className="text-xl font-extrabold mb-3">Sin resultados</h2>
+          <h2 className="text-lg font-extrabold mb-3">Sin resultados</h2>
           <p className="text-gray-600">
             No hay trabajadores evaluados en este periodo para generar un
             certificado.
@@ -128,8 +128,9 @@ export default function BestWorkerCertificateModal({
         {/* Action bar */}
         <div className="flex items-center justify-between mb-6 no-print">
           <div className="flex flex-col">
-            <h2 className="text-2xl font-extrabold text-[#0047a3] mb-1">
-              🏆 Certificados Emitidos
+            <h2 className="text-xl font-extrabold text-[#0047a3] mb-1 flex items-center gap-2">
+              <Trophy className="size-7" aria-hidden="true" />
+              Certificados Emitidos
             </h2>
             <p className="text-gray-600 font-medium">
               Mejor trabajador del mes • {firstPlaceWorkers.length} {firstPlaceWorkers.length === 1 ? 'ganador' : 'ganadores (empate)'}
@@ -155,7 +156,7 @@ export default function BestWorkerCertificateModal({
                 className="border border-gray-200 rounded-xl p-6 bg-gray-50/50"
               >
                 <div className="flex items-center justify-between mb-6 no-print bg-amber-50 rounded-lg px-5 py-4 border border-amber-200">
-                  <h3 className="font-bold text-xl text-amber-900 border-l-4 border-amber-500 pl-4">
+                  <h3 className="font-bold text-lg text-amber-900 border-l-4 border-amber-500 pl-4">
                     {worker.fullName}
                   </h3>
                   <button
@@ -163,7 +164,8 @@ export default function BestWorkerCertificateModal({
                     className="px-6 py-2.5 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white font-semibold flex items-center gap-2 shadow-sm transition-colors"
                     onClick={() => handlePrint(worker.workerId)}
                   >
-                    🖨️ Imprimir
+                    <Printer className="size-5" aria-hidden="true" />
+                    Imprimir
                   </button>
                 </div>
 
@@ -200,7 +202,7 @@ export default function BestWorkerCertificateModal({
                     justifyContent: "center",
                     position: "relative",
                     overflow: "hidden",
-                    fontFamily: "'Georgia', 'Times New Roman', serif",
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
             {/* Corner decorations */}
@@ -423,7 +425,7 @@ export default function BestWorkerCertificateModal({
                   borderRadius: "8px",
                   fontSize: "14px",
                   fontWeight: 700,
-                  fontFamily: "'Arial', sans-serif",
+                  fontFamily: "var(--font-sans)",
                 }}
               >
                 Puntaje: {scoreText}
@@ -437,7 +439,7 @@ export default function BestWorkerCertificateModal({
                     borderRadius: "8px",
                     fontSize: "14px",
                     fontWeight: 700,
-                    fontFamily: "'Arial', sans-serif",
+                    fontFamily: "var(--font-sans)",
                   }}
                 >
                   {worker.performanceLabel}
@@ -467,14 +469,10 @@ export default function BestWorkerCertificateModal({
                 flexWrap: "wrap",
               }}
             >
-              <div
-                style={{
-                  fontSize: "40px",
-                  lineHeight: 1,
-                }}
-              >
-                🏆
-              </div>
+              <Trophy
+                aria-hidden="true"
+                style={{ width: "40px", height: "40px", color: "#c9a84c" }}
+              />
             </div>
 
                   <p
@@ -482,7 +480,7 @@ export default function BestWorkerCertificateModal({
                       fontSize: "11px",
                       color: "#CCC",
                       textAlign: "center",
-                      fontFamily: "'Arial', sans-serif",
+                      fontFamily: "var(--font-sans)",
                     }}
                   >
                     Documento generado automáticamente por el sistema SIR-GAVA

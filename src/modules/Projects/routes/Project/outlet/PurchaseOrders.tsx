@@ -5,7 +5,7 @@ import { AddButton } from "../../../../../common/button";
 import { useCurrentUser } from "../../../../../hooks";
 import { adminTypes, logisticsTypes } from "../../../../../utils";
 import { Button } from "../../../../../components";
-import { FaListUl } from "react-icons/fa";
+import { List as FaListUl } from "lucide-react";
 import { useState } from "react";
 import { UnitValuesModal } from "./PurchaseOrders/components";
 

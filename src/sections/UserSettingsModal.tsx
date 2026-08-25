@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { IoCloseCircle, IoClose } from "react-icons/io5";
+import { CircleX as IoCloseCircle, X as IoClose } from "lucide-react";
 import type { UpdateUserDto, User } from "../data/types";
 import { userApi } from "../data/apiUrl";
 import { useApiAction } from "../hooks/useApiAction";
@@ -119,7 +119,7 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
           <IoCloseCircle className="size-8 aspect-square cursor-pointer" onClick={onClose} />
         </div>
 
-        <h1 className="text-2xl font-extrabold mb-4">CONFIGURACIÓN DE USUARIO</h1>
+        <h1 className="text-xl font-extrabold mb-4">CONFIGURACIÓN DE USUARIO</h1>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <InputForm
@@ -163,7 +163,7 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
           />
 
           {errors.length > 0 && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">
               <p className="font-semibold">Revisa los siguientes campos:</p>
               <ul className="list-disc list-inside">
                 {errors.map((error) => (

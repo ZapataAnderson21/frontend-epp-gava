@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { IoCloseCircle } from "react-icons/io5";
+import { CircleX as IoCloseCircle } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
 import {
@@ -443,7 +443,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
 
   return (
     <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
-      <h2 className="text-2xl font-extrabold mb-5">Gestion de plantillas</h2>
+      <h2 className="text-xl font-extrabold mb-5">Gestion de plantillas</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="border border-gray-200 rounded-md p-4">
@@ -474,13 +474,13 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-semibold">{template.name}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-500">
                           {template.description || "Sin descripcion"}
                         </p>
                       </div>
                       <button
                         type="button"
-                        className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold"
+                        className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
                         onClick={(event) => {
                           event.stopPropagation();
                           handleDuplicate(template.monthlyEvaluationTemplateId);
@@ -491,7 +491,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                       </button>
                     </div>
 
-                    <div className="text-xs text-gray-600">
+                    <div className="text-2xs text-gray-600">
                       Escalas: observada {observed} / regular {regular}
                     </div>
                   </button>
@@ -508,7 +508,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
             </h3>
             <button
               type="button"
-              className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-semibold"
+              className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-xs font-semibold"
               onClick={handleNewClick}
             >
               Nueva
@@ -565,7 +565,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                 <p className="font-semibold">Secciones y preguntas</p>
                 <button
                   type="button"
-                  className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-semibold"
+                  className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-xs font-semibold"
                   onClick={addSection}
                 >
                   Agregar seccion
@@ -588,7 +588,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+                        className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-xs"
                         onClick={() => moveSection(sectionIndex, -1)}
                         disabled={sectionIndex === 0}
                       >
@@ -596,7 +596,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                       </button>
                       <button
                         type="button"
-                        className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+                        className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-xs"
                         onClick={() => moveSection(sectionIndex, 1)}
                         disabled={sectionIndex === sections.length - 1}
                       >
@@ -604,7 +604,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                       </button>
                       <button
                         type="button"
-                        className="px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 text-red-700 text-sm"
+                        className="px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 text-red-700 text-xs"
                         onClick={() => removeSection(section.id)}
                         disabled={sections.length === 1}
                       >
@@ -614,10 +614,10 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm">Preguntas</p>
+                    <p className="font-semibold text-xs">Preguntas</p>
                     <button
                       type="button"
-                      className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-sm font-semibold"
+                      className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-xs font-semibold"
                       onClick={() => addQuestion(section.id)}
                     >
                       Agregar pregunta
@@ -679,7 +679,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+                          className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-xs"
                           onClick={() => moveQuestion(section.id, questionIndex, -1)}
                           disabled={questionIndex === 0}
                         >
@@ -687,7 +687,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                         </button>
                         <button
                           type="button"
-                          className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm"
+                          className="px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-xs"
                           onClick={() => moveQuestion(section.id, questionIndex, 1)}
                           disabled={questionIndex === section.questions.length - 1}
                         >
@@ -695,7 +695,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                         </button>
                         <button
                           type="button"
-                          className="px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 text-red-700 text-sm"
+                          className="px-2 py-1 rounded-md bg-red-100 hover:bg-red-200 text-red-700 text-xs"
                           onClick={() => removeQuestion(section.id, question.id)}
                           disabled={section.questions.length === 1}
                         >
@@ -728,7 +728,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
       {confirmNewOpen ? (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-lg w-[min(480px,92vw)] p-5 shadow-lg">
-            <h3 className="text-xl font-extrabold mb-2">Cambios sin guardar</h3>
+            <h3 className="text-lg font-extrabold mb-2">Cambios sin guardar</h3>
             <p className="text-gray-700 mb-4">
               Hay cambios sin guardar en la plantilla actual. Deseas guardar antes de crear una nueva?
             </p>

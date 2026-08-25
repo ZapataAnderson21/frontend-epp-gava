@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FaArrowRightArrowLeft, FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
+import { ArrowRightLeft as FaArrowRightArrowLeft, TrendingDown as FaArrowTrendDown, TrendingUp as FaArrowTrendUp } from "lucide-react";
 
 interface PropsSectionProjectSummary {
   children?: ReactNode;
@@ -12,18 +12,18 @@ export default function SectionProjectSummary({ title, children, trend, summary 
 
   const TrendIcon =
       trend === "up" ? (
-        <FaArrowTrendUp className="text-2xl text-green-600" />
+        <FaArrowTrendUp className="text-xl text-green-600" />
       ) : trend === "down" ? (
-        <FaArrowTrendDown className="text-2xl text-red-600" />
+        <FaArrowTrendDown className="text-xl text-red-600" />
       ) : (
-        <FaArrowRightArrowLeft className="text-2xl text-primary" />
+        <FaArrowRightArrowLeft className="text-xl text-primary" />
       );
 
   return (
     <div className="flex flex-col gap-2 mb-4">
       <div className="flex flex-row items-center justify-between gap-3">
         <div className="flex flex-row gap-2 items-center">
-          <h1 className="text-lg font-extrabold">{title}</h1>
+          <h1 className="text-base font-extrabold">{title}</h1>
           {TrendIcon}
         </div>
         {summary ? <div className="font-extrabold text-red-600">{summary}</div> : null}

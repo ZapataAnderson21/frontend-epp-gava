@@ -25,7 +25,7 @@ export default function PaymentConditionsCard({...props}: Props) {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">CONDICIONES DE PAGO</h1>
+      <h1 className="text-lg font-bold">CONDICIONES DE PAGO</h1>
       <div className="flex flex-col gap-4 shadow-md shadow-gray-300">
         <div className="border-b-1 border-gray-200 px-4 py-2">
           <div className="flex flex-col gap-1">
@@ -56,11 +56,11 @@ export default function PaymentConditionsCard({...props}: Props) {
                     placeholder="p.ej., 30 días / contra entrega / etc."
                   />
                 ) : (
-                  <p className="text-gray-500 font-normal text-sm mb-3">(Seleccione primero una condición)</p>
+                  <p className="text-gray-500 font-normal text-xs mb-3">(Seleccione primero una condición)</p>
                 )}
               </div>
             </div>
-            {errorPaymentConditions && <p className="text-xs text-red-600">{errorPaymentConditions}</p>}
+            {errorPaymentConditions && <p className="text-2xs text-red-600">{errorPaymentConditions}</p>}
           </div>
         </div>
 
@@ -76,7 +76,7 @@ export default function PaymentConditionsCard({...props}: Props) {
                 { value: "transfer", label: "Transferencia a cuenta corriente" },
               ]}
             />
-            {errorPaymentMethod && <p className="text-xs text-red-600 mt-1">{errorPaymentMethod}</p>}
+            {errorPaymentMethod && <p className="text-2xs text-red-600 mt-1">{errorPaymentMethod}</p>}
           </div>
 
           {supplier && (

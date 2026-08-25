@@ -1,7 +1,7 @@
 // SidebarItem.tsx
 import type React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdOutlineArrowDropDown } from "react-icons/md";
+import { ChevronDown as MdOutlineArrowDropDown } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SidebarItemProps {
@@ -42,11 +42,11 @@ export default function SidebarItem({
   );
 
   const content =
-    <div className={`flex flex-row items-center justify-between gap-4 p-3 hover:bg-primary-50
+    <div className={`flex flex-row items-center justify-between gap-2 p-2.5 hover:bg-primary-50 text-sm
                                  hover:text-primary hover:shadow-primary-50 hover:shadow-md focus:bg-primary-50 focus:text-primary
-                                 focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-sm transition-all duration-200
+                                 focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-lg transition-all duration-200
                                  ${isActive ? "bg-primary-50 text-primary shadow-primary-50 shadow-md font-semibold" : ""}`}>
-      <div className="flex flex-row items-center gap-4">
+      <div className="flex flex-row items-center gap-2">
         {icon}
         {label}
       </div>
@@ -62,7 +62,7 @@ export default function SidebarItem({
       animate="visible"
     >
       <Link
-        className="w-full block rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="w-full block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         to={href}
         onClick={onClick}
         aria-current={isActive ? "page" : undefined}

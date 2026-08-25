@@ -1,4 +1,4 @@
-import { IoIosCloseCircle } from "react-icons/io";
+import { CircleX as IoIosCloseCircle } from "lucide-react";
 import type { ElementRequestType } from "../../../data/types";
 import {
   getRequestLineFamily,
@@ -51,7 +51,7 @@ export default function RowElementRequest({
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-medium">{elementLabel}</span>
           {helperText ? (
-            <span className="text-xs text-gray-500">{helperText}</span>
+            <span className="text-2xs text-gray-500">{helperText}</span>
           ) : null}
         </div>
 
@@ -79,7 +79,7 @@ export default function RowElementRequest({
         {showNotesField ? (
           <input
             type="text"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm lg:px-2 lg:py-1"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs lg:px-2 lg:py-1"
             placeholder="Descripcion..."
             value={elementRequest.notes ?? ""}
             onChange={(e) =>
@@ -94,7 +94,7 @@ export default function RowElementRequest({
           {showPlanningButton ? (
             <button
               type="button"
-              className="rounded-md border border-[#0047a3] px-3 py-1 text-xs font-semibold text-[#0047a3] hover:bg-[#eff6ff]"
+              className="rounded-md border border-[#0047a3] px-3 py-1 text-2xs font-semibold text-[#0047a3] hover:bg-[#eff6ff]"
               onClick={() => onOpenPlanning?.(elementRequest)}
             >
               Detalles

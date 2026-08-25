@@ -13,7 +13,7 @@ export default function Users() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   const navigate = useNavigate();
-  const tabBaseClass = "px-4 py-2 text-sm font-semibold border-b-2 transition-colors";
+  const tabBaseClass = "px-4 py-2 text-xs font-semibold border-b-2 transition-colors";
   const tabClass = (tab: "active" | "inactive") =>
     `${tabBaseClass} ${
       activeTab === tab

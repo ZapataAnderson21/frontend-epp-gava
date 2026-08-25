@@ -9,7 +9,7 @@ export const statusColor = {
 
 export default function StatusTag( { status }: StatusTagProps) {
   return (
-    <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
+    <span className={`px-2 py-1 rounded-full text-white font-semibold text-xs`}
           style={{ backgroundColor: statusColor[status as keyof typeof statusColor] || '#9ca3af' }}>
             {status.toUpperCase()}
     </span>

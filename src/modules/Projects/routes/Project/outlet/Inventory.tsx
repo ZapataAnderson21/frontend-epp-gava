@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { FaArrowRotateLeft, FaTrash, FaUserPlus, FaXmark } from "react-icons/fa6";
+import {
+  RotateCcw as FaArrowRotateLeft,
+  Trash2 as FaTrash,
+  UserPlus as FaUserPlus,
+  X as FaXmark,
+} from "lucide-react";
 import { Table } from "../../../../../common/table";
 import { ErrorMessage } from "../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../common/loading";
@@ -417,7 +422,7 @@ export default function ProjectInventory() {
         <div className="min-w-0">
           <p className="font-semibold text-gray-900">{row.elementName}</p>
           {row.fallProtectionGroupId && row.fallProtectionParts?.length ? (
-            <p className="mt-1 line-clamp-2 text-xs leading-snug text-gray-500">
+            <p className="mt-1 line-clamp-2 text-2xs leading-snug text-gray-500">
               {row.fallProtectionParts.join(" | ")}
             </p>
           ) : null}
@@ -437,7 +442,7 @@ export default function ProjectInventory() {
       render: (row: ProjectInventoryEntry) => {
         const family = getEntryFamily(row);
         return (
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-[#0047a3]">
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-2xs font-bold text-[#0047a3]">
             {getInventoryFamilyLabel(family)}
           </span>
         );
@@ -511,7 +516,7 @@ export default function ProjectInventory() {
               />
             ) : null}
             {family === "ssomaSupply" ? (
-              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-600">
+              <span className="rounded-full bg-gray-100 px-2 py-1 text-2xs font-bold text-gray-600">
                 No asignable
               </span>
             ) : null}
@@ -616,20 +621,20 @@ export default function ProjectInventory() {
       <div className="flex flex-col gap-6 w-full max-w-full">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-gray-500">Registros</p>
-            <p className="text-3xl font-extrabold text-gray-800">
+            <p className="text-xs font-semibold text-gray-500">Registros</p>
+            <p className="text-2xl font-extrabold text-gray-800">
               {data.summary.totalEntries}
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-gray-500">Pendiente por retorno</p>
-            <p className="text-3xl font-extrabold text-[#b45309]">
+            <p className="text-xs font-semibold text-gray-500">Pendiente por retorno</p>
+            <p className="text-2xl font-extrabold text-[#b45309]">
               {formatInventoryQuantity(data.summary.totalPendingReturn)}
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-gray-500">Bloqueos de inactivacion</p>
-            <p className="text-3xl font-extrabold text-[#b91c1c]">
+            <p className="text-xs font-semibold text-gray-500">Bloqueos de inactivacion</p>
+            <p className="text-2xl font-extrabold text-[#b91c1c]">
               {data.summary.pendingBlockingEntries}
             </p>
           </div>
@@ -653,7 +658,7 @@ export default function ProjectInventory() {
               <button
                 key={tab.key}
                 type="button"
-                className={`pb-2 text-xl font-extrabold transition-colors ${
+                className={`pb-2 text-lg font-extrabold transition-colors ${
                   isActive
                     ? "border-b-4 border-gray-900 text-gray-950"
                     : "text-gray-400 hover:text-gray-700"
@@ -665,7 +670,7 @@ export default function ProjectInventory() {
                 }}
               >
                 {tab.label}
-                <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-600">
+                <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-2xs font-bold text-gray-600">
                   {tabCounts[tab.key] ?? 0}
                 </span>
               </button>
@@ -673,16 +678,16 @@ export default function ProjectInventory() {
           })}
         </div>
 
-        <h2 className="text-2xl font-extrabold text-gray-900">{activeTitle}</h2>
+        <h2 className="text-xl font-extrabold text-gray-900">{activeTitle}</h2>
 
         {selectedEntry ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
               <div className="flex-1">
-                <p className="text-sm font-semibold text-blue-900">
+                <p className="text-xs font-semibold text-blue-900">
                   Registrar retorno de {selectedEntry.elementName}
                 </p>
-                <p className="text-sm text-blue-800">
+                <p className="text-xs text-blue-800">
                   Familia: {selectedFamily ? getInventoryFamilyLabel(selectedFamily) : "Sin familia"}.
                   Responsables:{" "}
                   {selectedEntry.responsibleUserNames?.length
@@ -697,7 +702,7 @@ export default function ProjectInventory() {
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div className="flex flex-col">
-                  <label className="text-sm font-semibold text-gray-700" htmlFor="returnQuantity">
+                  <label className="text-xs font-semibold text-gray-700" htmlFor="returnQuantity">
                     Cantidad
                   </label>
                   <input
@@ -712,7 +717,7 @@ export default function ProjectInventory() {
                 </div>
 
                 <div className="flex min-w-[18rem] flex-col">
-                  <label className="text-sm font-semibold text-gray-700" htmlFor="returnNotes">
+                  <label className="text-xs font-semibold text-gray-700" htmlFor="returnNotes">
                     Observacion
                   </label>
                   <input
@@ -851,10 +856,10 @@ function ProjectReturnBlockersModal({
       <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900">
               Retornos pendientes para finalizar
             </h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-xs text-gray-600">
               Antes de finalizar el proyecto deben retornar estos items al
               inventario de oficina. Las filas correspondientes quedan
               resaltadas temporalmente.
@@ -875,7 +880,7 @@ function ProjectReturnBlockersModal({
               key={group.key}
               className="rounded-lg border border-gray-200 bg-gray-50 p-4"
             >
-              <h4 className="mb-3 text-lg font-extrabold text-gray-900">
+              <h4 className="mb-3 text-base font-extrabold text-gray-900">
                 {group.label}
               </h4>
               <ul className="flex flex-col gap-3">
@@ -894,15 +899,15 @@ function ProjectReturnBlockersModal({
                         <div>
                           <p className="font-bold text-gray-900">{title}</p>
                           {entry.fallProtectionParts?.length ? (
-                            <p className="mt-1 text-xs text-gray-600">
+                            <p className="mt-1 text-2xs text-gray-600">
                               {entry.fallProtectionParts.join(" | ")}
                             </p>
                           ) : null}
-                          <p className="mt-1 text-sm text-gray-600">
+                          <p className="mt-1 text-xs text-gray-600">
                             Responsable(s): {getResponsibleText(entry)}
                           </p>
                         </div>
-                        <p className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-900">
+                        <p className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
                           Por retornar: {getPendingText(entry)}
                         </p>
                       </div>
@@ -970,10 +975,10 @@ function FallProtectionProjectCards({
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-extrabold text-gray-900">
+                <h3 className="text-xl font-extrabold text-gray-900">
                   {groupCode}
                 </h3>
-                <p className="text-sm font-semibold text-gray-500">
+                <p className="text-xs font-semibold text-gray-500">
                   Disponible: {formatInventoryQuantity(availableToAssign)}
                 </p>
               </div>
@@ -1015,11 +1020,11 @@ function FallProtectionProjectCards({
             </div>
 
             <div className="rounded-md border border-gray-300 p-3">
-              <p className="mb-2 text-sm font-extrabold uppercase text-gray-900">
+              <p className="mb-2 text-xs font-extrabold uppercase text-gray-900">
                 Partes
               </p>
               {parts.length ? (
-                <ul className="flex flex-col gap-1 text-sm text-gray-800">
+                <ul className="flex flex-col gap-1 text-xs text-gray-800">
                   {parts.map((part) => (
                     <li
                       key={part}
@@ -1031,11 +1036,11 @@ function FallProtectionProjectCards({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-500">Partes no registradas.</p>
+                <p className="text-xs text-gray-500">Partes no registradas.</p>
               )}
             </div>
 
-            <div className="mt-3 rounded-md border border-gray-300 p-3 text-sm text-gray-800">
+            <div className="mt-3 rounded-md border border-gray-300 p-3 text-xs text-gray-800">
               <p className="mb-2 font-extrabold uppercase text-gray-900">
                 Datos del equipo
               </p>
@@ -1078,10 +1083,10 @@ function ProjectInventoryDetailModal({
       <div className="w-full max-w-3xl rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900">
               {entry.elementName}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               {familyLabel} · {entry.categoryName || "Sin categoria"}
             </p>
           </div>
@@ -1144,7 +1149,7 @@ function ProjectInventoryDetailModal({
         {entry.fallProtectionGroupId && entry.fallProtectionParts?.length ? (
           <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
             <p className="mb-2 font-extrabold text-gray-900">Partes del grupo EPA</p>
-            <ul className="grid gap-2 text-sm text-gray-700 md:grid-cols-2">
+            <ul className="grid gap-2 text-xs text-gray-700 md:grid-cols-2">
               {entry.fallProtectionParts.map((part) => (
                 <li key={part} className="rounded-md bg-white px-3 py-2">
                   {part}
@@ -1157,7 +1162,7 @@ function ProjectInventoryDetailModal({
         {entry.notes ? (
           <div className="mt-5 rounded-lg border border-gray-200 p-4">
             <p className="mb-1 font-extrabold text-gray-900">Observacion</p>
-            <p className="text-sm text-gray-700">{entry.notes}</p>
+            <p className="text-xs text-gray-700">{entry.notes}</p>
           </div>
         ) : null}
       </div>
@@ -1237,10 +1242,10 @@ function ProjectInventoryAssignmentModal({
       <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900">
               Asignar a trabajador
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               {entry.elementName} · Disponible en obra:{" "}
               {formatInventoryQuantity(availableToAssign)}
             </p>
@@ -1262,7 +1267,7 @@ function ProjectInventoryAssignmentModal({
               </p>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[48rem] text-sm">
+              <table className="w-full min-w-[48rem] text-xs">
                 <thead className="bg-gray-100 text-left text-gray-700">
                   <tr>
                     <th className="px-4 py-3">Trabajador</th>
@@ -1330,18 +1335,18 @@ function ProjectInventoryAssignmentModal({
             </div>
           </div>
         ) : (
-          <div className="mb-6 rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+          <div className="mb-6 rounded-lg border border-dashed border-gray-300 p-4 text-xs text-gray-500">
             Todavia no hay asignaciones registradas para este item en este proyecto.
           </div>
         )}
 
         <div className="grid gap-3">
           <div className="flex items-center justify-between gap-3 border-b border-gray-200 pb-2">
-            <p className="text-sm font-extrabold uppercase text-gray-700">
+            <p className="text-xs font-extrabold uppercase text-gray-700">
               Nueva entrega
             </p>
             {availableToAssign <= 0 ? (
-              <p className="text-sm font-semibold text-gray-500">
+              <p className="text-xs font-semibold text-gray-500">
                 No hay unidades disponibles en obra para nuevas asignaciones.
               </p>
             ) : null}
@@ -1349,7 +1354,7 @@ function ProjectInventoryAssignmentModal({
 
           {availableToAssign > 0 ? (
             <>
-              <div className="grid gap-3 text-sm font-extrabold uppercase text-gray-700 md:grid-cols-[10rem_1.5fr_8rem_1.4fr_3rem]">
+              <div className="grid gap-3 text-xs font-extrabold uppercase text-gray-700 md:grid-cols-[10rem_1.5fr_8rem_1.4fr_3rem]">
                 <span>Fecha de asignacion</span>
                 <span>Trabajador</span>
                 <span>Cantidad</span>
@@ -1430,7 +1435,7 @@ function ProjectInventoryAssignmentModal({
               + Anadir trabajador
             </button>
             <p
-              className={`text-sm font-semibold ${
+              className={`text-xs font-semibold ${
                 totalDraftQuantity > availableToAssign
                   ? "text-red-600"
                   : "text-gray-600"
@@ -1468,8 +1473,8 @@ function ProjectInventoryAssignmentModal({
 function InventoryDetailCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-gray-500">{label}</p>
-      <p className="text-3xl font-extrabold text-gray-900">{value}</p>
+      <p className="text-xs font-semibold text-gray-500">{label}</p>
+      <p className="text-2xl font-extrabold text-gray-900">{value}</p>
     </div>
   );
 }
@@ -1477,8 +1482,8 @@ function InventoryDetailCard({ label, value }: { label: string; value: string })
 function InventoryDetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-      <p className="text-xs font-bold uppercase text-gray-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-gray-900">{value}</p>
+      <p className="text-2xs font-bold uppercase text-gray-500">{label}</p>
+      <p className="mt-1 text-xs font-semibold text-gray-900">{value}</p>
     </div>
   );
 }

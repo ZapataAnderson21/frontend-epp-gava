@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { IoWarning } from "react-icons/io5";
-import { RiQuestionFill } from "react-icons/ri";
-import { MdAttachEmail } from "react-icons/md";
-import { TiArrowBack } from "react-icons/ti";
+import {
+  ArrowLeft as TiArrowBack,
+  CircleHelp as RiQuestionFill,
+  MailPlus as MdAttachEmail,
+  TriangleAlert as IoWarning,
+} from "lucide-react";
+
+
+
 import toast, { Toaster } from "react-hot-toast";
 
 import type {
@@ -331,7 +336,7 @@ export default function NewRequest() {
   return (
     <>
       <form onSubmit={handleSaveRequest} className="w-full p-10 text-gray-800">
-        <h1 className="mb-4 text-2xl font-bold">REGISTRAR SOLICITUD</h1>
+        <h1 className="mb-4 text-xl font-bold">REGISTRAR SOLICITUD</h1>
 
         <div className="flex h-full w-full flex-col items-start justify-start gap-4">
           <div className="flex max-w-4xl w-full flex-col gap-4">
@@ -388,10 +393,10 @@ export default function NewRequest() {
 
             <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-lg font-bold text-gray-900">
                   {getRequestFamilyDescription(activeFamily)}
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-500">
                   {selectedFamilyConfig?.requiresCode
                     ? "Selecciona unidades con codigo obligatorio."
                     : activeFamily === "ese"
@@ -424,7 +429,7 @@ export default function NewRequest() {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500">
+                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
                       No hay items seleccionados en {selectedFamilyConfig?.label || "esta familia"}.
                     </div>
                   )}
@@ -467,7 +472,7 @@ export default function NewRequest() {
       {openPasswordModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-all duration-300">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-xl font-semibold">Contraseña del Sistema de Correos</h2>
+            <h2 className="mb-4 text-lg font-semibold">Contraseña del Sistema de Correos</h2>
             <InputForm
               label="Contraseña"
               name="passwordCPanel"

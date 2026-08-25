@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
 import { workerApi } from "../../data/apiUrl";
 import { type Worker } from "../../data/types";
-import { useFetch } from "../../hooks";
+import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
+import type { PaginatedData } from "../../common/table";
 import { EditButton, SeeButton } from "../../common/button";
 import { formatDate } from "../../utils";
 
@@ -15,59 +16,57 @@ interface ProjectTableProps {
 }
 
 const workerTypeOptions = [
-  "Todos",
-  "Obrero",
-  "Técnico",
-  "Ingeniero",
-  "Administrador(a)",
-  "Gerente",
+  { value: "all", label: "Todos" },
+  { value: "laborer", label: "Obrero" },
+  { value: "technician", label: "Técnico" },
+  { value: "engineer", label: "Ingeniero" },
+  { value: "administrator", label: "Administrador(a)" },
+  { value: "manager", label: "Gerente" },
 ];
 
+type WorkerPageData = PaginatedData<Worker> & {
+  workerTypeCounts: Record<string, number>;
+};
+
 export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTableProps) {
-  const { data: workers, loading, error } = useFetch<Worker[]>(`${workerApi}`, [reFetch]);
   const [search, setSearch] = useState("");
-  const [workerTypeFilter, setWorkerTypeFilter] = useState("Todos");
+  const [workerTypeFilter, setWorkerTypeFilter] = useState("all");
+  const debouncedSearch = useDebouncedValue(search);
+  const {
+    data,
+    items: workers,
+    pagination,
+    loading,
+    error,
+    refetch,
+    setPage,
+    setPageSize,
+  } = usePaginatedFetch<Worker>(`${workerApi}paginated`, {
+    params: {
+      search: debouncedSearch,
+      workerType: workerTypeFilter !== "all" ? workerTypeFilter : undefined,
+    },
+  });
+
+  useEffect(() => {
+    refetch();
+  }, [reFetch, refetch]);
 
   const normalizedWorkers = useMemo(
     () =>
-      (workers ?? []).map((worker) => ({
+      workers.map((worker) => ({
         ...worker,
         workerType: normalizeWorkerTypeLabel(worker.workerType),
       })),
     [workers],
   );
 
-  const workerTypeCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    counts.set("Todos", normalizedWorkers.length);
-    workerTypeOptions.slice(1).forEach((type) => counts.set(type, 0));
-
-    normalizedWorkers.forEach((worker) => {
-      counts.set(worker.workerType, (counts.get(worker.workerType) ?? 0) + 1);
-    });
-
-    return counts;
-  }, [normalizedWorkers]);
-
-  const filteredWorkers = useMemo(() => {
-    const query = normalizeText(search);
-
-    return normalizedWorkers.filter((worker) => {
-      const matchesType =
-        workerTypeFilter === "Todos" || worker.workerType === workerTypeFilter;
-      const searchText = normalizeText(
-        [
-          worker.fullName,
-          worker.dni,
-          worker.phone,
-          worker.personalEmail,
-          worker.workerType,
-        ].join(" "),
-      );
-
-      return matchesType && (!query || searchText.includes(query));
-    });
-  }, [normalizedWorkers, search, workerTypeFilter]);
+  const workerTypeCounts =
+    (data as WorkerPageData | null)?.workerTypeCounts ?? {};
+  const allWorkerCount = Object.values(workerTypeCounts).reduce(
+    (total, count) => total + count,
+    0,
+  );
 
   const columns = [
     { key: "fullName", label: "Nombre Completo", width: "18rem" },
@@ -98,7 +97,7 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
         ]),
   ] as const;
 
-  if (loading) {
+  if (loading && !pagination) {
     return <LoadingSkeletonTable />;
   }
 
@@ -106,7 +105,7 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
     return <ErrorMessage errorMessage={error} />;
   }
 
-  if (!workers || workers.length === 0) {
+  if (!workers.length && !search && workerTypeFilter === "all") {
     return <div className="text-center text-gray-500">No se encontraron trabajadores.</div>;
   }
 
@@ -115,18 +114,20 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         {workerTypeOptions.map((type) => (
           <button
-            key={type}
+            key={type.value}
             type="button"
-            onClick={() => setWorkerTypeFilter(type)}
+            onClick={() => setWorkerTypeFilter(type.value)}
             className={`rounded-md border p-4 text-left shadow-sm transition ${
-              workerTypeFilter === type
+              workerTypeFilter === type.value
                 ? "border-[#0047a3] bg-blue-50"
                 : "border-gray-200 bg-white hover:border-[#0047a3]"
             }`}
           >
-            <p className="text-xs font-bold uppercase text-gray-500">{type}</p>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">
-              {workerTypeCounts.get(type) ?? 0}
+            <p className="text-2xs font-bold uppercase text-gray-500">{type.label}</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">
+              {type.value === "all"
+                ? allWorkerCount
+                : workerTypeCounts[type.value] ?? 0}
             </p>
           </button>
         ))}
@@ -138,24 +139,32 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar por nombre, DNI, teléfono o correo"
-          className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold outline-none focus:border-[#0047a3] md:max-w-md"
+          className="w-full rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold outline-none focus:border-[#0047a3] md:max-w-md"
         />
 
         <select
           value={workerTypeFilter}
           onChange={(event) => setWorkerTypeFilter(event.target.value)}
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold outline-none focus:border-[#0047a3]"
+          className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold outline-none focus:border-[#0047a3]"
         >
           {workerTypeOptions.map((type) => (
-            <option key={type} value={type}>
-              {type}
+            <option key={type.value} value={type.value}>
+              {type.label}
             </option>
           ))}
         </select>
       </div>
 
-      {filteredWorkers.length ? (
-        <Table<Worker> data={filteredWorkers} columns={columns} />
+      {normalizedWorkers.length ? (
+        <Table<Worker>
+          data={normalizedWorkers}
+          columns={columns}
+          pagination={pagination}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          loading={loading}
+          getRowKey={(row) => row.workerId}
+        />
       ) : (
         <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
           No hay trabajadores que coincidan con los filtros.
@@ -182,11 +191,4 @@ function normalizeWorkerTypeLabel(type?: string) {
   };
 
   return labels[type ?? ""] ?? type ?? "No Especificado";
-}
-
-function normalizeText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
 }

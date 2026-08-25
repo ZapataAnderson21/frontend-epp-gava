@@ -1,6 +1,6 @@
-import { FaSave } from "react-icons/fa";
+import { LoaderCircle as AiOutlineLoading, Save as FaSave } from "lucide-react";
 import { Button } from "../../components";
-import { AiOutlineLoading } from "react-icons/ai";
+
 
 interface SaveButtonProps {
   loading: boolean;

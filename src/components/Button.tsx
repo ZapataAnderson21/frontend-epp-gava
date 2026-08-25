@@ -25,7 +25,7 @@ export default function Button({ icon, label, onClick, bgColor, bgHoverColor, ty
       style={{ backgroundColor: bgColor }}
       onMouseOver={(e) => (e.currentTarget.style.backgroundColor = bgHoverColor)}
       onMouseOut={(e) => (e.currentTarget.style.backgroundColor = bgColor)}
-      className="cursor-pointer px-4 py-2 rounded-md shadow-sm transition-colors font-bold flex flex-row gap-2 items-center text-white text-nowrap"
+      className="cursor-pointer px-3 py-2 rounded-lg shadow-sm transition-colors font-bold flex flex-row gap-1 items-center text-white text-nowrap"
       disabled={disabled}
     >
       {icon}

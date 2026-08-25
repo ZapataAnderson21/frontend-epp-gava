@@ -67,7 +67,7 @@ export default function ResetPassword() {
                 onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
-            {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+            {error && <p className="text-red-600 text-xs mb-4">{error}</p>}
             <div className="flex flex-row gap-4 items-end justify-between w-full">
               <button
                 type="submit"
@@ -83,7 +83,7 @@ export default function ResetPassword() {
       {openModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.5)] z-50">
           <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-center">
+            <h2 className="text-lg font-bold mb-4 text-center">
               Actualización de contraseña
             </h2>
             <p className="text-gray-700 mb-4 text-center">{message}</p>

@@ -79,7 +79,7 @@ export default function EmergencyTable() {
       width: "8rem",
       render: (row: EmergencyType) => {
         return (
-          <span className={`px-2 py-1 rounded-full text-white font-semibold text-sm`} 
+          <span className={`px-2 py-1 rounded-full text-white font-semibold text-xs`}
                 style={{ backgroundColor: bgStatusColor[row.status as keyof typeof bgStatusColor] || '#9ca3af' }}>
                   {labelStatus[row.status as keyof typeof labelStatus]}
           </span>

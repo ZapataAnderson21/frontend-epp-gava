@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SelectForm } from "../../../../../../../common/form";
 import { Button } from "../../../../../../../components";
-import { FaArrowLeft, FaRegCopy } from "react-icons/fa6";
+import { ArrowLeft as FaArrowLeft, Copy as FaRegCopy } from "lucide-react";
 import { projectApi } from "../../../../../../../data/apiUrl";
 import type { Project } from "../../../../../../../data/types";
 import { useFetch } from "../../../../../../../hooks";
@@ -49,7 +49,7 @@ export default function DuplicateModal({ isOpen, onClose, onSubmit, isLoading }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Duplicar Orden de Compra</h2>
+        <h2 className="text-lg font-bold mb-4">Duplicar Orden de Compra</h2>
         
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <SelectForm

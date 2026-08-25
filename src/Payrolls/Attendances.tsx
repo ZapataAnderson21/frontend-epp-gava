@@ -8,10 +8,10 @@ import { ErrorMessage } from "../common/error";
 import { logisticsTypes } from "../utils";
 import Permission from "../common/auth/Permission";
 import { formatDate } from "../utils/dateUtils"
-import { FaSearch } from "react-icons/fa";
+import { CircleX as IoCloseCircle, Search as FaSearch } from "lucide-react";
 import { useMemo, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { IoCloseCircle } from "react-icons/io5";
+
 import InputCheck from "./components/InputCheck";
 
 export default function Attendances() {
@@ -74,7 +74,7 @@ export default function Attendances() {
         <section className="flex flex-row w-full gap-16 mt-6">
           <div className="flex flex-col gap-2 w-full max-w-4xl">
             <div className="mb-4">
-              <div className="relative grid grid-cols-2 bg-gray-100 rounded-xl font-extrabold text-lg">
+              <div className="relative grid grid-cols-2 bg-gray-100 rounded-xl font-extrabold text-base">
                 {/* OBREROS */}
                 <button
                   onClick={() => { setWorkerType("laborer"); setSearchTerm(""); }}

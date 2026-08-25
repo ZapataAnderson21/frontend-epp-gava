@@ -38,7 +38,7 @@ export default function Form({
     <motion.div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
       <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
         <motion.h1
-          className="text-2xl font-bold mb-4"
+          className="text-xl font-bold mb-4"
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.1 }}

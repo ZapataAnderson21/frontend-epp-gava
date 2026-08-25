@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  TbChevronDown,
-  TbChevronRight,
-  TbEdit,
-  TbTrash,
-  TbUser,
-  TbCalendar,
-  TbAlertCircle,
-  TbSubtask,
-} from "react-icons/tb";
+  Calendar as TbCalendar,
+  ChevronDown as TbChevronDown,
+  ChevronRight as TbChevronRight,
+  CircleAlert as TbAlertCircle,
+  ListTree as TbSubtask,
+  Pencil as TbEdit,
+  Trash2 as TbTrash,
+  User as TbUser,
+} from "lucide-react";
 import type { Task } from "./types";
 import {
   STATUS_COLORS,
@@ -137,9 +137,9 @@ export default function TaskTable({
           <AnimatePresence>
             {flattenedTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <TbCalendar className="text-5xl mb-3 text-gray-300" />
-                <p className="text-lg font-medium">No hay tareas</p>
-                <p className="text-sm">Crea tu primera tarea para comenzar</p>
+                <TbCalendar className="text-4xl mb-3 text-gray-300" />
+                <p className="text-base font-medium">No hay tareas</p>
+                <p className="text-xs">Crea tu primera tarea para comenzar</p>
               </div>
             ) : (
               flattenedTasks.map((task, idx) => (
@@ -185,7 +185,7 @@ export default function TaskTable({
                     {/* Título */}
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm font-medium truncate ${
+                        className={`text-xs font-medium truncate ${
                           task.status === "cancelled" ? "text-gray-400 line-through" : "text-gray-800"
                         }`}
                         title={task.title}
@@ -193,21 +193,23 @@ export default function TaskTable({
                         {task.title}
                       </p>
                       {task.description && (
-                        <p className="text-xs text-gray-500 truncate" title={task.description}>
+                        <p className="text-2xs text-gray-500 truncate" title={task.description}>
                           {task.description}
                         </p>
                       )}
                     </div>
 
                     {isOverdue(task) && (
-                      <TbAlertCircle className="text-red-500 flex-shrink-0" title="Vencida" />
+                      <span className="flex-shrink-0" title="Vencida">
+                        <TbAlertCircle className="text-red-500" aria-hidden="true" />
+                      </span>
                     )}
                   </div>
 
                   {/* Estado */}
                   <div className="col-span-1 px-2 py-3 flex justify-center">
                     <span
-                      className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap"
+                      className="text-2xs px-2 py-1 rounded-full font-medium whitespace-nowrap"
                       style={{
                         backgroundColor: `${STATUS_COLORS[task.status]}20`,
                         color: STATUS_COLORS[task.status],
@@ -220,7 +222,7 @@ export default function TaskTable({
                   {/* Prioridad */}
                   <div className="col-span-1 px-2 py-3 flex justify-center">
                     <span
-                      className="text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap"
+                      className="text-2xs px-2 py-1 rounded-full font-medium whitespace-nowrap"
                       style={{
                         backgroundColor: `${PRIORITY_COLORS[task.priority]}20`,
                         color: PRIORITY_COLORS[task.priority],
@@ -238,7 +240,7 @@ export default function TaskTable({
                           {task.assignments.slice(0, 3).map((assignment) => (
                             <div
                               key={assignment.taskAssignmentId}
-                              className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-medium border-2 border-white"
+                              className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-2xs font-medium border-2 border-white"
                               title={`${assignment.user.name} ${assignment.user.lastName}`}
                             >
                               {assignment.user.name.charAt(0)}
@@ -247,13 +249,13 @@ export default function TaskTable({
                           ))}
                         </div>
                         {task.assignments.length > 3 && (
-                          <span className="text-xs text-gray-500 ml-1">
+                          <span className="text-2xs text-gray-500 ml-1">
                             +{task.assignments.length - 3}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-2xs text-gray-400 flex items-center gap-1">
                         <TbUser />
                         Sin asignar
                       </span>
@@ -264,7 +266,7 @@ export default function TaskTable({
                   <div className="col-span-2 px-2 py-3">
                     {task.startDate && task.dueDate ? (
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center justify-between text-2xs text-gray-500">
                           <span>{formatDate(task.startDate)}</span>
                           <span>{formatDate(task.dueDate)}</span>
                         </div>
@@ -284,7 +286,7 @@ export default function TaskTable({
                         </div>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <span className="text-2xs text-gray-400 flex items-center gap-1">
                         <TbCalendar />
                         Sin fechas
                       </span>

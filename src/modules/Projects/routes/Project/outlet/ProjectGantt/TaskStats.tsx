@@ -46,7 +46,7 @@ export default function TaskStats({ tasks }: TaskStatsProps) {
 
       {/* Barra de progreso general */}
       <div className="flex-1 min-w-[200px] max-w-[300px]">
-        <div className="flex items-center justify-between text-sm mb-1">
+        <div className="flex items-center justify-between text-xs mb-1">
           <span className="text-gray-600">Progreso general</span>
           <span className="font-bold text-primary">{completionRate}%</span>
         </div>

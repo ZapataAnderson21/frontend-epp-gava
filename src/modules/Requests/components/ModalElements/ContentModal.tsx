@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { FaSave } from "react-icons/fa";
-import { FaDeleteLeft } from "react-icons/fa6";
+import { Delete as FaDeleteLeft, Save as FaSave } from "lucide-react";
+
 
 import type { ElementRequestType, ElementType } from "../../../../data/types";
 import { elementApi, elementRequestApi } from "../../../../data/apiUrl";

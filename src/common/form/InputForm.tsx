@@ -34,7 +34,7 @@ export default function InputForm({ label, name, type, value, maxLength, onChang
           disabled={disabled}
         />
       </div>
-      {error && <p className="text-red-600 text-xs">{error}</p>}
+      {error && <p className="text-red-600 text-2xs">{error}</p>}
     </div>
   )
 }

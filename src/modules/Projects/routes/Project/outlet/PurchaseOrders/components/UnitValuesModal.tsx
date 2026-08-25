@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FaExternalLinkAlt, FaTimes } from "react-icons/fa";
+import { ExternalLink as FaExternalLinkAlt, X as FaTimes } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../../../../../../common/error";
 import { Table } from "../../../../../../../common/table";
@@ -89,10 +89,10 @@ export default function UnitValuesModal({
       <div className="flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-md bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4">
           <div>
-            <h2 className="text-xl font-extrabold text-gray-900">
+            <h2 className="text-lg font-extrabold text-gray-900">
               Valores unitarios registrados
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               Items de ordenes de compra dentro de este proyecto.
             </p>
           </div>
@@ -112,7 +112,7 @@ export default function UnitValuesModal({
               <button
                 key={type}
                 type="button"
-                className={`rounded-md border px-4 py-2 text-sm font-bold transition ${
+                className={`rounded-md border px-4 py-2 text-xs font-bold transition ${
                   typeFilter === type
                     ? "border-[#14519d] bg-[#14519d] text-white"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -125,7 +125,7 @@ export default function UnitValuesModal({
           </div>
 
           <div className="flex w-full flex-col gap-1 md:w-80">
-            <label className="text-sm text-gray-700">Buscar</label>
+            <label className="text-xs text-gray-700">Buscar</label>
             <input
               type="text"
               value={query}
@@ -189,7 +189,7 @@ export default function UnitValuesModal({
                     render: (row) => (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-sm font-bold text-white transition hover:bg-black"
+                        className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-xs font-bold text-white transition hover:bg-black"
                         onClick={() => handleSeePurchaseOrder(row.purchaseOrderId)}
                       >
                         <FaExternalLinkAlt />

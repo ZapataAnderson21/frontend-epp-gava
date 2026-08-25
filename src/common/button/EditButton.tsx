@@ -1,4 +1,4 @@
-import { FaPencil } from "react-icons/fa6";
+import { Pencil as FaPencil } from "lucide-react";
 import ActionButton from "../../components/ActionButton";
 
 interface EditButtonProps {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TbX, TbPlus } from "react-icons/tb";
+import { Plus as TbPlus, X as TbX } from "lucide-react";
 import { InputForm, SelectForm } from "../../../../../../common/form";
 import type { Task, TaskStatus, TaskPriority } from "./types";
 import { STATUS_LABELS, PRIORITY_LABELS } from "./types";
@@ -164,18 +164,18 @@ export default function TaskModal({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">
+              <h2 className="text-base font-semibold text-gray-800">
                 {task ? "Editar Tarea" : parentTask ? "Nueva Subtarea" : "Nueva Tarea"}
               </h2>
               {parentTask && (
-                <p className="text-sm text-gray-500">Subtarea de: {parentTask.title}</p>
+                <p className="text-xs text-gray-500">Subtarea de: {parentTask.title}</p>
               )}
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <TbX className="text-xl text-gray-500" />
+              <TbX className="text-lg text-gray-500" />
             </button>
           </div>
 
@@ -252,7 +252,7 @@ export default function TaskModal({
                     return (
                       <div
                         key={userId}
-                        className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-1 rounded-full text-sm"
+                        className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs"
                       >
                         <span>{user.name} {user.lastName}</span>
                         <button
@@ -260,7 +260,7 @@ export default function TaskModal({
                           onClick={() => handleRemoveUser(userId)}
                           className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
                         >
-                          <TbX className="text-sm" />
+                          <TbX className="text-xs" />
                         </button>
                       </div>
                     );
@@ -307,7 +307,7 @@ export default function TaskModal({
               )}
 
               {users.length === 0 && (
-                <p className="text-sm text-gray-500 italic">No hay usuarios disponibles</p>
+                <p className="text-xs text-gray-500 italic">No hay usuarios disponibles</p>
               )}
             </div>
           </form>

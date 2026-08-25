@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
-import { CgSpinner } from "react-icons/cg";
-import { TbCircleFilled, TbAlertCircle, TbClock, TbChecks } from "react-icons/tb";
+import {
+  CheckCheck as TbChecks,
+  Circle as TbCircleFilled,
+  CircleAlert as TbAlertCircle,
+  Clock as TbClock,
+  LoaderCircle as CgSpinner,
+} from "lucide-react";
+
 import { useFetch } from "../../../../../../../hooks";
 import { taskApi } from "../../../../../../../data/apiUrl";
 
@@ -87,8 +93,8 @@ export default function ProjectProgress({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
-        <CgSpinner className="animate-spin text-4xl text-gray-400" />
-        <span className="text-sm text-gray-500 mt-2">Cargando...</span>
+        <CgSpinner className="animate-spin text-3xl text-gray-400" />
+        <span className="text-xs text-gray-500 mt-2">Cargando...</span>
       </div>
     );
   }
@@ -97,9 +103,9 @@ export default function ProjectProgress({
   if (stats.total === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-        <TbChecks className="text-5xl mb-2" />
-        <span className="text-sm">Sin tareas registradas</span>
-        <span className="text-xs mt-1">Agrega tareas desde el diagrama de Gantt</span>
+        <TbChecks className="text-4xl mb-2" />
+        <span className="text-xs">Sin tareas registradas</span>
+        <span className="text-2xs mt-1">Agrega tareas desde el diagrama de Gantt</span>
       </div>
     );
   }
@@ -149,21 +155,21 @@ export default function ProjectProgress({
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              className="text-3xl font-extrabold text-gray-800"
+              className="text-2xl font-extrabold text-gray-800"
             >
               {progress}%
             </motion.span>
-            <span className="text-xs text-gray-500">Completado</span>
+            <span className="text-2xs text-gray-500">Completado</span>
           </div>
         </div>
 
         {/* Resumen rápido */}
         <div className="flex flex-col gap-2">
           <div className="text-center">
-            <span className="text-3xl font-extrabold text-gray-800">{stats.completed}</span>
-            <span className="text-lg text-gray-500">/{activeTasks}</span>
+            <span className="text-2xl font-extrabold text-gray-800">{stats.completed}</span>
+            <span className="text-base text-gray-500">/{activeTasks}</span>
           </div>
-          <span className="text-sm text-gray-500">tareas completadas</span>
+          <span className="text-xs text-gray-500">tareas completadas</span>
           
           {/* Alerta de tareas vencidas */}
           {stats.overdue > 0 && (
@@ -172,8 +178,8 @@ export default function ProjectProgress({
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-md mt-1"
             >
-              <TbAlertCircle className="text-lg" />
-              <span className="text-xs font-medium">{stats.overdue} vencida{stats.overdue > 1 ? 's' : ''}</span>
+              <TbAlertCircle className="text-base" />
+              <span className="text-2xs font-medium">{stats.overdue} vencida{stats.overdue > 1 ? 's' : ''}</span>
             </motion.div>
           )}
         </div>
@@ -192,10 +198,10 @@ export default function ProjectProgress({
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <item.icon className="text-lg" style={{ color: item.color }} />
+            <item.icon className="text-base" style={{ color: item.color }} />
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{item.label}</span>
-              <span className="text-sm font-bold text-gray-800">{item.count}</span>
+              <span className="text-2xs text-gray-500">{item.label}</span>
+              <span className="text-xs font-bold text-gray-800">{item.count}</span>
             </div>
           </motion.div>
         ))}
@@ -248,7 +254,7 @@ export default function ProjectProgress({
       </div>
 
       {/* Total de tareas */}
-      <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+      <div className="flex justify-between items-center mt-3 text-2xs text-gray-500">
         <span>Total: {stats.total} tareas</span>
         {stats.cancelled > 0 && (
           <span className="text-gray-400">{stats.cancelled} cancelada{stats.cancelled > 1 ? 's' : ''}</span>

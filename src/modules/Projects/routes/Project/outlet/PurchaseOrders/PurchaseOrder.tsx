@@ -7,7 +7,7 @@ import { ReturnButton } from "../../../../../../common/button";
 import { purchaseOrderApi } from "../../../../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../../../../data/types";
 import { SignaturesTable, DuplicateModal, SectionCard, InfoField } from "./components";
-import { FaRegCopy, FaRegFilePdf } from "react-icons/fa6";
+import { Copy as FaRegCopy, FileText as FaRegFilePdf } from "lucide-react";
 import { Button } from "../../../../../../components";
 import { useState } from "react";
 import TableViewPO from "./components/Table/TableViewPO";
@@ -119,8 +119,8 @@ export default function PurchaseOrder() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <h1 className="font-extrabold text-xl">{purchaseOrder?.project?.name.toUpperCase()}</h1>
-                <div className="flex flex-col lg:flex-row items-center justify-center gap-2 bg-[#14519d] text-white p-4 text-2xl font-bold">
+                <h1 className="font-extrabold text-lg">{purchaseOrder?.project?.name.toUpperCase()}</h1>
+                <div className="flex flex-col lg:flex-row items-center justify-center gap-2 bg-[#14519d] text-white p-4 text-xl font-bold">
                   <h1>ORDEN DE COMPRA {purchaseOrder?.code.toUpperCase()}</h1>
                 </div>
                 <p className="self-end">
@@ -158,7 +158,7 @@ export default function PurchaseOrder() {
 
               <div className="flex flex-col">
                 <div className="bg-[#14519d] text-white p-4 border border-[#14519d]">
-                  <h1 className="text-xl font-bold">CONDICIONES DE PAGO</h1>
+                  <h1 className="text-lg font-bold">CONDICIONES DE PAGO</h1>
                 </div>
                 <div className="flex flex-col gap-4 p-4 border-x border-gray-300">
                   <p className="font-bold">{purchaseOrder?.paymentConditions}</p>
@@ -200,14 +200,14 @@ export default function PurchaseOrder() {
               
               <SignaturesTable />
 
-              <h3 className="text-lg font-bold">CONDICIONES COMERCIALES</h3>
+              <h3 className="text-base font-bold">CONDICIONES COMERCIALES</h3>
               <ol className="list-decimal list-inside">
               {purchaseOrder?.generalConditions?.split('|').map((condition, index) => (
                 <li key={index}>{condition}</li>
               ))}
               </ol>
               
-              <h3 className="text-lg font-bold">CONDICIONES DE CALIDAD</h3>
+              <h3 className="text-base font-bold">CONDICIONES DE CALIDAD</h3>
               <ol className="list-decimal list-inside">
                 {purchaseOrder?.qualityConditions?.split('|').map((condition, index) => (
                   <li key={index}>{condition}</li>

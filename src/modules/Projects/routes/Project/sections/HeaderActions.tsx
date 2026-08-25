@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { FaCheck } from "react-icons/fa6";
+import { Check as FaCheck } from "lucide-react";
 import { ReturnButton } from "../../../../../common/button";
 import { Button } from "../../../../../components";
 import { inventoryApi, projectApi } from "../../../../../data/apiUrl";

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useCurrentUser, useFetch } from "../../../../../hooks";
+import { useCurrentUser, usePaginatedFetch } from "../../../../../hooks";
 
 import { LoadingSkeletonTable } from "../../../../../common/loading";
 import { SeeButton, EditButton } from "../../../../../common/button";
@@ -25,7 +25,19 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
 
-  const { data: projects, loading, error } = useFetch<Project[]>(projectApi + (filter !== "all" ? `status/${filter}` : ""), [filter]);
+  const {
+    items: projects,
+    pagination,
+    loading,
+    error,
+    setPage,
+    setPageSize,
+  } = usePaginatedFetch<Project>(`${projectApi}paginated`, {
+    params: {
+      status: filter !== "all" ? filter : undefined,
+      order: "desc",
+    },
+  });
 
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
@@ -53,7 +65,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     },
   ] as const;
 
-  if (loading) {
+  if (loading && !pagination) {
     return <LoadingSkeletonTable />;
   }
 
@@ -61,7 +73,7 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     return <ErrorMessage errorMessage={error} />;
   }
 
-  if (!projects || projects.length === 0) {
+  if (!projects.length) {
     return <div className="text-center text-gray-500">No hay proyectos disponibles.</div>;
   }
 
@@ -78,6 +90,11 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     <Table<Project>
       data={processedProjects}
       columns={columns}
+      pagination={pagination}
+      onPageChange={setPage}
+      onPageSizeChange={setPageSize}
+      loading={loading}
+      getRowKey={(row) => row.projectId}
     />
   );
 }

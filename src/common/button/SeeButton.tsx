@@ -1,4 +1,4 @@
-import { FaEye } from "react-icons/fa6";
+import { Eye as FaEye } from "lucide-react";
 import ActionButton from "../../components/ActionButton";
 
 interface SeeButtonProps {

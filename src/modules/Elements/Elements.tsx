@@ -340,13 +340,13 @@ export default function Elements() {
       <HeaderPanel name="Inventario SSOMA" />
 
       <div className="flex w-full flex-col gap-4">
-        <p className="max-w-4xl text-sm text-gray-500">
+        <p className="max-w-4xl text-xs text-gray-500">
           Catalogo maestro de Elementos de Proteccion, Equipos de Seguridad y Emergencia,
           y Proteccion Anticaida. Cada talla o modelo se registra como un elemento independiente.
         </p>
 
         {isLegacyRoute ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
             Esta ruta es heredada. Los registros operativos antiguos se muestran bajo la
             clasificacion actual para conservar el historial.
           </div>
@@ -362,7 +362,7 @@ export default function Elements() {
                   key={tab.key}
                   type="button"
                   onClick={() => handleTabChange(tab.key)}
-                  className={`border-b-4 px-1 pb-2 text-xl font-extrabold transition-colors ${
+                  className={`border-b-4 px-1 pb-2 text-lg font-extrabold transition-colors ${
                     active
                       ? "border-gray-900 text-gray-900"
                       : "border-transparent text-gray-400 hover:text-gray-700"
@@ -376,7 +376,7 @@ export default function Elements() {
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="text-2xl font-extrabold text-gray-900">
+              <h2 className="text-xl font-extrabold text-gray-900">
                 {activeTab === "fall" && epaView === "groups"
                   ? `${activeTitle} - Grupos`
                   : activeTab === "fall"
@@ -384,7 +384,7 @@ export default function Elements() {
                     : activeTitle}
               </h2>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-                <label className="text-sm font-bold text-gray-700" htmlFor="inventorySearch">
+                <label className="text-xs font-bold text-gray-700" htmlFor="inventorySearch">
                   Buscar
                 </label>
                 <input
@@ -406,7 +406,7 @@ export default function Elements() {
                     setEpaCategoryFilter("all");
                     setEpaView((view) => (view === "groups" ? "elements" : "groups"));
                   }}
-                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   Cambiar a {epaView === "groups" ? "ELEMENTOS" : "GRUPOS"}
                 </button>
@@ -416,7 +416,7 @@ export default function Elements() {
                 <button
                   type="button"
                   onClick={() => setIsCategoryModalOpen(true)}
-                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   Categorias
                 </button>
@@ -426,7 +426,7 @@ export default function Elements() {
                 <select
                   value={safetyTypeFilter}
                   onChange={(event) => setSafetyTypeFilter(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-[#0047a3]"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
                 >
                   <option value="all">
                     Todos los tipos ({activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})
@@ -441,7 +441,7 @@ export default function Elements() {
                 <select
                   value={epaCategoryFilter}
                   onChange={(event) => setEpaCategoryFilter(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-[#0047a3]"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
                 >
                   <option value="all">
                     Todas las categorias ({activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})
@@ -456,7 +456,7 @@ export default function Elements() {
                 <select
                   value={familyFilter}
                   onChange={(event) => setFamilyFilter(event.target.value as InventoryFilter)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm font-bold focus:outline-[#0047a3]"
+                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
                 >
                   {visibleFilterOptions.map((filter) => (
                     <option key={filter} value={filter}>
@@ -564,8 +564,8 @@ function SafetyCategoryModal({
       <div className="flex w-full max-w-2xl flex-col gap-4 rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Categorias ESE</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900">Categorias ESE</h2>
+            <p className="mt-1 text-xs text-gray-500">
               Al eliminar una categoria tambien se archivan sus items activos asociados,
               para que no aparezcan en inventario ni en requerimientos.
             </p>
@@ -573,22 +573,22 @@ function SafetyCategoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-3 py-1 text-sm font-bold text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-bold text-gray-700 hover:bg-gray-50"
           >
             Cerrar
           </button>
         </div>
 
         {loading ? (
-          <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
+          <div className="rounded-md border border-gray-200 p-4 text-xs text-gray-500">
             Cargando categorias...
           </div>
         ) : error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-xs text-red-700">
             {error}
           </div>
         ) : !categories.length ? (
-          <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+          <div className="rounded-md border border-dashed border-gray-300 p-4 text-xs text-gray-500">
             No hay categorias ESE registradas.
           </div>
         ) : (
@@ -601,7 +601,7 @@ function SafetyCategoryModal({
                 >
                   <div className="min-w-0">
                     <p className="truncate font-bold text-gray-900">{category.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                       {category.activeElementCount} item(s) activos
                     </p>
                   </div>
@@ -646,18 +646,18 @@ function EpaGroupView({
           className="rounded-lg border border-gray-300 bg-white p-5 shadow-sm"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-xl font-extrabold">{group.code}</h3>
+            <h3 className="text-lg font-extrabold">{group.code}</h3>
             <button
               type="button"
               onClick={() => navigate(`/admin/inventory/harness`)}
-              className="rounded-md border border-gray-300 px-3 py-1 text-sm font-bold hover:bg-gray-50"
+              className="rounded-md border border-gray-300 px-3 py-1 text-xs font-bold hover:bg-gray-50"
             >
               Ver
             </button>
           </div>
 
           <div className="rounded-md border border-gray-200 p-3">
-            <p className="mb-2 text-sm font-extrabold uppercase">Partes</p>
+            <p className="mb-2 text-xs font-extrabold uppercase">Partes</p>
             <GroupPartList
               label="Arnes"
               elements={getGroupComponentsByRole(group, "harness", group.harnessElement)}
@@ -680,7 +680,7 @@ function EpaGroupView({
             />
           </div>
 
-          <div className="mt-3 rounded-md border border-gray-200 p-3 text-sm">
+          <div className="mt-3 rounded-md border border-gray-200 p-3 text-xs">
             <p className="mb-2 font-extrabold uppercase">Datos del equipo</p>
             <p><span className="font-semibold">Ubicacion actual:</span> Oficina</p>
             <p><span className="font-semibold">Responsable:</span> -</p>
@@ -715,7 +715,7 @@ function GroupPartList({
   elements: ElementType[];
 }) {
   return (
-    <div className="text-sm">
+    <div className="text-xs">
       <p className="font-semibold">{label}:</p>
       {elements.length ? (
         <ul className="ml-3 list-disc text-gray-700">

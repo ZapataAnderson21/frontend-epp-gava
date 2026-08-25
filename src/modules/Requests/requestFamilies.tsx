@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
-import { FaHelmetSafety } from "react-icons/fa6";
-import { FaBoxOpen, FaFireExtinguisher, FaLink } from "react-icons/fa";
+import {
+  FireExtinguisher as FaFireExtinguisher,
+  HardHat as FaHelmetSafety,
+  Link as FaLink,
+  PackageOpen as FaBoxOpen,
+} from "lucide-react";
+
 import type { InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
 import { getInventoryFamilyConfig } from "../Elements/inventoryCatalog";
 

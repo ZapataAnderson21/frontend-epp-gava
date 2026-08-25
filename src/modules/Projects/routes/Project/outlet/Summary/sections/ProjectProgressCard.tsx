@@ -12,7 +12,7 @@ export default function ProjectProgressCard({ projectId }: ProjectProgressCardPr
   return (
     <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between mb-4">
-        <h3 className="text-xl font-extrabold text-gray-800">Avance del Proyecto</h3>
+        <h3 className="text-lg font-extrabold text-gray-800">Avance del Proyecto</h3>
         <SeeButton onClick={() => navigate(`/admin/projects/${projectId}/progress`)} />
       </div>
       <ProjectProgress projectId={projectId} />

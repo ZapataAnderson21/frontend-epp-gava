@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaPlus } from "react-icons/fa6";
+import { Plus as FaPlus } from "lucide-react";
 import { elementApi, inventoryApi } from "../../../data/apiUrl";
 import type {
   ElementType,
@@ -376,7 +376,7 @@ export default function RequestItemPicker({
 
   return (
     <aside className="flex min-h-[24rem] flex-col gap-3 border-t border-gray-300 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-      <label className="text-sm font-bold text-gray-700" htmlFor="requestItemSearch">
+      <label className="text-xs font-bold text-gray-700" htmlFor="requestItemSearch">
         Buscar
       </label>
       <div className="flex gap-2">
@@ -392,7 +392,7 @@ export default function RequestItemPicker({
           <select
             value={familyFilter}
             onChange={(event) => setFamilyFilter(event.target.value as typeof familyFilter)}
-            className="w-32 rounded-md border border-gray-300 px-2 py-2 text-sm font-semibold focus:outline-[#0047a3]"
+            className="w-32 rounded-md border border-gray-300 px-2 py-2 text-xs font-semibold focus:outline-[#0047a3]"
           >
             {protectionFilters.map((filter) => (
               <option key={filter.value} value={filter.value}>
@@ -404,7 +404,7 @@ export default function RequestItemPicker({
           <select
             value={safetyTypeFilter}
             onChange={(event) => setSafetyTypeFilter(event.target.value)}
-            className="w-40 rounded-md border border-gray-300 px-2 py-2 text-sm font-semibold focus:outline-[#0047a3]"
+            className="w-40 rounded-md border border-gray-300 px-2 py-2 text-xs font-semibold focus:outline-[#0047a3]"
           >
             <option value="all">Todos los tipos</option>
             {safetyTypeOptions.map((typeName) => (
@@ -418,15 +418,15 @@ export default function RequestItemPicker({
 
       <div className="flex max-h-[28rem] flex-col gap-2 overflow-y-auto pr-1">
         {loading || loadingOfficeEntries || loadingFallProtectionGroups ? (
-          <div className="rounded-md border border-gray-200 p-4 text-sm text-gray-500">
+          <div className="rounded-md border border-gray-200 p-4 text-xs text-gray-500">
             Cargando elementos...
           </div>
         ) : error || officeEntriesError || fallProtectionGroupsError ? (
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-xs text-red-700">
             {error || officeEntriesError || fallProtectionGroupsError}
           </div>
         ) : !visibleElements.length ? (
-          <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+          <div className="rounded-md border border-dashed border-gray-300 p-4 text-xs text-gray-500">
             No hay elementos para agregar.
           </div>
         ) : (
@@ -447,14 +447,14 @@ export default function RequestItemPicker({
                 className="flex w-full items-center justify-between gap-3 rounded-md border border-gray-300 bg-white px-3 py-2 text-left transition-colors hover:border-[#0047a3] hover:bg-blue-50"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-base font-bold text-gray-900">
+                  <span className="block truncate text-sm font-bold text-gray-900">
                     {element.name}
                   </span>
-                  <span className={`block truncate text-xs font-semibold ${description.highlight}`}>
+                  <span className={`block truncate text-2xs font-semibold ${description.highlight}`}>
                     {description.meta}
                   </span>
                   {description.detail ? (
-                    <span className="block truncate text-xs text-gray-500">
+                    <span className="block truncate text-2xs text-gray-500">
                       {description.detail}
                     </span>
                   ) : null}

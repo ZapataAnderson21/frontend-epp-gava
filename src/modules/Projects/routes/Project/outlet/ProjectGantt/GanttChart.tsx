@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { TbCircleCheck, TbProgress, TbClock } from "react-icons/tb";
+import { CircleCheck as TbCircleCheck, Clock as TbClock, Gauge as TbProgress } from "lucide-react";
 import type { Task, TaskStatus } from "./types";
 import { STATUS_COLORS, STATUS_LABELS } from "./types";
 import { formatToLongMonthDate } from "../../../../../../utils";
@@ -333,7 +333,7 @@ export default function GanttChart({
           </DndContext>
 
           {flattenedTasks.length === 0 && (
-            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-32 text-gray-400 text-xs">
               No hay tareas
             </div>
           )}
@@ -354,7 +354,7 @@ export default function GanttChart({
               {months.map((month, i) => (
                 <div
                   key={i}
-                  className="text-xs font-medium text-gray-600 text-center flex items-center justify-center border-r border-gray-200 capitalize"
+                  className="text-2xs font-medium text-gray-600 text-center flex items-center justify-center border-r border-gray-200 capitalize"
                   style={{ width: month.days * DAY_WIDTH, height: HEADER_MONTH_HEIGHT }}
                 >
                   {month.name}
@@ -376,7 +376,7 @@ export default function GanttChart({
                   }`}
                   style={{ width: DAY_WIDTH, height: HEADER_DAY_HEIGHT }}
                 >
-                  <span className="text-xs">{day.dayNum}</span>
+                  <span className="text-2xs">{day.dayNum}</span>
                 </div>
               ))}
             </div>
@@ -457,7 +457,7 @@ export default function GanttChart({
                       />
 
                       {barStyle.width > 60 && (
-                        <span className="absolute inset-0 flex items-center px-2 text-xs font-medium text-gray-700 truncate">
+                        <span className="absolute inset-0 flex items-center px-2 text-2xs font-medium text-gray-700 truncate">
                           {task.title}
                         </span>
                       )}
@@ -472,11 +472,11 @@ export default function GanttChart({
                           className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[140px]"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <p className="px-3 py-1 text-xs text-gray-500 font-medium">Cambiar estado</p>
+                          <p className="px-3 py-1 text-2xs text-gray-500 font-medium">Cambiar estado</p>
                           {(["pending", "in_progress", "completed", "cancelled"] as TaskStatus[]).map((status) => (
                             <button
                               key={status}
-                              className={`w-full px-3 py-1.5 text-left text-sm hover:bg-gray-100 flex items-center gap-2 ${
+                              className={`w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 flex items-center gap-2 ${
                                 task.status === status ? "bg-gray-50 font-medium" : ""
                               }`}
                               onClick={() => {
@@ -501,7 +501,7 @@ export default function GanttChart({
 
                   {!barStyle && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-gray-300 italic">
+                      <span className="text-2xs text-gray-300 italic">
                         Sin fechas
                       </span>
                     </div>

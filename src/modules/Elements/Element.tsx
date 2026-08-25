@@ -23,7 +23,7 @@ import {
 import { DeleteButton, ReturnButton, SaveButton, SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
 import toast, { Toaster } from "react-hot-toast";
-import { FaFileLines } from "react-icons/fa6";
+import { FileText as FaFileLines } from "lucide-react";
 import type { InventoryFamilyKey } from "./inventoryCatalog";
 import {
   formatInventoryQuantity,
@@ -406,7 +406,7 @@ export default function Element() {
         <Toaster position="top-center" reverseOrder={false} />
         <div className="grid gap-10 p-10 xl:grid-cols-[minmax(24rem,35rem)_1fr]">
           <form className="flex max-w-xl flex-col gap-4" onSubmit={handleUpdate}>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            <h1 className="mb-2 text-xl font-bold text-gray-900">
               ITEM DE INVENTARIO {elementId}
             </h1>
 
@@ -480,7 +480,7 @@ export default function Element() {
             {isProtectionElement ? (
               <div className="flex flex-col gap-2">
                 <span className="font-semibold text-gray-700">Retorno obligatorio</span>
-                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                <div className="flex gap-6 text-xs font-semibold text-gray-700">
                   <label className="flex items-center gap-2">
                     <input type="radio" checked={family !== "uniform"} readOnly />
                     Si
@@ -501,7 +501,7 @@ export default function Element() {
               optional={true}
             />
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
               <p className="font-semibold">{selectedFamilyLabel}</p>
               {isOfficeMaterial ? (
                 <p>
@@ -533,8 +533,8 @@ export default function Element() {
 
           <section className="flex flex-col gap-6 max-w-xl xl:max-w-full">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Trazabilidad de inventario</h2>
-              <p className="mt-2 text-sm text-gray-500">
+              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <p className="mt-2 text-xs text-gray-500">
                 Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
               </p>
             </div>
@@ -569,28 +569,28 @@ export default function Element() {
                   <button
                     type="button"
                     onClick={() => setMovementModal("entry")}
-                    className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
+                    className="rounded-md bg-[#0047a3] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#003366]"
                   >
                     Registrar ingreso
                   </button>
                   <button
                     type="button"
                     onClick={() => setMovementModal("disposal")}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
+                    className="rounded-md bg-red-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-red-700"
                   >
                     Registrar salida
                   </button>
                   <button
                     type="button"
                     onClick={() => setMovementModal("adjustment")}
-                    className="rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
+                    className="rounded-md bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-600"
                   >
                     Registrar ajuste
                   </button>
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <h3 className="text-xl font-bold text-gray-900">Ubicaciones actuales</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
                   {!currentLocationRows.length ? (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                       No hay unidades activas de este item en oficina ni en obra.
@@ -608,7 +608,7 @@ export default function Element() {
           </section>
 
           <section className="xl:col-span-2 max-w-xl xl:max-w-full">
-            <h3 className="mb-4 text-xl font-bold text-gray-900">Historial de movimientos</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900">Historial de movimientos</h3>
             {loadingInventory ? (
               <LoadingSkeletonForm numberRows={1} />
             ) : !inventoryDetail?.movementHistory.length ? (
@@ -652,7 +652,7 @@ export default function Element() {
         <Toaster position="top-center" reverseOrder={false} />
         <div className="grid gap-10 p-10 xl:grid-cols-[minmax(24rem,35rem)_1fr]">
           <form className="flex max-w-xl flex-col gap-4" onSubmit={handleUpdate}>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+            <h1 className="mb-2 text-xl font-bold text-gray-900">
               ITEM DE INVENTARIO {elementId}
             </h1>
 
@@ -747,7 +747,7 @@ export default function Element() {
               optional={true}
             />
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
               <p className="font-semibold">{selectedFamilyLabel}</p>
               <p>
                 Familia fija para equipos de seguridad y emergencia. El tipo registrado
@@ -767,8 +767,8 @@ export default function Element() {
 
           <section className="flex max-w-xl flex-col gap-6 xl:max-w-full">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Trazabilidad de inventario</h2>
-              <p className="mt-2 text-sm text-gray-500">
+              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <p className="mt-2 text-xs text-gray-500">
                 Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
               </p>
             </div>
@@ -799,13 +799,13 @@ export default function Element() {
                   />
                 </div>
 
-                <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
                   Este equipo es un item fisico unico. Su movimiento se registra al enviarlo por
                   requerimiento y al retornarlo desde la obra.
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <h3 className="text-xl font-bold text-gray-900">Ubicaciones actuales</h3>
+                  <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
                   {!currentLocationRows.length ? (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                       No hay unidades activas de este item en oficina ni en obra.
@@ -823,7 +823,7 @@ export default function Element() {
           </section>
 
           <section className="max-w-xl xl:col-span-2 xl:max-w-full">
-            <h3 className="mb-4 text-xl font-bold text-gray-900">Historial de movimientos</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900">Historial de movimientos</h3>
             {loadingInventory ? (
               <LoadingSkeletonForm numberRows={1} />
             ) : !inventoryDetail?.movementHistory.length ? (
@@ -867,7 +867,7 @@ export default function Element() {
       <div className="flex flex-col gap-8">
         <Form name={`ITEM DE INVENTARIO ${elementId}`} handleSubmit={handleUpdate}>
           {isLegacyOperative ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
               Este item pertenece al grupo <span className="font-semibold">Operative legado</span>.
               Selecciona su familia correcta y guarda para migrarlo sin perder historial.
             </div>
@@ -904,7 +904,7 @@ export default function Element() {
               />
               <div className="flex flex-col gap-2">
                 <span className="font-semibold text-gray-700">Retorno obligatorio</span>
-                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                <div className="flex gap-6 text-xs font-semibold text-gray-700">
                   <label className="flex items-center gap-2"><input type="radio" checked={family !== "uniform"} readOnly />Si</label>
                   <label className="flex items-center gap-2"><input type="radio" checked={family === "uniform"} readOnly />No</label>
                 </div>
@@ -1002,7 +1002,7 @@ export default function Element() {
             ]}
           />
 
-          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
             <p className="font-semibold">
               {selectedFamilyLabel}
             </p>
@@ -1032,20 +1032,20 @@ export default function Element() {
         <section className="flex flex-col gap-6 p-10">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Modelo de catalogo</p>
-              <p className="text-xl font-extrabold text-gray-800">
+              <p className="text-xs font-semibold text-gray-500">Modelo de catalogo</p>
+              <p className="text-lg font-extrabold text-gray-800">
                 {familyConfig?.unique ? "Activo unico" : "Stock base"}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Activos registrados</p>
-              <p className="text-3xl font-extrabold text-gray-800">
+              <p className="text-xs font-semibold text-gray-500">Activos registrados</p>
+              <p className="text-2xl font-extrabold text-gray-800">
                 {assetSummary?.totalAssets || 0}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Activos disponibles</p>
-              <p className="text-3xl font-extrabold text-[#166534]">
+              <p className="text-xs font-semibold text-gray-500">Activos disponibles</p>
+              <p className="text-2xl font-extrabold text-[#166534]">
                 {assetSummary?.availableAssets || 0}
               </p>
             </div>
@@ -1053,8 +1053,8 @@ export default function Element() {
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-bold text-gray-900">Trazabilidad de inventario</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <p className="text-xs text-gray-500">
                 Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
               </p>
             </div>
@@ -1063,21 +1063,21 @@ export default function Element() {
                 <button
                   type="button"
                   onClick={() => setMovementModal("entry")}
-                  className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
+                  className="rounded-md bg-[#0047a3] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#003366]"
                 >
                   Registrar ingreso
                 </button>
                 <button
                   type="button"
                   onClick={() => setMovementModal("disposal")}
-                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-red-700"
+                  className="rounded-md bg-red-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-red-700"
                 >
                   Registrar salida
                 </button>
                 <button
                   type="button"
                   onClick={() => setMovementModal("adjustment")}
-                  className="rounded-md bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
+                  className="rounded-md bg-amber-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-600"
                 >
                   Registrar ajuste
                 </button>
@@ -1086,7 +1086,7 @@ export default function Element() {
           </div>
 
           {familyConfig?.unique ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
               Esta ficha ya esta preparada para activos unicos. En la siguiente fase se registraran
               las unidades fisicas y su trazabilidad por codigo, serie, partes o calibracion.
             </div>
@@ -1102,27 +1102,27 @@ export default function Element() {
             <>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-sm font-semibold text-gray-500">Total recibido</p>
-                  <p className="text-3xl font-extrabold text-gray-800">
+                  <p className="text-xs font-semibold text-gray-500">Total recibido</p>
+                  <p className="text-2xl font-extrabold text-gray-800">
                     {formatInventoryQuantity(inventoryDetail.summary.totalReceived)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-sm font-semibold text-gray-500">Total retornado</p>
-                  <p className="text-3xl font-extrabold text-[#166534]">
+                  <p className="text-xs font-semibold text-gray-500">Total retornado</p>
+                  <p className="text-2xl font-extrabold text-[#166534]">
                     {formatInventoryQuantity(inventoryDetail.summary.totalReturned)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-sm font-semibold text-gray-500">Ubicacion actual</p>
-                  <p className="text-3xl font-extrabold text-[#b45309]">
+                  <p className="text-xs font-semibold text-gray-500">Ubicacion actual</p>
+                  <p className="text-2xl font-extrabold text-[#b45309]">
                     {formatInventoryQuantity(inventoryDetail.summary.totalPending)}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
-                <h3 className="text-xl font-bold text-gray-900">Ubicaciones actuales</h3>
+                <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
                 {!currentLocationRows.length ? (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                     No hay unidades activas de este item en oficina ni en obra.
@@ -1137,7 +1137,7 @@ export default function Element() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <h3 className="text-xl font-bold text-gray-900">Historial de movimientos</h3>
+                <h3 className="text-lg font-bold text-gray-900">Historial de movimientos</h3>
                 {!inventoryDetail.movementHistory.length ? (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                     Todavia no hay movimientos registrados para este item.
@@ -1192,8 +1192,8 @@ function TraceabilityCard({
 
   return (
     <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-gray-500">{label}</p>
-      <p className={`mt-2 text-3xl font-extrabold ${valueColorByTone[tone]}`}>
+      <p className="text-xs font-semibold text-gray-500">{label}</p>
+      <p className={`mt-2 text-2xl font-extrabold ${valueColorByTone[tone]}`}>
         {formatInventoryQuantity(value)}
       </p>
     </div>
@@ -1336,7 +1336,7 @@ function MovementTypeBadge({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md px-4 py-2 text-sm font-extrabold text-white shadow-sm transition-colors ${colorClass}`}
+      className={`rounded-md px-4 py-2 text-xs font-extrabold text-white shadow-sm transition-colors ${colorClass}`}
     >
       {translateMovementType(movementType)}
     </button>
@@ -1355,17 +1355,17 @@ function MovementDetailModal({
       <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900">
               Detalle del movimiento
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs text-gray-500">
               Movimiento #{movement.inventoryMovementId}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-3 py-1 text-2xl font-bold text-gray-400 hover:text-gray-700"
+            className="rounded-md px-3 py-1 text-xl font-bold text-gray-400 hover:text-gray-700"
           >
             x
           </button>
@@ -1402,7 +1402,7 @@ function MovementDetailModal({
         </div>
 
         <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
-          <p className="text-sm font-bold text-gray-600">Observacion</p>
+          <p className="text-xs font-bold text-gray-600">Observacion</p>
           <p className="mt-2 whitespace-pre-wrap text-gray-900">
             {movement.notes || "Sin observacion."}
           </p>
@@ -1412,7 +1412,7 @@ function MovementDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366]"
+            className="rounded-md bg-[#0047a3] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#003366]"
           >
             Cerrar
           </button>
@@ -1431,7 +1431,7 @@ function MovementDetailRow({
 }) {
   return (
     <div className="rounded-md border border-gray-200 bg-white p-4">
-      <p className="text-sm font-bold text-gray-500">{label}</p>
+      <p className="text-xs font-bold text-gray-500">{label}</p>
       <p className="mt-1 font-semibold text-gray-900">{value}</p>
     </div>
   );
@@ -1519,15 +1519,15 @@ function InventoryMovementModal({
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900">
               {titleByMode[mode]}
             </h3>
-            <p className="mt-1 text-sm text-gray-500">{elementName}</p>
+            <p className="mt-1 text-xs text-gray-500">{elementName}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-3 py-1 text-2xl font-bold text-gray-400 hover:text-gray-700"
+            className="rounded-md px-3 py-1 text-xl font-bold text-gray-400 hover:text-gray-700"
           >
             x
           </button>
@@ -1536,7 +1536,7 @@ function InventoryMovementModal({
         <div className="flex flex-col gap-4">
           {requiresOfficeEntry ? (
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-700">
+              <label className="text-xs font-bold text-gray-700">
                 Registro de oficina
               </label>
               <select
@@ -1553,11 +1553,11 @@ function InventoryMovementModal({
                 ))}
               </select>
               {!officeEntries.length ? (
-                <p className="text-sm text-red-600">
+                <p className="text-xs text-red-600">
                   No hay registros de oficina disponibles para este elemento.
                 </p>
               ) : selectedEntry ? (
-                <p className="text-xs font-semibold text-gray-500">
+                <p className="text-2xs font-semibold text-gray-500">
                   Stock actual: {formatInventoryQuantity(selectedEntry.currentStock)} {selectedEntry.unit}
                 </p>
               ) : null}
@@ -1566,7 +1566,7 @@ function InventoryMovementModal({
 
           {mode === "adjustment" ? (
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-700">Nueva cantidad</label>
+              <label className="text-xs font-bold text-gray-700">Nueva cantidad</label>
               <input
                 type="number"
                 min="0"
@@ -1579,7 +1579,7 @@ function InventoryMovementModal({
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-700">Cantidad</label>
+              <label className="text-xs font-bold text-gray-700">Cantidad</label>
               <input
                 type="number"
                 min="0.0001"
@@ -1594,7 +1594,7 @@ function InventoryMovementModal({
 
           {mode !== "entry" ? (
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-gray-700">Motivo</label>
+              <label className="text-xs font-bold text-gray-700">Motivo</label>
               <input
                 type="text"
                 value={reason}
@@ -1606,7 +1606,7 @@ function InventoryMovementModal({
           ) : null}
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-gray-700">Descripcion</label>
+            <label className="text-xs font-bold text-gray-700">Descripcion</label>
             <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
@@ -1619,14 +1619,14 @@ function InventoryMovementModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"
+            className="rounded-md border border-gray-300 px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={loading || (requiresOfficeEntry && !officeEntries.length)}
-            className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[#003366] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-[#0047a3] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-[#003366] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Guardando..." : "Guardar"}
           </button>
@@ -1647,8 +1647,8 @@ function StatusRadio({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-semibold text-gray-700">{label}</span>
-      <div className="flex gap-6 text-sm font-semibold text-gray-700">
+      <span className="text-xs font-semibold text-gray-700">{label}</span>
+      <div className="flex gap-6 text-xs font-semibold text-gray-700">
         <label className="flex items-center gap-2">
           <input
             type="radio"

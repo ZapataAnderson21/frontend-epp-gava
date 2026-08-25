@@ -7,7 +7,7 @@ export default function ForgotPasswordModal({ email, onClick }: ForgotPasswordMo
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.5)] z-50">
       <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4 text-center">
+        <h2 className="text-lg font-bold mb-4 text-center">
           Recuperación de contraseña
         </h2>
         <p className="text-gray-700 mb-4 text-center">

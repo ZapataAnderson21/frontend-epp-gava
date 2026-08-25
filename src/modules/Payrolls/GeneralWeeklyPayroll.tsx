@@ -7,14 +7,14 @@ import { adminTypes, formatToLongMonthDate } from "../../utils";
 import Permission from "../../common/auth/Permission";
 import { useEffect, useState, useMemo } from "react";
 import { weeklyWageApi } from "../../data/apiUrl";
-import { AiOutlineLoading } from "react-icons/ai";
+import { FileSpreadsheet as FaFileExcel, LoaderCircle as AiOutlineLoading, Save as FaSave } from "lucide-react";
 import { Button } from "../../components";
-import { FaSave } from "react-icons/fa";
+
 import toast, { Toaster } from "react-hot-toast";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { GeneralPayrollSummaryCards, GeneralPayrollTable } from "./components";
 import type { WorkerPayrollDetail, WeekPayrollDetail } from "./types";
-import { FaFileExcel } from "react-icons/fa";
+
 
 export default function GeneralWeeklyPayroll() {
   const { user } = useCurrentUser();

@@ -290,7 +290,7 @@ function NewInventoryElement() {
                   <span className="font-semibold text-gray-700">
                     Retorno obligatorio
                   </span>
-                  <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                  <div className="flex gap-6 text-xs font-semibold text-gray-700">
                     <label className="flex items-center gap-2">
                       <input type="radio" checked={family !== "uniform"} readOnly />
                       Si
@@ -303,11 +303,11 @@ function NewInventoryElement() {
                 </div>
               </>
             ) : isSsomaSupply ? (
-              <div className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <div className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
                 Control por cantidad. No asignable a trabajador y no retornable.
               </div>
             ) : (
-              <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
                 Retorno opcional. Este material puede volver a oficina, pero no bloquea el cierre del proyecto.
               </div>
             )}
@@ -381,10 +381,10 @@ function NewInventoryElement() {
                 optional={true}
               />
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-xs font-semibold text-gray-700">
                   Estado de Operat.
                 </span>
-                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                <div className="flex gap-6 text-xs font-semibold text-gray-700">
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -462,10 +462,10 @@ function NewInventoryElement() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-xs font-semibold text-gray-700">
                   Estado de Operatividad
                 </span>
-                <div className="flex gap-6 text-sm font-semibold text-gray-700">
+                <div className="flex gap-6 text-xs font-semibold text-gray-700">
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -538,7 +538,7 @@ function NewInventoryElement() {
           />
         ) : null}
 
-        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
           <p className="font-semibold">
             {getInventoryFamilyLabel(family)}
           </p>

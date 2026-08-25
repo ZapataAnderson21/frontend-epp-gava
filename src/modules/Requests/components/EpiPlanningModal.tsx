@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { IoIosCloseCircle } from "react-icons/io";
-import { FaPlus, FaSave } from "react-icons/fa";
-import { TiArrowBack } from "react-icons/ti";
+import {
+  ArrowLeft as TiArrowBack,
+  CircleX as IoIosCloseCircle,
+  Plus as FaPlus,
+  Save as FaSave,
+} from "lucide-react";
+
+
 import type {
   ElementRequestType,
   ElementRequestWorkerPlan,
@@ -181,30 +186,30 @@ export default function EpiPlanningModal({
       <div className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
         <div className="flex flex-col gap-5">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900">
               Detalles de {elementRequest.element?.name}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               Aqui defines la planificacion previa de reparto para este EPI. La entrega real al trabajador se registrara despues de forma manual.
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Solicitado</p>
-              <p className="text-3xl font-extrabold text-gray-800">
+              <p className="text-xs font-semibold text-gray-500">Solicitado</p>
+              <p className="text-2xl font-extrabold text-gray-800">
                 {formatInventoryQuantity(requestedTotal)}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Planificado</p>
-              <p className="text-3xl font-extrabold text-[#0047a3]">
+              <p className="text-xs font-semibold text-gray-500">Planificado</p>
+              <p className="text-2xl font-extrabold text-[#0047a3]">
                 {formatInventoryQuantity(plannedTotal)}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-500">Pendiente por planificar</p>
-              <p className={`text-3xl font-extrabold ${remainingTotal < 0 ? "text-[#b91c1c]" : "text-[#166534]"}`}>
+              <p className="text-xs font-semibold text-gray-500">Pendiente por planificar</p>
+              <p className={`text-2xl font-extrabold ${remainingTotal < 0 ? "text-[#b91c1c]" : "text-[#166534]"}`}>
                 {formatInventoryQuantity(remainingTotal)}
               </p>
             </div>
@@ -226,10 +231,10 @@ export default function EpiPlanningModal({
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                     }`}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <p className="text-2xs font-semibold uppercase tracking-wide text-gray-500">
                     {filter.label}
                   </p>
-                  <p className="text-2xl font-extrabold">{count}</p>
+                  <p className="text-xl font-extrabold">{count}</p>
                 </button>
               );
             })}
@@ -271,12 +276,12 @@ export default function EpiPlanningModal({
           {loading ? (
             <LoadingSkeletonTable />
           ) : error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
               {error}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-[minmax(220px,2fr)_120px_120px_minmax(200px,2fr)_40px] gap-3 px-1 text-xs font-bold uppercase tracking-wide text-gray-500">
+              <div className="grid grid-cols-[minmax(220px,2fr)_120px_120px_minmax(200px,2fr)_40px] gap-3 px-1 text-2xs font-bold uppercase tracking-wide text-gray-500">
                 <span>Trabajador</span>
                 <span>Cantidad</span>
                 <span>Talla</span>
@@ -294,7 +299,7 @@ export default function EpiPlanningModal({
                       <span className="font-semibold text-gray-800">
                         {plan.requestWorker?.worker?.fullName || "Sin trabajador"}
                       </span>
-                      <span className="text-xs uppercase text-gray-500">
+                      <span className="text-2xs uppercase text-gray-500">
                         {getWorkerTypeLabel(plan.requestWorker?.worker?.workerType)}
                       </span>
                     </div>
@@ -374,7 +379,7 @@ export default function EpiPlanningModal({
                   </div>
                 ))
               ) : (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center text-sm text-gray-500">
+                <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center text-xs text-gray-500">
                   Aun no hay trabajadores agregados para este detalle EPI.
                 </div>
               )}

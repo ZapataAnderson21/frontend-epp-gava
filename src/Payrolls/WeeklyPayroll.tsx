@@ -11,9 +11,9 @@ import { SummaryCards } from "./components/SummaryCards";
 import { WeeklyPayrollTable } from "./components/WeeklyPayrollTable";
 import { dailyWageApi } from "../data/apiUrl";
 import { useApiAction } from "../hooks";
-import { AiOutlineLoading } from "react-icons/ai";
+import { LoaderCircle as AiOutlineLoading, Save as FaSave } from "lucide-react";
 import { Button } from "../components";
-import { FaSave } from "react-icons/fa";
+
 import toast, { Toaster } from "react-hot-toast";
 
 export default function WeeklyPayroll() {

@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
-import { CgSpinner } from "react-icons/cg";
-import { TbCalendarTime, TbCalendarCheck, TbCalendarOff, TbAlertTriangle } from "react-icons/tb";
+import {
+  CalendarCheck as TbCalendarCheck,
+  CalendarClock as TbCalendarTime,
+  CalendarX as TbCalendarOff,
+  LoaderCircle as CgSpinner,
+  TriangleAlert as TbAlertTriangle,
+} from "lucide-react";
+
 
 interface ProjectTimelineProps {
   loading?: boolean;
@@ -136,8 +142,8 @@ export default function ProjectTimeline({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
-        <CgSpinner className="animate-spin text-4xl text-gray-400" />
-        <span className="text-sm text-gray-500 mt-2">Cargando...</span>
+        <CgSpinner className="animate-spin text-3xl text-gray-400" />
+        <span className="text-xs text-gray-500 mt-2">Cargando...</span>
       </div>
     );
   }
@@ -146,9 +152,9 @@ export default function ProjectTimeline({
   if (!start && !end) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-        <TbCalendarTime className="text-5xl mb-2" />
-        <span className="text-sm">Sin fechas configuradas</span>
-        <span className="text-xs mt-1">Edita el proyecto para agregar fechas</span>
+        <TbCalendarTime className="text-4xl mb-2" />
+        <span className="text-xs">Sin fechas configuradas</span>
+        <span className="text-2xs mt-1">Edita el proyecto para agregar fechas</span>
       </div>
     );
   }
@@ -198,21 +204,21 @@ export default function ProjectTimeline({
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5, duration: 0.3 }}
-              className="text-3xl font-extrabold text-gray-800"
+              className="text-2xl font-extrabold text-gray-800"
             >
               {metrics.progress}%
             </motion.span>
-            <span className="text-xs text-gray-500">Tiempo</span>
+            <span className="text-2xs text-gray-500">Tiempo</span>
           </div>
         </div>
 
         {/* Resumen rápido */}
         <div className="flex flex-col gap-2">
           <div className="text-center">
-            <span className="text-3xl font-extrabold text-gray-800">{metrics.daysRemaining}</span>
-            <span className="text-sm text-gray-500 ml-1">días</span>
+            <span className="text-2xl font-extrabold text-gray-800">{metrics.daysRemaining}</span>
+            <span className="text-xs text-gray-500 ml-1">días</span>
           </div>
-          <span className="text-sm text-gray-500">restantes</span>
+          <span className="text-xs text-gray-500">restantes</span>
           
           {/* Alerta si está por vencer o vencido */}
           {metrics.status === "por-vencer" && (
@@ -221,8 +227,8 @@ export default function ProjectTimeline({
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-md mt-1"
             >
-              <TbAlertTriangle className="text-lg" />
-              <span className="text-xs font-medium">Por vencer</span>
+              <TbAlertTriangle className="text-base" />
+              <span className="text-2xs font-medium">Por vencer</span>
             </motion.div>
           )}
           
@@ -232,8 +238,8 @@ export default function ProjectTimeline({
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-md mt-1"
             >
-              <TbAlertTriangle className="text-lg" />
-              <span className="text-xs font-medium">Proyecto vencido</span>
+              <TbAlertTriangle className="text-base" />
+              <span className="text-2xs font-medium">Proyecto vencido</span>
             </motion.div>
           )}
         </div>
@@ -252,10 +258,10 @@ export default function ProjectTimeline({
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <item.icon className="text-lg" style={{ color: item.color }} />
+            <item.icon className="text-base" style={{ color: item.color }} />
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">{item.label}</span>
-              <span className="text-sm font-bold text-gray-800">{item.value}</span>
+              <span className="text-2xs text-gray-500">{item.label}</span>
+              <span className="text-xs font-bold text-gray-800">{item.value}</span>
             </div>
           </motion.div>
         ))}
@@ -275,7 +281,7 @@ export default function ProjectTimeline({
       </div>
 
       {/* Total de días */}
-      <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+      <div className="flex justify-between items-center mt-3 text-2xs text-gray-500">
         <span>Duración: {metrics.totalDays} días</span>
         <span>{metrics.daysElapsed} días transcurridos</span>
       </div>

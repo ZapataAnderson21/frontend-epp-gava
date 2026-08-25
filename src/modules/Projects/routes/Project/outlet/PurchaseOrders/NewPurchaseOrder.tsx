@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { CgSpinner } from "react-icons/cg";
+import { LoaderCircle as CgSpinner } from "lucide-react";
 import { ErrorMessage } from "../../../../../../common/error";
 import { ButtonContainer } from "../../../../../../common/form";
 import { Toaster } from "react-hot-toast";

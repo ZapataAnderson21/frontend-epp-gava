@@ -5,9 +5,14 @@ import { userApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { Button } from "../../components";
-import { AiOutlineLoading } from "react-icons/ai";
-import { FiLogIn } from "react-icons/fi";
-import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import {
+  Eye as FaEye,
+  EyeOff as FaEyeSlash,
+  LoaderCircle as AiOutlineLoading,
+  LogIn as FiLogIn,
+} from "lucide-react";
+
+
 
 interface LoginResponse {
   accessToken: string;

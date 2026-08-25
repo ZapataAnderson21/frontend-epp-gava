@@ -1,6 +1,6 @@
 import { type Currency, CurrencyFilter, MoneyTrendCard } from "../components";
 import { SectionProjectSummary } from "../components";
-import { CgSpinner } from "react-icons/cg";
+import { LoaderCircle as CgSpinner } from "lucide-react";
 
 interface AmountsByCurrency {
   PEN: number;
@@ -61,7 +61,7 @@ export default function EconomicSummaryCard({
     <div className="col-span-1">
       <div className="flex flex-col w-full bg-white border border-gray-50 rounded-xl p-5 shadow-sm h-full">
         <div className="flex flex-col mb-4 gap-2">
-          <h3 className="text-xl font-extrabold text-gray-800">Resumen Económico</h3>
+          <h3 className="text-lg font-extrabold text-gray-800">Resumen Económico</h3>
           <div className="flex w-full justify-end">
             <div className="w-fit">
               <CurrencyFilter currency={currency} onChange={setCurrency} />
@@ -87,7 +87,7 @@ export default function EconomicSummaryCard({
             trend="down"
             summary={
               totalExpensesLoading ? (
-                <CgSpinner className="animate-spin text-2xl" />
+                <CgSpinner className="animate-spin text-xl" />
               ) : (
                 formatMoney(totalExpenses, currency)
               )

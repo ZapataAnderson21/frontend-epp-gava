@@ -1,4 +1,4 @@
-import { FaTrashAlt } from "react-icons/fa";
+import { Trash2 as FaTrashAlt } from "lucide-react";
 import ActionButton from "../../components/ActionButton";
 
 interface DeleteButtonProps {

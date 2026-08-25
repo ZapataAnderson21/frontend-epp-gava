@@ -10,7 +10,7 @@ import AddButton from "../../../../../../common/button/AddButton";
 import Permission from "../../../../../../common/auth/Permission";
 import { adminTypes, logisticsTypes } from "../../../../../../utils";
 import { Button } from "../../../../../../components";
-import { FaListUl } from "react-icons/fa";
+import { List as FaListUl } from "lucide-react";
 import { useState } from "react";
 import { UnitValuesModal } from "./components";
 

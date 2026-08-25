@@ -1,14 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  TbChevronDown,
-  TbChevronRight,
-  TbEdit,
-  TbTrash,
-  TbSubtask,
-  TbUser,
-  TbGripVertical,
-} from "react-icons/tb";
+  ChevronDown as TbChevronDown,
+  ChevronRight as TbChevronRight,
+  GripVertical as TbGripVertical,
+  ListTree as TbSubtask,
+  Pencil as TbEdit,
+  Trash2 as TbTrash,
+  User as TbUser,
+} from "lucide-react";
 import type { Task } from "../types";
 import { PRIORITY_COLORS, PRIORITY_LABELS } from "../types";
 
@@ -70,7 +70,7 @@ export default function DraggableTaskRow({
         className="p-0.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex-shrink-0 touch-none"
         title="Arrastrar para reordenar"
       >
-        <TbGripVertical className="text-sm" />
+        <TbGripVertical className="text-xs" />
       </button>
 
       {task.hasSubtasks ? (
@@ -79,9 +79,9 @@ export default function DraggableTaskRow({
           className="p-0.5 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
         >
           {task.isExpanded ? (
-            <TbChevronDown className="text-gray-500 text-sm" />
+            <TbChevronDown className="text-gray-500 text-xs" />
           ) : (
-            <TbChevronRight className="text-gray-500 text-sm" />
+            <TbChevronRight className="text-gray-500 text-xs" />
           )}
         </button>
       ) : (
@@ -95,7 +95,7 @@ export default function DraggableTaskRow({
       />
 
       <span
-        className={`flex-1 text-sm truncate ${
+        className={`flex-1 text-xs truncate ${
           task.status === "cancelled"
             ? "text-gray-400 line-through"
             : "text-gray-800"
@@ -106,8 +106,8 @@ export default function DraggableTaskRow({
       </span>
 
       {task.assignments && task.assignments.length > 0 && (
-        <div className="flex items-center text-xs text-gray-400 flex-shrink-0">
-          <TbUser className="text-xs" />
+        <div className="flex items-center text-2xs text-gray-400 flex-shrink-0">
+          <TbUser className="text-2xs" />
           <span>{task.assignments.length}</span>
         </div>
       )}
@@ -118,21 +118,21 @@ export default function DraggableTaskRow({
           className="p-1 text-gray-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
           title="Agregar subtarea"
         >
-          <TbSubtask className="text-sm" />
+          <TbSubtask className="text-xs" />
         </button>
         <button
           onClick={() => onEdit(task)}
           className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
           title="Editar"
         >
-          <TbEdit className="text-sm" />
+          <TbEdit className="text-xs" />
         </button>
         <button
           onClick={() => onDelete(task)}
           className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
           title="Eliminar"
         >
-          <TbTrash className="text-sm" />
+          <TbTrash className="text-xs" />
         </button>
       </div>
     </div>

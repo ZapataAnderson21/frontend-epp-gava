@@ -1,5 +1,5 @@
 import { Button } from "../../components";
-import { FaPlus } from "react-icons/fa6";
+import { Plus as FaPlus } from "lucide-react";
 
 interface AddButtonProps {
   onClick?: () => void;
@@ -8,7 +8,7 @@ interface AddButtonProps {
 export default function AddButton({ onClick }: AddButtonProps) {
   return (
     <Button
-      icon={<FaPlus />}
+      icon={<FaPlus className="w-5 h-5" />}
       label="Añadir"
       type="button"
       bgColor="#0047a3" 

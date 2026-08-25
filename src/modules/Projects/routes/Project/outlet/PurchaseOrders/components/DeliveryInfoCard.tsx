@@ -24,7 +24,7 @@ export default function DeliveryInfoCard({
 }: Props) {
   return (
     <div className="grid-cols-1 flex flex-col h-full">
-      <h1 className="text-xl font-bold">DATOS PARA ENTREGA O ENVÍO</h1>
+      <h1 className="text-lg font-bold">DATOS PARA ENTREGA O ENVÍO</h1>
       <div className="flex flex-col gap-4 p-4 shadow-md shadow-gray-300 h-full">
         <InputForm name="destination" label="Destino" type="text" value={destination} onChange={(e) => setDestination(e.target.value)} />
         <InputForm name="deliveryLocation" label="Lugar de entrega" type="text" value={deliveryLocation} onChange={(e) => setDeliveryLocation(e.target.value)} />

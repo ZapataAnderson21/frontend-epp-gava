@@ -112,7 +112,7 @@ export default function WorkerMonthlyEvaluations() {
         const isOpen = row.status === "open";
         return (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-semibold text-white ${isOpen ? "bg-emerald-600" : "bg-gray-500"}`}
+            className={`px-2 py-1 rounded-full text-2xs font-semibold text-white ${isOpen ? "bg-emerald-600" : "bg-gray-500"}`}
           >
             {isOpen ? "ABIERTA" : "CERRADA"}
           </span>

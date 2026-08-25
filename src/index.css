@@ -4,6 +4,38 @@
 
 @font-face {
   font-family: 'Lato';
+  src: url('/fonts/Lato-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/Lato-ThinItalic.ttf') format('truetype');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/Lato-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('/fonts/Lato-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
   src: url('/fonts/Lato-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
@@ -63,8 +95,31 @@
   --color-primary-900: #001f3d;
   --color-primary: #0047a3;
   
-  /* Fuente personalizada */
-  --font-family-sans: 'Lato', ui-sans-serif, system-ui, sans-serif;
+  /* Fuente sans predeterminada de Tailwind y de la aplicacion */
+  --font-sans: 'Lato', ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala compacta: nivel inferior a xs para interfaces densas. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+}
+
+body {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+
+/* react-calendar declara Arial en su hoja interna. */
+html .react-calendar {
+  font-family: var(--font-sans);
 }
 
 /* Fondo con waves diagonales difuminadas */

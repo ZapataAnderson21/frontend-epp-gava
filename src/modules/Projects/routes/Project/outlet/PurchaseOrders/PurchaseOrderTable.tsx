@@ -130,7 +130,7 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col sm:flex-row gap-3 md:items-end md:justify-between mb-4">
         <div className="flex flex-col w-full gap-1">
-          <label className="text-sm text-gray-700">Buscar por código</label>
+          <label className="text-xs text-gray-700">Buscar por código</label>
           <input
             type="text"
             value={codeQuery}
@@ -140,7 +140,7 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-700">Proveedor</label>
+          <label className="text-xs text-gray-700">Proveedor</label>
           <Select
             name="supplier-filter"
             value={supplierFilter}

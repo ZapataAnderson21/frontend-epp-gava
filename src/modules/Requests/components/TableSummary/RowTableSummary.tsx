@@ -188,21 +188,21 @@ export default function RowTableSummary({
       {family === 'ese' ? (
         <div className="mt-2 rounded-md border border-gray-300 bg-gray-50 p-3">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <p className="text-sm font-bold text-gray-900">
+            <p className="text-xs font-bold text-gray-900">
               Equipos fisicos para enviar
             </p>
-            <p className="text-xs font-semibold text-gray-600">
+            <p className="text-2xs font-semibold text-gray-600">
               {acceptedSafetyQuantity} de {requestedQuantity} seleccionado(s)
             </p>
           </div>
 
           {safetyOptions.length === 0 ? (
-            <p className="rounded-md border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-500">
+            <p className="rounded-md border border-dashed border-gray-300 bg-white p-3 text-xs text-gray-500">
               No hay equipos fisicos disponibles en oficina para este tipo.
             </p>
           ) : (
             <div className="overflow-hidden rounded-md border border-gray-300 bg-white">
-              <div className="grid grid-cols-[1fr_96px_88px] gap-2 bg-gray-100 px-3 py-2 text-xs font-extrabold uppercase text-gray-700">
+              <div className="grid grid-cols-[1fr_96px_88px] gap-2 bg-gray-100 px-3 py-2 text-2xs font-extrabold uppercase text-gray-700">
                 <span>Equipo fisico</span>
                 <span className="text-center">Stock ofic.</span>
                 <span className="text-center">Enviar</span>
@@ -213,7 +213,7 @@ export default function RowTableSummary({
                 return (
                   <label
                     key={element.elementId}
-                    className={`grid cursor-pointer grid-cols-[1fr_96px_88px] items-center gap-2 border-t px-3 py-2 text-sm transition ${
+                    className={`grid cursor-pointer grid-cols-[1fr_96px_88px] items-center gap-2 border-t px-3 py-2 text-xs transition ${
                       checked
                         ? 'border-blue-200 bg-blue-50'
                         : 'border-gray-200 hover:bg-blue-50'
@@ -223,7 +223,7 @@ export default function RowTableSummary({
                       <span className="block truncate font-bold text-gray-900">
                         {getElementOptionLabel(element)}
                       </span>
-                      <span className="block text-xs text-gray-500">
+                      <span className="block text-2xs text-gray-500">
                         {getElementSecondaryLabel(element)}
                       </span>
                     </span>

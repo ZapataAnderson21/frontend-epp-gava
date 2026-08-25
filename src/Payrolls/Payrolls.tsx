@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { FaSave } from "react-icons/fa";
-import { FaXmark } from "react-icons/fa6";
+import { Save as FaSave, X as FaXmark } from "lucide-react";
+
 import toast, { Toaster } from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import Permission from "../common/auth/Permission";
@@ -170,10 +170,10 @@ export default function Payrolls() {
       <div className="flex w-full max-w-full flex-col gap-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-900">
+            <h1 className="text-xl font-extrabold text-gray-900">
               Planillas semanales
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs text-gray-600">
               {project?.name || "Proyecto"}: registra el monto total pagado por
               semana.
             </p>
@@ -183,18 +183,18 @@ export default function Payrolls() {
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-gray-500">
+            <p className="text-xs font-semibold text-gray-500">
               Semanas registradas
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-gray-900">
+            <p className="mt-1 text-xl font-extrabold text-gray-900">
               {payrolls?.length || 0}
             </p>
           </div>
           <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
-            <p className="text-sm font-semibold text-gray-500">
+            <p className="text-xs font-semibold text-gray-500">
               Total registrado
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-gray-900">
+            <p className="mt-1 text-xl font-extrabold text-gray-900">
               S/{" "}
               {totalRegistered.toLocaleString("es-PE", {
                 minimumFractionDigits: 2,
@@ -208,14 +208,14 @@ export default function Payrolls() {
           onSubmit={handleSubmit}
           className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
         >
-          <h2 className="mb-4 text-lg font-bold text-gray-900">
+          <h2 className="mb-4 text-base font-bold text-gray-900">
             {editingId
               ? "Editar planilla semanal"
               : "Registrar planilla semanal"}
           </h2>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-gray-700">
               Semana
               <select
                 value={weekId}
@@ -233,7 +233,7 @@ export default function Payrolls() {
               </select>
             </label>
 
-            <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-gray-700">
               Monto total (S/)
               <input
                 type="number"
@@ -248,7 +248,7 @@ export default function Payrolls() {
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-gray-700">
               Observación (opcional)
               <input
                 type="text"

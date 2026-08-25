@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { FaMinus, FaPlus, FaRegFilePdf } from "react-icons/fa6";
-import { AiOutlineLoading } from "react-icons/ai";
+import {
+  FileText as FaRegFilePdf,
+  LoaderCircle as AiOutlineLoading,
+  Minus as FaMinus,
+  Plus as FaPlus,
+} from "lucide-react";
+
 import { Button } from "../../components";
 import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
@@ -233,13 +238,13 @@ export default function EditQuotation() {
         <div className="w-full flex flex-col items-center justify-center">
           <div className="flex flex-col gap-8 lg:w-[85%] w-full md:border border-gray-100 px-4 py-6 sm:px-6 md:px-10 md:py-10 lg:px-12 lg:py-12 md:shadow-md shadow-gray-300 bg-white rounded-sm">
             <div className="flex flex-col gap-4 text-center">
-              <p className="text-[#03045a] font-bold italic text-xl">"Seguridad y Calidad a su Servicio"</p>
-              <h1 className="text-[#c00000] font-extrabold text-2xl">EDITAR COTIZACIÓN</h1>
+              <p className="text-[#03045a] font-bold italic text-lg">"Seguridad y Calidad a su Servicio"</p>
+              <h1 className="text-[#c00000] font-extrabold text-xl">EDITAR COTIZACIÓN</h1>
               <div className="border-t-4 border-[#c00000]" />
-              <h2 className="text-[#c00000] text-3xl font-bold">{quotation.code}</h2>
+              <h2 className="text-[#c00000] text-2xl font-bold">{quotation.code}</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
               <div className="flex flex-col gap-2">
                 <label className="font-bold">Cliente:</label>
                 <select
@@ -272,7 +277,7 @@ export default function EditQuotation() {
             </div>
 
             <div className="pt-1">
-              <h3 className="text-xl font-bold mb-2">Descripción del Servicio:</h3>
+              <h3 className="text-lg font-bold mb-2">Descripción del Servicio:</h3>
               <textarea
                 className="w-full min-h-28 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
                 value={serviceDescription}
@@ -282,7 +287,7 @@ export default function EditQuotation() {
             </div>
 
             <div className="overflow-x-auto rounded-sm">
-              <table className="w-full text-lg">
+              <table className="w-full text-base">
                 <thead className="bg-[#c90000] text-white">
                   <tr>
                     <th className="p-3 text-left">Ítem</th>
@@ -353,7 +358,7 @@ export default function EditQuotation() {
             </div>
 
             <div className="flex justify-end mt-1">
-              <div className="w-full md:w-[48%] text-xl">
+              <div className="w-full md:w-[48%] text-lg">
                 <div className="flex justify-between py-2 border-b border-gray-300 font-semibold">
                   <span>COSTO DIRECTO</span>
                   <span>{summary.costDirectAmount.toFixed(2)}</span>
@@ -370,7 +375,7 @@ export default function EditQuotation() {
             </div>
 
             <div className="pt-1">
-              <h3 className="text-xl font-bold mb-2">Condiciones Comerciales:</h3>
+              <h3 className="text-lg font-bold mb-2">Condiciones Comerciales:</h3>
               <textarea
                 className="w-full min-h-36 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
                 value={commercialTerms}

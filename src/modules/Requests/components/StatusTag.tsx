@@ -95,7 +95,7 @@ export default function StatusTag({
   if (!editable) {
     return (
       <span
-        className="px-2 py-1 rounded-full text-white font-semibold text-sm"
+        className="px-2 py-1 rounded-full text-white font-semibold text-xs"
         style={{ backgroundColor: statusColor[label as keyof typeof statusColor] || '#9ca3af' }}
       >
         {label.toUpperCase()}
@@ -107,7 +107,7 @@ export default function StatusTag({
     <>
       <span
         ref={tagRef}
-        className="px-2 py-1 rounded-full text-white font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity"
+        className="px-2 py-1 rounded-full text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition-opacity"
         style={{ backgroundColor: statusColor[label as keyof typeof statusColor] || '#9ca3af' }}
         onClick={() => setIsOpen((current) => !current)}
       >
@@ -138,7 +138,7 @@ export default function StatusTag({
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: statusColor[option.label] }}
                 />
-                <span className="text-sm text-gray-700">{option.label}</span>
+                <span className="text-xs text-gray-700">{option.label}</span>
               </div>
             ))}
         </div>,

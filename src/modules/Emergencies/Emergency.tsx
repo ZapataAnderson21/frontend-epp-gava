@@ -91,7 +91,7 @@ export default function Emergency() {
   return (
     <div className="flex flex-col items-start justify-start w-full h-full text-gray-800 p-10">
       <div className="flex flex-row flex-wrap gap-2 items-center justify-between w-full">
-        <h1 className="text-2xl font-bold mb-4">EMERGENCIA {emergencyId}</h1>
+        <h1 className="text-xl font-bold mb-4">EMERGENCIA {emergencyId}</h1>
       </div>
       <div className="flex flex-col items-start justify-start gap-4 w-full h-full text-gray-600">
         <div className="flex flex-row flex-wrap gap-4 w-full">
