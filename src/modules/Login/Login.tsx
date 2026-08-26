@@ -126,13 +126,13 @@ export default function Login() {
               onClick={() => setVisiblePassword(!visiblePassword)}
               className="cursor-pointer hover:scale-105 duration-300"
             >
-              {visiblePassword ? <FaEyeSlash /> : <FaEye />}
+              {visiblePassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
             </button>
           </InputForm>
 
           <div className="flex flex-row gap-4 items-end justify-between w-full">
             <Button
-              icon={loadingLogin ? <AiOutlineLoading className="animate-spin" /> : <FiLogIn />}
+              icon={loadingLogin ? <AiOutlineLoading className="w-5 h-5 animate-spin" /> : <FiLogIn className="w-5 h-5" />}
               label={loadingLogin ? "Ingresando..." : "Iniciar Sesión"}
               type="submit"
               bgColor="#0047a3" 
