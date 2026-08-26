@@ -689,6 +689,78 @@ export interface PurchaseOrderUnitValue {
   orderNumber?: number;
 }
 
+export type PurchaseOrderDashboardCurrency = "PEN" | "USD" | "EUR";
+export type PurchaseOrderDashboardStatus =
+  | "pending"
+  | "authorized"
+  | "delivered"
+  | "cancelled";
+
+export interface PurchaseOrderDashboardOrder {
+  purchaseOrderId: number;
+  code: string;
+  purchaseOrderType: "materials" | "services";
+  purchaseAmount: number;
+  saleAmount: number;
+  margin: number;
+  status: PurchaseOrderDashboardStatus;
+  createdAt: string;
+  projectId: number;
+  projectName: string;
+  supplierId: number;
+  supplierName: string;
+  currency: PurchaseOrderDashboardCurrency;
+  daysPending?: number;
+}
+
+export interface PurchaseOrderDashboardResponse {
+  period: { month: number; year: number };
+  appliedFilters: {
+    currency: PurchaseOrderDashboardCurrency | null;
+    status: PurchaseOrderDashboardStatus | null;
+    projectId: number | null;
+    purchaseOrderType: "materials" | "services" | null;
+  };
+  filterOptions: {
+    projects: Array<{ projectId: number; name: string }>;
+  };
+  totals: {
+    totalOrders: number;
+    pendingOrders: number;
+    authorizedOrders: number;
+    deliveredOrders: number;
+    cancelledOrders: number;
+    purchaseAmount: number;
+    saleAmount: number;
+    margin: number;
+    marginPercent: number;
+  };
+  statusDistribution: Array<{
+    status: PurchaseOrderDashboardStatus;
+    label: string;
+    count: number;
+    purchaseAmount: number;
+  }>;
+  weeklyTrend: Array<{
+    week: number;
+    label: string;
+    count: number;
+    purchaseAmount: number;
+    saleAmount: number;
+  }>;
+  topProjects: PurchaseOrderDashboardRanking[];
+  topSuppliers: PurchaseOrderDashboardRanking[];
+  oldestPendingOrders: PurchaseOrderDashboardOrder[];
+  latestOrders: PurchaseOrderDashboardOrder[];
+}
+
+export interface PurchaseOrderDashboardRanking {
+  id: number;
+  name: string;
+  count: number;
+  purchaseAmount: number;
+}
+
 export interface PettyCashType {
   pettyCashId: number;
   projectId: number;

@@ -12,6 +12,7 @@ import type {
 import { useFetch } from "../../hooks";
 import { formatInventoryQuantity } from "../Elements/inventoryCatalog";
 import DocumentExpirationDashboard from "./DocumentExpirationDashboard";
+import PurchaseOrdersDashboard from "./PurchaseOrdersDashboard";
 
 const months = [
   "Enero",
@@ -477,9 +478,7 @@ export default function Dashboard() {
         ) : null}
 
         {activeTab === "orders" ? (
-          <section className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
-            Aún no hay indicadores configurados para órdenes de compra.
-          </section>
+          <PurchaseOrdersDashboard month={month} year={year} />
         ) : null}
 
         {activeTab === "expirations" ? (
