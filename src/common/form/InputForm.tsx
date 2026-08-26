@@ -26,7 +26,7 @@ export default function InputForm({ label, name, type, value, maxLength, onChang
           id={name}
           name={name}
           type={type}
-          className={`border ${error ? "border-red-600" : "border-gray-400"} p-2 rounded-sm w-full focus:outline-[#0047a3]`}
+          className={`border ${error ? "border-red-600" : "border-gray-400"} p-2 rounded-lg w-full focus:outline-[#0047a3]`}
           value={value}
           onChange={onChange}
           maxLength={maxLength}
