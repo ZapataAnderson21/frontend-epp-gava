@@ -8,7 +8,7 @@ interface AddButtonProps {
 export default function AddButton({ onClick }: AddButtonProps) {
   return (
     <Button
-      icon={<FaPlus className="w-5 h-5" />}
+      icon={<FaPlus />}
       label="Añadir"
       type="button"
       bgColor="#0047a3" 

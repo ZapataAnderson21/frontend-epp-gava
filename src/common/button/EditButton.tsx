@@ -9,7 +9,7 @@ interface EditButtonProps {
 export default function EditButton({ onClick, disabled }: EditButtonProps) {
   return (
     <ActionButton
-      icon={<FaPencil className="size-4" />}
+      icon={<FaPencil />}
       onClick={onClick}
       disabled={disabled}
       bgColor="#fbbf24"

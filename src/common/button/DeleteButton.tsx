@@ -9,7 +9,7 @@ interface DeleteButtonProps {
 export default function DeleteButton({ onClick, disabled }: DeleteButtonProps) {
   return (
     <ActionButton
-      icon={<FaTrashAlt className="size-4" />}
+      icon={<FaTrashAlt />}
       onClick={onClick}
       disabled={disabled}
       bgColor="#d80027"

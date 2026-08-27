@@ -494,7 +494,7 @@ export default function ProjectInventory() {
             <SeeButton onClick={() => setSelectedDetailEntry(row)} />
             {canAssign ? (
               <ActionButton
-                icon={<FaUserPlus className="size-4" />}
+                icon={<FaUserPlus />}
                 bgColor={
                   selectedAssignEntry?.projectInventoryEntryId === row.projectInventoryEntryId
                     ? "#374151"
@@ -522,7 +522,7 @@ export default function ProjectInventory() {
             ) : null}
             {canReturn ? (
               <ActionButton
-                icon={<FaArrowRotateLeft className="size-4" />}
+                icon={<FaArrowRotateLeft />}
                 bgColor={
                   selectedEntry?.projectInventoryEntryId === row.projectInventoryEntryId
                     ? "#374151"
@@ -986,7 +986,7 @@ function FallProtectionProjectCards({
                 <SeeButton onClick={() => onView(entry)} />
                 {canAssign ? (
                     <ActionButton
-                      icon={<FaUserPlus className="size-4" />}
+                      icon={<FaUserPlus />}
                       bgColor={
                         selectedAssignEntryId === entry.projectInventoryEntryId
                           ? "#374151"
@@ -1002,7 +1002,7 @@ function FallProtectionProjectCards({
                 ) : null}
                 {canReturn ? (
                     <ActionButton
-                      icon={<FaArrowRotateLeft className="size-4" />}
+                      icon={<FaArrowRotateLeft />}
                       bgColor={
                         selectedReturnEntryId === entry.projectInventoryEntryId
                           ? "#374151"

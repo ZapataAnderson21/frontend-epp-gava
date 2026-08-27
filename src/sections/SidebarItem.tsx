@@ -46,7 +46,7 @@ export default function SidebarItem({
                                  hover:text-primary hover:shadow-primary-50 hover:shadow-md focus:bg-primary-50 focus:text-primary
                                  focus:shadow-primary-50 focus:shadow-sm w-full cursor-pointer rounded-lg transition-all duration-200
                                  ${isActive ? "bg-primary-50 text-primary shadow-primary-50 shadow-md font-semibold" : ""}`}>
-      <div className="flex flex-row items-center gap-2">
+      <div className="flex flex-row items-center gap-2 [&_svg]:size-5 [&_svg]:shrink-0">
         {icon}
         {label}
       </div>

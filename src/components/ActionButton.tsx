@@ -16,7 +16,7 @@ export default function ActionButton({ icon, onClick, disabled, bgColor, bgHover
       style={{ backgroundColor: bgColor }}
       className={`cursor-pointer flex gap-2 justify-center items-center border p-2 rounded-xl 
           border-gray-100 text-white w-fit 
-          hover:scale-[105%] duration-300 disabled:opacity-60`}
+          hover:scale-[105%] duration-300 disabled:opacity-60 [&_svg]:size-4 [&_svg]:shrink-0`}
       whileHover={{ backgroundColor: bgHoverColor }}
       disabled={disabled}>
       {icon}
