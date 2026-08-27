@@ -8,6 +8,11 @@ interface AmountsByCurrency {
   EUR: number;
 }
 
+interface AmountsByPurchaseOrderType {
+  materials: AmountsByCurrency;
+  services: AmountsByCurrency;
+}
+
 const CURRENCY_SYMBOL: Record<Currency, string> = {
   PEN: "S/.",
   USD: "$",
@@ -31,6 +36,8 @@ interface EconomicSummaryCardProps {
   loading: boolean;
   purchaseOrdersSaleTotals: AmountsByCurrency;
   purchaseOrdersPurchaseTotals: AmountsByCurrency;
+  purchaseOrdersSaleTotalsByType: AmountsByPurchaseOrderType;
+  purchaseOrdersPurchaseTotalsByType: AmountsByPurchaseOrderType;
   payrollTotalsAmounts: AmountsByCurrency;
   pettyCashTotals: AmountsByCurrency;
   utilitiesTotals: AmountsByCurrency;
@@ -46,6 +53,8 @@ export default function EconomicSummaryCard({
   loading,
   purchaseOrdersSaleTotals,
   purchaseOrdersPurchaseTotals,
+  purchaseOrdersSaleTotalsByType,
+  purchaseOrdersPurchaseTotalsByType,
   payrollTotalsAmounts,
   pettyCashTotals,
   utilitiesTotals,
@@ -70,14 +79,32 @@ export default function EconomicSummaryCard({
         </div>
         <div className="space-y-4">
           {/* Ingresos */}
-          <SectionProjectSummary title="Ingresos" trend="up">
+          <SectionProjectSummary
+            title="Ingresos"
+            trend="up"
+            summary={
+              purchaseOrderSaleLoading ? (
+                <CgSpinner className="animate-spin text-xl" />
+              ) : (
+                formatMoney(purchaseOrdersSaleTotals[currency] ?? 0, currency)
+              )
+            }
+          >
             <MoneyTrendCard
               index={1}
               loading={purchaseOrderSaleLoading}
-              title="Órdenes de Compra"
+              title="Materiales"
               trend="up"
               currency={currency}
-              amountsByCurrency={purchaseOrdersSaleTotals}
+              amountsByCurrency={purchaseOrdersSaleTotalsByType.materials}
+            />
+            <MoneyTrendCard
+              index={2}
+              loading={purchaseOrderSaleLoading}
+              title="Servicios"
+              trend="up"
+              currency={currency}
+              amountsByCurrency={purchaseOrdersSaleTotalsByType.services}
             />
           </SectionProjectSummary>
 
@@ -96,13 +123,21 @@ export default function EconomicSummaryCard({
             <MoneyTrendCard
               index={1} 
               loading={purchaseOrderPurchaseLoading} 
-              title="Órdenes de Compra" 
+              title="Materiales"
               trend="down" 
               currency={currency} 
-              amountsByCurrency={purchaseOrdersPurchaseTotals} 
+              amountsByCurrency={purchaseOrdersPurchaseTotalsByType.materials}
             />
             <MoneyTrendCard
               index={2}
+              loading={purchaseOrderPurchaseLoading}
+              title="Servicios"
+              trend="down"
+              currency={currency}
+              amountsByCurrency={purchaseOrdersPurchaseTotalsByType.services}
+            />
+            <MoneyTrendCard
+              index={3}
               loading={payrollTotalsLoading} 
               title="Planillas" 
               trend="down" 
@@ -110,7 +145,7 @@ export default function EconomicSummaryCard({
               amountsByCurrency={payrollTotalsAmounts} 
             />
             <MoneyTrendCard
-              index={3} 
+              index={4}
               loading={pettyCashLoading} 
               title="Caja Chica" 
               trend="down" 

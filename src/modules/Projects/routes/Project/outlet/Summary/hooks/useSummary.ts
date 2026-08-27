@@ -4,7 +4,21 @@ import { useFetch } from "../../../../../../../hooks";
 import type { Project } from "../../../../../../../data/types";
 import { pettyCashApi, projectApi, purchaseOrderApi, workerApi } from "../../../../../../../data/apiUrl";
 import type { Currency } from "../../../../../../../data/types";
-import type { PayrollTotals, PurchaseOrderAmounts, UseSummaryReturn } from "../types";
+import type {
+  AmountsByCurrency,
+  PayrollTotals,
+  PurchaseOrderAmounts,
+  PurchaseOrderAmountTotals,
+  UseSummaryReturn,
+} from "../types";
+
+const toAmountsByCurrency = (
+  amounts?: PurchaseOrderAmountTotals,
+): AmountsByCurrency => ({
+  PEN: amounts?.totalPEN ?? 0,
+  USD: amounts?.totalUSD ?? 0,
+  EUR: amounts?.totalEUR ?? 0,
+});
 
 export function useSummary(): UseSummaryReturn {
   const { id: projectId } = useParams<{ id: string }>();
@@ -55,16 +69,30 @@ export function useSummary(): UseSummaryReturn {
     EUR: 0,
   };
 
-  const purchaseOrdersSaleTotals = {
-    PEN: purchaseOrderSaleAmounts?.totalPEN ?? 0,
-    USD: purchaseOrderSaleAmounts?.totalUSD ?? 0,
-    EUR: purchaseOrderSaleAmounts?.totalEUR ?? 0,
+  const purchaseOrdersSaleTotals = toAmountsByCurrency(
+    purchaseOrderSaleAmounts ?? undefined,
+  );
+
+  const purchaseOrdersPurchaseTotals = toAmountsByCurrency(
+    purchaseOrderPurchaseAmounts ?? undefined,
+  );
+
+  const purchaseOrdersSaleTotalsByType = {
+    materials: toAmountsByCurrency(
+      purchaseOrderSaleAmounts?.byType?.materials,
+    ),
+    services: toAmountsByCurrency(
+      purchaseOrderSaleAmounts?.byType?.services,
+    ),
   };
 
-  const purchaseOrdersPurchaseTotals = {
-    PEN: purchaseOrderPurchaseAmounts?.totalPEN ?? 0,
-    USD: purchaseOrderPurchaseAmounts?.totalUSD ?? 0,
-    EUR: purchaseOrderPurchaseAmounts?.totalEUR ?? 0,
+  const purchaseOrdersPurchaseTotalsByType = {
+    materials: toAmountsByCurrency(
+      purchaseOrderPurchaseAmounts?.byType?.materials,
+    ),
+    services: toAmountsByCurrency(
+      purchaseOrderPurchaseAmounts?.byType?.services,
+    ),
   };
 
   const utilitiesTotals = {
@@ -111,6 +139,8 @@ export function useSummary(): UseSummaryReturn {
     payrollTotalsAmounts,
     purchaseOrdersSaleTotals,
     purchaseOrdersPurchaseTotals,
+    purchaseOrdersSaleTotalsByType,
+    purchaseOrdersPurchaseTotalsByType,
     utilitiesTotals,
   };
 }

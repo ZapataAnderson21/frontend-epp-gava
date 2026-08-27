@@ -31,6 +31,8 @@ export default function Summary() {
     payrollTotalsAmounts,
     purchaseOrdersSaleTotals,
     purchaseOrdersPurchaseTotals,
+    purchaseOrdersSaleTotalsByType,
+    purchaseOrdersPurchaseTotalsByType,
     utilitiesTotals,
   } = useSummary();
   
@@ -66,6 +68,8 @@ export default function Summary() {
           loading={loading}
           purchaseOrdersSaleTotals={purchaseOrdersSaleTotals}
           purchaseOrdersPurchaseTotals={purchaseOrdersPurchaseTotals}
+          purchaseOrdersSaleTotalsByType={purchaseOrdersSaleTotalsByType}
+          purchaseOrdersPurchaseTotalsByType={purchaseOrdersPurchaseTotalsByType}
           payrollTotalsAmounts={payrollTotalsAmounts}
           pettyCashTotals={pettyCashTotals}
           utilitiesTotals={utilitiesTotals}

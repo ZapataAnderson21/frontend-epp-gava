@@ -1,15 +1,64 @@
-  import { useFetch, useApiAction } from "../../../../../../hooks";
+import { useFetch, useApiAction } from "../../../../../../hooks";
 import { ErrorMessage } from "../../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
 import { purchaseOrderApi } from "../../../../../../data/apiUrl";
-import type { PurchaseOrder } from "../../../../../../data/types";
+import type { Currency, PurchaseOrder } from "../../../../../../data/types";
 import { DeleteButton, EditButton, SeeButton } from "../../../../../../common/button";
 import { useNavigate } from "react-router-dom";
 import StatusTag, { statusOptions } from "./components/StatusTag";
 import toast, { Toaster } from "react-hot-toast";
-  import { useMemo, useState } from "react";
-  import { DeleteConfirmDialog, Select } from "../../../../../../components";
+import { useMemo, useState } from "react";
+import { DeleteConfirmDialog, Select } from "../../../../../../components";
+
+const CURRENCIES: Currency[] = ["PEN", "USD", "EUR"];
+
+type TotalsByCurrency = Record<Currency, number>;
+
+const emptyTotals = (): TotalsByCurrency => ({ PEN: 0, USD: 0, EUR: 0 });
+
+const isCurrency = (value?: string): value is Currency =>
+  CURRENCIES.includes(value as Currency);
+
+const formatMoney = (amount: number, currency: Currency) =>
+  new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(amount);
+
+function FilteredTotalCard({
+  title,
+  totals,
+  tone,
+}: {
+  title: string;
+  totals: TotalsByCurrency;
+  tone: "income" | "expense";
+}) {
+  const toneClasses =
+    tone === "income"
+      ? "border-emerald-100 bg-emerald-50/60 text-emerald-800"
+      : "border-red-100 bg-red-50/60 text-red-800";
+
+  return (
+    <article className={`rounded-xl border p-4 ${toneClasses}`}>
+      <p className="mb-3 text-sm font-bold">{title}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {CURRENCIES.map((currency) => (
+          <div key={currency} className="rounded-lg bg-white/80 px-3 py-2">
+            <span className="block text-2xs font-semibold opacity-70">
+              {currency}
+            </span>
+            <strong className="block text-sm">
+              {formatMoney(totals[currency], currency)}
+            </strong>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
 
 interface PurchaseOrderTableProps {
   projectId: number;
@@ -17,21 +66,25 @@ interface PurchaseOrderTableProps {
 
 export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProps) {
   const { data: purchaseOrders, loading, error, setData } = useFetch<PurchaseOrder[]>(`${purchaseOrderApi}project/${projectId}`, [projectId]);
-  const { execute } = useApiAction<any>();
+  const { execute } = useApiAction<unknown>();
   const [supplierFilter, setSupplierFilter] = useState<number>(0);
   const [codeQuery, setCodeQuery] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const processedPurchaseOrders = purchaseOrders?.map((po) => ({
-    ...po,
-    createdAt: new Date(po.createdAt).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }), 
-    supplierName: po.supplier ? po.supplier.name : "N/A",
-  })) || [];
+  const processedPurchaseOrders = useMemo(
+    () =>
+      (purchaseOrders ?? []).map((po) => ({
+        ...po,
+        createdAt: new Date(po.createdAt).toLocaleDateString("es-ES", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        supplierName: po.supplier ? po.supplier.name : "N/A",
+      })),
+    [purchaseOrders],
+  );
 
   const supplierOptions = useMemo(() => {
     const seen = new Map<number, string>();
@@ -54,6 +107,29 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
       return supplierMatch && codeMatch;
     });
   }, [processedPurchaseOrders, supplierFilter, codeQuery]);
+
+  const filteredTotals = useMemo(() => {
+    const income = emptyTotals();
+    const expense = emptyTotals();
+
+    filteredPurchaseOrders.forEach((purchaseOrder) => {
+      if (purchaseOrder.status === "Cancelada") return;
+
+      const currency = purchaseOrder.supplier?.currency;
+      if (!isCurrency(currency)) return;
+
+      income[currency] += Number(purchaseOrder.saleAmount ?? 0);
+      expense[currency] += Number(purchaseOrder.purchaseAmount ?? 0);
+    });
+
+    return { income, expense };
+  }, [filteredPurchaseOrders]);
+
+  const totalsScopeLabel =
+    supplierFilter === 0
+      ? "todas las órdenes visibles"
+      : supplierOptions.find((option) => option.value === supplierFilter)
+          ?.label ?? "el proveedor seleccionado";
 
   const navigate = useNavigate();
 
@@ -89,10 +165,12 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
       } else {
         throw new Error(result.message || 'Error al actualizar');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revertir al estado anterior si falla
       setData(previousOrders);
-      toast.error(err.message || 'Error al actualizar el estado');
+      toast.error(
+        err instanceof Error ? err.message : "Error al actualizar el estado",
+      );
     }
   };
 
@@ -112,9 +190,13 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
     try {
       await execute(`${purchaseOrderApi}${pendingDeleteId}`, "DELETE");
       toast.success("Orden de compra eliminada con éxito");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setData(previousOrders);
-      toast.error(err.message || "Error al eliminar la orden de compra");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Error al eliminar la orden de compra",
+      );
     } finally {
       setDeleting(false);
       setPendingDeleteId(null);
@@ -149,6 +231,23 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
           />
         </div>
       </div>
+      <section className="mb-4" aria-live="polite">
+        <p className="mb-2 text-sm font-semibold text-gray-700">
+          Totales de {totalsScopeLabel}
+        </p>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <FilteredTotalCard
+            title="Total de ingresos"
+            totals={filteredTotals.income}
+            tone="income"
+          />
+          <FilteredTotalCard
+            title="Total de gastos"
+            totals={filteredTotals.expense}
+            tone="expense"
+          />
+        </div>
+      </section>
       <Table<PurchaseOrder>
         data={filteredPurchaseOrders as unknown as PurchaseOrder[]}
         columns={[

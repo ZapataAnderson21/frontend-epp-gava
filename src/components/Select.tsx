@@ -106,7 +106,10 @@ export default function Select<T extends Primitive = string>({
   };
 
   return (
-    <div className={`relative min-w-0 ${className}`} ref={dropdownRef}>
+    <div
+      className={`relative w-full min-w-[14rem] max-w-full ${className}`}
+      ref={dropdownRef}
+    >
       <button
         type="button"
         onClick={() => {
@@ -115,7 +118,7 @@ export default function Select<T extends Primitive = string>({
           setIsOpen(current => !current);
         }}
         disabled={disabled}
-        className={`w-full min-w-0 flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={`w-full flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
         title={selectedLabel || placeholder}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
