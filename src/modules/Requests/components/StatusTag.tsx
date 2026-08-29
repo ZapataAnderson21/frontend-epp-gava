@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface StatusTagProps {
@@ -59,13 +59,13 @@ export default function StatusTag({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const label = normalizeRequestStatusLabel(status);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isOpen || !tagRef.current) return;
 
     const rect = tagRef.current.getBoundingClientRect();
     setDropdownPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.left + window.scrollX,
+      top: rect.bottom + 4,
+      left: rect.left,
     });
   }, [isOpen]);
 
@@ -111,7 +111,7 @@ export default function StatusTag({
         style={{ backgroundColor: statusColor[label as keyof typeof statusColor] || '#9ca3af' }}
         onClick={() => setIsOpen((current) => !current)}
       >
-        {label.toUpperCase()} v
+        {label.toUpperCase()} ▾
       </span>
 
       {isOpen && createPortal(

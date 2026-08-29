@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 
 interface StatusTagProps {
@@ -28,12 +28,12 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Calcular posición del dropdown
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen && tagRef.current) {
       const rect = tagRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+        top: rect.bottom + 4,
+        left: rect.left,
       });
     }
   }, [isOpen]);
