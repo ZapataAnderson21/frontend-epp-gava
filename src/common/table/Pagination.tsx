@@ -64,7 +64,7 @@ export default function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalItems);
   const pageItems = getPageItems(currentPage, safeTotalPages);
   const buttonClass =
-    "inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-xs font-bold text-gray-700 transition hover:border-[#0047a3] hover:text-[#0047a3] disabled:cursor-not-allowed disabled:opacity-40";
+    "cursor-pointer inline-flex h-9 min-w-9 items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-xs font-bold text-gray-700 transition hover:border-[#0047a3] hover:text-[#0047a3] disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
     <nav
@@ -128,7 +128,7 @@ export default function Pagination({
                 key={item}
                 className={`${buttonClass} ${
                   item === currentPage
-                    ? "border-[#0047a3] hover:bg-[#0047a3] hover:text-white"
+                    ? "border-[#0047a3] bg-[#0047a3] hover:text-white"
                     : ""
                 }`}
                 onClick={() => onPageChange(item)}
