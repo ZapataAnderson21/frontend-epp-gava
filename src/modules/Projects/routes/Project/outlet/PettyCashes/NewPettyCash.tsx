@@ -16,6 +16,7 @@ interface NewPettyCashProps {
 export default function NewPettyCash({ projectId, successAction, closeAction }: NewPettyCashProps) {
 
   const [amount, setAmount] = useState(0);
+  const [includesIgv, setIncludesIgv] = useState(true);
   const [description, setDescription] = useState("");
   const [expenseType, setExpenseType] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
@@ -34,7 +35,7 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
       return;
     }
 
-    const body = { projectId, amount, description, expenseType, expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'), invoiceNumber };
+    const body = { projectId, amount, includesIgv, description, expenseType, expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'), invoiceNumber };
 
     toast.promise(
       execute(pettyCashApi, "POST", body),
@@ -44,6 +45,7 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
           successAction();
           setDescription("");
           setAmount(0);
+          setIncludesIgv(true);
           setAmountError("");
           setExpenseType("");
           setExpenseDate("");
@@ -85,6 +87,23 @@ export default function NewPettyCash({ projectId, successAction, closeAction }: 
           optional={false}
           error={amountError}
         />
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={includesIgv}
+            onChange={(e) => setIncludesIgv(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[#0047a3]"
+          />
+          <span className="flex flex-col">
+            <span className="font-medium text-gray-800">El monto incluye IGV (18%)</span>
+            <span className="text-sm text-gray-500">
+              {includesIgv
+                ? "El resumen económico usará el monto registrado."
+                : "El resumen económico añadirá el 18% al monto registrado."}
+            </span>
+          </span>
+        </label>
 
         <InputForm
           label="Número de Comprobante"

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { ReturnButton } from "../../common/button";
+import Select from "../../components/Select";
 import {
   ButtonContainer,
   ButtonSubmit,
@@ -295,21 +296,19 @@ function FallProtectionPartList({
       ) : null}
       {values.map((value, index) => (
         <div key={`${label}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
-          <select
-            aria-invalid={Boolean(error)}
-            className={`w-full rounded-sm border p-2 focus:outline-[#0047a3] ${
-              error ? "border-red-600" : "border-gray-400"
-            }`}
+          <Select
+            name={`component-${index}`}
             value={value}
-            onChange={(event) => updateValue(index, event.target.value)}
-          >
-            <option value="">Seleccionar...</option>
-            {elements.map((element) => (
-              <option key={element.elementId} value={element.elementId}>
-                {element.code ? `${element.name} - ${element.code}` : element.name}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) => updateValue(index, nextValue)}
+            error={Boolean(error)}
+            options={[
+              { value: "", label: "Seleccionar..." },
+              ...elements.map((element) => ({
+                value: String(element.elementId),
+                label: element.code ? `${element.name} - ${element.code}` : element.name,
+              })),
+            ]}
+          />
           <button
             type="button"
             className="rounded-md border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"

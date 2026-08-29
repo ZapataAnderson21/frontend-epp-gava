@@ -765,6 +765,7 @@ export interface PettyCashType {
   pettyCashId: number;
   projectId: number;
   amount: number;
+  includesIgv: boolean;
   description: string;
   invoiceNumber: string;
   expenseDate: string;

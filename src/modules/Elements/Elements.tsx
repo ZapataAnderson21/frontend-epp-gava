@@ -12,6 +12,7 @@ import type {
 } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
 import { DeleteConfirmDialog } from "../../components";
+import Select from "../../components/Select";
 import toast, { Toaster } from "react-hot-toast";
 import ElementTable from "./ElementTable";
 import {
@@ -423,49 +424,52 @@ export default function Elements() {
               ) : null}
 
               {activeTab === "safety" ? (
-                <select
+                <Select
+                  name="safetyTypeFilter"
                   value={safetyTypeFilter}
-                  onChange={(event) => setSafetyTypeFilter(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
-                >
-                  <option value="all">
-                    Todos los tipos ({activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})
-                  </option>
-                  {safetyTypeOptions.map((typeName) => (
-                    <option key={typeName} value={typeName}>
-                      {typeName} ({safetyTypeCounts[typeName] || 0})
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSafetyTypeFilter}
+                  className="text-xs font-bold"
+                  options={[
+                    {
+                      value: "all",
+                      label: `Todos los tipos (${activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})`,
+                    },
+                    ...safetyTypeOptions.map((typeName) => ({
+                      value: typeName,
+                      label: `${typeName} (${safetyTypeCounts[typeName] || 0})`,
+                    })),
+                  ]}
+                />
               ) : activeTab === "fall" && epaView === "elements" ? (
-                <select
+                <Select
+                  name="epaCategoryFilter"
                   value={epaCategoryFilter}
-                  onChange={(event) => setEpaCategoryFilter(event.target.value)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
-                >
-                  <option value="all">
-                    Todas las categorias ({activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})
-                  </option>
-                  {epaCategoryOptions.map((category) => (
-                    <option key={category} value={category}>
-                      {category} ({epaCategoryCounts[category] || 0})
-                    </option>
-                  ))}
-                </select>
+                  onChange={setEpaCategoryFilter}
+                  className="text-xs font-bold"
+                  options={[
+                    {
+                      value: "all",
+                      label: `Todas las categorias (${activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)})`,
+                    },
+                    ...epaCategoryOptions.map((category) => ({
+                      value: category,
+                      label: `${category} (${epaCategoryCounts[category] || 0})`,
+                    })),
+                  ]}
+                />
               ) : activeTab === "fall" && epaView === "groups" ? null : (
-                <select
+                <Select<InventoryFilter>
+                  name="inventoryFamilyFilter"
                   value={familyFilter}
-                  onChange={(event) => setFamilyFilter(event.target.value as InventoryFilter)}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-xs font-bold focus:outline-[#0047a3]"
-                >
-                  {visibleFilterOptions.map((filter) => (
-                    <option key={filter} value={filter}>
-                      {filterLabels[filter]} ({filter === "all"
+                  onChange={setFamilyFilter}
+                  className="text-xs font-bold"
+                  options={visibleFilterOptions.map((filter) => ({
+                    value: filter,
+                    label: `${filterLabels[filter]} (${filter === "all"
                         ? activeFamilies.reduce((total, item) => total + (familyCounts[item] || 0), 0)
-                        : familyCounts[filter] || 0})
-                    </option>
-                  ))}
-                </select>
+                        : familyCounts[filter] || 0})`,
+                  }))}
+                />
               )}
 
               <AddButton

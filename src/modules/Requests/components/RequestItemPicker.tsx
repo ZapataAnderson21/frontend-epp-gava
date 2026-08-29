@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus as FaPlus } from "lucide-react";
+import Select from "../../../components/Select";
 import { elementApi, inventoryApi } from "../../../data/apiUrl";
 import type {
   ElementType,
@@ -389,30 +390,24 @@ export default function RequestItemPicker({
           placeholder="Buscar por nombre, codigo o categoria"
         />
         {familyKey === "epp" ? (
-          <select
+          <Select<typeof familyFilter>
+            name="requestFamilyFilter"
             value={familyFilter}
-            onChange={(event) => setFamilyFilter(event.target.value as typeof familyFilter)}
-            className="w-32 rounded-md border border-gray-300 px-2 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            {protectionFilters.map((filter) => (
-              <option key={filter.value} value={filter.value}>
-              {filter.label}
-              </option>
-            ))}
-          </select>
+            onChange={setFamilyFilter}
+            className="!w-32 text-xs font-semibold"
+            options={protectionFilters}
+          />
         ) : familyKey === "ese" ? (
-          <select
+          <Select
+            name="requestSafetyTypeFilter"
             value={safetyTypeFilter}
-            onChange={(event) => setSafetyTypeFilter(event.target.value)}
-            className="w-40 rounded-md border border-gray-300 px-2 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            <option value="all">Todos los tipos</option>
-            {safetyTypeOptions.map((typeName) => (
-              <option key={typeName} value={typeName}>
-                {typeName}
-              </option>
-            ))}
-          </select>
+            onChange={setSafetyTypeFilter}
+            className="!w-40 text-xs font-semibold"
+            options={[
+              { value: "all", label: "Todos los tipos" },
+              ...safetyTypeOptions.map((typeName) => ({ value: typeName, label: typeName })),
+            ]}
+          />
         ) : null}
       </div>
 

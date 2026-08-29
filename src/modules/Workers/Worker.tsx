@@ -9,6 +9,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
+import Select from "../../components/Select";
 import { inventoryApi, projectApi, workerApi } from "../../data/apiUrl";
 import {
   WorkerType,
@@ -354,43 +355,39 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
           <div className="order-2 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
             <h2 className="text-xl font-extrabold">Historial de EP y EPA</h2>
             <div className="flex flex-wrap gap-2">
-              <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
+              <Select
+                name="assignmentFamilyFilter"
                 value={familyFilter}
-                onChange={(event) => setFamilyFilter(event.target.value)}
-              >
-                <option value="">Todos</option>
-                <option value="epp">EPP</option>
-                <option value="epi">EPI</option>
-                <option value="uniform">Uniforme</option>
-                <option value="harness">EPA</option>
-              </select>
-              <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
+                onChange={setFamilyFilter}
+                className="text-xs font-semibold"
+                options={[
+                  { value: "", label: "Todos" },
+                  { value: "epp", label: "EPP" },
+                  { value: "epi", label: "EPI" },
+                  { value: "uniform", label: "Uniforme" },
+                  { value: "harness", label: "EPA" },
+                ]}
+              />
+              <Select<number>
+                name="assignmentMonthFilter"
                 value={monthFilter}
-                onChange={(event) => setMonthFilter(Number(event.target.value))}
-              >
-                <option value={0}>Todos los meses</option>
-                {monthNames.map((month, index) => (
-                  <option key={month} value={index + 1}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold"
+                onChange={setMonthFilter}
+                className="text-xs font-semibold"
+                options={[
+                  { value: 0, label: "Todos los meses" },
+                  ...monthNames.map((month, index) => ({ value: index + 1, label: month })),
+                ]}
+              />
+              <Select<number>
+                name="assignmentYearFilter"
                 value={yearFilter}
-                onChange={(event) => setYearFilter(Number(event.target.value))}
-              >
-                {[0, 1, 2, 3].map((offset) => {
+                onChange={setYearFilter}
+                className="text-xs font-semibold"
+                options={[0, 1, 2, 3].map((offset) => {
                   const value = today.getFullYear() - offset;
-                  return (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  );
+                  return { value, label: String(value) };
                 })}
-              </select>
+              />
             </div>
           </div>
 
@@ -484,35 +481,31 @@ export default function Worker({ workerId, closeAction }: WorkerProps) {
             <div className="grid gap-3 md:grid-cols-2">
               <label className="flex flex-col gap-1 text-xs font-semibold">
                 Proyecto activo
-                <select
-                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                <Select<number>
+                  name="assignmentProject"
                   value={selectedProjectId}
-                  onChange={(event) => setSelectedProjectId(Number(event.target.value))}
-                >
-                  <option value={0}>Seleccionar...</option>
-                  {(projects ?? []).map((project) => (
-                    <option key={project.projectId} value={project.projectId}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedProjectId}
+                  options={[
+                    { value: 0, label: "Seleccionar..." },
+                    ...(projects ?? []).map((project) => ({
+                      value: project.projectId,
+                      label: project.name,
+                    })),
+                  ]}
+                />
               </label>
 
               <label className="flex flex-col gap-1 text-xs font-semibold">
                 Tipo de elemento
-                <select
-                  className="rounded-md border border-gray-300 px-3 py-2 font-normal focus:outline-[#0047a3]"
+                <Select<InventoryFamilyTabKey>
+                  name="assignmentFamily"
                   value={assignmentFamily}
-                  onChange={(event) =>
-                    setAssignmentFamily(event.target.value as InventoryFamilyTabKey)
-                  }
-                >
-                  {assignableFamilies.map((family) => (
-                    <option key={family} value={family}>
-                      {getInventoryFamilyLabel(family)}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setAssignmentFamily}
+                  options={assignableFamilies.map((family) => ({
+                    value: family,
+                    label: getInventoryFamilyLabel(family),
+                  }))}
+                />
               </label>
 
               <div className="flex flex-col gap-2 text-xs font-semibold md:col-span-2">

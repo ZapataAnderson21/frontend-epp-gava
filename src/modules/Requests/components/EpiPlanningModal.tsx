@@ -17,6 +17,7 @@ import { workerApi } from "../../../data/apiUrl";
 import { LoadingSkeletonTable } from "../../../common/loading";
 import { ButtonContainer } from "../../../common/form";
 import Button from "../../../components/Button";
+import Select from "../../../components/Select";
 import { useFetch } from "../../../hooks";
 import { formatInventoryQuantity } from "../../Elements/inventoryCatalog";
 
@@ -249,18 +250,18 @@ export default function EpiPlanningModal({
               onChange={(event) => setSearchTerm(event.target.value)}
             />
 
-            <select
+            <Select
+              name="epiWorker"
               value={selectedWorkerId}
-              onChange={(event) => setSelectedWorkerId(event.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
-            >
-              <option value="">Seleccionar trabajador</option>
-              {availableWorkers.map((worker) => (
-                <option key={worker.workerId} value={worker.workerId}>
-                  {worker.fullName} - {getWorkerTypeLabel(worker.workerType)}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedWorkerId}
+              options={[
+                { value: "", label: "Seleccionar trabajador" },
+                ...availableWorkers.map((worker) => ({
+                  value: String(worker.workerId),
+                  label: `${worker.fullName} - ${getWorkerTypeLabel(worker.workerType)}`,
+                })),
+              ]}
+            />
 
             <button
               type="button"

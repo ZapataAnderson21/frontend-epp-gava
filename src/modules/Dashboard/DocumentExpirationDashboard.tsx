@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
+import Select from "../../components/Select";
 import { expiringDocumentsApi } from "../../data/apiUrl";
 import type { ExpiringDocumentCategory, ExpiringDocumentDashboardResponse, ExpiringDocumentStatus } from "../../data/types";
 import { useFetch } from "../../hooks";
@@ -27,10 +28,19 @@ export default function DocumentExpirationDashboard({ month, year }: { month: nu
           <p className="text-xs font-semibold text-gray-500">Los estados próximos usan el primer aviso configurado en cada categoría.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <select className="rounded-md border border-gray-300 px-3 py-2 text-xs" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
-            <option value="">Todas las categorías</option>
-            {(categories ?? []).map((category) => <option key={category.expiringDocumentCategoryId} value={category.expiringDocumentCategoryId}>{category.name}</option>)}
-          </select>
+          <Select
+            name="expirationCategory"
+            value={categoryId}
+            onChange={setCategoryId}
+            className="text-xs"
+            options={[
+              { value: "", label: "Todas las categorías" },
+              ...(categories ?? []).map((category) => ({
+                value: String(category.expiringDocumentCategoryId),
+                label: category.name,
+              })),
+            ]}
+          />
           <Link to="/admin/document-expirations" className="rounded-lg bg-[#0047a3] px-4 py-2 text-xs font-bold text-white hover:bg-[#00377e]">Administrar documentos</Link>
         </div>
       </div>

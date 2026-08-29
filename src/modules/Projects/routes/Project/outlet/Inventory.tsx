@@ -21,6 +21,7 @@ import type {
 import { SeeButton } from "../../../../../common/button";
 import ActionButton from "../../../../../components/ActionButton";
 import DeleteConfirmDialog from "../../../../../components/DeleteConfirmDialog";
+import Select from "../../../../../components/Select";
 import { logisticsTypes, riskPreventionTypes } from "../../../../../utils";
 import {
   formatInventoryQuantity,
@@ -1376,20 +1377,15 @@ function ProjectInventoryAssignmentModal({
                     }
                   />
 
-                  <select
-                    className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
+                  <Select<number>
+                    name={`inventoryWorker-${row.localId}`}
                     value={row.workerId}
-                    onChange={(event) =>
-                      updateRow(row.localId, { workerId: Number(event.target.value) })
-                    }
-                  >
-                    <option value={0}>Seleccionar...</option>
-                    {workers.map((worker) => (
-                      <option key={worker.workerId} value={worker.workerId}>
-                        {worker.fullName}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(workerId) => updateRow(row.localId, { workerId })}
+                    options={[
+                      { value: 0, label: "Seleccionar..." },
+                      ...workers.map((worker) => ({ value: worker.workerId, label: worker.fullName })),
+                    ]}
+                  />
 
                   <input
                     type="number"

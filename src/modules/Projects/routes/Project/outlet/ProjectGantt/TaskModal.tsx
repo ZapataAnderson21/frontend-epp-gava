@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus as TbPlus, X as TbX } from "lucide-react";
 import { InputForm, SelectForm } from "../../../../../../common/form";
+import Select from "../../../../../../components/Select";
 import type { Task, TaskStatus, TaskPriority } from "./types";
 import { STATUS_LABELS, PRIORITY_LABELS } from "./types";
 import type { User } from "../../../../../../data/types";
@@ -47,6 +48,7 @@ export default function TaskModal({
     dueDate: "",
   });
   const [assignedUsers, setAssignedUsers] = useState<number[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Inicializar formulario cuando se abre el modal
@@ -74,6 +76,7 @@ export default function TaskModal({
         setAssignedUsers([]);
       }
       setErrors({});
+      setSelectedUserId(0);
     }
   }, [isOpen, task]);
 
@@ -271,32 +274,25 @@ export default function TaskModal({
               {/* Selector de usuarios */}
               {availableUsers.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <select
-                    className="flex-1 border border-gray-400 p-2 rounded-sm focus:outline-primary"
-                    defaultValue=""
-                    onChange={(e) => {
-                      const userId = parseInt(e.target.value);
-                      if (userId) {
-                        handleAddUser(userId);
-                        e.target.value = "";
-                      }
-                    }}
-                  >
-                    <option value="">Seleccionar encargado...</option>
-                    {availableUsers.map((user) => (
-                      <option key={user.userId} value={user.userId}>
-                        {user.name} {user.lastName}
-                      </option>
-                    ))}
-                  </select>
+                  <Select<number>
+                    name="taskAssignee"
+                    className="flex-1"
+                    value={selectedUserId}
+                    onChange={setSelectedUserId}
+                    options={[
+                      { value: 0, label: "Seleccionar encargado..." },
+                      ...availableUsers.map((user) => ({
+                        value: user.userId,
+                        label: `${user.name} ${user.lastName}`,
+                      })),
+                    ]}
+                  />
                   <button
                     type="button"
                     onClick={() => {
-                      const select = document.querySelector("select") as HTMLSelectElement;
-                      const userId = parseInt(select?.value);
-                      if (userId) {
-                        handleAddUser(userId);
-                        select.value = "";
+                      if (selectedUserId) {
+                        handleAddUser(selectedUserId);
+                        setSelectedUserId(0);
                       }
                     }}
                     className="p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"

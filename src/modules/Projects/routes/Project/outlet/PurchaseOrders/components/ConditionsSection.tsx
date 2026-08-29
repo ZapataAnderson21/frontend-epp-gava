@@ -13,6 +13,7 @@ import type {
   PurchaseOrderConditionType,
 } from "../../../../../../../data/types";
 import { useApiAction, useFetch } from "../../../../../../../hooks";
+import Select from "../../../../../../../components/Select";
 
 interface SectionProps {
   title: string;
@@ -238,16 +239,15 @@ function SelectInline({
   return (
     <div className="flex items-center gap-2">
       <label className="font-semibold text-nowrap text-gray-700" htmlFor={name}>{label}</label>
-      <div className="relative w-fit">
-        <select
+      <div className="relative min-w-0 flex-1">
+        <Select
           id={name}
-          className={`p-[10px] border ${purchaseOrderTypeError ? "border-red-500" : "border-gray-400"} rounded-sm  focus:outline-[#0047a3]`}
+          name={name}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          <option value="" disabled>Seleccionar...</option>
-          {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+          onChange={onChange}
+          error={Boolean(purchaseOrderTypeError)}
+          options={[{ value: "", label: "Seleccionar...", disabled: true }, ...options]}
+        />
         {purchaseOrderTypeError && <span className="absolute text-nowrap text-2xs top-12 left-0 text-red-500">{purchaseOrderTypeError}</span>}
       </div>
     </div>

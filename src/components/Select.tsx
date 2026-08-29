@@ -7,19 +7,24 @@ type Primitive = string | number;
 export interface Option<T extends Primitive = string> {
   value: T;
   label: string;
+  disabled?: boolean;
 }
 
 interface SelectProps<T extends Primitive = string> {
   name: string;
   value: T;
   onChange: (value: T) => void;
-  options: Option<T>[];
+  options: readonly Option<T>[];
   className?: string;
+  buttonClassName?: string;
   error?: boolean;
   placeholder?: string;
   openDurationMs?: number;
   staggerMs?: number;
   disabled?: boolean;
+  required?: boolean;
+  id?: string;
+  ariaLabel?: string;
 }
 
 export default function Select<T extends Primitive = string>({
@@ -28,11 +33,15 @@ export default function Select<T extends Primitive = string>({
   onChange,
   options,
   className = "",
+  buttonClassName = "",
   error,
   placeholder = "Seleccionar ...",
   openDurationMs = 200,
   staggerMs = 30,
   disabled = false,
+  required = false,
+  id,
+  ariaLabel,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,10 +116,12 @@ export default function Select<T extends Primitive = string>({
 
   return (
     <div
-      className={`relative w-full min-w-[14rem] max-w-full ${className}`}
+      className={`relative w-full min-w-0 max-w-full ${className}`}
       ref={dropdownRef}
     >
+      <input type="hidden" name={name} value={value} />
       <button
+        id={id}
         type="button"
         onClick={() => {
           if (disabled) return;
@@ -118,8 +129,10 @@ export default function Select<T extends Primitive = string>({
           setIsOpen(current => !current);
         }}
         disabled={disabled}
-        className={`w-full flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-sm focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+        className={`w-full min-w-0 flex items-center justify-between border cursor-pointer ${error ? "border-red-500" : "border-gray-400"} p-2 rounded-lg focus:border focus:border-[#0047a3] ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""} ${buttonClassName}`}
         title={selectedLabel || placeholder}
+        aria-label={ariaLabel}
+        aria-required={required}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={`${name}-menu`}
@@ -139,7 +152,7 @@ export default function Select<T extends Primitive = string>({
             id={`${name}-menu`}
             role="listbox"
             key="dropdown"
-            className="absolute top-full left-0 z-200 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-72 overflow-auto"
+            className="absolute overflow-y-hidden top-full left-0 z-200 w-full bg-white border border-gray-200 rounded-md shadow-md max-h-72 overflow-auto"
             initial="collapsed"
             animate="open"
             exit="collapsed"
@@ -173,11 +186,13 @@ export default function Select<T extends Primitive = string>({
                 animate="visible"
                 exit="hidden"
                 onClick={() => {
+                  if (option.disabled) return;
                   onChange(option.value);
                   closeSelect();
                 }}
                 title={option.label}
-                className={`min-w-0 px-3 py-2 hover:bg-[#eff2ff] hover:text-[#0047a3] cursor-pointer ${
+                aria-disabled={option.disabled}
+                className={`min-w-0 px-3 py-2 ${option.disabled ? "cursor-not-allowed bg-gray-50 text-gray-400" : "cursor-pointer hover:bg-[#eff2ff] hover:text-[#0047a3]"} ${
                   value === option.value ? "bg-[#eff2ff] font-semibold text-[#0047a3]" : ""
                 }`}
               >

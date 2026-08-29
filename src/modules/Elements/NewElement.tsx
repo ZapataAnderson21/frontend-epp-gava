@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { elementApi, inventoryApi } from "../../data/apiUrl";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton, SaveButton } from "../../common/button";
+import Select from "../../components/Select";
 import {
   ButtonContainer,
   Form,
@@ -318,26 +319,21 @@ function NewInventoryElement() {
             <label htmlFor="safetyType" className="font-semibold text-nowrap">
               Tipo de Equipo
             </label>
-            <select
+            <Select
               id="safetyType"
               name="safetyType"
-              className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
               value={safetyTypeSelection}
-              onChange={(event) => {
-                const value = event.target.value;
+              onChange={(value) => {
                 setSafetyTypeSelection(value);
                 setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
               }}
               required
-            >
-              <option value="">Seleccionar...</option>
-              {existingSafetyTypes.map((typeName) => (
-                <option key={typeName} value={typeName}>
-                  {typeName}
-                </option>
-              ))}
-              <option value={NEW_SAFETY_TYPE_VALUE}>Registrar nuevo tipo</option>
-            </select>
+              options={[
+                { value: "", label: "Seleccionar..." },
+                ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
+                { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+              ]}
+            />
 
             {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
               <input

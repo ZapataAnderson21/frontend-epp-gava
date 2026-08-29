@@ -10,7 +10,7 @@ interface SelectFormProps<T extends Primitive = string> {
   name: string;
   value: T;
   onChange: (value: T) => void;
-  options: Option<T>[];
+  options: readonly Option<T>[];
   directionRow?: boolean;
   children?: React.ReactNode;
   error?: boolean;
@@ -36,13 +36,13 @@ export default function SelectForm<T extends Primitive = string>({
 }: SelectFormProps<T>) {
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full min-w-0 flex-col">
       <div
-        className={`flex ${
+        className={`flex min-w-0 ${
           directionRow ? "flex-row items-center text-nowrap" : "flex-col"
         } gap-2`}
       >
-        <div className="flex flex-row justify-between w-full">
+        <div className={`flex flex-row justify-between ${directionRow ? "w-auto shrink-0" : "w-full"}`}>
           <p className="text-gray-700 font-bold">
             {label}
           </p>
@@ -50,6 +50,7 @@ export default function SelectForm<T extends Primitive = string>({
         </div>
 
         <Select
+          className="min-w-0 flex-1"
           name={name}
           value={value}
           onChange={onChange}

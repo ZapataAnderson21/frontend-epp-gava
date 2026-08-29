@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
+import Select from "../../components/Select";
 import { purchaseOrderApi } from "../../data/apiUrl";
 import type {
   PurchaseOrderDashboardCurrency,
@@ -103,63 +104,62 @@ export default function PurchaseOrdersDashboard({
 
       <div className="grid gap-3 rounded-md border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
         <FilterField label="Moneda">
-          <select
+          <Select<PurchaseOrderDashboardCurrency>
+            name="dashboardCurrency"
             value={currency}
-            onChange={(event) =>
-              setCurrency(event.target.value as PurchaseOrderDashboardCurrency)
-            }
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            {Object.entries(currencyLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            onChange={setCurrency}
+            className="text-xs font-semibold"
+            options={Object.entries(currencyLabels).map(([value, label]) => ({
+              value: value as PurchaseOrderDashboardCurrency,
+              label,
+            }))}
+          />
         </FilterField>
 
         <FilterField label="Estado">
-          <select
+          <Select<PurchaseOrderDashboardStatus | "">
+            name="dashboardStatus"
             value={status}
-            onChange={(event) =>
-              setStatus(event.target.value as PurchaseOrderDashboardStatus | "")
-            }
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            <option value="">Todos</option>
-            {Object.entries(statusMetadata).map(([value, metadata]) => (
-              <option key={value} value={value}>
-                {metadata.label}
-              </option>
-            ))}
-          </select>
+            onChange={setStatus}
+            className="text-xs font-semibold"
+            options={[
+              { value: "", label: "Todos" },
+              ...Object.entries(statusMetadata).map(([value, metadata]) => ({
+                value: value as PurchaseOrderDashboardStatus,
+                label: metadata.label,
+              })),
+            ]}
+          />
         </FilterField>
 
         <FilterField label="Proyecto">
-          <select
+          <Select
+            name="dashboardProject"
             value={projectId}
-            onChange={(event) => setProjectId(event.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            <option value="">Todos</option>
-            {data.filterOptions.projects.map((project) => (
-              <option key={project.projectId} value={project.projectId}>
-                {project.name}
-              </option>
-            ))}
-          </select>
+            onChange={setProjectId}
+            className="text-xs font-semibold"
+            options={[
+              { value: "", label: "Todos" },
+              ...data.filterOptions.projects.map((project) => ({
+                value: String(project.projectId),
+                label: project.name,
+              })),
+            ]}
+          />
         </FilterField>
 
         <FilterField label="Tipo">
-          <select
+          <Select
+            name="dashboardPurchaseOrderType"
             value={purchaseOrderType}
-            onChange={(event) => setPurchaseOrderType(event.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
-          >
-            <option value="">Todos</option>
-            <option value="materials">Materiales</option>
-            <option value="services">Servicios</option>
-          </select>
+            onChange={setPurchaseOrderType}
+            className="text-xs font-semibold"
+            options={[
+              { value: "", label: "Todos" },
+              { value: "materials", label: "Materiales" },
+              { value: "services", label: "Servicios" },
+            ]}
+          />
         </FilterField>
       </div>
 

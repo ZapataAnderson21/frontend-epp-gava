@@ -13,6 +13,7 @@ import { useApiAction } from "../../hooks/useApiAction";
 import { useCurrentUser } from "../../hooks";
 import { elementApi, inventoryApi } from "../../data/apiUrl";
 import { DeleteConfirmDialog } from "../../components";
+import Select from "../../components/Select";
 import {
   ButtonContainer,
   Form,
@@ -660,24 +661,21 @@ export default function Element() {
               <label htmlFor="safetyType" className="font-semibold text-nowrap">
                 Tipo de Equipo
               </label>
-              <select
+              <Select
                 id="safetyType"
                 name="safetyType"
-                className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
                 value={safetyTypeSelection}
-                onChange={(event) => {
-                  const value = event.target.value;
+                onChange={(value) => {
                   setSafetyTypeSelection(value);
                   setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
                 }}
                 required
-              >
-                <option value="">Seleccionar...</option>
-                {existingSafetyTypes.map((typeName) => (
-                  <option key={typeName} value={typeName}>{typeName}</option>
-                ))}
-                <option value={NEW_SAFETY_TYPE_VALUE}>Registrar nuevo tipo</option>
-              </select>
+                options={[
+                  { value: "", label: "Seleccionar..." },
+                  ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
+                  { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+                ]}
+              />
               {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
                 <input
                   id="name"
@@ -914,24 +912,21 @@ export default function Element() {
             <div className="flex flex-col gap-2">
               <div className="flex w-full flex-col gap-2">
                 <label htmlFor="safetyType" className="font-semibold text-nowrap">Tipo de Equipo</label>
-                <select
+                <Select
                   id="safetyType"
                   name="safetyType"
-                  className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
                   value={safetyTypeSelection}
-                  onChange={(event) => {
-                    const value = event.target.value;
+                  onChange={(value) => {
                     setSafetyTypeSelection(value);
                     setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
                   }}
                   required
-                >
-                  <option value="">Seleccionar...</option>
-                  {existingSafetyTypes.map((typeName) => (
-                    <option key={typeName} value={typeName}>{typeName}</option>
-                  ))}
-                  <option value={NEW_SAFETY_TYPE_VALUE}>Registrar nuevo tipo</option>
-                </select>
+                  options={[
+                    { value: "", label: "Seleccionar..." },
+                    ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
+                    { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+                  ]}
+                />
                 {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
                   <input id="name" name="name" type="text" className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Extintor" required />
                 ) : null}
@@ -1539,19 +1534,19 @@ function InventoryMovementModal({
               <label className="text-xs font-bold text-gray-700">
                 Registro de oficina
               </label>
-              <select
+              <Select
+                name="officeInventoryEntryId"
                 value={officeInventoryEntryId}
-                onChange={(event) => setOfficeInventoryEntryId(event.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
+                onChange={setOfficeInventoryEntryId}
                 required
-              >
-                <option value="">Seleccionar...</option>
-                {officeEntries.map((entry) => (
-                  <option key={entry.officeInventoryEntryId} value={entry.officeInventoryEntryId}>
-                    #{entry.officeInventoryEntryId} - Stock {formatInventoryQuantity(entry.currentStock)} {entry.unit}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "Seleccionar..." },
+                  ...officeEntries.map((entry) => ({
+                    value: String(entry.officeInventoryEntryId),
+                    label: `#${entry.officeInventoryEntryId} - Stock ${formatInventoryQuantity(entry.currentStock)} ${entry.unit}`,
+                  })),
+                ]}
+              />
               {!officeEntries.length ? (
                 <p className="text-xs text-red-600">
                   No hay registros de oficina disponibles para este elemento.

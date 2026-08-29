@@ -34,9 +34,9 @@ export default function ProjectInfoCard({ project, loading, startDate, endDate }
         <div className="col-span-1">
           <h4 className="font-bold">Código</h4>
           <div className="flex flex-row gap-2 items-center cursor-pointer w-fit" onClick={copyCode}>
-            <MdOutlineContentCopy className="text-gray-700" />
+            <MdOutlineContentCopy className="size-4 text-gray-700" />
             <span className="text-xs text-gray-500">
-              {loading ? <CgSpinner className="animate-spin" /> : project?.code || "N/A"}
+              {loading ? <CgSpinner className="size-4 animate-spin" /> : project?.code || "N/A"}
             </span>
           </div>
         </div>
@@ -44,7 +44,7 @@ export default function ProjectInfoCard({ project, loading, startDate, endDate }
         <div className="col-span-1">
           <h4 className="font-bold">Ubicación</h4>
           <div className="flex flex-row gap-2 justify-start items-center">
-            <TbLocation className="text-gray-700" />
+            <TbLocation className="size-4 text-gray-700" />
             <span className="text-xs text-gray-500">
               {loading ? <CgSpinner className="animate-spin" /> : project?.location || "—"}
             </span>
@@ -55,11 +55,9 @@ export default function ProjectInfoCard({ project, loading, startDate, endDate }
         <div className="col-span-2">
           <h4 className="font-bold">Duración</h4>
           <div className="flex flex-row gap-2 items-center">
-            <div className="p-1">
-              <TbCalendar className="text-gray-700" />
-            </div>
+            <TbCalendar className="size-4 text-gray-700" />            
             <span className="text-xs text-gray-500">
-              {loading ? <CgSpinner className="animate-spin" /> : startDate ? 
+              {loading ? <CgSpinner className="size-4 animate-spin" /> : startDate ? 
               startDate.split("-").reverse().join("/").concat(` - ${endDate.split("-").reverse().join("/")}`): "—"}
             </span>
           </div>
@@ -69,7 +67,7 @@ export default function ProjectInfoCard({ project, loading, startDate, endDate }
           <h4 className="font-bold">Descripción</h4>
           <div className="flex flex-row gap-2 items-center">
             <span className="text-xs text-gray-500">
-                {loading ? <CgSpinner className="animate-spin" /> : project?.description ? project.description : "N/A"}
+                {loading ? <CgSpinner className="size-4 animate-spin" /> : project?.description ? project.description : "N/A"}
               </span>
           </div>
         </div>

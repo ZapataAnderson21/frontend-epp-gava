@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
+import Select from "../../components/Select";
 import { workerApi } from "../../data/apiUrl";
 import { type Worker } from "../../data/types";
 import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
@@ -142,17 +143,13 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
           className="w-full rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold outline-none focus:border-[#0047a3] md:max-w-md"
         />
 
-        <select
+        <Select
+          name="workerTypeFilter"
           value={workerTypeFilter}
-          onChange={(event) => setWorkerTypeFilter(event.target.value)}
-          className="rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold outline-none focus:border-[#0047a3]"
-        >
-          {workerTypeOptions.map((type) => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
+          onChange={setWorkerTypeFilter}
+          className="max-w-xs text-xs font-semibold"
+          options={workerTypeOptions}
+        />
       </div>
 
       {normalizedWorkers.length ? (

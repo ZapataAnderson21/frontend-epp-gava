@@ -4,6 +4,7 @@ import Permission from "../../common/auth/Permission";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Panel } from "../../common/panel";
+import Select from "../../components/Select";
 import { expiringDocumentsApi } from "../../data/apiUrl";
 import type {
   ExpiringDocument,
@@ -224,13 +225,29 @@ export default function DocumentExpirations() {
 
               <div className="grid gap-3 rounded-md border border-gray-200 bg-white p-4 md:grid-cols-4">
                 <input className="rounded-md border border-gray-300 px-3 py-2" placeholder="Buscar documento, código o referencia" value={search} onChange={(event) => setSearch(event.target.value)} />
-                <select className="rounded-md border border-gray-300 px-3 py-2" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-                  <option value="">Todas las categorías</option>
-                  {(categories ?? []).map((category) => <option key={category.expiringDocumentCategoryId} value={category.expiringDocumentCategoryId}>{category.name}</option>)}
-                </select>
-                <select className="rounded-md border border-gray-300 px-3 py-2" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                  <option value="">Todos los estados</option><option value="expired">Vencidos</option><option value="upcoming">Próximos</option><option value="valid">Vigentes</option>
-                </select>
+                <Select
+                  name="documentCategoryFilter"
+                  value={categoryFilter}
+                  onChange={setCategoryFilter}
+                  options={[
+                    { value: "", label: "Todas las categorías" },
+                    ...(categories ?? []).map((category) => ({
+                      value: String(category.expiringDocumentCategoryId),
+                      label: category.name,
+                    })),
+                  ]}
+                />
+                <Select
+                  name="documentStatusFilter"
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: "", label: "Todos los estados" },
+                    { value: "expired", label: "Vencidos" },
+                    { value: "upcoming", label: "Próximos" },
+                    { value: "valid", label: "Vigentes" },
+                  ]}
+                />
                 <label className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-xs font-semibold"><input type="checkbox" checked={includeDeleted} onChange={(event) => setIncludeDeleted(event.target.checked)} /> Mostrar archivados</label>
               </div>
 
@@ -297,7 +314,21 @@ function DocumentForm({ form, setForm, categories, editing, saving, onSubmit, on
     <form onSubmit={onSubmit} className="rounded-md border border-blue-100 bg-blue-50/40 p-5">
       <h2 className="mb-4 text-lg font-extrabold">{editing ? "Editar documento" : "Registrar documento"}</h2>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Field label="Categoría"><select required value={form.categoryId} onChange={(e) => change("categoryId", e.target.value)} className="input"><option value="">Seleccionar</option>{categories.map((category) => <option key={category.expiringDocumentCategoryId} value={category.expiringDocumentCategoryId}>{category.name}</option>)}</select></Field>
+        <Field label="Categoría">
+          <Select
+            name="categoryId"
+            value={form.categoryId}
+            onChange={(value) => change("categoryId", value)}
+            required
+            options={[
+              { value: "", label: "Seleccionar" },
+              ...categories.map((category) => ({
+                value: String(category.expiringDocumentCategoryId),
+                label: category.name,
+              })),
+            ]}
+          />
+        </Field>
         <Field label="Nombre del documento"><input required value={form.title} onChange={(e) => change("title", e.target.value)} className="input" /></Field>
         <Field label="Código o número"><input value={form.documentCode} onChange={(e) => change("documentCode", e.target.value)} className="input" /></Field>
         <Field label="Tipo de referencia"><input required placeholder="Proyecto, trabajador, equipo..." value={form.referenceType} onChange={(e) => change("referenceType", e.target.value)} className="input" /></Field>

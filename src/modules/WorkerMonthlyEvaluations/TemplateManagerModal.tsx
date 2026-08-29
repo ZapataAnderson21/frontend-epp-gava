@@ -3,6 +3,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { CircleX as IoCloseCircle } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
+import Select from "../../components/Select";
 import {
   useMonthlyEvaluationTemplates,
   useWorkerMonthlyEvaluationActions,
@@ -644,19 +645,20 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="flex flex-col gap-1">
                           <label className="font-semibold">Tipo</label>
-                          <select
-                            className="border border-gray-300 rounded-sm p-2"
+                          <Select<MonthlyEvaluationQuestionType>
+                            name={`questionType-${section.id}-${question.id}`}
                             value={question.questionType}
-                            onChange={(event) =>
+                            onChange={(questionType) =>
                               setQuestion(section.id, question.id, (prev) => ({
                                 ...prev,
-                                questionType: event.target.value as MonthlyEvaluationQuestionType,
+                                questionType,
                               }))
                             }
-                          >
-                            <option value="score">Puntaje</option>
-                            <option value="text">Texto</option>
-                          </select>
+                            options={[
+                              { value: "score", label: "Puntaje" },
+                              { value: "text", label: "Texto" },
+                            ]}
+                          />
                         </div>
 
                         <div className="flex items-end">

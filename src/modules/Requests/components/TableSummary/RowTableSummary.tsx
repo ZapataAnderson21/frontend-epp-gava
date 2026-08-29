@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ElementRequestType, ElementType, OfficeInventoryEntry } from '../../../../data/types';
 import CellTableSummary from './CellTableSummary';
+import Select from '../../../../components/Select';
 import {
   getFallProtectionGroupParts,
   getRequestLineElementLabel,
@@ -137,8 +138,7 @@ export default function RowTableSummary({
     }
   };
 
-  const handleFallProtectionDecision = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = Number(e.target.value);
+  const handleFallProtectionDecision = (value: number) => {
     setQuantityAccepted(value);
     if (typeof elementRequest.elementRequestId === 'number') {
       onQuantityChange(elementRequest.elementRequestId, value);
@@ -166,14 +166,17 @@ export default function RowTableSummary({
             {acceptedSafetyQuantity}
           </div>
         ) : family === 'harness' ? (
-          <select
-            className="border-2 border-gray-800 w-full h-full text-center px-2 py-1 rounded-md bg-yellow-400 font-semibold"
+          <Select<number>
+            name={`fallProtectionDecision-${elementRequest.elementRequestId}`}
+            className="h-full"
+            buttonClassName="!h-full !border-2 !border-gray-800 !bg-yellow-400 font-semibold"
             value={quantityAccepted}
             onChange={handleFallProtectionDecision}
-          >
-            <option value={1}>Aceptar</option>
-            <option value={0}>Cancelar</option>
-          </select>
+            options={[
+              { value: 1, label: "Aceptar" },
+              { value: 0, label: "Cancelar" },
+            ]}
+          />
         ) : (
           <input
             type="number"

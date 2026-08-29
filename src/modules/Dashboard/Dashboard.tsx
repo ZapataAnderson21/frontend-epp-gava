@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Panel } from "../../common/panel";
+import Select from "../../components/Select";
 import { inventoryApi, workerApi } from "../../data/apiUrl";
 import type {
   InventoryDashboardDeliveredItem,
@@ -205,28 +206,20 @@ export default function Dashboard() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <select
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
+            <Select<number>
+              name="dashboardMonth"
               value={month}
-              onChange={(event) => setMonth(Number(event.target.value))}
-            >
-              {months.map((label, index) => (
-                <option key={label} value={index + 1}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="rounded-md border border-gray-300 px-3 py-2 text-xs font-semibold focus:outline-[#0047a3]"
+              onChange={setMonth}
+              className="min-w-[9rem] text-xs font-semibold"
+              options={months.map((label, index) => ({ value: index + 1, label }))}
+            />
+            <Select<number>
+              name="dashboardYear"
               value={year}
-              onChange={(event) => setYear(Number(event.target.value))}
-            >
-              {years.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
+              onChange={setYear}
+              className="min-w-[7rem] text-xs font-semibold"
+              options={years.map((value) => ({ value, label: String(value) }))}
+            />
           </div>
         </div>
 

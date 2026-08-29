@@ -4,6 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { CircleX as IoCloseCircle, Trophy } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
+import Select from "../../components/Select";
 import { Table } from "../../common/table";
 import type {
   WorkerMonthlyEvaluationPeriodStatusPayload,
@@ -289,24 +290,20 @@ export default function MonthlyEvaluationPeriodDetailModal({
         {!hasEvaluations ? (
           <div className="flex items-center gap-2">
             <label className="font-semibold text-xs">Plantilla del mes</label>
-            <select
-              className="border border-gray-300 rounded-sm p-2 text-xs min-w-[22rem]"
+            <Select<number>
+              name="periodTemplate"
+              className="min-w-0 text-xs sm:min-w-[22rem]"
               value={selectedTemplateId}
-              onChange={(event) => setSelectedTemplateId(Number(event.target.value) || 0)}
+              onChange={setSelectedTemplateId}
               disabled={loadingTemplates}
-            >
-              <option value={0}>
-                {loadingTemplates ? "Cargando plantillas..." : "Selecciona una plantilla"}
-              </option>
-              {templates?.map((template) => (
-                <option
-                  key={template.monthlyEvaluationTemplateId}
-                  value={template.monthlyEvaluationTemplateId}
-                >
-                  {template.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: 0, label: loadingTemplates ? "Cargando plantillas..." : "Selecciona una plantilla" },
+                ...(templates ?? []).map((template) => ({
+                  value: template.monthlyEvaluationTemplateId,
+                  label: template.name,
+                })),
+              ]}
+            />
           </div>
         ) : null}
 

@@ -3,6 +3,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { CircleX as IoCloseCircle } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
+import Select from "../../components/Select";
 import { workerApi } from "../../data/apiUrl";
 import {
   useFetch,
@@ -363,37 +364,31 @@ export default function WorkerMonthlyEvaluationForm({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1">
               <label className="font-semibold">Trabajador</label>
-              <select
-                className="border border-gray-300 rounded-sm p-2"
-                value={workerId || ""}
-                onChange={(event) => setWorkerId(Number(event.target.value) || 0)}
-              >
-                <option value="">Selecciona trabajador</option>
-                {workers?.map((worker) => (
-                  <option key={worker.workerId} value={worker.workerId}>
-                    {worker.fullName}
-                  </option>
-                ))}
-              </select>
+              <Select<number>
+                name="evaluationWorker"
+                value={workerId || 0}
+                onChange={setWorkerId}
+                options={[
+                  { value: 0, label: "Selecciona trabajador" },
+                  ...(workers ?? []).map((worker) => ({ value: worker.workerId, label: worker.fullName })),
+                ]}
+              />
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="font-semibold">Plantilla</label>
-              <select
-                className="border border-gray-300 rounded-sm p-2"
-                value={templateId || ""}
-                onChange={(event) => setTemplateId(Number(event.target.value))}
-              >
-                <option value="">Selecciona una plantilla</option>
-                {templates?.map((template) => (
-                  <option
-                    key={template.monthlyEvaluationTemplateId}
-                    value={template.monthlyEvaluationTemplateId}
-                  >
-                    {template.name}
-                  </option>
-                ))}
-              </select>
+              <Select<number>
+                name="evaluationTemplate"
+                value={templateId || 0}
+                onChange={setTemplateId}
+                options={[
+                  { value: 0, label: "Selecciona una plantilla" },
+                  ...(templates ?? []).map((template) => ({
+                    value: template.monthlyEvaluationTemplateId,
+                    label: template.name,
+                  })),
+                ]}
+              />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -408,17 +403,12 @@ export default function WorkerMonthlyEvaluationForm({
 
             <div className="flex flex-col gap-1">
               <label className="font-semibold">Mes</label>
-              <select
-                className="border border-gray-300 rounded-sm p-2"
+              <Select<number>
+                name="evaluationFormMonth"
                 value={month}
-                onChange={(event) => setMonth(Number(event.target.value))}
-              >
-                {monthOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setMonth}
+                options={monthOptions}
+              />
             </div>
           </div>
         )}

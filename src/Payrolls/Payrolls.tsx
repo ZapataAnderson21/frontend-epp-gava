@@ -9,6 +9,7 @@ import CalendarButton from "../common/button/CalendarButton";
 import { ErrorMessage } from "../common/error";
 import { LoadingSkeletonTable } from "../common/loading";
 import { Button } from "../components";
+import Select from "../components/Select";
 import { projectApi, projectWeeklyPayrollApi } from "../data/apiUrl";
 import { type Project } from "../data/types";
 import { useApiAction, useCurrentUser, useFetch } from "../hooks";
@@ -217,20 +218,20 @@ export default function Payrolls() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <label className="flex flex-col gap-1 text-xs font-semibold text-gray-700">
               Semana
-              <select
+              <Select
+                name="weekId"
                 value={weekId}
-                onChange={(event) => setWeekId(event.target.value)}
+                onChange={setWeekId}
                 disabled={Boolean(editingId) || weeksLoading || saving}
                 required
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 font-normal outline-none focus:border-blue-600"
-              >
-                <option value="">Selecciona una semana</option>
-                {selectableWeeks.map((week) => (
-                  <option key={week.weekId} value={week.weekId}>
-                    {formatDate(week.startDate)} - {formatDate(week.endDate)}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "Selecciona una semana" },
+                  ...selectableWeeks.map((week) => ({
+                    value: String(week.weekId),
+                    label: `${formatDate(week.startDate)} - ${formatDate(week.endDate)}`,
+                  })),
+                ]}
+              />
             </label>
 
             <label className="flex flex-col gap-1 text-xs font-semibold text-gray-700">

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "../../components";
+import Select from "../../components/Select";
 import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonForm } from "../../common/loading";
@@ -247,30 +248,24 @@ export default function EditQuotation() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
               <div className="flex flex-col gap-2">
                 <label className="font-bold">Cliente:</label>
-                <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-[#0047a3]"
+                <Select<number>
+                  name="quotationClient"
                   value={clientId}
-                  onChange={(e) => setClientId(Number(e.target.value))}
-                >
-                  <option value={0}>Selecciona un cliente</option>
-                  {(clients ?? []).map((client) => (
-                    <option key={client.clientId} value={client.clientId}>
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setClientId}
+                  options={[
+                    { value: 0, label: "Selecciona un cliente" },
+                    ...(clients ?? []).map((client) => ({ value: client.clientId, label: client.name })),
+                  ]}
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <label className="font-bold">Estado:</label>
-                <select
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-[#0047a3]"
+                <Select<QuotationStatus>
+                  name="quotationStatus"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as QuotationStatus)}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
+                  onChange={setStatus}
+                  options={statusOptions}
+                />
               </div>
               <p><span className="font-bold">RUC:</span> {selectedClient?.ruc ?? "-"}</p>
               <p><span className="font-bold">Atención:</span> {selectedClient?.contactName ?? "-"}</p>

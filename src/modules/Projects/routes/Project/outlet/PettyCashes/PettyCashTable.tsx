@@ -26,6 +26,19 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
       render: (row: PettyCashType) => (<span className="flex max-w-[6rem] justify-end">S/ {Number(row.amount).toFixed(2)}</span>),
     },
     {
+      label: "IGV",
+      width: "8rem",
+      render: (row: PettyCashType) => {
+        const includesIgv = row.includesIgv !== false;
+
+        return (
+          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${includesIgv ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+            {includesIgv ? "Incluido" : "No incluido"}
+          </span>
+        );
+      },
+    },
+    {
       label: "Acciones",
       width: "8rem",
       render: (row: PettyCashType) => (

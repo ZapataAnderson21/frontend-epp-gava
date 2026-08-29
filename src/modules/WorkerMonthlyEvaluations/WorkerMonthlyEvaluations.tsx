@@ -7,6 +7,7 @@ import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { HeaderPanel, Panel } from "../../common/panel";
 import { Table } from "../../common/table";
+import Select from "../../components/Select";
 import type {
   WorkerMonthlyEvaluationPeriod,
   WorkerMonthlyEvaluationPeriodStatusPayload,
@@ -172,18 +173,12 @@ export default function WorkerMonthlyEvaluations() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Mes</label>
-            <select
-              className="border border-gray-300 rounded-sm p-2"
+            <Select<number>
+              name="evaluationMonth"
               value={month}
-              onChange={(event) => setMonth(Number(event.target.value) || 0)}
-            >
-              <option value={0}>Todos los meses</option>
-              {monthOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setMonth}
+              options={[{ value: 0, label: "Todos los meses" }, ...monthOptions]}
+            />
           </div>
 
           <div className="flex flex-col gap-1">

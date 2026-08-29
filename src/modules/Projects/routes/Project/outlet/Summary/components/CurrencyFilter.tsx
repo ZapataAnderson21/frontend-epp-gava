@@ -15,13 +15,13 @@ const options = [
 
 export default function CurrencyFilter({ currency, onChange }: Props) {
   return (
-    <div className="min-w-[220px]">
+    <div className="w-full min-w-0">
       <SelectForm<Currency>
         label="Moneda"
         name="currency"
         value={currency}
         onChange={onChange}
-        options={options as unknown as { value: Currency; label: string }[]}
+        options={options}
         directionRow
       />
     </div>

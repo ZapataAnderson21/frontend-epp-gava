@@ -20,6 +20,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
   const {data: pettyCash, error: fetchError, loading} = useFetch<PettyCashType>(`${pettyCashApi}${pettyCashId}`);
   const [expenseType, setExpenseType] =  useState<string>("");
   const [amount, setAmount] =  useState<number>(0);
+  const [includesIgv, setIncludesIgv] = useState(true);
   const [invoiceNumber, setInvoiceNumber] =  useState<string>("");
   const [expenseDate, setExpenseDate] =  useState<string>("");
   const [description, setDescription] =  useState<string>("");
@@ -30,6 +31,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
     if (pettyCash) {
       setExpenseType(pettyCash.expenseType);
       setAmount(pettyCash.amount);
+      setIncludesIgv(pettyCash.includesIgv ?? true);
       setInvoiceNumber(pettyCash.invoiceNumber);
       setExpenseDate(toDateLocalValue(pettyCash.expenseDate));
       setDescription(pettyCash.description);
@@ -42,6 +44,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
     const updatedPettyCash = {
       expenseType,
       amount,
+      includesIgv,
       invoiceNumber,
       expenseDate: ymdLocalMidnightToUtc(expenseDate, 'America/Lima'),
       description,
@@ -61,7 +64,7 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
     );
   }
 
-  if(loading) return <LoadingSkeletonForm numberRows={6} />;
+  if(loading) return <LoadingSkeletonForm numberRows={7} />;
   if(fetchError) return <ErrorMessage errorMessage="Error al cargar la salida de caja chica" />;
 
   return (
@@ -92,6 +95,23 @@ export default function PettyCash({ pettyCashId, successAction, closeAction }: P
           type="number"
           onChange={(e) => setAmount(Number(e.target.value))}
         />
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={includesIgv}
+            onChange={(e) => setIncludesIgv(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[#0047a3]"
+          />
+          <span className="flex flex-col">
+            <span className="font-medium text-gray-800">El monto incluye IGV (18%)</span>
+            <span className="text-sm text-gray-500">
+              {includesIgv
+                ? "El resumen económico usará el monto registrado."
+                : "El resumen económico añadirá el 18% al monto registrado."}
+            </span>
+          </span>
+        </label>
 
         <InputForm
           label="Número de Comprobante"
