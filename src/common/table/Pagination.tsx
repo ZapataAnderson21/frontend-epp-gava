@@ -84,7 +84,7 @@ export default function Pagination({
               value={pageSize}
               onChange={(event) => onPageSizeChange(Number(event.target.value))}
               disabled={disabled}
-              className="h-9 rounded-md border border-gray-300 bg-white px-2 text-xs font-bold outline-none focus:border-[#0047a3]"
+              className="h-9 rounded-md border border-gray-300 px-2 text-xs font-bold outline-none focus:border-[#0047a3]"
               aria-label="Filas por página"
             >
               {pageSizeOptions.map((option) => (
