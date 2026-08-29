@@ -40,7 +40,7 @@ export default function SupplierTable() {
   if (loading && !pagination) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
 
-  if (!suppliers.length && !search) {
+  if (!loading && !pagination && !suppliers.length && !search) {
     return <div className="text-center text-gray-500">No hay proveedores disponibles.</div>;
   }
 

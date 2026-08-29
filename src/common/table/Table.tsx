@@ -68,7 +68,7 @@ export default function Table<T>({
 
   return (
     <div className="w-full min-w-0">
-      <div className="w-full min-w-0 overflow-x-auto rounded-lg border border-gray-100 bg-white">
+      <div className="w-full min-w-0 overflow-y-hidden overflow-x-auto rounded-lg border border-gray-100 bg-white">
         <table className="w-full min-w-full whitespace-nowrap text-gray-700">
           <colgroup>
             {columns.map((column, index) => (
