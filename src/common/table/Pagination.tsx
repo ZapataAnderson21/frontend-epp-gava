@@ -128,7 +128,7 @@ export default function Pagination({
                 key={item}
                 className={`${buttonClass} ${
                   item === currentPage
-                    ? "border-[#0047a3] bg-[#0047a3] hover:text-white"
+                    ? "border-[#0047a3] bg-[#0047a3] text-white hover:text-white"
                     : ""
                 }`}
                 onClick={() => onPageChange(item)}

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import Pagination from "./Pagination";
 import type { PaginationMeta } from "./pagination.types";
 import { usePagination } from "./usePagination";
@@ -91,41 +91,38 @@ export default function Table<T>({
             </tr>
           </thead>
           <tbody aria-busy={loading}>
-            <AnimatePresence initial={false}>
-              {displayData.map((item, index) => {
-                const customClass = rowClassName?.(item, index);
-                const rowClasses = customClass
-                  ? `border-t border-gray-100 hover:bg-[#eff2ff] ${customClass}`
-                  : `border-t border-gray-100 hover:bg-[#eff2ff] ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`;
+            {displayData.map((item, index) => {
+              const customClass = rowClassName?.(item, index);
+              const rowClasses = customClass
+                ? `border-t border-gray-100 hover:bg-[#eff2ff] ${customClass}`
+                : `border-t border-gray-100 hover:bg-[#eff2ff] ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`;
 
-                return (
-                  <motion.tr
-                    key={getRowKey?.(item, index) ?? index}
-                    className={rowClasses}
-                    variants={rowVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit={{ opacity: 0 }}
-                    custom={index}
-                  >
-                    {columns.map((column, columnIndex) => (
-                      <td
-                        key={String(column.key ?? `cell-${columnIndex}`)}
-                        className={`px-4 py-3 ${
-                          column.truncate ? "max-w-0 truncate" : ""
-                        } ${cellAlign(column.align)}`}
-                      >
-                        {column.render
-                          ? column.render(item)
-                          : String(item[column.key as keyof T] ?? "")}
-                      </td>
-                    ))}
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
+              return (
+                <motion.tr
+                  key={getRowKey?.(item, index) ?? index}
+                  className={rowClasses}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  custom={index}
+                >
+                  {columns.map((column, columnIndex) => (
+                    <td
+                      key={String(column.key ?? `cell-${columnIndex}`)}
+                      className={`px-4 py-3 ${
+                        column.truncate ? "max-w-0 truncate" : ""
+                      } ${cellAlign(column.align)}`}
+                    >
+                      {column.render
+                        ? column.render(item)
+                        : String(item[column.key as keyof T] ?? "")}
+                    </td>
+                  ))}
+                </motion.tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
