@@ -1,10 +1,22 @@
+import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
 import { pettyCashApi } from "../../../../../../data/apiUrl";
 import { type PettyCashType } from "../../../../../../data/types";
-import { useFetch } from "../../../../../../hooks";
+import { useDebouncedValue, usePaginatedFetch } from "../../../../../../hooks";
 import SeeButton from "../../../../../../common/button/SeeButton";
+
+const expenseTypeOptions = [
+  { value: "", label: "Todos los tipos" },
+  { value: "meals", label: "Comidas" },
+  { value: "fuel", label: "Combustible" },
+  { value: "transport", label: "Transporte" },
+  { value: "supplies", label: "Materiales / Insumos" },
+  { value: "safety_equipment", label: "Equipo de Seguridad" },
+  { value: "services", label: "Servicios" },
+  { value: "other", label: "Otros" },
+] as const;
 
 interface ProjectTableProps {
   projectId: number;
@@ -13,8 +25,31 @@ interface ProjectTableProps {
 }
 
 export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTableProps) {
+  const [search, setSearch] = useState("");
+  const [expenseType, setExpenseType] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+  const {
+    items: pettyCashes,
+    pagination,
+    loading,
+    error,
+    refetch,
+    setPage,
+    setPageSize,
+  } = usePaginatedFetch<PettyCashType>(
+    `${pettyCashApi}project/${projectId}/paginated`,
+    {
+      params: {
+        search: debouncedSearch,
+        expenseType: expenseType || undefined,
+      },
+      enabled: projectId > 0,
+    },
+  );
 
-  const { data: pettyCashes, loading, error } = useFetch<PettyCashType[]>(`${pettyCashApi}project/${projectId}`, [projectId, reFetch]);
+  useEffect(() => {
+    if (reFetch > 0) refetch();
+  }, [reFetch, refetch]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -51,7 +86,7 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
     return <div className="text-red-500">Iniciar sesión.</div>;
   }
 
-  if (loading) {
+  if (loading && !pagination) {
     return <LoadingSkeletonTable />;
   }
 
@@ -59,11 +94,7 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
     return <ErrorMessage errorMessage={error} />;
   }
 
-  if (!pettyCashes || pettyCashes.length === 0) {
-    return <div className="text-center text-gray-500">No hay salidas de caja chica.</div>;
-  }
-
-  const processedPettyCashes = pettyCashes?.map(pettyCash => ({
+  const processedPettyCashes = pettyCashes.map(pettyCash => ({
     ...pettyCash,
     createdAt: new Date(pettyCash.createdAt).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -73,9 +104,48 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
   }));
 
   return (
-    <Table<PettyCashType>
-      data={processedPettyCashes}
-      columns={columns}
-    />
+    <div className="flex w-full min-w-0 flex-col gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar por descripción o número de comprobante"
+          aria-label="Buscar movimientos de caja chica"
+          className="w-full rounded-md border border-gray-300 px-4 py-2 text-xs font-semibold outline-none focus:border-[#0047a3] md:max-w-lg"
+        />
+
+        <select
+          value={expenseType}
+          onChange={(event) => setExpenseType(event.target.value)}
+          aria-label="Filtrar por tipo de gasto"
+          className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 outline-none focus:border-[#0047a3] md:w-56"
+        >
+          {expenseTypeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {processedPettyCashes.length ? (
+        <Table<PettyCashType>
+          data={processedPettyCashes}
+          columns={columns}
+          pagination={pagination}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          loading={loading}
+          getRowKey={(row) => row.pettyCashId}
+        />
+      ) : (
+        <div className="rounded-md border border-dashed border-gray-300 bg-white p-8 text-center text-gray-500">
+          {search || expenseType
+            ? "No hay movimientos que coincidan con los filtros."
+            : "No hay salidas de caja chica."}
+        </div>
+      )}
+    </div>
   );
 }
