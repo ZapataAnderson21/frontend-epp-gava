@@ -30,20 +30,22 @@ export default function RequestsProject() {
   return (
     <div className="flex flex-col max-w-full w-full gap-6">
       <div className="flex justify-end">
-        <div className="flex flex-row w-fit gap-2">
-          <SelectForm
-            label="Filtrar por"
-            name="filter"
-            value={filter.value}
-            onChange={(value) => {
-              const option = options.find(opt => opt.value === value);
-              if (option) {
-                handleSelect(option);
-              }
-            }}
-            options={options}
-            directionRow={true}
-          />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="w-full min-w-0 sm:w-72">
+            <SelectForm
+              label="Filtrar por"
+              name="filter"
+              value={filter.value}
+              onChange={(value) => {
+                const option = options.find(opt => opt.value === value);
+                if (option) {
+                  handleSelect(option);
+                }
+              }}
+              options={options}
+              directionRow={true}
+            />
+          </div>
           <AddButton onClick={navigateToNewRequest} />
         </div>
       </div>

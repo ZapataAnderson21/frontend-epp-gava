@@ -1,5 +1,4 @@
 import {
-  Banknote as FaMoneyBillWave,
   Boxes as FaCubes,
   CalendarCheck as FaCalendarCheck,
   ChartColumn as FaChartColumn,
@@ -15,6 +14,7 @@ import {
   UserRoundCog as FaUserTie,
   Users as FaUsers,
   UsersRound as FaUserGroup,
+  Banknote as FaMoneyBillWave,
 } from "lucide-react";
 
 
@@ -115,6 +115,10 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
+          <Permission user={user} allow={adminTypes}>
+            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
+          </Permission>
+
           <Permission user={user} allow={monthlyEvaluationTypes}>
             <SidebarItem icon={<FaClipboardCheck />} label="Eval. mensuales" href="/admin/worker-monthly-evaluations" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
@@ -123,9 +127,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             <SidebarItem icon={<FaCalendarCheck />} label="Vencimientos" href="/admin/document-expirations" index={12} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
 
-          <Permission user={user} allow={adminTypes}>
-            <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={13} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
-          </Permission>
         </div>
 
         <div className="flex flex-col border-t border-gray-300 py-4 px-4">

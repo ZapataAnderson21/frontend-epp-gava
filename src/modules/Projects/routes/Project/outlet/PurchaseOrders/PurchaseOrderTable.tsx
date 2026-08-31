@@ -221,7 +221,7 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
             className="border border-gray-400 rounded-sm p-2 min-w-[220px] focus:outline-[#0047a3]"
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full min-w-0 flex-col gap-1 sm:w-72 sm:shrink-0">
           <label className="text-xs text-gray-700">Proveedor</label>
           <Select
             name="supplier-filter"

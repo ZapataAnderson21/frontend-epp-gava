@@ -46,15 +46,9 @@ export const requestWorkerApi = `${root}request-worker/`;
 
 export const elementRequestWorkerPlanApi = `${root}element-request-worker-plan/`;
 
-export const attendanceApi = `${root}attendance/`;
-
-export const weekApi = `${root}week/`;
-
 export const dailyWageApi = `${root}daily-wage/`;
 
-export const weeklyWageApi = `${root}weekly-wage/`;
-
-export const projectWeeklyPayrollApi = `${root}project-weekly-payroll/`;
+export const generalPayrollApi = `${root}general-payroll/`;
 
 export const taskApi = `${root}task/`;
 

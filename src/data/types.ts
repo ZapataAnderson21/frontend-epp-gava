@@ -125,74 +125,74 @@ export interface UpdateElementDto {
 }
 
 export interface ElementRequestType {
-  elementRequestId?: number
-  quantityRequested: number
-    unit: string
-    elementId: number
-    elementVariantId?: number | null
-    fallProtectionGroupId?: number | null
-    lineItemOrder?: number
-  notes?: string | null
-  lineKey?: string
-  requestId: number
-    element?: ElementType
-    elementVariant?: ElementVariantType | null
-    fallProtectionGroup?: FallProtectionGroupType | null
-    elementRequestResponses?: ElementRequestResponseType[]
-  epiPlans?: ElementRequestWorkerPlan[]
+  elementRequestId?: number;
+  quantityRequested: number;
+  unit: string;
+  elementId: number;
+  elementVariantId?: number | null;
+  fallProtectionGroupId?: number | null;
+  lineItemOrder?: number;
+  notes?: string | null;
+  lineKey?: string;
+  requestId: number;
+  element?: ElementType;
+  elementVariant?: ElementVariantType | null;
+  fallProtectionGroup?: FallProtectionGroupType | null;
+  elementRequestResponses?: ElementRequestResponseType[];
+  epiPlans?: ElementRequestWorkerPlan[];
 }
 
 export interface CreateElementRequestDto {
-  quantityRequested: number
-  unit: string
-    elementId: number
-    elementVariantId?: number | null
-    fallProtectionGroupId?: number | null
-    lineItemOrder?: number
-  notes?: string | null
-  requestId: number
+  quantityRequested: number;
+  unit: string;
+  elementId: number;
+  elementVariantId?: number | null;
+  fallProtectionGroupId?: number | null;
+  lineItemOrder?: number;
+  notes?: string | null;
+  requestId: number;
 }
 
 export interface UpdateElementRequestDto {
-  elementRequestId?: number
-  quantityRequested: number
-  unit: string
-    elementId: number
-    elementVariantId?: number | null
-    fallProtectionGroupId?: number | null
-    lineItemOrder?: number
-  notes?: string | null
-  requestId: number
+  elementRequestId?: number;
+  quantityRequested: number;
+  unit: string;
+  elementId: number;
+  elementVariantId?: number | null;
+  fallProtectionGroupId?: number | null;
+  lineItemOrder?: number;
+  notes?: string | null;
+  requestId: number;
 }
 
 export interface ElementRequestResponseType {
-  elementRequestResponseId: number
-  elementRequestId: number
-  quantityAccepted: number
-  selectedElementIds?: number[]
-  requestResponseId: number
-  elementRequest?: ElementRequestType
-  requestResponse?: RequestResponseType
+  elementRequestResponseId: number;
+  elementRequestId: number;
+  quantityAccepted: number;
+  selectedElementIds?: number[];
+  requestResponseId: number;
+  elementRequest?: ElementRequestType;
+  requestResponse?: RequestResponseType;
 }
 
 export interface CreateElementRequestResponseDto {
-  elementRequestId: number
-  quantityAccepted: number
-  selectedElementIds?: number[]
-  requestResponseId: number
+  elementRequestId: number;
+  quantityAccepted: number;
+  selectedElementIds?: number[];
+  requestResponseId: number;
 }
 
 export interface UpdateElementRequestResponseDto {
-  elementRequestId?: number
-  quantityAccepted: number
-  selectedElementIds?: number[]
-  requestResponseId: number
+  elementRequestId?: number;
+  quantityAccepted: number;
+  selectedElementIds?: number[];
+  requestResponseId: number;
 }
 
 export interface EmergencyType {
   emergencyId: number;
-  image: string; 
-  title: string; 
+  image: string;
+  title: string;
   description: string;
   userId: number;
   projectId: number;
@@ -205,16 +205,16 @@ export interface EmergencyType {
 }
 
 export interface CreateEmergencyDto {
-  image: string; 
-  title: string; 
+  image: string;
+  title: string;
   description: string;
   userId: number;
   projectId: number;
 }
 
 export interface UpdateEmergencyDto {
-  image?: string; 
-  title?: string; 
+  image?: string;
+  title?: string;
   description?: string;
   userId?: number;
   projectId?: number;
@@ -245,7 +245,7 @@ export interface Project {
 export interface CreateProjectDto {
   name: string;
   description: string;
-  code: string
+  code: string;
 }
 
 export interface UpdateProjectDto {
@@ -256,20 +256,20 @@ export interface UpdateProjectDto {
 }
 
 export interface RequestType {
-  requestId: number
-  createdAt: string
-  deliveryDueDate: string
-  status: string
-  description?: string
-  projectId: number
-  userId: number
-  type: string
-  inventoryLoadedAt?: string | null
-  user?: User
-  project?: Project
-  elementRequests?: ElementRequestType[]
-  requestWorkers?: RequestWorker[]
-  userName?: string
+  requestId: number;
+  createdAt: string;
+  deliveryDueDate: string;
+  status: string;
+  description?: string;
+  projectId: number;
+  userId: number;
+  type: string;
+  inventoryLoadedAt?: string | null;
+  user?: User;
+  project?: Project;
+  elementRequests?: ElementRequestType[];
+  requestWorkers?: RequestWorker[];
+  userName?: string;
 }
 
 export interface ProjectInventoryEntry {
@@ -485,80 +485,80 @@ export interface ElementInventoryDetail {
 }
 
 export interface CreateRequestDto {
-  deliveryDueDate: string
-  description?: string
-  projectId: number
-  userId: number
-  type: string
+  deliveryDueDate: string;
+  description?: string;
+  projectId: number;
+  userId: number;
+  type: string;
 }
 
 export interface UpdateRequestDto {
-  createdAt?: string
-  status?: string
-  deliveryDueDate?: string
-  description?: string
-  projectId?: number
-  userId?: number
-  type?: string
+  createdAt?: string;
+  status?: string;
+  deliveryDueDate?: string;
+  description?: string;
+  projectId?: number;
+  userId?: number;
+  type?: string;
 }
 
 export interface RequestResponseType {
-  requestResponseId: number
-  requestId: number
-  responderUserId: number
-  responseDate: string
-  adminDescription?: string
-  managementDescription?: string
-  logisticsDescription?: string
-  request?: RequestType
-  responder?: User
+  requestResponseId: number;
+  requestId: number;
+  responderUserId: number;
+  responseDate: string;
+  adminDescription?: string;
+  managementDescription?: string;
+  logisticsDescription?: string;
+  request?: RequestType;
+  responder?: User;
 }
 
 export interface CreateRequestResponseDto {
-  requestId: number
-  responderUserId: number
-  description?: string
+  requestId: number;
+  responderUserId: number;
+  description?: string;
 }
 
 export interface UpdateRequestResponseDto {
-  requestId: number
-  responderUserId: number
-  description?: string
+  requestId: number;
+  responderUserId: number;
+  description?: string;
 }
 
 export interface CreateUserDto {
-  name: string,
-  lastName: string,
-  email: string,
-  password: string,
-  userTypeId: number
+  name: string;
+  lastName: string;
+  email: string;
+  password: string;
+  userTypeId: number;
 }
 
 export interface UpdateUserDto {
-  name?: string,
-  lastName?: string,
-  email?: string,
-  password?: string
+  name?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
 }
 
 export interface User {
-  userId: number,
-  name: string,
-  lastName: string,
-  email: string,
-  phone?: string | null,
-  password?: string,
+  userId: number;
+  name: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  password?: string;
   userType: string;
-  deletedAt?: string | null,
+  deletedAt?: string | null;
 }
 
 export interface CreateUserTypeDto {
-  name: string
+  name: string;
 }
 
 export interface UserType {
-  userTypeId: number,
-  name: string
+  userTypeId: number;
+  name: string;
 }
 
 export interface Resource {
@@ -652,7 +652,7 @@ export interface PurchaseOrderCondition {
 export interface PurchaseOrder {
   purchaseOrderId: number;
   code: string;
-  codeComplete?: string; 
+  codeComplete?: string;
   deliveryLocation: string;
   destination: string;
   paymentConditions: string;
@@ -787,45 +787,44 @@ export interface ServiceSaleType {
 export type Currency = "PEN" | "USD" | "EUR";
 
 export const WorkerType = {
-  Laborer: ['laborer', 'Obrero'],
-  Technician: ['technician', 'Técnico'],
-  Engineer: ['engineer', 'Ingeniero'],
-  Administrator: ['administrator', 'Administrador(a)'],
-  Manager: ['manager', 'Gerente'],
-  Unspecified: ['unspecified', 'No Especificado'],
+  Laborer: ["laborer", "Obrero"],
+  Technician: ["technician", "Técnico"],
+  Engineer: ["engineer", "Ingeniero"],
+  Administrator: ["administrator", "Administrador(a)"],
+  Manager: ["manager", "Gerente"],
+  Unspecified: ["unspecified", "No Especificado"],
 } as const;
 
-export type WorkerType = typeof WorkerType[keyof typeof WorkerType];
+export type WorkerType = (typeof WorkerType)[keyof typeof WorkerType];
 
 export interface Worker {
-  workerId: number
-  fullName: string
-  dni: string
-  phone?: string
-  address?: string
-  personalEmail?: string
-  birthDate?: string
-  workerType: string
-  createdAt: string
-  updatedAt: string
-  deletedAt?: string
-  workerTypeName?: string
-  dailyWage?: number
-  attendances?: Attendance[];
+  workerId: number;
+  fullName: string;
+  dni: string;
+  phone?: string;
+  address?: string;
+  personalEmail?: string;
+  birthDate?: string;
+  workerType: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  workerTypeName?: string;
+  dailyWage?: number;
 }
 
 export interface RequestWorker {
-  requestWorkerId: number
-  requestId: number
-  shoeSize?: string | null
-  pantsSize?: string | null
-  shirtSize?: string | null
-  workerId: number
-  createdAt?: string
-  updatedAt?: string
-  worker?: Worker
-  workerName?: string
-  request?: RequestType
+  requestWorkerId: number;
+  requestId: number;
+  shoeSize?: string | null;
+  pantsSize?: string | null;
+  shirtSize?: string | null;
+  workerId: number;
+  createdAt?: string;
+  updatedAt?: string;
+  worker?: Worker;
+  workerName?: string;
+  request?: RequestType;
 }
 
 export interface WorkerInventoryAssignment {
@@ -896,33 +895,6 @@ export interface ResourcePurchaseOrder {
   updatedAt?: string;
   resource?: Resource;
   purchaseOrder?: PurchaseOrder;
-}
-
-export interface Attendance {
-  attendanceId: number;
-  workerId: number;
-  projectId: number;
-  date: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface WorkersPayroll {
-  workerId: number;
-  workerName: string;
-  workerType: string; // "laborer" | "technician"
-  attendances: number;
-  dailyWage: number;
-}
-
-export interface WeeklyPayrollData {
-  weekId: number;
-  startDate: string;
-  endDate: string;
-  laborerAmount: number;
-  technicianAmount: number;
-  totalAmount: number;
-  workers: WorkersPayroll[];
 }
 
 export type MonthlyEvaluationQuestionType = "score" | "text";
