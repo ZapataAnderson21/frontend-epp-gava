@@ -11,7 +11,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { generalPayrollApi } from "../../data/apiUrl";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
-import { adminTypes } from "../../utils";
+import { logisticsTypes } from "../../utils";
 import PayrollConfigurationModal from "./PayrollConfigurationModal";
 import { GeneralPayrollGrid, ProjectPayrollGrid } from "./PayrollGrid";
 import type {
@@ -47,7 +47,7 @@ const dayKeys = [
 
 export default function GeneralWeeklyPayroll() {
   const { user } = useCurrentUser();
-  const canEdit = adminTypes.includes(user?.userType ?? "");
+  const canEdit = logisticsTypes.includes(user?.userType ?? "");
   const { weekId } = useParams();
   const navigate = useNavigate();
   const url = weekId ? `${generalPayrollApi}weeks/${weekId}` : "";
