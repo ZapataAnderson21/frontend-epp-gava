@@ -262,7 +262,7 @@ export default function NewRequest() {
             localStorage.removeItem("projectId");
             localStorage.removeItem("deliveryDueDate");
             setTimeout(() => navigateToBack(), 1200);
-            return result?.data.request.message || "Solicitud guardada exitosamente.";
+            return result.data.message || "Solicitud guardada exitosamente.";
           }
 
           throw new Error("Error al guardar la solicitud.");

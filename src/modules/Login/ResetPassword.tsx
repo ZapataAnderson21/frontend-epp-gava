@@ -13,7 +13,7 @@ export default function ResetPassword() {
   const token = params.get("token") || "";
 
   const navigate = useNavigate();
-  const { execute, loading } = useApiAction<any>();
+  const { execute, loading } = useApiAction<unknown>();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();

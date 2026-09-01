@@ -47,10 +47,10 @@ export function useCurrentUser() {
 
         console.log("Fetched current user:", json.data);
 
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (mounted) {
           setUser(null);
-          setError(e?.message ?? 'Error');
+          setError(e instanceof Error ? e.message : "Error");
         }
       } finally {
         if (mounted) setLoading(false);

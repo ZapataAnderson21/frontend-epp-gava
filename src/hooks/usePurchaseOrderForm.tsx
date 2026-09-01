@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFetch, useApiAction } from "../hooks";
-import type { Project, Resource, Supplier } from "../data/types";
+import type { Project, PurchaseOrder, Resource, Supplier } from "../data/types";
 import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
 import toast from "react-hot-toast";
 import { lineAmount, roundMoney, totalFromRoundedLines } from "../utils";
@@ -58,7 +58,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   const { data: resources, loading: resourcesLoading, error: resourcesError } =
     useFetch<Resource[]>(`${resourceApi}`, []);
 
-  const { execute, loading: saving } = useApiAction<any>();
+  const { execute, loading: saving } = useApiAction<PurchaseOrder>();
 
   // --- form state (sin localStorage) ---
   const [code, setCode] = useState("");
@@ -102,7 +102,11 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     setQualityConditions((p) => p.map((v, i) => (i === idx ? value : v)));
 
   // items helpers
-  const handleItemChange = (index: number, field: keyof ItemRow, value: any) => {
+  const handleItemChange = <K extends keyof ItemRow>(
+    index: number,
+    field: K,
+    value: ItemRow[K],
+  ) => {
     setItems((prev) => {
       const next = [...prev];
 
@@ -120,7 +124,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
           next[index] = { ...next[index], resourceId: 0, description: "", unit: "" };
         }
       } else {
-        (next[index] as any)[field] = value;
+        next[index] = { ...next[index], [field]: value };
       }
 
       next[index].subtotal = lineAmount(

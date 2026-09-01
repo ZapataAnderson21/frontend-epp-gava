@@ -45,7 +45,7 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
       if (password.length < 8) nextErrors.push("La contraseña debe tener al menos 8 caracteres");
       if (!/(?=.*[A-Z])/.test(password)) nextErrors.push("La contraseña debe contener al menos una mayúscula");
       if (!/(?=.*\d)/.test(password)) nextErrors.push("La contraseña debe contener al menos un número");
-      if (!/(?=.*[!@#$%^&*(),.?\":{}|<>])/.test(password)) nextErrors.push("La contraseña debe contener al menos un carácter especial");
+      if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) nextErrors.push("La contraseña debe contener al menos un carácter especial");
     }
 
     setErrors(nextErrors);

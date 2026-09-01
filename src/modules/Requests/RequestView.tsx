@@ -140,12 +140,12 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const isAddressed = request?.status === "Atendida";
 
   // ✅ useApiAction para POST y PATCH
-  const { execute: createRequestResponse } = useApiAction<any>();
-  const { execute: updateRequestResponse } = useApiAction<any>();
-  const { execute: createElementRequestResponse } = useApiAction<any>();
-  const { execute: updateElementRequestResponse } = useApiAction<any>();
-  const { execute: updateRequestStatus } = useApiAction<any>();
-  const { execute: createElementRequest } = useApiAction<any>();
+  const { execute: createRequestResponse } = useApiAction<RequestResponseType>();
+  const { execute: updateRequestResponse } = useApiAction<RequestResponseType>();
+  const { execute: createElementRequestResponse } = useApiAction<unknown>();
+  const { execute: updateElementRequestResponse } = useApiAction<unknown>();
+  const { execute: updateRequestStatus } = useApiAction<unknown>();
+  const { execute: createElementRequest } = useApiAction<ElementRequestType>();
 
   useEffect(() => {
     if (request?.elementRequests) {
@@ -323,8 +323,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
       setNewElementId(0);
       setNewUnit("");
       setNewQuantity(1);
-    } catch (err: any) {
-      toast.error(err?.message || "Error al agregar el elemento.");
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Error al agregar el elemento.",
+      );
     }
   };
 

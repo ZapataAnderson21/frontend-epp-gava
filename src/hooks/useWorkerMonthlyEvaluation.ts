@@ -61,7 +61,7 @@ function buildPeriodDetailUrl(
   return `${workerMonthlyEvaluationPeriodApi}detail?${params.toString()}`;
 }
 
-export function useMonthlyEvaluationTemplates(extraDeps: any[] = []) {
+export function useMonthlyEvaluationTemplates(extraDeps: unknown[] = []) {
   return useFetch<MonthlyEvaluationTemplate[]>(
     workerMonthlyEvaluationTemplateApi,
     extraDeps,
@@ -70,7 +70,7 @@ export function useMonthlyEvaluationTemplates(extraDeps: any[] = []) {
 
 export function useMonthlyEvaluationTemplate(
   templateId?: number,
-  extraDeps: any[] = [],
+  extraDeps: unknown[] = [],
 ) {
   const url = templateId
     ? `${workerMonthlyEvaluationTemplateApi}${templateId}`
@@ -81,7 +81,7 @@ export function useMonthlyEvaluationTemplate(
 
 export function useWorkerMonthlyEvaluations(
   filters?: WorkerMonthlyEvaluationFilters,
-  extraDeps: any[] = [],
+  extraDeps: unknown[] = [],
 ) {
   const url = buildInstanceListUrl(filters);
   return useFetch<WorkerMonthlyEvaluation[]>(url, [
@@ -94,7 +94,7 @@ export function useWorkerMonthlyEvaluations(
 
 export function useWorkerMonthlyEvaluationPeriods(
   filters?: WorkerMonthlyEvaluationPeriodFilters,
-  extraDeps: any[] = [],
+  extraDeps: unknown[] = [],
 ) {
   const url = buildPeriodListUrl(filters);
   return useFetch<WorkerMonthlyEvaluationPeriod[]>(url, [
@@ -107,7 +107,7 @@ export function useWorkerMonthlyEvaluationPeriods(
 
 export function useWorkerMonthlyEvaluationPeriodDetail(
   period?: WorkerMonthlyEvaluationPeriodStatusPayload,
-  extraDeps: any[] = [],
+  extraDeps: unknown[] = [],
 ) {
   const url = buildPeriodDetailUrl(period);
   return useFetch<WorkerMonthlyEvaluationPeriodDetail>(url, [
@@ -120,7 +120,7 @@ export function useWorkerMonthlyEvaluationPeriodDetail(
 
 export function useWorkerMonthlyEvaluationById(
   workerMonthlyEvaluationId?: number,
-  extraDeps: any[] = [],
+  extraDeps: unknown[] = [],
 ) {
   const url = workerMonthlyEvaluationId
     ? `${workerMonthlyEvaluationInstanceApi}${workerMonthlyEvaluationId}`
@@ -133,7 +133,7 @@ export function useWorkerMonthlyEvaluationById(
 }
 
 export function useWorkerMonthlyEvaluationActions() {
-  const { execute, loading, error, response } = useApiAction<any>();
+  const { execute, loading, error, response } = useApiAction<unknown>();
 
   const createTemplate = async (payload: CreateMonthlyEvaluationTemplateDto) => {
     return execute(workerMonthlyEvaluationTemplateApi, "POST", payload);

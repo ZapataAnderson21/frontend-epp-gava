@@ -15,6 +15,11 @@ const CURRENCIES: Currency[] = ["PEN", "USD", "EUR"];
 
 type TotalsByCurrency = Record<Currency, number>;
 
+type PurchaseOrderRow = Omit<PurchaseOrder, "createdAt"> & {
+  createdAt: string;
+  supplierName: string;
+};
+
 const emptyTotals = (): TotalsByCurrency => ({ PEN: 0, USD: 0, EUR: 0 });
 
 const isCurrency = (value?: string): value is Currency =>
@@ -248,8 +253,8 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
           />
         </div>
       </section>
-      <Table<PurchaseOrder>
-        data={filteredPurchaseOrders as unknown as PurchaseOrder[]}
+      <Table<PurchaseOrderRow>
+        data={filteredPurchaseOrders}
         columns={[
           { key: "code", label: "Código", width: "12rem" },
           { key: "supplierName", label: "Proveedor", width: "12rem" },
@@ -257,7 +262,7 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
           { 
             label: "Estado",
             width: "8rem",
-            render: (row: PurchaseOrder) => {
+            render: (row: PurchaseOrderRow) => {
               return (
                 <StatusTag 
                   status={row.status} 

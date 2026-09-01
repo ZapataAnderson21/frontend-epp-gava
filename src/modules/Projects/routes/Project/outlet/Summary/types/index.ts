@@ -50,6 +50,7 @@ export interface UseSummaryReturn {
   purchaseOrderSaleLoading: boolean;
   purchaseOrderPurchaseLoading: boolean;
   payrollTotalsLoading: boolean;
+  serviceSaleLoading: boolean;
   
   // Calculated totals
   pettyCashTotals: AmountsByCurrency;
@@ -58,5 +59,6 @@ export interface UseSummaryReturn {
   purchaseOrdersPurchaseTotals: AmountsByCurrency;
   purchaseOrdersSaleTotalsByType: AmountsByPurchaseOrderType;
   purchaseOrdersPurchaseTotalsByType: AmountsByPurchaseOrderType;
+  registeredIncomeTotals: AmountsByCurrency;
   utilitiesTotals: AmountsByCurrency;
 }

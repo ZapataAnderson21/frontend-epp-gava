@@ -4,6 +4,7 @@ import type {
   ElementRequestType,
   ElementRequestWorkerPlan,
   ElementType,
+  RequestType,
   RequestWorker,
 } from "../data/types";
 import {
@@ -119,15 +120,15 @@ function clearRequestDraftStorage() {
 }
 
 export function useHandleForm() {
-  const { execute: createRequest } = useApiAction<any>();
-  const { execute: updateRequest } = useApiAction<any>();
-  const { execute: sendRequestToLogistics } = useApiAction<any>();
-  const { execute: createElementRequest } = useApiAction<any>();
-  const { execute: updateElementRequest } = useApiAction<any>();
-  const { execute: createRequestWorker } = useApiAction<any>();
-  const { execute: updateRequestWorker } = useApiAction<any>();
-  const { execute: deleteRequestWorker } = useApiAction<any>();
-  const { execute: replaceElementRequestWorkerPlans } = useApiAction<any>();
+  const { execute: createRequest } = useApiAction<RequestType>();
+  const { execute: updateRequest } = useApiAction<RequestType>();
+  const { execute: sendRequestToLogistics } = useApiAction<unknown>();
+  const { execute: createElementRequest } = useApiAction<ElementRequestType>();
+  const { execute: updateElementRequest } = useApiAction<ElementRequestType>();
+  const { execute: createRequestWorker } = useApiAction<RequestWorker>();
+  const { execute: updateRequestWorker } = useApiAction<RequestWorker>();
+  const { execute: deleteRequestWorker } = useApiAction<unknown>();
+  const { execute: replaceElementRequestWorkerPlans } = useApiAction<unknown>();
 
   const syncPlans = async (
     elementRequests: ElementRequestType[],
@@ -365,6 +366,7 @@ export function useHandleForm() {
       error: false,
       data: {
         request: response.data,
+        message: response.message,
         elements: savedElementRequests,
         workers: savedRequestWorkers,
       },
@@ -407,13 +409,9 @@ export function useHandleForm() {
 
     let result: Awaited<ReturnType<typeof handleSave>> | null = null;
 
-    try {
-      result = await handleSave(projectId, deliveryDueDate, description, {
-        clearDraft: false,
-      });
-    } catch (error) {
-      throw error;
-    }
+    result = await handleSave(projectId, deliveryDueDate, description, {
+      clearDraft: false,
+    });
 
     if (!result?.data) {
       throw new Error("Error al guardar la solicitud.");

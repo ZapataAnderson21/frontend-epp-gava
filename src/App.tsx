@@ -40,6 +40,7 @@ import ProjectInventory from "./modules/Projects/routes/Project/outlet/Inventory
 import { WorkerMonthlyEvaluations } from "./modules/WorkerMonthlyEvaluations";
 import DocumentExpirations from "./modules/DocumentExpirations/DocumentExpirations";
 import { GeneralPayrolls, GeneralWeeklyPayroll } from "./modules/Payrolls";
+import { Incomes } from "./modules/Projects/routes/Project/outlet/Incomes";
 
 export default function App() {
   return (
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="progress" element={<ProjectGantt />} />
             <Route path="payrolls" element={<ProjectPayrolls />} />
             <Route path="petty-cash" element={<PettyCashes />} />
+            <Route path="incomes" element={<Incomes />} />
             <Route path="requests" element={<RequestsProject />} />
             <Route path="inventory" element={<ProjectInventory />} />
             <Route path="emergencies" element={<EmergenciesProject />} />

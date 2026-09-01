@@ -100,6 +100,27 @@ const getProjectEntryIds = (entry: ProjectInventoryEntry) =>
     ? entry.projectInventoryEntryIds
     : [entry.projectInventoryEntryId];
 
+const getEntryFamily = (entry: ProjectInventoryEntry) =>
+  getInventoryFamilyFromSource({
+    type: entry.elementType,
+    controlType: entry.controlType,
+    code: entry.elementCode,
+    family: entry.family,
+  });
+
+const getEntryTab = (
+  entry: ProjectInventoryEntry,
+): ProjectInventoryTab | "other" => {
+  const family = getEntryFamily(entry);
+
+  if (["epp", "epi", "uniform"].includes(family)) return "protection";
+  if (family === "ese") return "safety";
+  if (family === "ssomaSupply") return "ssomaSupply";
+  if (family === "harness") return "fallProtection";
+  if (family === "officeMaterial") return "officeMaterial";
+  return "other";
+};
+
 export default function ProjectInventory() {
   const { id: projectId } = useParams<{ id: string }>();
   const location = useLocation();
@@ -147,25 +168,6 @@ export default function ProjectInventory() {
     useState(false);
   const [assignmentToDelete, setAssignmentToDelete] =
     useState<WorkerInventoryAssignment | null>(null);
-
-  const getEntryFamily = (entry: ProjectInventoryEntry) =>
-    getInventoryFamilyFromSource({
-      type: entry.elementType,
-      controlType: entry.controlType,
-      code: entry.elementCode,
-      family: entry.family,
-    });
-
-  const getEntryTab = (entry: ProjectInventoryEntry): ProjectInventoryTab | "other" => {
-    const family = getEntryFamily(entry);
-
-    if (["epp", "epi", "uniform"].includes(family)) return "protection";
-    if (family === "ese") return "safety";
-    if (family === "ssomaSupply") return "ssomaSupply";
-    if (family === "harness") return "fallProtection";
-    if (family === "officeMaterial") return "officeMaterial";
-    return "other";
-  };
 
   useEffect(() => {
     if (!data || !projectId || returnBlockerPromptHandled) return;

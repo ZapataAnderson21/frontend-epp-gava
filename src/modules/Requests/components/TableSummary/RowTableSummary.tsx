@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ElementRequestType, ElementType, OfficeInventoryEntry } from '../../../../data/types';
 import CellTableSummary from './CellTableSummary';
 import Select from '../../../../components/Select';
@@ -78,8 +78,10 @@ export default function RowTableSummary({
     elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
     (family === 'harness' ? 1 : 0);
   const [quantityAccepted, setQuantityAccepted] = useState<number>(initialQuantity);
-  const savedSelectedElementIds =
-    elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [];
+  const savedSelectedElementIds = useMemo(
+    () => elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [],
+    [elementRequest.elementRequestResponses],
+  );
   const savedSelectedElementIdsKey = savedSelectedElementIds.join(',');
   const [localSelectedElementIds, setLocalSelectedElementIds] =
     useState<number[]>(savedSelectedElementIds);
@@ -95,7 +97,11 @@ export default function RowTableSummary({
   useEffect(() => {
     if (Array.isArray(controlledSelectedElementIds)) return;
     setLocalSelectedElementIds(savedSelectedElementIds);
-  }, [controlledSelectedElementIds, savedSelectedElementIdsKey]);
+  }, [
+    controlledSelectedElementIds,
+    savedSelectedElementIds,
+    savedSelectedElementIdsKey,
+  ]);
   const fallProtectionParts = getFallProtectionGroupParts(elementRequest);
   const requestedSafetyType = getSafetyTypeName(elementRequest.element);
   const safetyOptions = safetyElements.filter(

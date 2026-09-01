@@ -79,7 +79,7 @@ export default function RequestDraft() {
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
-  const { execute: deleteElementRequest } = useApiAction<any>();
+  const { execute: deleteElementRequest } = useApiAction<unknown>();
   const { data: request, loading, error } = useFetch<RequestType>(
     requestId ? `${requestApi}${requestId}` : "",
     [requestId],
@@ -119,7 +119,7 @@ export default function RequestDraft() {
   };
 
   const handleSelectionElementsUpdate = (
-    _nextElements: any[],
+    _nextElements: ElementType[],
     nextElementRequests: ElementRequestType[],
   ) => {
     const normalizedLines = attachRequestLineKeys(nextElementRequests);
@@ -202,8 +202,10 @@ export default function RequestDraft() {
       setElementRequests(nextElementRequests);
       setElementPlans(nextPlans);
       setRequestWorkers(nextRequestWorkers);
-    } catch (err: any) {
-      toast.error(err?.message || "No se pudo eliminar el item.");
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "No se pudo eliminar el item.",
+      );
     }
   };
 

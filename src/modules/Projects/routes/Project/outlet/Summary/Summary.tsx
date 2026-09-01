@@ -27,12 +27,14 @@ export default function Summary() {
     purchaseOrderSaleLoading,
     purchaseOrderPurchaseLoading,
     payrollTotalsLoading,
+    serviceSaleLoading,
     pettyCashTotals,
     payrollTotalsAmounts,
     purchaseOrdersSaleTotals,
     purchaseOrdersPurchaseTotals,
     purchaseOrdersSaleTotalsByType,
     purchaseOrdersPurchaseTotalsByType,
+    registeredIncomeTotals,
     utilitiesTotals,
   } = useSummary();
   
@@ -64,12 +66,21 @@ export default function Summary() {
           purchaseOrderSaleLoading={purchaseOrderSaleLoading}
           purchaseOrderPurchaseLoading={purchaseOrderPurchaseLoading}
           payrollTotalsLoading={payrollTotalsLoading}
+          serviceSaleLoading={serviceSaleLoading}
           pettyCashLoading={pettyCashLoading}
-          loading={loading}
+          loading={
+            loading ||
+            purchaseOrderSaleLoading ||
+            purchaseOrderPurchaseLoading ||
+            payrollTotalsLoading ||
+            pettyCashLoading ||
+            serviceSaleLoading
+          }
           purchaseOrdersSaleTotals={purchaseOrdersSaleTotals}
           purchaseOrdersPurchaseTotals={purchaseOrdersPurchaseTotals}
           purchaseOrdersSaleTotalsByType={purchaseOrdersSaleTotalsByType}
           purchaseOrdersPurchaseTotalsByType={purchaseOrdersPurchaseTotalsByType}
+          registeredIncomeTotals={registeredIncomeTotals}
           payrollTotalsAmounts={payrollTotalsAmounts}
           pettyCashTotals={pettyCashTotals}
           utilitiesTotals={utilitiesTotals}

@@ -209,15 +209,15 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
     applyEditorState(state);
   };
 
-  const useNextId = () => {
+  const takeNextId = () => {
     const id = nextId;
     setNextId((prev) => prev + 1);
     return id;
   };
 
   const addSection = () => {
-    const sectionId = useNextId();
-    const questionId = useNextId();
+    const sectionId = takeNextId();
+    const questionId = takeNextId();
     setSections((prev) => [
       ...prev,
       {
@@ -249,7 +249,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
   };
 
   const addQuestion = (sectionId: number) => {
-    const questionId = useNextId();
+    const questionId = takeNextId();
 
     setSections((prev) =>
       prev.map((section) => {
@@ -336,7 +336,7 @@ export default function TemplateManagerModal({ onClose, onUpdated }: TemplateMan
     );
 
     if (sectionWithoutQuestions) {
-      toast.error(`La seccion \"${sectionWithoutQuestions.title}\" no tiene preguntas validas.`);
+      toast.error(`La seccion "${sectionWithoutQuestions.title}" no tiene preguntas validas.`);
       return null;
     }
 

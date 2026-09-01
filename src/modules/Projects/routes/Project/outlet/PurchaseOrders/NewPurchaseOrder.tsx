@@ -17,10 +17,6 @@ export default function NewPurchaseOrder() {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  if (!projectId) {
-    return <ErrorMessage errorMessage="Project ID is required." />;
-  }
-
   const {
     // data
     project, projectLoading, projectError,
@@ -56,7 +52,11 @@ export default function NewPurchaseOrder() {
 
     // submit & UI
     saving, handleSubmit,
-  } = usePurchaseOrderForm({ projectId, navigate });
+  } = usePurchaseOrderForm({ projectId: projectId ?? "", navigate });
+
+  if (!projectId) {
+    return <ErrorMessage errorMessage="Project ID is required." />;
+  }
 
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/projects/${projectId}/purchase-orders`);

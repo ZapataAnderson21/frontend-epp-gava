@@ -50,7 +50,9 @@ export default function PaymentConditionsCard({...props}: Props) {
                     className={`w-full p-2 border rounded-sm ${errorPaymentConditions ? "border-red-600" : "border-gray-400"} focus:outline-[#0047a3]`}
                     value={paymentConditions2}
                     onChange={(e) => {
-                      setPaymentConditions2 && setPaymentConditions2(e.target.value);
+                      if (setPaymentConditions2) {
+                        setPaymentConditions2(e.target.value);
+                      }
                       setPaymentConditions(`${paymentConditions1} - ${e.target.value}`)
                     }}
                     placeholder="p.ej., 30 días / contra entrega / etc."

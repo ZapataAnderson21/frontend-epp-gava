@@ -61,8 +61,8 @@ export default function ContentModal({
     [id],
   );
 
-  const { execute: createElementRequest } = useApiAction<any>();
-  const { execute: deleteElementRequest } = useApiAction<any>();
+  const { execute: createElementRequest } = useApiAction<ElementRequestType>();
+  const { execute: deleteElementRequest } = useApiAction<unknown>();
 
   useEffect(() => {
     if (!fetchedElements) return;

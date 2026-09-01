@@ -48,7 +48,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
 
   const { data: requests, loading, error, refetch } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
   const { user } = useCurrentUser();
-  const { execute: updateRequestStatus } = useApiAction<any>();
+  const { execute: updateRequestStatus } = useApiAction<unknown>();
 
   const navigate = useNavigate();
   const canEditRequestStatus =

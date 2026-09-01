@@ -21,7 +21,11 @@ export default function RecordsSummaryCard({ project }: RecordsSummaryCardProps)
           <span>Caja Chica</span>
           <span className="font-semibold">{project?.pettyCashes?.length ?? 0}</span>
         </div>
-        <div className="flex flex-row justify-between bg-gray-50 p-2 rounded-br-xl rounded-bl-xl">
+        <div className="flex flex-row justify-between bg-gray-50 p-2">
+          <span>Ingresos</span>
+          <span className="font-semibold">{project?.serviceSales?.length ?? 0}</span>
+        </div>
+        <div className="flex flex-row justify-between bg-sky-50 p-2 rounded-br-xl rounded-bl-xl">
           <span>Emergencias</span>
           <span className="font-semibold">{project?.emergencies?.length ?? 0}</span>
         </div>

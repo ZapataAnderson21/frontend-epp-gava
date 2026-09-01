@@ -14,6 +14,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const extraDepsKey = JSON.stringify(extraDeps);
 
   const refetch = useCallback(() => {
     setRefetchTrigger(prev => prev + 1);
@@ -86,7 +87,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
       active = false;
       controller.abort();
     };
-  }, [url, refetchTrigger, ...extraDeps]);
+  }, [url, refetchTrigger, extraDepsKey]);
 
   // Permite actualizar los datos localmente sin re-fetch
   const updateData = useCallback((updater: T | ((prev: T | null) => T | null)) => {

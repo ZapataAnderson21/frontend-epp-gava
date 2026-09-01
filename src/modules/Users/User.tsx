@@ -30,7 +30,7 @@ export default function User() {
 
   const { data: userTypes, loading: loadingRoles, error: errorRoles } = useFetch<UserType[]>(userTypeApi, []);
 
-  const { execute: updateUser, loading: updating } = useApiAction<any>();
+  const { execute: updateUser, loading: updating } = useApiAction<unknown>();
 
   useEffect(() => {
     if (user) {

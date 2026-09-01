@@ -63,9 +63,11 @@ export default function QuotationTable() {
       } else {
         throw new Error(result.message || "Error al actualizar");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setData(previousQuotations);
-      toast.error(err.message || "Error al actualizar el estado");
+      toast.error(
+        err instanceof Error ? err.message : "Error al actualizar el estado",
+      );
     }
   };
 

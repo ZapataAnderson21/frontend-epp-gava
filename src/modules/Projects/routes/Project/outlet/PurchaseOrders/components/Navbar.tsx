@@ -1,6 +1,6 @@
 import Permission from "../../../../../../../common/auth/Permission";
 import { useCurrentUser } from "../../../../../../../hooks";
-import { logisticsTypes } from "../../../../../../../utils";
+import { adminTypes, logisticsTypes } from "../../../../../../../utils";
 import NavbarItemProject from "./NavbarItemProject";
 
 export default function NavbarProject() {
@@ -16,6 +16,10 @@ export default function NavbarProject() {
       
       <NavbarItemProject to='requests' name="Requerimientos" />
       <NavbarItemProject to='inventory' name="Inventario" />
+
+      <Permission user={user} allow={adminTypes}>
+        <NavbarItemProject to='incomes' name="Ingresos" />
+      </Permission>
       
       <Permission user={user} allow={logisticsTypes}>
         <NavbarItemProject to='petty-cash' name="Caja Chica" />

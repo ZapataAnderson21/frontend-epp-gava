@@ -24,7 +24,7 @@ export default function NewEmergency() {
 
   const { data: projects, loading: loadingProjects, error: errorProjects } = useFetch<Project[]>(`${projectApi}status/active`);
   
-  const { execute, loading } = useFormDataAction<any>();
+  const { execute, loading } = useFormDataAction<unknown>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

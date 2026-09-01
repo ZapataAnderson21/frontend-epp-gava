@@ -32,12 +32,14 @@ interface EconomicSummaryCardProps {
   purchaseOrderSaleLoading: boolean;
   purchaseOrderPurchaseLoading: boolean;
   payrollTotalsLoading: boolean;
+  serviceSaleLoading: boolean;
   pettyCashLoading: boolean;
   loading: boolean;
   purchaseOrdersSaleTotals: AmountsByCurrency;
   purchaseOrdersPurchaseTotals: AmountsByCurrency;
   purchaseOrdersSaleTotalsByType: AmountsByPurchaseOrderType;
   purchaseOrdersPurchaseTotalsByType: AmountsByPurchaseOrderType;
+  registeredIncomeTotals: AmountsByCurrency;
   payrollTotalsAmounts: AmountsByCurrency;
   pettyCashTotals: AmountsByCurrency;
   utilitiesTotals: AmountsByCurrency;
@@ -49,12 +51,14 @@ export default function EconomicSummaryCard({
   purchaseOrderSaleLoading,
   purchaseOrderPurchaseLoading,
   payrollTotalsLoading,
+  serviceSaleLoading,
   pettyCashLoading,
   loading,
   purchaseOrdersSaleTotals,
   purchaseOrdersPurchaseTotals,
   purchaseOrdersSaleTotalsByType,
   purchaseOrdersPurchaseTotalsByType,
+  registeredIncomeTotals,
   payrollTotalsAmounts,
   pettyCashTotals,
   utilitiesTotals,
@@ -65,6 +69,10 @@ export default function EconomicSummaryCard({
     (pettyCashTotals[currency] ?? 0);
 
   const totalExpensesLoading = purchaseOrderPurchaseLoading || payrollTotalsLoading || pettyCashLoading;
+  const totalIncome =
+    (purchaseOrdersSaleTotals[currency] ?? 0) +
+    (registeredIncomeTotals[currency] ?? 0);
+  const totalIncomeLoading = purchaseOrderSaleLoading || serviceSaleLoading;
 
   return (
     <div className="col-span-1">
@@ -83,10 +91,10 @@ export default function EconomicSummaryCard({
             title="Ingresos"
             trend="up"
             summary={
-              purchaseOrderSaleLoading ? (
+              totalIncomeLoading ? (
                 <CgSpinner className="animate-spin text-xl" />
               ) : (
-                formatMoney(purchaseOrdersSaleTotals[currency] ?? 0, currency)
+                formatMoney(totalIncome, currency)
               )
             }
           >
@@ -105,6 +113,14 @@ export default function EconomicSummaryCard({
               trend="up"
               currency={currency}
               amountsByCurrency={purchaseOrdersSaleTotalsByType.services}
+            />
+            <MoneyTrendCard
+              index={3}
+              loading={serviceSaleLoading}
+              title="Ingresos registrados"
+              trend="up"
+              currency={currency}
+              amountsByCurrency={registeredIncomeTotals}
             />
           </SectionProjectSummary>
 

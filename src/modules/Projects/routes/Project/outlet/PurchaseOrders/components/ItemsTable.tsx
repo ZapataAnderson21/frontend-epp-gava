@@ -29,7 +29,11 @@ type ItemErrors = Partial<{
 interface Props {
   items: ItemRow[];
   resources: Resource[];
-  onChange: (index: number, field: keyof ItemRow, value: any) => void;
+  onChange: <K extends keyof ItemRow>(
+    index: number,
+    field: K,
+    value: ItemRow[K],
+  ) => void;
   onAddRow: (rowIndex?: number) => void;
   onRemoveRow: (rowIndex: number) => void;
   onMoveRow: (rowIndex: number, direction: -1 | 1) => void;
@@ -111,7 +115,9 @@ export default function ItemsTable({
                     <Select
                       name={`resource-${index}`}
                       value={item.resourceId || ""}
-                      onChange={(value) => onChange(index, "resourceId", value)}
+                    onChange={(value) =>
+                      onChange(index, "resourceId", Number(value))
+                    }
                       options={[
                         ...resources.map((r) => ({
                           value: r.resourceId,

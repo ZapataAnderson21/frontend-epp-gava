@@ -9,6 +9,7 @@ interface UsePaginatedFetchOptions {
   initialPageSize?: number;
   params?: Record<string, QueryValue>;
   enabled?: boolean;
+  extraDeps?: unknown[];
 }
 
 export default function usePaginatedFetch<T>(
@@ -18,6 +19,7 @@ export default function usePaginatedFetch<T>(
     initialPageSize = 10,
     params = {},
     enabled = true,
+    extraDeps = [],
   }: UsePaginatedFetchOptions = {},
 ) {
   const [page, setPage] = useState(initialPage);
@@ -47,9 +49,9 @@ export default function usePaginatedFetch<T>(
     });
 
     return parsedUrl.toString();
-  }, [baseUrl, enabled, page, pageSize, serializedParams]);
+  }, [baseUrl, enabled, page, pageSize, params]);
 
-  const result = useFetch<PaginatedData<T>>(url);
+  const result = useFetch<PaginatedData<T>>(url, extraDeps);
 
   useEffect(() => {
     const totalPages = result.data?.pagination.totalPages;

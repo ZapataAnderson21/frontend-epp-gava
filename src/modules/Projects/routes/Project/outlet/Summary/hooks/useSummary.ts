@@ -7,6 +7,7 @@ import {
   pettyCashApi,
   projectApi,
   purchaseOrderApi,
+  serviceSaleApi,
 } from "../../../../../../../data/apiUrl";
 import type { Currency } from "../../../../../../../data/types";
 import type {
@@ -67,6 +68,12 @@ export function useSummary(): UseSummaryReturn {
       [projectId],
     );
 
+  const { data: registeredIncomeTotalsData, loading: serviceSaleLoading } =
+    useFetch<AmountsByCurrency>(
+      `${serviceSaleApi}project/${projectId}/totals`,
+      [projectId],
+    );
+
   // Calculated totals
   const pettyCashTotals = {
     PEN: pettyCashPEN ? Number(pettyCashPEN) : 0,
@@ -102,19 +109,25 @@ export function useSummary(): UseSummaryReturn {
     ),
   };
 
+  const registeredIncomeTotals: AmountsByCurrency = {
+    PEN: registeredIncomeTotalsData?.PEN ?? 0,
+    USD: registeredIncomeTotalsData?.USD ?? 0,
+    EUR: registeredIncomeTotalsData?.EUR ?? 0,
+  };
+
   const utilitiesTotals = {
     PEN:
-      (purchaseOrdersSaleTotals.PEN || 0) -
+      purchaseOrdersSaleTotals.PEN + registeredIncomeTotals.PEN -
       (purchaseOrdersPurchaseTotals.PEN +
         pettyCashTotals.PEN +
         payrollTotalsAmounts.PEN || 0),
     USD:
-      (purchaseOrdersSaleTotals.USD || 0) -
+      purchaseOrdersSaleTotals.USD + registeredIncomeTotals.USD -
       (purchaseOrdersPurchaseTotals.USD +
         pettyCashTotals.USD +
         payrollTotalsAmounts.USD || 0),
     EUR:
-      (purchaseOrdersSaleTotals.EUR || 0) -
+      purchaseOrdersSaleTotals.EUR + registeredIncomeTotals.EUR -
       (purchaseOrdersPurchaseTotals.EUR +
         pettyCashTotals.EUR +
         payrollTotalsAmounts.EUR || 0),
@@ -146,6 +159,7 @@ export function useSummary(): UseSummaryReturn {
     purchaseOrderSaleLoading,
     purchaseOrderPurchaseLoading,
     payrollTotalsLoading,
+    serviceSaleLoading,
 
     // Calculated totals
     pettyCashTotals,
@@ -154,6 +168,7 @@ export function useSummary(): UseSummaryReturn {
     purchaseOrdersPurchaseTotals,
     purchaseOrdersSaleTotalsByType,
     purchaseOrdersPurchaseTotalsByType,
+    registeredIncomeTotals,
     utilitiesTotals,
   };
 }

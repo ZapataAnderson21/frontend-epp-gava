@@ -779,6 +779,7 @@ export interface ServiceSaleType {
   projectId: number;
   serviceName: string;
   amount: number;
+  currency: Currency;
   description: string;
   createdAt: string;
   updatedAt: Date;

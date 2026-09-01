@@ -59,7 +59,7 @@ export default function EditPurchaseOrder() {
   const { data: resourcePurchaseOrders, loading: resourcePuchaseOrdersLoading, error: resourcePurchaseOrdersError } = useFetch<ResourcePurchaseOrder[]>(`${resourcePurchaseOrderApi}purchase-order/${purchaseOrderId}`);
   const { data: resources, loading: resourcesLoading, error: resourcesError } = useFetch<Resource[]>(`${resourceApi}`);
 
-  const { execute, loading: saving } = useApiAction<any>();
+  const { execute, loading: saving } = useApiAction<unknown>();
 
   const navigate = useNavigate();
 
@@ -119,7 +119,11 @@ export default function EditPurchaseOrder() {
   };
 
   // ---- helpers de items ----
-  const handleItemChange = (index: number, field: string, value: any) => {
+  const handleItemChange = <K extends keyof ItemRow>(
+    index: number,
+    field: K,
+    value: ItemRow[K],
+  ) => {
     setItems(prev => {
       const normalizeOrderNumbers = (rows: ItemRow[]) =>
         rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
@@ -137,7 +141,7 @@ export default function EditPurchaseOrder() {
           next[index] = { ...next[index], resourceId: 0, description: "", unit: "" };
         }
       } else {
-        (next[index] as any)[field] = value;
+        next[index] = { ...next[index], [field]: value };
       }
 
       next[index].subtotal = lineAmount(

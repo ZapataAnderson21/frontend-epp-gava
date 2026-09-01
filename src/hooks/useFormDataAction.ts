@@ -16,9 +16,8 @@ export function useFormDataAction<T>() {
     setLoading(true);
     setError(null);
     try {
-      const authHeaders = getAuthHeaders();
-      // ❌ No seteamos Content-Type, el browser lo hace automáticamente para FormData
-      const { ["Content-Type"]: _omit, ...headers } = authHeaders as Record<string, string>;
+      const headers = new Headers(getAuthHeaders());
+      headers.delete("Content-Type");
 
       const res = await fetch(url, {
         method,
@@ -34,8 +33,8 @@ export function useFormDataAction<T>() {
       }
 
       return json;
-    } catch (err: any) {
-      setError(err.message || "Error desconocido");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
       throw err;
     } finally {
       setLoading(false);
