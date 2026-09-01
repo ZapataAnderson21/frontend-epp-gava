@@ -3,7 +3,7 @@ import PurchaseOrderTable from "./PurchaseOrders/PurchaseOrderTable";
 import Permission from "../../../../../common/auth/Permission";
 import { AddButton } from "../../../../../common/button";
 import { useCurrentUser } from "../../../../../hooks";
-import { adminTypes, logisticsTypes } from "../../../../../utils";
+import { logisticsTypes } from "../../../../../utils";
 import { Button } from "../../../../../components";
 import { List as FaListUl } from "lucide-react";
 import { useState } from "react";
@@ -36,7 +36,7 @@ export default function PurchaseOrdersProject() {
               type="button"
               onClick={() => setIsUnitValuesOpen(true)}
             />
-            <Permission user={user} allow={adminTypes}>
+            <Permission user={user} allow={logisticsTypes}>
             <AddButton onClick={navigateToNewPurchaseOrder} />
             </Permission>
           </div>

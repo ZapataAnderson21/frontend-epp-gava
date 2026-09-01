@@ -1,5 +1,5 @@
 import Permission from "../../../../../../common/auth/Permission"
-import { adminTypes, lineAmount, roundMoney, totalFromRoundedLines } from "../../../../../../utils";
+import { logisticsTypes, lineAmount, roundMoney, totalFromRoundedLines } from "../../../../../../utils";
 import { useApiAction, useCurrentUser, useFetch } from "../../../../../../hooks";
 import { ErrorMessage } from "../../../../../../common/error";
 import { purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../../../../../../data/apiUrl";
@@ -477,7 +477,7 @@ export default function EditPurchaseOrder() {
   if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+    <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col justify-center w-full">
         <div className="w-full flex flex-col items-center justify-center">

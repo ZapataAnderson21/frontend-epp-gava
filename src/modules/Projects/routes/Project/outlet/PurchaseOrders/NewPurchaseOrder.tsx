@@ -8,7 +8,7 @@ import { usePurchaseOrderForm } from "../../../../../../hooks/usePurchaseOrderFo
 import { PurchaseOrderHeader, SupplierSelectCard, DeliveryInfoCard, PaymentConditionsCard, ItemsTable, ConditionsSection, SignaturesTable } from "./components";
 import { ReturnButton, SaveButton } from "../../../../../../common/button";
 import Permission from "../../../../../../common/auth/Permission";
-import { adminTypes } from "../../../../../../utils";
+import { logisticsTypes } from "../../../../../../utils";
 import { useCurrentUser } from "../../../../../../hooks";
 import { Select } from "../../../../../../components";
 
@@ -75,7 +75,7 @@ export default function NewPurchaseOrder() {
   if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+    <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col justify-center w-full">
 
