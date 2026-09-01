@@ -37,6 +37,7 @@ export default function PayrollConfigurationModal({
     })),
   );
   const [search, setSearch] = useState("");
+  const [projectSearch, setProjectSearch] = useState("");
   const [activeGroup, setActiveGroup] = useState<PayrollWorkerGroup>("laborer");
 
   const normalizedSearch = search
@@ -45,6 +46,22 @@ export default function PayrollConfigurationModal({
     .toLowerCase();
   const naturalGroup = (worker: PayrollWorkerOption): PayrollWorkerGroup =>
     worker.workerType === "technician" ? "technician" : "laborer";
+
+  const visibleProjects = useMemo(() => {
+    const normalized = projectSearch
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+    if (!normalized) return activeProjects;
+    return activeProjects.filter((project) =>
+      `${project.code} ${project.name}`
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .includes(normalized),
+    );
+  }, [activeProjects, projectSearch]);
 
   const visibleWorkers = useMemo(
     () =>
@@ -152,8 +169,18 @@ export default function PayrollConfigurationModal({
             <p className="mb-4 mt-1 text-xs text-gray-500">
               {projectIds.length} seleccionados
             </p>
-            <div className="space-y-2">
-              {activeProjects.map((project) => (
+            <label className="mb-4 flex items-center gap-2 rounded-xl border border-gray-300 px-3 focus-within:border-[#0047a3]">
+              <Search className="size-4 text-gray-400" />
+              <input
+                type="search"
+                value={projectSearch}
+                onChange={(event) => setProjectSearch(event.target.value)}
+                placeholder="Buscar por código o nombre"
+                className="w-full bg-transparent py-3 outline-none"
+              />
+            </label>
+            <div className="max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+              {visibleProjects.map((project) => (
                 <label
                   key={project.projectId}
                   className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50"
@@ -174,6 +201,11 @@ export default function PayrollConfigurationModal({
                   </span>
                 </label>
               ))}
+              {visibleProjects.length === 0 && (
+                <p className="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
+                  No se encontraron proyectos.
+                </p>
+              )}
             </div>
           </section>
 

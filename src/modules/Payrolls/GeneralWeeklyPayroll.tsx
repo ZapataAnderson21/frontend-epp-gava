@@ -14,6 +14,7 @@ import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { logisticsTypes } from "../../utils";
 import PayrollConfigurationModal from "./PayrollConfigurationModal";
 import { GeneralPayrollGrid, ProjectPayrollGrid } from "./PayrollGrid";
+import ProjectWorkerSelectionModal from "./ProjectWorkerSelectionModal";
 import type {
   GeneralPayroll,
   GeneralPayrollDetail,
@@ -61,9 +62,12 @@ export default function GeneralWeeklyPayroll() {
     useApiAction<GeneralPayrollDetail>();
   const { execute: persist, loading: saving } =
     useApiAction<GeneralPayrollDetail>();
+  const { execute: updateProjectWorkers, loading: updatingProjectWorkers } =
+    useApiAction<GeneralPayrollDetail>();
   const [payroll, setPayroll] = useState<GeneralPayroll | null>(null);
   const [activeTab, setActiveTab] = useState<number | "general">("general");
   const [configurationOpen, setConfigurationOpen] = useState(false);
+  const [projectWorkersOpen, setProjectWorkersOpen] = useState(false);
 
   useEffect(() => {
     setPayroll(data?.payroll ? structuredClone(data.payroll) : null);
@@ -97,7 +101,9 @@ export default function GeneralWeeklyPayroll() {
       payroll.workers.map((worker) => [worker.generalPayrollWorkerId, worker]),
     );
     const entriesNet = payroll.projects
-      .flatMap((project) => project.entries)
+      .flatMap((project) =>
+        project.entries.filter((entry) => entry.isActive),
+      )
       .reduce((total, entry) => {
         const worker = workerById.get(entry.generalPayrollWorkerId);
         if (!worker) return total;
@@ -228,7 +234,7 @@ export default function GeneralWeeklyPayroll() {
             sundayDinnerAmount: worker.sundayDinnerAmount,
           })),
           entries: payroll.projects.flatMap((project) =>
-            project.entries.map((entry) => ({
+            project.entries.filter((entry) => entry.isActive).map((entry) => ({
               generalPayrollEntryId: entry.generalPayrollEntryId,
               monday: entry.monday,
               tuesday: entry.tuesday,
@@ -252,6 +258,30 @@ export default function GeneralWeeklyPayroll() {
         actionError instanceof Error
           ? actionError.message
           : "No se pudo guardar la planilla.",
+      );
+    }
+  };
+
+  const handleProjectWorkersSave = async (
+    generalPayrollWorkerIds: number[],
+    confirmClearAttendance: boolean,
+  ) => {
+    if (!weekId || !selectedProject) return;
+    try {
+      const response = await updateProjectWorkers(
+        `${generalPayrollApi}weeks/${weekId}/projects/${selectedProject.generalPayrollProjectId}/workers`,
+        "PUT",
+        { generalPayrollWorkerIds, confirmClearAttendance },
+      );
+      setPayroll(response.data.payroll);
+      setProjectWorkersOpen(false);
+      toast.success("Trabajadores del proyecto actualizados.");
+      refetch();
+    } catch (actionError) {
+      toast.error(
+        actionError instanceof Error
+          ? actionError.message
+          : "No se pudo actualizar la asignación del proyecto.",
       );
     }
   };
@@ -423,14 +453,27 @@ export default function GeneralWeeklyPayroll() {
               readOnly={!canEdit}
             />
           ) : selectedProject ? (
-            <ProjectPayrollGrid
-              project={selectedProject}
-              projects={payroll.projects}
-              workers={payroll.workers}
-              onEntryChange={handleEntryChange}
-              onWorkerChange={handleWorkerChange}
-              readOnly={!canEdit}
-            />
+            <div className="space-y-4">
+              {canEdit && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setProjectWorkersOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
+                  >
+                    <Users className="size-4" /> Seleccionar trabajadores
+                  </button>
+                </div>
+              )}
+              <ProjectPayrollGrid
+                project={selectedProject}
+                projects={payroll.projects}
+                workers={payroll.workers}
+                onEntryChange={handleEntryChange}
+                onWorkerChange={handleWorkerChange}
+                readOnly={!canEdit}
+              />
+            </div>
           ) : null}
 
           {payroll.projects.length === 0 && payroll.workers.length > 0 && (
@@ -450,6 +493,16 @@ export default function GeneralWeeklyPayroll() {
           saving={configuring}
           onClose={() => setConfigurationOpen(false)}
           onSave={handleConfigure}
+        />
+      )}
+
+      {canEdit && projectWorkersOpen && payroll && selectedProject && (
+        <ProjectWorkerSelectionModal
+          project={selectedProject}
+          workers={payroll.workers}
+          saving={updatingProjectWorkers}
+          onClose={() => setProjectWorkersOpen(false)}
+          onSave={handleProjectWorkersSave}
         />
       )}
     </main>

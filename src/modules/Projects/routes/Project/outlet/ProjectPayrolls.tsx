@@ -66,6 +66,85 @@ function PayrollWeek({
   initiallyOpen: boolean;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
+  const calculateTotals = (workers: ProjectPayrollWeekDetail["workers"]) => ({
+    attendance: Object.fromEntries(
+      dayFields.map(([field]) => [
+        field,
+        workers.reduce(
+          (total, worker) => total + (worker.attendance[field] ? 1 : 0),
+          0,
+        ),
+      ]),
+    ) as Record<(typeof dayFields)[number][0], number>,
+    attendanceCount: workers.reduce(
+      (total, worker) => total + worker.attendanceCount,
+      0,
+    ),
+    dailyWage: workers.reduce(
+      (total, worker) => total + worker.dailyWage,
+      0,
+    ),
+    overtimeAmount: workers.reduce(
+      (total, worker) => total + worker.overtimeAmount,
+      0,
+    ),
+    grossAmount: workers.reduce(
+      (total, worker) => total + worker.grossAmount,
+      0,
+    ),
+    afpDiscount: workers.reduce(
+      (total, worker) => total + worker.afpDiscount,
+      0,
+    ),
+    advanceDiscount: workers.reduce(
+      (total, worker) => total + worker.advanceDiscount,
+      0,
+    ),
+    paidAmount: workers.reduce(
+      (total, worker) => total + worker.paidAmount,
+      0,
+    ),
+  });
+
+  const renderTotalsRow = (
+    label: string,
+    workers: ProjectPayrollWeekDetail["workers"],
+    overall = false,
+  ) => {
+    const totals = calculateTotals(workers);
+    return (
+      <tr
+        key={label}
+        className={
+          overall
+            ? "border-t-2 border-[#0047a3] bg-[#eaf2ff] font-extrabold text-[#0f2545]"
+            : "border-t border-gray-200 bg-gray-100 font-bold text-[#0f2545]"
+        }
+      >
+        <td colSpan={2} className="px-4 py-3 text-right">
+          {label}
+        </td>
+        {dayFields.map(([field]) => (
+          <td key={field} className="px-2 py-3 text-center">
+            {totals.attendance[field]}
+          </td>
+        ))}
+        <td className="px-3 py-3 text-right">{totals.attendanceCount}</td>
+        {[
+          totals.dailyWage,
+          totals.overtimeAmount,
+          totals.grossAmount,
+          totals.afpDiscount,
+          totals.advanceDiscount,
+          totals.paidAmount,
+        ].map((value, index) => (
+          <td key={index} className="px-3 py-3 text-right">
+            {moneyFormatter.format(value)}
+          </td>
+        ))}
+      </tr>
+    );
+  };
 
   return (
     <details
@@ -172,19 +251,11 @@ function PayrollWeek({
                     </td>
                   </tr>
                 )),
+                renderTotalsRow(`Total ${groupLabels[group]}`, workers),
               ];
             })}
+            {renderTotalsRow("Total de la semana", week.workers, true)}
           </tbody>
-          <tfoot className="border-t-2 border-gray-200 bg-gray-50 font-bold text-[#0f2545]">
-            <tr>
-              <td colSpan={15} className="px-4 py-4 text-right">
-                Total de la semana
-              </td>
-              <td className="px-4 py-4 text-right text-emerald-700">
-                {moneyFormatter.format(week.totalAmount)}
-              </td>
-            </tr>
-          </tfoot>
         </table>
       </div>
     </details>

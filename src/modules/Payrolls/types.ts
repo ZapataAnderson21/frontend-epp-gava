@@ -40,6 +40,7 @@ export interface GeneralPayrollEntry {
   generalPayrollEntryId: number;
   generalPayrollProjectId: number;
   generalPayrollWorkerId: number;
+  isActive: boolean;
   monday: number;
   tuesday: number;
   wednesday: number;

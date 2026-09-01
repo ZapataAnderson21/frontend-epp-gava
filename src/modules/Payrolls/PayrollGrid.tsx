@@ -22,13 +22,128 @@ const moneyFormatter = new Intl.NumberFormat("es-PE", {
   maximumFractionDigits: 2,
 });
 
-const sumDays = (entry: GeneralPayrollEntry) =>
-  dayFields.reduce((total, [field]) => total + Number(entry[field] || 0), 0);
-
 const groupLabel: Record<PayrollWorkerGroup, string> = {
   laborer: "Obreros",
   technician: "Técnicos",
 };
+
+type DayField = (typeof dayFields)[number][0];
+
+interface ProjectColumnTotals {
+  days: Record<DayField, number>;
+  totalDays: number;
+  dailyWage: number;
+  overtime: number;
+  gross: number;
+  afp: number;
+  advance: number;
+  net: number;
+}
+
+const emptyDays = (): Record<DayField, number> =>
+  Object.fromEntries(dayFields.map(([field]) => [field, 0])) as Record<
+    DayField,
+    number
+  >;
+
+const calculateProjectWorkerTotals = (
+  worker: GeneralPayrollWorker,
+  entry: GeneralPayrollEntry,
+): ProjectColumnTotals => {
+  const days = Object.fromEntries(
+    dayFields.map(([field]) => [field, Number(entry[field])]),
+  ) as Record<DayField, number>;
+  const totalDays = Object.values(days).reduce(
+    (total, value) => total + value,
+    0,
+  );
+  const gross = totalDays * worker.dailyWage + entry.overtimeAmount;
+  const net = gross - entry.afpDiscount - entry.advanceDiscount;
+  return {
+    days,
+    totalDays,
+    dailyWage: worker.dailyWage,
+    overtime: entry.overtimeAmount,
+    gross,
+    afp: entry.afpDiscount,
+    advance: entry.advanceDiscount,
+    net,
+  };
+};
+
+const sumProjectColumnTotals = (
+  totals: ProjectColumnTotals[],
+): ProjectColumnTotals =>
+  totals.reduce<ProjectColumnTotals>(
+    (sum, current) => ({
+      days: Object.fromEntries(
+        dayFields.map(([field]) => [
+          field,
+          sum.days[field] + current.days[field],
+        ]),
+      ) as Record<DayField, number>,
+      totalDays: sum.totalDays + current.totalDays,
+      dailyWage: sum.dailyWage + current.dailyWage,
+      overtime: sum.overtime + current.overtime,
+      gross: sum.gross + current.gross,
+      afp: sum.afp + current.afp,
+      advance: sum.advance + current.advance,
+      net: sum.net + current.net,
+    }),
+    {
+      days: emptyDays(),
+      totalDays: 0,
+      dailyWage: 0,
+      overtime: 0,
+      gross: 0,
+      afp: 0,
+      advance: 0,
+      net: 0,
+    },
+  );
+
+function ProjectTotalsRow({
+  label,
+  totals,
+  overall = false,
+}: {
+  label: string;
+  totals: ProjectColumnTotals;
+  overall?: boolean;
+}) {
+  return (
+    <tr
+      className={
+        overall
+          ? "border-t-2 border-[#0047a3] bg-[#eaf2ff] font-extrabold text-[#0f2545]"
+          : "border-t border-gray-200 bg-gray-100 font-bold text-[#0f2545]"
+      }
+    >
+      <td colSpan={3} className="px-4 py-3 text-right">
+        {label}
+      </td>
+      {dayFields.map(([field]) => (
+        <td key={field} className="px-2 py-3 text-center">
+          {moneyFormatter.format(totals.days[field])}
+        </td>
+      ))}
+      {[
+        totals.totalDays,
+        totals.dailyWage,
+        totals.overtime,
+        totals.gross,
+        totals.afp,
+        totals.advance,
+        totals.net,
+      ].map((value, index) => (
+        <td key={index} className="px-3 py-3 text-right">
+          {index >= 1 ? "S/ " : ""}
+          {moneyFormatter.format(value)}
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 interface ProjectGridProps {
   project: GeneralPayrollProject;
@@ -134,6 +249,17 @@ export function ProjectPayrollGrid({
   const entryByWorker = new Map(
     project.entries.map((entry) => [entry.generalPayrollWorkerId, entry]),
   );
+  const activeWorkers = workers.filter(
+    (worker) => entryByWorker.get(worker.generalPayrollWorkerId)?.isActive,
+  );
+  const allProjectTotals = sumProjectColumnTotals(
+    activeWorkers.map((worker) =>
+      calculateProjectWorkerTotals(
+        worker,
+        entryByWorker.get(worker.generalPayrollWorkerId)!,
+      ),
+    ),
+  );
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -163,8 +289,16 @@ export function ProjectPayrollGrid({
         </thead>
         <tbody>
           {(["laborer", "technician"] as const).map((group) => {
-            const groupedWorkers = workers.filter(
+            const groupedWorkers = activeWorkers.filter(
               (worker) => worker.group === group,
+            );
+            const groupTotals = sumProjectColumnTotals(
+              groupedWorkers.map((worker) =>
+                calculateProjectWorkerTotals(
+                  worker,
+                  entryByWorker.get(worker.generalPayrollWorkerId)!,
+                ),
+              ),
             );
             return [
               <tr
@@ -181,10 +315,8 @@ export function ProjectPayrollGrid({
               ...groupedWorkers.map((worker, index) => {
                 const entry = entryByWorker.get(worker.generalPayrollWorkerId);
                 if (!entry) return null;
-                const totalDays = sumDays(entry);
-                const gross =
-                  totalDays * worker.dailyWage + entry.overtimeAmount;
-                const net = gross - entry.afpDiscount - entry.advanceDiscount;
+                const { totalDays, gross, net } =
+                  calculateProjectWorkerTotals(worker, entry);
                 return (
                   <tr
                     key={worker.generalPayrollWorkerId}
@@ -210,6 +342,7 @@ export function ProjectPayrollGrid({
                                 (candidateEntry) =>
                                   candidateEntry.generalPayrollWorkerId ===
                                     worker.generalPayrollWorkerId &&
+                                  candidateEntry.isActive &&
                                   Number(candidateEntry[field]) > 0,
                               ),
                           );
@@ -319,9 +452,20 @@ export function ProjectPayrollGrid({
                     No hay trabajadores en este grupo.
                   </td>
                 </tr>
-              ) : null,
+              ) : (
+                <ProjectTotalsRow
+                  key={`${group}-totals`}
+                  label={`Total ${groupLabel[group]}`}
+                  totals={groupTotals}
+                />
+              ),
             ];
           })}
+          <ProjectTotalsRow
+            label="Total del proyecto"
+            totals={allProjectTotals}
+            overall
+          />
         </tbody>
       </table>
     </div>
@@ -350,6 +494,7 @@ export function GeneralPayrollGrid({
       .flatMap((project) => project.entries)
       .filter(
         (entry) =>
+          entry.isActive &&
           entry.generalPayrollWorkerId === worker.generalPayrollWorkerId,
       );
     const days = Object.fromEntries(
@@ -378,8 +523,107 @@ export function GeneralPayrollGrid({
       worker.additionalAmount +
       worker.liquidationAmount +
       worker.sundayDinnerAmount;
-    return { days, totalDays, overtime, afp, advance, gross, net, finalNet };
+    return {
+      days,
+      totalDays,
+      dailyWage: worker.dailyWage,
+      overtime,
+      afp,
+      advance,
+      gross,
+      net,
+      additional: worker.additionalAmount,
+      liquidation: worker.liquidationAmount,
+      sundayDinner: worker.sundayDinnerAmount,
+      finalNet,
+    };
   };
+
+  type GeneralColumnTotals = ReturnType<typeof aggregate>;
+  const sumGeneralTotals = (
+    selectedWorkers: GeneralPayrollWorker[],
+  ): GeneralColumnTotals =>
+    selectedWorkers
+      .map(aggregate)
+      .reduce<GeneralColumnTotals>(
+        (sum, current) => ({
+          days: Object.fromEntries(
+            dayFields.map(([field]) => [
+              field,
+              sum.days[field] + current.days[field],
+            ]),
+          ) as Record<DayField, number>,
+          totalDays: sum.totalDays + current.totalDays,
+          dailyWage: sum.dailyWage + current.dailyWage,
+          overtime: sum.overtime + current.overtime,
+          afp: sum.afp + current.afp,
+          advance: sum.advance + current.advance,
+          gross: sum.gross + current.gross,
+          net: sum.net + current.net,
+          additional: sum.additional + current.additional,
+          liquidation: sum.liquidation + current.liquidation,
+          sundayDinner: sum.sundayDinner + current.sundayDinner,
+          finalNet: sum.finalNet + current.finalNet,
+        }),
+        {
+          days: emptyDays(),
+          totalDays: 0,
+          dailyWage: 0,
+          overtime: 0,
+          afp: 0,
+          advance: 0,
+          gross: 0,
+          net: 0,
+          additional: 0,
+          liquidation: 0,
+          sundayDinner: 0,
+          finalNet: 0,
+        },
+      );
+
+  const renderTotalsRow = (
+    label: string,
+    totals: GeneralColumnTotals,
+    overall = false,
+  ) => (
+    <tr
+      key={label}
+      className={
+        overall
+          ? "border-t-2 border-[#0047a3] bg-[#eaf2ff] font-extrabold text-[#0f2545]"
+          : "border-t border-gray-200 bg-gray-100 font-bold text-[#0f2545]"
+      }
+    >
+      <td colSpan={3} className="px-4 py-3 text-right">
+        {label}
+      </td>
+      {dayFields.map(([field]) => (
+        <td key={field} className="px-2 py-3 text-right">
+          {moneyFormatter.format(totals.days[field])}
+        </td>
+      ))}
+      {[
+        totals.totalDays,
+        totals.dailyWage,
+        totals.overtime,
+        totals.gross,
+        totals.afp,
+        totals.advance,
+        totals.net,
+        totals.additional,
+        totals.liquidation,
+        totals.sundayDinner,
+        totals.finalNet,
+      ].map((value, index) => (
+        <td key={index} className="px-3 py-3 text-right">
+          {index >= 1 ? "S/ " : ""}
+          {moneyFormatter.format(value)}
+        </td>
+      ))}
+    </tr>
+  );
+
+  const overallTotals = sumGeneralTotals(workers);
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -416,6 +660,7 @@ export function GeneralPayrollGrid({
             const groupedWorkers = workers.filter(
               (worker) => worker.group === group,
             );
+            const groupTotals = sumGeneralTotals(groupedWorkers);
             return [
               <tr
                 key={`${group}-header`}
@@ -509,9 +754,12 @@ export function GeneralPayrollGrid({
                     No hay trabajadores en este grupo.
                   </td>
                 </tr>
-              ) : null,
+              ) : (
+                renderTotalsRow(`Total ${groupLabel[group]}`, groupTotals)
+              ),
             ];
           })}
+          {renderTotalsRow("Total general", overallTotals, true)}
         </tbody>
       </table>
     </div>
