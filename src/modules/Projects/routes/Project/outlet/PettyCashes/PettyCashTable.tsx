@@ -2,10 +2,16 @@ import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
+import { DeleteButton, SeeButton } from "../../../../../../common/button";
+import { DeleteConfirmDialog } from "../../../../../../components";
 import { pettyCashApi } from "../../../../../../data/apiUrl";
 import { type PettyCashType } from "../../../../../../data/types";
-import { useDebouncedValue, usePaginatedFetch } from "../../../../../../hooks";
-import SeeButton from "../../../../../../common/button/SeeButton";
+import {
+  useApiAction,
+  useDebouncedValue,
+  usePaginatedFetch,
+} from "../../../../../../hooks";
+import toast from "react-hot-toast";
 
 const expenseTypeOptions = [
   { value: "", label: "Todos los tipos" },
@@ -22,11 +28,20 @@ interface ProjectTableProps {
   projectId: number;
   reFetch: number;
   onSee: (pettyCashId: number) => void;
+  onDeleted: () => void;
 }
 
-export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTableProps) {
+export default function PettyCashTable({
+  projectId,
+  reFetch,
+  onSee,
+  onDeleted,
+}: ProjectTableProps) {
   const [search, setSearch] = useState("");
   const [expenseType, setExpenseType] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const { execute: deletePettyCash, loading: deleting } =
+    useApiAction<PettyCashType>();
   const debouncedSearch = useDebouncedValue(search);
   const {
     items: pettyCashes,
@@ -53,12 +68,34 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
+  const handleConfirmDelete = async () => {
+    if (pendingDeleteId === null) return;
+
+    try {
+      await deletePettyCash(`${pettyCashApi}${pendingDeleteId}`, "DELETE");
+      toast.success("Registro de caja chica eliminado correctamente");
+      setPendingDeleteId(null);
+      onDeleted();
+    } catch (caught) {
+      toast.error(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo eliminar el registro de caja chica",
+      );
+    }
+  };
+
   const columns = [
     { key: "expenseDate", label: "Fecha", width: "12rem" },
     { key: "expenseType", label: "Tipo", width: "12rem" },
-    { label: "Monto (S/. )", 
+    {
+      label: "Monto (S/. )",
       width: "12rem",
-      render: (row: PettyCashType) => (<span className="flex max-w-[6rem] justify-end">S/ {Number(row.amount).toFixed(2)}</span>),
+      render: (row: PettyCashType) => (
+        <span className="flex max-w-[6rem] justify-end">
+          S/ {Number(row.amount).toFixed(2)}
+        </span>
+      ),
     },
     {
       label: "IGV",
@@ -67,7 +104,9 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
         const includesIgv = row.includesIgv !== false;
 
         return (
-          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${includesIgv ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+          <span
+            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${includesIgv ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}
+          >
             {includesIgv ? "Incluido" : "No incluido"}
           </span>
         );
@@ -75,9 +114,12 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
     },
     {
       label: "Acciones",
-      width: "8rem",
+      width: "10rem",
       render: (row: PettyCashType) => (
-        <SeeButton onClick={() => onSee(row.pettyCashId)} />
+        <div className="flex items-center gap-2">
+          <SeeButton onClick={() => onSee(row.pettyCashId)} />
+          <DeleteButton onClick={() => setPendingDeleteId(row.pettyCashId)} />
+        </div>
       ),
     },
   ] as const;
@@ -94,13 +136,13 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
     return <ErrorMessage errorMessage={error} />;
   }
 
-  const processedPettyCashes = pettyCashes.map(pettyCash => ({
+  const processedPettyCashes = pettyCashes.map((pettyCash) => ({
     ...pettyCash,
     createdAt: new Date(pettyCash.createdAt).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "numeric",
-      day: "numeric"
-    })
+      day: "numeric",
+    }),
   }));
 
   return (
@@ -146,6 +188,15 @@ export default function PettyCashTable( {projectId, reFetch, onSee} : ProjectTab
             : "No hay salidas de caja chica."}
         </div>
       )}
+
+      <DeleteConfirmDialog
+        isOpen={pendingDeleteId !== null}
+        title="Eliminar registro de caja chica"
+        message="Esta acción eliminará el registro y actualizará los totales del proyecto. No se puede deshacer."
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }
