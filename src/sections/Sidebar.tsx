@@ -26,7 +26,7 @@ import { useApiAction } from "../hooks/useApiAction";
 import { userApi } from "../data/apiUrl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCurrentUser } from "../hooks";
-import { adminTypes, documentExpirationTypes, logisticsTypes, monthlyEvaluationTypes } from "../utils";
+import { documentExpirationTypes, logisticsTypes, monthlyEvaluationTypes } from "../utils";
 import Permission from "../common/auth/Permission";
 import { NotificationBell } from "../components";
 
@@ -115,7 +115,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           <SidebarItem icon={<RiAlertFill />} label="Emergencias" href="/admin/emergencies" index={9} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           <SidebarItem icon={<FaUsers />} label="Trabajadores" href="/admin/workers" index={10} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
 
-          <Permission user={user} allow={adminTypes}>
+          <Permission user={user} allow={logisticsTypes}>
             <SidebarItem icon={<FaMoneyBillWave />} label="Planillas" href="/admin/payrolls" index={11} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
           </Permission>
 

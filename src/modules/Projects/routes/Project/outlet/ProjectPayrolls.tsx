@@ -12,7 +12,7 @@ import type {
   ProjectPayrollDetail,
   ProjectPayrollWeekDetail,
 } from "../../../../Payrolls/types";
-import { adminTypes } from "../../../../../utils";
+import { logisticsTypes } from "../../../../../utils";
 
 const PAGE_SIZE = 5;
 const dayFields = [
@@ -212,7 +212,7 @@ export default function ProjectPayrolls() {
   return (
     <Permission
       user={user}
-      allow={adminTypes}
+      allow={logisticsTypes}
       fallback={
         <ErrorMessage errorMessage="No tienes permiso para ver esta sección." />
       }

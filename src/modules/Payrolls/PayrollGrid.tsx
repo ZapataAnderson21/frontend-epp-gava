@@ -44,6 +44,7 @@ interface ProjectGridProps {
     field: keyof GeneralPayrollWorker,
     value: number,
   ) => void;
+  readOnly?: boolean;
 }
 
 const NumberInput = ({
@@ -51,11 +52,13 @@ const NumberInput = ({
   onChange,
   ariaLabel,
   className = "w-20",
+  disabled = false,
 }: {
   value: number;
   onChange: (value: number) => void;
   ariaLabel: string;
   className?: string;
+  disabled?: boolean;
 }) => (
   <input
     type="number"
@@ -63,8 +66,9 @@ const NumberInput = ({
     step="0.01"
     value={value}
     aria-label={ariaLabel}
+    disabled={disabled}
     onChange={(event) => onChange(Math.max(0, Number(event.target.value) || 0))}
-    className={`${className} rounded-md border border-gray-300 bg-white px-2 py-1.5 text-right outline-none transition focus:border-[#0047a3] focus:ring-2 focus:ring-[#0047a3]/10`}
+    className={`${className} rounded-md border border-gray-300 px-2 py-1.5 text-right outline-none transition focus:border-[#0047a3] focus:ring-2 focus:ring-[#0047a3]/10 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600`}
   />
 );
 
@@ -94,10 +98,12 @@ const AttendanceCheck = ({
     transition={{ type: "spring", stiffness: 460, damping: 24 }}
     onClick={() => onChange(!checked)}
     className={`inline-flex size-8 items-center justify-center rounded-lg border-2 transition-colors ${
-      checked
-        ? "cursor-pointer border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
-        : disabled
-          ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+      disabled
+        ? checked
+          ? "cursor-not-allowed border-[#0047a3] bg-[#0047a3] text-white opacity-75"
+          : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+        : checked
+          ? "cursor-pointer border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
           : "cursor-pointer border-gray-300 bg-white text-transparent hover:border-[#0047a3] hover:bg-[#eff5ff]"
     }`}
   >
@@ -123,6 +129,7 @@ export function ProjectPayrollGrid({
   workers,
   onEntryChange,
   onWorkerChange,
+  readOnly = false,
 }: ProjectGridProps) {
   const entryByWorker = new Map(
     project.entries.map((entry) => [entry.generalPayrollWorkerId, entry]),
@@ -207,13 +214,16 @@ export function ProjectPayrollGrid({
                               ),
                           );
                           const checked = Number(entry[field]) === 1;
-                          const disabled = Boolean(occupiedProject) && !checked;
+                          const disabled =
+                            readOnly || (Boolean(occupiedProject) && !checked);
                           return (
                             <AttendanceCheck
                               checked={checked}
                               disabled={disabled}
                               disabledReason={
-                                occupiedProject
+                                readOnly
+                                  ? "Vista de solo lectura"
+                                  : occupiedProject
                                   ? `Ya registró asistencia en ${occupiedProject.project.name}`
                                   : undefined
                               }
@@ -235,6 +245,7 @@ export function ProjectPayrollGrid({
                     </td>
                     <td className="px-3 py-3 text-right">
                       <NumberInput
+                        disabled={readOnly}
                         value={worker.dailyWage}
                         onChange={(value) =>
                           onWorkerChange(
@@ -248,6 +259,7 @@ export function ProjectPayrollGrid({
                     </td>
                     <td className="px-3 py-3 text-right">
                       <NumberInput
+                        disabled={readOnly}
                         value={entry.overtimeAmount}
                         onChange={(value) =>
                           onEntryChange(
@@ -264,6 +276,7 @@ export function ProjectPayrollGrid({
                     </td>
                     <td className="px-3 py-3 text-right">
                       <NumberInput
+                        disabled={readOnly}
                         value={entry.afpDiscount}
                         onChange={(value) =>
                           onEntryChange(
@@ -277,6 +290,7 @@ export function ProjectPayrollGrid({
                     </td>
                     <td className="px-3 py-3 text-right">
                       <NumberInput
+                        disabled={readOnly}
                         value={entry.advanceDiscount}
                         onChange={(value) =>
                           onEntryChange(
@@ -322,12 +336,14 @@ interface GeneralGridProps {
     field: keyof GeneralPayrollWorker,
     value: number,
   ) => void;
+  readOnly?: boolean;
 }
 
 export function GeneralPayrollGrid({
   projects,
   workers,
   onWorkerChange,
+  readOnly = false,
 }: GeneralGridProps) {
   const aggregate = (worker: GeneralPayrollWorker) => {
     const entries = projects
@@ -463,6 +479,7 @@ export function GeneralPayrollGrid({
                     ).map((field) => (
                       <td key={field} className="px-3 py-3 text-right">
                         <NumberInput
+                          disabled={readOnly}
                           value={worker[field]}
                           onChange={(value) =>
                             onWorkerChange(

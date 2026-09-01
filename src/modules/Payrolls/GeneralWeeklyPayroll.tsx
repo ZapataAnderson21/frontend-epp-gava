@@ -10,7 +10,8 @@ import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { generalPayrollApi } from "../../data/apiUrl";
-import { useApiAction, useFetch } from "../../hooks";
+import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
+import { adminTypes } from "../../utils";
 import PayrollConfigurationModal from "./PayrollConfigurationModal";
 import { GeneralPayrollGrid, ProjectPayrollGrid } from "./PayrollGrid";
 import type {
@@ -45,6 +46,8 @@ const dayKeys = [
 ] as const;
 
 export default function GeneralWeeklyPayroll() {
+  const { user } = useCurrentUser();
+  const canEdit = adminTypes.includes(user?.userType ?? "");
   const { weekId } = useParams();
   const navigate = useNavigate();
   const url = weekId ? `${generalPayrollApi}weeks/${weekId}` : "";
@@ -307,22 +310,30 @@ export default function GeneralWeeklyPayroll() {
                   {moneyFormatter.format(totalNet)}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setConfigurationOpen(true)}
-                className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
-              >
-                <Settings2 className="size-4" /> Configurar
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:opacity-60"
-              >
-                <Save className="size-4" />{" "}
-                {saving ? "Guardando..." : "Guardar"}
-              </button>
+              {canEdit ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setConfigurationOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
+                  >
+                    <Settings2 className="size-4" /> Configurar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:opacity-60"
+                  >
+                    <Save className="size-4" />{" "}
+                    {saving ? "Guardando..." : "Guardar"}
+                  </button>
+                </>
+              ) : (
+                <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600">
+                  Solo lectura
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -337,29 +348,32 @@ export default function GeneralWeeklyPayroll() {
             Esta semana todavía no tiene planilla
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-gray-600">
-            Puedes crear un padrón vacío o reutilizar la lista de la última
-            semana y modificarla después.
+            {canEdit
+              ? "Puedes crear un padrón vacío o reutilizar la lista de la última semana y modificarla después."
+              : "La planilla todavía no ha sido configurada por administración."}
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              disabled={initializing}
-              onClick={() => handleInitialize(false)}
-              className="rounded-xl border border-[#0047a3] bg-white px-5 py-3 font-bold text-[#0047a3] hover:bg-[#eff5ff] disabled:opacity-60"
-            >
-              Crear lista vacía
-            </button>
-            {data.previousPayrollWeekId && (
+          {canEdit ? (
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
                 disabled={initializing}
-                onClick={() => handleInitialize(true)}
-                className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-3 font-bold text-white hover:bg-[#003b88] disabled:opacity-60"
+                onClick={() => handleInitialize(false)}
+                className="rounded-xl border border-[#0047a3] bg-white px-5 py-3 font-bold text-[#0047a3] hover:bg-[#eff5ff] disabled:opacity-60"
               >
-                <Users className="size-4" /> Copiar lista anterior
+                Crear lista vacía
               </button>
-            )}
-          </div>
+              {data.previousPayrollWeekId && (
+                <button
+                  type="button"
+                  disabled={initializing}
+                  onClick={() => handleInitialize(true)}
+                  className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-3 font-bold text-white hover:bg-[#003b88] disabled:opacity-60"
+                >
+                  <Users className="size-4" /> Copiar lista anterior
+                </button>
+              )}
+            </div>
+          ) : null}
         </section>
       )}
 
@@ -391,19 +405,22 @@ export default function GeneralWeeklyPayroll() {
               <p className="font-semibold text-[#0f2545]">
                 La lista de trabajadores está vacía.
               </p>
-              <button
-                type="button"
-                onClick={() => setConfigurationOpen(true)}
-                className="mt-4 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white"
-              >
-                Añadir trabajadores
-              </button>
+              {canEdit ? (
+                <button
+                  type="button"
+                  onClick={() => setConfigurationOpen(true)}
+                  className="mt-4 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white"
+                >
+                  Añadir trabajadores
+                </button>
+              ) : null}
             </div>
           ) : activeTab === "general" ? (
             <GeneralPayrollGrid
               projects={payroll.projects}
               workers={payroll.workers}
               onWorkerChange={handleWorkerChange}
+              readOnly={!canEdit}
             />
           ) : selectedProject ? (
             <ProjectPayrollGrid
@@ -412,6 +429,7 @@ export default function GeneralWeeklyPayroll() {
               workers={payroll.workers}
               onEntryChange={handleEntryChange}
               onWorkerChange={handleWorkerChange}
+              readOnly={!canEdit}
             />
           ) : null}
 
@@ -424,7 +442,7 @@ export default function GeneralWeeklyPayroll() {
         </>
       )}
 
-      {configurationOpen && payroll && (
+      {canEdit && configurationOpen && payroll && (
         <PayrollConfigurationModal
           activeProjects={data.activeProjects}
           availableWorkers={data.availableWorkers}
