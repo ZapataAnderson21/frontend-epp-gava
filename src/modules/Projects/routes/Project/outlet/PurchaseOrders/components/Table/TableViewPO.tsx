@@ -1,5 +1,10 @@
 import type { PurchaseOrder } from "../../../../../../../../data/types";
-import { lineAmount, roundMoney, totalFromRoundedLines } from "../../../../../../../../utils";
+import {
+  formatNumberWithSpaceGroups,
+  lineAmount,
+  roundMoney,
+  totalFromRoundedLines,
+} from "../../../../../../../../utils";
 
 interface TableViewPOProps {
   purchaseOrder: PurchaseOrder;
@@ -17,7 +22,7 @@ export default function TableViewPO({ purchaseOrder, seeSalesPrices }: TableView
   const formatPrice = (value: number | string | null | undefined, decimals = 2) => {
     const numeric = toNumber(value);
     const safe = Number.isFinite(numeric) ? numeric : 0;
-    return safe.toFixed(decimals);
+    return formatNumberWithSpaceGroups(safe, decimals, decimals);
   };
 
   const orderedResources = [...(purchaseOrder?.resources || [])].sort((a, b) => {

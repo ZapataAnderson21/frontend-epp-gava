@@ -5,7 +5,6 @@ import { WorkerType, type Worker } from "../../data/types";
 import { useApiAction } from "../../hooks";
 import { workerApi } from "../../data/apiUrl";
 import { ReturnButton } from "../../common/button";
-import { ymdLocalMidnightToUtc } from "../../utils";
 
 interface NewPettyCashProps {
   successAction: () => void;
@@ -65,7 +64,15 @@ export default function NewPettyCash({ successAction, closeAction }: NewPettyCas
       return;
     }
 
-    const body = { fullName, dni, phone, address, workerType: workerType[0], personalEmail, birthDate: ymdLocalMidnightToUtc(birthDate, 'America/Lima') };
+    const body = {
+      fullName,
+      dni,
+      phone,
+      address,
+      workerType: workerType[0],
+      personalEmail,
+      birthDate: birthDate || undefined,
+    };
 
     await toast.promise(
       execute(workerApi, "POST", body),

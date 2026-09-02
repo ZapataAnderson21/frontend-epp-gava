@@ -21,7 +21,7 @@ export default function NewPurchaseOrder() {
     // data
     project, projectLoading, projectError,
     suppliers, suppliersLoading, suppliersError,
-    supplier, resources, resourcesLoading, resourcesError,
+    supplier, resources, resourcesLoading, resourcesError, refetchResources,
 
     // selections
     selectSupplierId, setSelectSupplierId,
@@ -62,7 +62,7 @@ export default function NewPurchaseOrder() {
     navigate(`/admin/projects/${projectId}/purchase-orders`);
   }
 
-  if (projectLoading || suppliersLoading || resourcesLoading) {
+  if (projectLoading || suppliersLoading || (resourcesLoading && !resources)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <CgSpinner className="size-18 aspect-square animate-spin" />
@@ -72,7 +72,7 @@ export default function NewPurchaseOrder() {
   
   if (projectError) return <ErrorMessage errorMessage={projectError} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
-  if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
+  if (resourcesError && !resources) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
@@ -160,7 +160,9 @@ export default function NewPurchaseOrder() {
                 supplierCurrency={supplier?.currency}
                 saleAmount={sale_amount}
                 purchaseAmount={purchase_amount}
-                itemErrors={errors.items} 
+                itemErrors={errors.items}
+                resourcesLoading={resourcesLoading}
+                onRefreshResources={refetchResources}
               />
 
               <SignaturesTable />

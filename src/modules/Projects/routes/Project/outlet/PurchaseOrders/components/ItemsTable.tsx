@@ -3,10 +3,15 @@ import {
   ArrowUp as FaArrowUp,
   Minus as FaMinus,
   Plus as FaPlus,
+  RefreshCw,
 } from "lucide-react";
 import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
-import { lineAmount, roundMoney } from "../../../../../../../utils";
+import {
+  formatNumberWithSpaceGroups,
+  lineAmount,
+  roundMoney,
+} from "../../../../../../../utils";
 
 type ItemRow = {
   orderNumber: number;
@@ -41,11 +46,14 @@ interface Props {
   saleAmount: number;
   purchaseAmount: number;
   itemErrors?: ItemErrors[];
+  resourcesLoading?: boolean;
+  onRefreshResources?: () => void;
 }
 
 export default function ItemsTable({
   items, resources, onChange, onAddRow, onRemoveRow, onMoveRow,
-  supplierCurrency, saleAmount, purchaseAmount, itemErrors
+  supplierCurrency, saleAmount, purchaseAmount, itemErrors,
+  resourcesLoading = false, onRefreshResources,
 }: Props) {
   const sym = supplierCurrency?.toUpperCase() === "PEN" ? "S/." : "$";
 
@@ -59,7 +67,24 @@ export default function ItemsTable({
     msg ? <p className="text-2xs text-red-600 mt-1 text-left">{msg}</p> : null;
 
   return (
-    <div className="overflow-x-auto">
+    <div>
+      {onRefreshResources && (
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={onRefreshResources}
+            disabled={resourcesLoading}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-[#14519d] bg-white px-3 py-2 text-xs font-semibold text-[#14519d] transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+            title="Volver a cargar el catálogo de recursos"
+          >
+            <RefreshCw
+              className={`size-4 ${resourcesLoading ? "animate-spin" : ""}`}
+            />
+            {resourcesLoading ? "Actualizando..." : "Actualizar recursos"}
+          </button>
+        </div>
+      )}
+      <div className="overflow-x-auto">
       <table className="text-center w-full min-w-[1180px] table-fixed">
         <colgroup>
           <col className="w-[44px]" />
@@ -169,7 +194,7 @@ export default function ItemsTable({
 
                 {/* PR PARC COMP */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
-                  <p>{sym} {item.subtotal.toFixed(2)}</p>
+                  <p>{sym} {formatNumberWithSpaceGroups(item.subtotal)}</p>
                 </td>
 
                 {/* PR UNIT VENT */}
@@ -190,7 +215,7 @@ export default function ItemsTable({
 
                 {/* PR PARC VENT */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
-                  <p>{sym} {lineAmount(item.quantity, item.unitSalesPrice).toFixed(2)}</p>
+                  <p>{sym} {formatNumberWithSpaceGroups(lineAmount(item.quantity, item.unitSalesPrice))}</p>
                 </td>
 
                 {/* ACCIONES */}
@@ -240,24 +265,25 @@ export default function ItemsTable({
         <tfoot>
           <tr>
             <td colSpan={5} className="p-2 pr-8 font-bold text-right">SUBTOTAL</td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {purchaseAmount.toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {formatNumberWithSpaceGroups(purchaseAmount)}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {saleAmount.toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {formatNumberWithSpaceGroups(saleAmount)}</td>
           </tr>
           <tr>
             <td colSpan={5} className="p-2 pr-8 font-bold text-right">IGV</td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {roundMoney(purchaseAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {formatNumberWithSpaceGroups(roundMoney(purchaseAmount * 0.18))}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {roundMoney(saleAmount * 0.18).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 bg-gray-100 text-nowrap">{sym} {formatNumberWithSpaceGroups(roundMoney(saleAmount * 0.18))}</td>
           </tr>
           <tr>
             <td colSpan={5} className="p-2 pr-8 font-bold text-right">TOTAL</td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {roundMoney(purchaseAmount + roundMoney(purchaseAmount * 0.18)).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {formatNumberWithSpaceGroups(roundMoney(purchaseAmount + roundMoney(purchaseAmount * 0.18)))}</td>
             <td></td>
-            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {roundMoney(saleAmount + roundMoney(saleAmount * 0.18)).toFixed(2)}</td>
+            <td className="p-2 border-1 border-gray-400 text-white bg-gray-800 text-nowrap">{sym} {formatNumberWithSpaceGroups(roundMoney(saleAmount + roundMoney(saleAmount * 0.18)))}</td>
           </tr>
         </tfoot>
       </table>
+      </div>
     </div>
   );
 }

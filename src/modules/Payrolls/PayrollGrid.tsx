@@ -238,6 +238,24 @@ const AttendanceCheck = ({
   </motion.button>
 );
 
+const AttendanceIndicator = ({ checked }: { checked: boolean }) => (
+  <motion.span
+    role="img"
+    aria-label={checked ? "Asistió" : "No asistió"}
+    title={checked ? "Asistió" : "No asistió"}
+    initial={false}
+    animate={{ scale: checked ? 1 : 0.94 }}
+    transition={{ type: "spring", stiffness: 460, damping: 24 }}
+    className={`mx-auto inline-flex size-8 items-center justify-center rounded-lg border-2 transition-colors ${
+      checked
+        ? "border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
+        : "border-gray-200 bg-white text-transparent"
+    }`}
+  >
+    <Check className="size-5" strokeWidth={3} />
+  </motion.span>
+);
+
 export function ProjectPayrollGrid({
   project,
   projects,
@@ -698,8 +716,10 @@ export function GeneralPayrollGrid({
                       {worker.worker.dni}
                     </td>
                     {dayFields.map(([field]) => (
-                      <td key={field} className="px-2 py-3 text-right">
-                        {moneyFormatter.format(totals.days[field])}
+                      <td key={field} className="px-2 py-3 text-center">
+                        <AttendanceIndicator
+                          checked={totals.days[field] > 0}
+                        />
                       </td>
                     ))}
                     <td className="px-3 py-3 text-right font-semibold">

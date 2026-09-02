@@ -5,7 +5,7 @@ import { workerApi } from "../../data/apiUrl";
 import { type  Worker, WorkerType } from "../../data/types";
 import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 import { ReturnButton } from "../../common/button";
-import { logisticsTypes, ymdLocalMidnightToUtc } from "../../utils";
+import { logisticsTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
 
 interface EditWorkerProps {
@@ -71,7 +71,15 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       return;
     }
 
-    const body = { fullName, dni, phone, address, workerType: workerType[0], personalEmail, birthDate: ymdLocalMidnightToUtc(birthDate, 'America/Lima') };
+    const body = {
+      fullName,
+      dni,
+      phone,
+      address,
+      workerType: workerType[0],
+      personalEmail,
+      birthDate: birthDate || undefined,
+    };
     
     await toast.promise(
       execute(`${workerApi}${workerId}`, "PATCH", body),

@@ -55,8 +55,12 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   const { data: supplier } =
     useFetch<Supplier>(selectSupplierId ? `${supplierApi}${selectSupplierId}` : "", [selectSupplierId]);
 
-  const { data: resources, loading: resourcesLoading, error: resourcesError } =
-    useFetch<Resource[]>(`${resourceApi}`, []);
+  const {
+    data: resources,
+    loading: resourcesLoading,
+    error: resourcesError,
+    refetch: refetchResources,
+  } = useFetch<Resource[]>(`${resourceApi}`, []);
 
   const { execute, loading: saving } = useApiAction<PurchaseOrder>();
 
@@ -344,7 +348,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     // data
     project, projectLoading, projectError,
     suppliers, suppliersLoading, suppliersError,
-    supplier, resources, resourcesLoading, resourcesError,
+    supplier, resources, resourcesLoading, resourcesError, refetchResources,
 
     // selections
     selectSupplierId, setSelectSupplierId,

@@ -1,6 +1,19 @@
 export const roundMoney = (value: number) =>
   Math.round((value + Number.EPSILON) * 100) / 100;
 
+export const formatNumberWithSpaceGroups = (
+  value: number,
+  minimumFractionDigits = 2,
+  maximumFractionDigits = minimumFractionDigits,
+) =>
+  new Intl.NumberFormat("es-PE", {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  })
+    .formatToParts(value)
+    .map((part) => (part.type === "group" ? " " : part.value))
+    .join("");
+
 export const lineAmount = (
   quantity: number | string | null | undefined,
   unitPrice: number | string | null | undefined,
@@ -18,4 +31,3 @@ export const totalFromRoundedLines = <
       0,
     ),
   );
-

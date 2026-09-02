@@ -30,7 +30,10 @@ const formatMoney = (amount: number, currency: Currency) =>
     style: "currency",
     currency,
     minimumFractionDigits: 2,
-  }).format(amount);
+  })
+    .formatToParts(amount)
+    .map((part) => (part.type === "group" ? " " : part.value))
+    .join("");
 
 function FilteredTotalCard({
   title,

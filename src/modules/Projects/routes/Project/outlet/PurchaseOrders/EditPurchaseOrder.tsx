@@ -57,7 +57,7 @@ export default function EditPurchaseOrder() {
   const { data: purchaseOrder, loading, error } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
   const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useFetch<Supplier[]>(`${supplierApi}`);
   const { data: resourcePurchaseOrders, loading: resourcePuchaseOrdersLoading, error: resourcePurchaseOrdersError } = useFetch<ResourcePurchaseOrder[]>(`${resourcePurchaseOrderApi}purchase-order/${purchaseOrderId}`);
-  const { data: resources, loading: resourcesLoading, error: resourcesError } = useFetch<Resource[]>(`${resourceApi}`);
+  const { data: resources, loading: resourcesLoading, error: resourcesError, refetch: refetchResources } = useFetch<Resource[]>(`${resourceApi}`);
 
   const { execute, loading: saving } = useApiAction<unknown>();
 
@@ -472,13 +472,13 @@ export default function EditPurchaseOrder() {
     );
   };
 
-  if (loading || suppliersLoading || resourcePuchaseOrdersLoading || resourcesLoading) {
+  if (loading || suppliersLoading || resourcePuchaseOrdersLoading || (resourcesLoading && !resources)) {
     return <Loading />;
   }
   if (error) return <ErrorMessage errorMessage={error} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
   if (resourcePurchaseOrdersError) return <ErrorMessage errorMessage={resourcePurchaseOrdersError} />;
-  if (resourcesError) return <ErrorMessage errorMessage={resourcesError} />;
+  if (resourcesError && !resources) return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
     <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
@@ -566,6 +566,8 @@ export default function EditPurchaseOrder() {
                 supplierCurrency={supplier?.currency}
                 saleAmount={sale_amount}
                 purchaseAmount={purchase_amount}
+                resourcesLoading={resourcesLoading}
+                onRefreshResources={refetchResources}
               />
 
               <SignaturesTable />

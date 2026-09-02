@@ -7,12 +7,13 @@ import { workerApi } from "../../data/apiUrl";
 import { type Worker } from "../../data/types";
 import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
 import type { PaginatedData } from "../../common/table";
-import { EditButton, SeeButton } from "../../common/button";
+import { DeleteButton, EditButton, SeeButton } from "../../common/button";
 import { formatDate } from "../../utils";
 
 interface ProjectTableProps {
   reFetch: number;
   onSee: (workerId: number) => void;
+  onDelete: (worker: Worker) => void;
   isAdmin: boolean;
 }
 
@@ -29,7 +30,12 @@ type WorkerPageData = PaginatedData<Worker> & {
   workerTypeCounts: Record<string, number>;
 };
 
-export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTableProps) {
+export default function WorkerTable({
+  reFetch,
+  onSee,
+  onDelete,
+  isAdmin,
+}: ProjectTableProps) {
   const [search, setSearch] = useState("");
   const [workerTypeFilter, setWorkerTypeFilter] = useState("all");
   const debouncedSearch = useDebouncedValue(search);
@@ -86,7 +92,12 @@ export default function WorkerTable({ reFetch, onSee, isAdmin }: ProjectTablePro
           {
             label: "Acciones",
             width: "8rem",
-            render: (row: Worker) => <EditButton onClick={() => onSee(row.workerId)} />,
+            render: (row: Worker) => (
+              <div className="flex items-center justify-center gap-2">
+                <EditButton onClick={() => onSee(row.workerId)} />
+                <DeleteButton onClick={() => onDelete(row)} />
+              </div>
+            ),
           },
         ]
       : [
