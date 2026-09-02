@@ -101,9 +101,7 @@ export default function GeneralWeeklyPayroll() {
       payroll.workers.map((worker) => [worker.generalPayrollWorkerId, worker]),
     );
     const entriesNet = payroll.projects
-      .flatMap((project) =>
-        project.entries.filter((entry) => entry.isActive),
-      )
+      .flatMap((project) => project.entries.filter((entry) => entry.isActive))
       .reduce((total, entry) => {
         const worker = workerById.get(entry.generalPayrollWorkerId);
         if (!worker) return total;
@@ -234,19 +232,21 @@ export default function GeneralWeeklyPayroll() {
             sundayDinnerAmount: worker.sundayDinnerAmount,
           })),
           entries: payroll.projects.flatMap((project) =>
-            project.entries.filter((entry) => entry.isActive).map((entry) => ({
-              generalPayrollEntryId: entry.generalPayrollEntryId,
-              monday: entry.monday,
-              tuesday: entry.tuesday,
-              wednesday: entry.wednesday,
-              thursday: entry.thursday,
-              friday: entry.friday,
-              saturday: entry.saturday,
-              dominical: entry.dominical,
-              overtimeAmount: entry.overtimeAmount,
-              afpDiscount: entry.afpDiscount,
-              advanceDiscount: entry.advanceDiscount,
-            })),
+            project.entries
+              .filter((entry) => entry.isActive)
+              .map((entry) => ({
+                generalPayrollEntryId: entry.generalPayrollEntryId,
+                monday: entry.monday,
+                tuesday: entry.tuesday,
+                wednesday: entry.wednesday,
+                thursday: entry.thursday,
+                friday: entry.friday,
+                saturday: entry.saturday,
+                dominical: entry.dominical,
+                overtimeAmount: entry.overtimeAmount,
+                afpDiscount: entry.afpDiscount,
+                advanceDiscount: entry.advanceDiscount,
+              })),
           ),
         },
       );
@@ -335,7 +335,9 @@ export default function GeneralWeeklyPayroll() {
           {payroll && (
             <div className="flex flex-wrap items-center gap-3">
               <div className="mr-2 rounded-xl bg-emerald-50 px-4 py-2">
-                <p className="text-xs text-emerald-700">Neto consolidado</p>
+                <p className="text-xs text-emerald-700">
+                  Neto final a depositar
+                </p>
                 <p className="font-bold text-emerald-800">
                   {moneyFormatter.format(totalNet)}
                 </p>

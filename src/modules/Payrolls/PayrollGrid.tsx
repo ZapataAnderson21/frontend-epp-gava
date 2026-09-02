@@ -14,7 +14,7 @@ const dayFields = [
   ["thursday", "J"],
   ["friday", "V"],
   ["saturday", "S"],
-  ["dominical", "Dominical"],
+  ["dominical", "Dominical (día)"],
 ] as const;
 
 const moneyFormatter = new Intl.NumberFormat("es-PE", {
@@ -283,8 +283,8 @@ export function ProjectPayrollGrid({
             <th className="px-3 py-4 text-right">H.E.</th>
             <th className="px-3 py-4 text-right">Pago semana</th>
             <th className="px-3 py-4 text-right">AFP</th>
-            <th className="min-w-36 px-3 py-4 text-right">Adelanto</th>
-            <th className="min-w-36 px-3 py-4 text-right">Neto</th>
+            <th className="min-w-36 px-3 py-4 text-right">Dscto. Adelanto</th>
+            <th className="min-w-36 px-3 py-4 text-right">Neto base</th>
           </tr>
         </thead>
         <tbody>
@@ -327,7 +327,9 @@ export function ProjectPayrollGrid({
                     <td className="sticky left-0 z-10 bg-inherit px-3 py-3 text-center">
                       {index + 1}
                     </td>
-                    <td className={`sticky left-12 z-10 ${index % 2 === 0 ? 'bg-[#f8fafc]' : 'bg-white'} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}>
+                    <td
+                      className={`sticky left-12 z-10 ${index % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}
+                    >
                       {worker.worker.fullName}
                     </td>
                     <td className="px-3 py-3 text-gray-600">
@@ -434,7 +436,7 @@ export function ProjectPayrollGrid({
                             value,
                           )
                         }
-                        ariaLabel={`Adelanto de ${worker.worker.fullName}`}
+                        ariaLabel={`Descuento por adelanto de ${worker.worker.fullName}`}
                       />
                     </td>
                     <td
@@ -647,12 +649,16 @@ export function GeneralPayrollGrid({
             <th className="px-3 py-4 text-right">H.E.</th>
             <th className="px-3 py-4 text-right">Pago semana</th>
             <th className="px-3 py-4 text-right">AFP</th>
-            <th className="px-3 py-4 text-right">Adelanto</th>
-            <th className="px-3 py-4 text-right">Neto</th>
+            <th className="min-w-36 px-3 py-4 text-right">Dscto. Adelanto</th>
+            <th className="min-w-32 px-3 py-4 text-right">Neto base</th>
             <th className="px-3 py-4 text-right">Otros adicionales</th>
             <th className="px-3 py-4 text-right">Liquidación</th>
-            <th className="px-3 py-4 text-right">Comida cena domingo</th>
-            <th className="min-w-40 px-3 py-4 text-right">Neto final</th>
+            <th className="min-w-40 px-3 py-4 text-right">
+              Comida domingo (S/.)
+            </th>
+            <th className="min-w-44 px-3 py-4 text-right">
+              Neto final a depositar
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -683,7 +689,9 @@ export function GeneralPayrollGrid({
                     <td className="sticky left-0 z-10 bg-inherit px-3 py-3 text-center">
                       {index + 1}
                     </td>
-                    <td className={`sticky left-12 z-10 ${index % 2 === 0 ? 'bg-[#f8fafc]' : 'bg-white'} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}>
+                    <td
+                      className={`sticky left-12 z-10 ${index % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}
+                    >
                       {worker.worker.fullName}
                     </td>
                     <td className="px-3 py-3 text-gray-600">
