@@ -327,7 +327,7 @@ export function ProjectPayrollGrid({
                     <td className="sticky left-0 z-10 bg-inherit px-3 py-3 text-center">
                       {index + 1}
                     </td>
-                    <td className="sticky left-12 z-10 bg-[#f8fafc] px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]">
+                    <td className={`sticky left-12 z-10 ${index % 2 === 0 ? 'bg-[#f8fafc]' : 'bg-white'} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}>
                       {worker.worker.fullName}
                     </td>
                     <td className="px-3 py-3 text-gray-600">
