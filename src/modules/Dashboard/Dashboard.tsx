@@ -14,6 +14,7 @@ import { useFetch } from "../../hooks";
 import { formatInventoryQuantity } from "../Elements/inventoryCatalog";
 import DocumentExpirationDashboard from "./DocumentExpirationDashboard";
 import PurchaseOrdersDashboard from "./PurchaseOrdersDashboard";
+import GeneralDashboard from "./general/GeneralDashboard";
 
 const months = [
   "Enero",
@@ -30,7 +31,7 @@ const months = [
   "Diciembre",
 ];
 
-type DashboardTab = "protection" | "orders" | "birthdays" | "expirations";
+type DashboardTab = "general" | "protection" | "orders" | "birthdays" | "expirations";
 
 function formatMovementDate(value: string) {
   const date = new Date(value);
@@ -116,17 +117,17 @@ export default function Dashboard() {
   const chartViewportRef = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
-  const [activeTab, setActiveTab] = useState<DashboardTab>("protection");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("general");
 
   const { data, loading, error } = useFetch<InventoryDashboardResponse>(
-    `${inventoryApi}dashboard?month=${month}&year=${year}`,
+    activeTab === "protection" ? `${inventoryApi}dashboard?month=${month}&year=${year}` : "",
     [month, year],
   );
   const {
     data: workers,
     loading: workersLoading,
     error: workersError,
-  } = useFetch<Worker[]>(`${workerApi}`, []);
+  } = useFetch<Worker[]>(activeTab === "birthdays" ? `${workerApi}` : "", []);
 
   const mostDelivered = useMemo(() => data?.mostDelivered ?? [], [data?.mostDelivered]);
   const selectedDefault = mostDelivered[0] ?? null;
@@ -178,6 +179,9 @@ export default function Dashboard() {
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight">Dashboard</h1>
             <div className="mt-4 flex flex-wrap gap-6 border-b border-gray-300">
+              <TabButton active={activeTab === "general"} onClick={() => setActiveTab("general")}>
+                General
+              </TabButton>
               <TabButton
                 active={activeTab === "protection"}
                 onClick={() => setActiveTab("protection")}
@@ -222,6 +226,8 @@ export default function Dashboard() {
             />
           </div>
         </div>
+
+        {activeTab === "general" ? <GeneralDashboard month={month} year={year} /> : null}
 
         {activeTab === "protection" ? (
           <>

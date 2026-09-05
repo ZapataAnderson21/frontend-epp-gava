@@ -2,6 +2,8 @@ import { config } from "../config/env";
 
 export const root = config.apiUrl;
 
+export const dashboardApi = `${root}dashboard/`;
+
 export const userTypeApi = `${root}user-type/`;
 
 export const userApi = `${root}user/`;
