@@ -2,15 +2,19 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CalendarDays,
+  FileSpreadsheet,
   Filter,
+  LoaderCircle,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 import { Pagination } from "../../common/table";
 import Select from "../../components/Select";
 import { generalPayrollApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks";
+import getAuthHeaders from "../../hooks/getAuthHeaders";
 import type { GeneralPayrollWeekCard } from "./types";
 
 const dateFormatter = new Intl.DateTimeFormat("es-PE", {
@@ -64,6 +68,7 @@ export default function GeneralPayrolls() {
   const [month, setMonth] = useState(-1);
   const [year, setYear] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [exportingWeekId, setExportingWeekId] = useState<number | null>(null);
   const {
     data: weeks,
     loading,
@@ -108,8 +113,54 @@ export default function GeneralPayrolls() {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
 
+  const handleExport = async (week: GeneralPayrollWeekCard) => {
+    if (!week.initialized || week.projectCount === 0 || exportingWeekId) return;
+
+    setExportingWeekId(week.weekId);
+    try {
+      const response = await fetch(
+        `${generalPayrollApi}weeks/${week.weekId}/export/excel`,
+        { headers: getAuthHeaders() },
+      );
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as {
+          message?: string | string[];
+        } | null;
+        const message = Array.isArray(payload?.message)
+          ? payload.message.join(" ")
+          : payload?.message;
+        throw new Error(message || "No se pudo generar el Excel.");
+      }
+
+      const disposition = response.headers.get("Content-Disposition") ?? "";
+      const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+      const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+      const fileName = encodedName
+        ? decodeURIComponent(encodedName)
+        : plainName || `planilla_semana_${week.weekId}.xlsx`;
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Planilla exportada correctamente.");
+    } catch (downloadError) {
+      toast.error(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "No se pudo generar el Excel.",
+      );
+    } finally {
+      setExportingWeekId(null);
+    }
+  };
+
   return (
     <main className="mx-auto w-full max-w-[1600px] p-4 md:p-8">
+      <Toaster position="top-right" />
       <div className="mb-8">
         <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-[#0047a3]">
           Gestión semanal
@@ -196,63 +247,98 @@ export default function GeneralPayrolls() {
         )}
 
       <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {visibleWeeks.map((week) => (
-          <button
-            key={week.weekId}
-            type="button"
-            onClick={() => navigate(`/admin/payrolls/${week.weekId}`)}
-            className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-[#0047a3]/40 hover:shadow-lg"
-          >
-            <div className="mb-5 flex items-start justify-between gap-3">
-              <span className="rounded-xl bg-[#eff5ff] p-3 text-[#0047a3]">
-                <CalendarDays className="size-6" />
-              </span>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                  week.initialized
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-amber-50 text-amber-700"
-                }`}
+        {visibleWeeks.map((week) => {
+          const canExport = week.initialized && week.projectCount > 0;
+          const isExporting = exportingWeekId === week.weekId;
+          return (
+            <article
+              key={week.weekId}
+              className="group overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:border-[#0047a3]/40 hover:shadow-lg"
+            >
+              <button
+                type="button"
+                onClick={() => navigate(`/admin/payrolls/${week.weekId}`)}
+                className="w-full cursor-pointer p-5 pb-4 text-left"
               >
-                {week.initialized ? "En edición" : "Sin configurar"}
-              </span>
-            </div>
+                <div className="mb-5 flex items-start justify-between gap-3">
+                  <span className="rounded-xl bg-[#eff5ff] p-3 text-[#0047a3]">
+                    <CalendarDays className="size-6" />
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      week.initialized
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {week.initialized ? "En edición" : "Sin configurar"}
+                  </span>
+                </div>
 
-            <h2 className="text-lg font-bold text-[#0f2545]">
-              {dateFormatter.format(new Date(week.startDate))}
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              al {dateFormatter.format(new Date(week.endDate))}
-            </p>
+                <h2 className="text-lg font-bold text-[#0f2545]">
+                  {dateFormatter.format(new Date(week.startDate))}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  al {dateFormatter.format(new Date(week.endDate))}
+                </p>
 
-            <div className="my-5 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-gray-50 p-3">
-                <BriefcaseBusiness className="mb-1 size-4 text-gray-500" />
-                <p className="text-xl font-bold text-[#0f2545]">
-                  {week.projectCount}
-                </p>
-                <p className="text-xs text-gray-500">Proyectos</p>
-              </div>
-              <div className="rounded-xl bg-gray-50 p-3">
-                <Users className="mb-1 size-4 text-gray-500" />
-                <p className="text-xl font-bold text-[#0f2545]">
-                  {week.workerCount}
-                </p>
-                <p className="text-xs text-gray-500">Trabajadores</p>
-              </div>
-            </div>
+                <div className="my-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <BriefcaseBusiness className="mb-1 size-4 text-gray-500" />
+                    <p className="text-xl font-bold text-[#0f2545]">
+                      {week.projectCount}
+                    </p>
+                    <p className="text-xs text-gray-500">Proyectos</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 p-3">
+                    <Users className="mb-1 size-4 text-gray-500" />
+                    <p className="text-xl font-bold text-[#0f2545]">
+                      {week.workerCount}
+                    </p>
+                    <p className="text-xs text-gray-500">Trabajadores</p>
+                  </div>
+                </div>
+              </button>
 
-            <div className="flex items-end justify-between gap-4 border-t border-gray-100 pt-4">
-              <div>
-                <p className="text-xs text-gray-500">Neto registrado</p>
-                <p className="font-bold text-[#0047a3]">
-                  {moneyFormatter.format(week.totalAmount)}
-                </p>
+              <div className="mx-5 flex items-center justify-between gap-3 border-t border-gray-100 py-4">
+                <div>
+                  <p className="text-xs text-gray-500">Neto registrado</p>
+                  <p className="font-bold text-[#0047a3]">
+                    {moneyFormatter.format(week.totalAmount)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!canExport || exportingWeekId !== null}
+                    title={
+                      canExport
+                        ? "Exportar planilla semanal a Excel"
+                        : "Configura proyectos en la semana antes de exportar"
+                    }
+                    onClick={() => void handleExport(week)}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    {isExporting ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="size-4" />
+                    )}
+                    {isExporting ? "Generando..." : "Excel"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Abrir planilla de la semana del ${dateFormatter.format(new Date(week.startDate))}`}
+                    onClick={() => navigate(`/admin/payrolls/${week.weekId}`)}
+                    className="cursor-pointer rounded-lg p-2 text-[#0047a3] transition hover:bg-[#eff5ff]"
+                  >
+                    <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </div>
               </div>
-              <ArrowRight className="size-5 text-[#0047a3] transition-transform group-hover:translate-x-1" />
-            </div>
-          </button>
-        ))}
+            </article>
+          );
+        })}
       </section>
 
       {!loading && !error && filteredWeeks.length > 0 && (
