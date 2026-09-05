@@ -15,11 +15,12 @@ import {
   Users as FaUsers,
   UsersRound as FaUserGroup,
   Banknote as FaMoneyBillWave,
+  PanelLeftClose,
 } from "lucide-react";
 
 
 import SidebarItem from "./SidebarItem";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useApiAction } from "../hooks/useApiAction";
@@ -36,14 +37,14 @@ interface SidebarProps {
   isOpen: boolean;
   isMobile?: boolean;
   setIsOpen?: (value: boolean) => void;
+  onClose: () => void;
 }
 
-export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
+export default function Sidebar({ isOpen, isMobile, setIsOpen, onClose }: SidebarProps) {
   const { user, refetch } = useCurrentUser();
   const [currentUser, setCurrentUser] = useState(user);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const accessToken = localStorage.getItem("accessToken");
@@ -59,16 +60,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isMobile && isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        setIsOpen?.(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, isMobile, setIsOpen]);
-
-  useEffect(() => {
     setCurrentUser(user);
   }, [user]);
 
@@ -78,13 +69,15 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
   if (!accessToken) return null;
 
   return (
+    <>
     <section
-      ref={sidebarRef}
-      className={`text-gray-500
-        ${isMobile
-          ? `fixed top-0 left-0 h-screen w-[260px] bg-white transform ${isOpen ? "translate-x-0" : "-translate-x-[280px]"} transition-transform duration-300 ease-in-out shadow-2xl z-10`
-          : `fixed top-0 left-0 h-screen w-[260px] shadow-gray-300 shadow-md bg-white z-10`
-        }`}
+      id="app-sidebar"
+      aria-label="Menú lateral"
+      aria-hidden={!isOpen}
+      inert={!isOpen}
+      className={`fixed top-0 z-30 h-dvh w-[260px] bg-white text-gray-500 transition-[left,visibility] duration-300 ease-in-out motion-reduce:transition-none ${
+        isOpen ? "visible left-0 shadow-md" : "invisible -left-[260px] pointer-events-none"
+      }`}
     >
       <div className="sidebar-scrollbar flex flex-col justify-between h-full overflow-y-auto">
         <div className="flex flex-col gap-2 py-3 px-4">
@@ -92,9 +85,21 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: baseDelay }}
-            className="flex flex-row items-center justify-start mt-6 mb-4"
+            className="flex flex-row items-center justify-between gap-2 mt-3 mb-4"
           >
-            <img src="/logo-gava.png" alt="Logo" className="h-14 ml-2" />
+            <img src="/logo-gava.png" alt="Logo" className="min-w-0 w-40 h-14 object-contain" />
+            <button
+              id="sidebar-close-button"
+              type="button"
+              aria-label="Cerrar menú lateral"
+              aria-controls="app-sidebar"
+              aria-expanded={isOpen}
+              title="Cerrar menú lateral"
+              onClick={onClose}
+              className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#0047a3] transition-colors hover:bg-[#eff5ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0047a3]"
+            >
+              <PanelLeftClose className="size-5" aria-hidden="true" />
+            </button>
           </motion.div>
 
           <SidebarItem icon={<FaChartColumn />} label="Dashboard" href="/admin/dashboard" exactActivePaths={["/admin"]} index={1} baseDelay={baseDelay} perItemDelay={perItemDelay} onClick={() => isMobile && setIsOpen?.(false)} />
@@ -185,6 +190,7 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           </AnimatePresence>
         </div>
       </div>
+    </section>
       <UserSettingsModal
         open={isUserSettingsOpen}
         user={currentUser ?? null}
@@ -194,6 +200,6 @@ export default function Sidebar({ isOpen, isMobile, setIsOpen }: SidebarProps) {
           refetch();
         }}
       />
-    </section>
+    </>
   );
 }
