@@ -13,6 +13,7 @@ import { ReturnButton } from "../../common/button";
 interface ResourceResponse {
   supplierId: number;
   name: string;
+  abbreviation: string;
   contactName: string;
   phone: string;
   email: string;
@@ -32,6 +33,7 @@ export default function Supplier() {
   
   const [supplierId, setSupplierId] = useState(0);
   const [name, setName] = useState("");
+  const [abbreviation, setAbbreviation] = useState("");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +56,7 @@ export default function Supplier() {
     if (supplier) {
       setSupplierId(supplier.supplierId);
       setName(supplier.name);
+      setAbbreviation(supplier.abbreviation ?? "");
       setContactName(supplier.contactName);
       setPhone(supplier.phone);
       setEmail(supplier.email ?? "");
@@ -80,6 +83,7 @@ export default function Supplier() {
     // Validación
     const errors: string[] = [];
     if (!name.trim()) errors.push("El nombre es requerido");
+    if (!/^[A-Z0-9]{1,8}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 8 letras o números, sin espacios ni símbolos");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (!phone.trim()) errors.push("El teléfono es requerido");
     if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
@@ -137,6 +141,7 @@ export default function Supplier() {
 
     const payload = {
       name,
+      abbreviation: abbreviation.trim(),
       contactName,
       phone,
       email,
@@ -182,6 +187,10 @@ export default function Supplier() {
     <>
       <Form name={`PROVEEDOR ${supplierId}`} handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
+        <div className="flex flex-col gap-1">
+          <InputForm label="Abreviatura del proveedor" name="abbreviation" type="text" value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} maxLength={8} optional={false} />
+          <p className="text-xs text-gray-500">De 1 a 8 letras o números, sin espacios. Cambiarla no modifica los códigos de órdenes existentes.</p>
+        </div>
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={true} />

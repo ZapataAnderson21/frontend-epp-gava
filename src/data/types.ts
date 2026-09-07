@@ -581,6 +581,7 @@ export interface CategoryResource {
 export interface Supplier {
   supplierId: number;
   name: string;
+  abbreviation: string;
   contactName: string;
   phone: string;
   email?: string;

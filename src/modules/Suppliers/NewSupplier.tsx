@@ -10,6 +10,7 @@ import { ReturnButton, SaveButton } from "../../common/button";
 interface ResourceResponse {
   supplierId: number;
   name: string;
+  abbreviation: string;
   contactName: string;
   phone: string;
   email: string;
@@ -25,6 +26,7 @@ interface ResourceResponse {
 export default function NewSupplier() {
   
   const [name, setName] = useState("");
+  const [abbreviation, setAbbreviation] = useState("");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -56,6 +58,7 @@ export default function NewSupplier() {
     // Validación
     const errors: string[] = [];
     if (!name.trim()) errors.push("El nombre es requerido");
+    if (!/^[A-Z0-9]{1,8}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 8 letras o números, sin espacios ni símbolos");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (!phone.trim()) errors.push("El teléfono es requerido");
     if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
@@ -111,6 +114,7 @@ export default function NewSupplier() {
 
     const payload = {
       name,
+      abbreviation: abbreviation.trim(),
       contactName,
       phone,
       email,
@@ -168,6 +172,10 @@ export default function NewSupplier() {
     <>
       <Form name="REGISTRAR PROVEEDOR" handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
+        <div className="flex flex-col gap-1">
+          <InputForm label="Abreviatura del proveedor" name="abbreviation" type="text" value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} maxLength={8} optional={false} />
+          <p className="text-xs text-gray-500">De 1 a 8 letras o números, sin espacios. Se usará al final del código de las nuevas órdenes de compra.</p>
+        </div>
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(''); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={true} />
