@@ -1,5 +1,5 @@
-import { Check, ChevronDown, HardHat, Users, WalletCards } from "lucide-react";
 import { motion } from "framer-motion";
+import { Check, ChevronDown, HardHat, Users, WalletCards } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Permission from "../../../../../common/auth/Permission";
@@ -7,12 +7,12 @@ import { ErrorMessage } from "../../../../../common/error";
 import { Pagination } from "../../../../../common/table";
 import { generalPayrollApi } from "../../../../../data/apiUrl";
 import { useCurrentUser, useFetch } from "../../../../../hooks";
+import { useAccess } from "../../../../../permissions/AccessProvider";
 import type {
   PayrollWorkerGroup,
   ProjectPayrollDetail,
   ProjectPayrollWeekDetail,
 } from "../../../../Payrolls/types";
-import { logisticsTypes } from "../../../../../utils";
 
 const PAGE_SIZE = 5;
 const dayFields = [
@@ -65,6 +65,7 @@ function PayrollWeek({
   week: ProjectPayrollWeekDetail;
   initiallyOpen: boolean;
 }) {
+  const { can } = useAccess();
   const [open, setOpen] = useState(initiallyOpen);
   const calculateTotals = (workers: ProjectPayrollWeekDetail["workers"]) => ({
     attendance: Object.fromEntries(
@@ -80,10 +81,7 @@ function PayrollWeek({
       (total, worker) => total + worker.attendanceCount,
       0,
     ),
-    dailyWage: workers.reduce(
-      (total, worker) => total + worker.dailyWage,
-      0,
-    ),
+    dailyWage: workers.reduce((total, worker) => total + worker.dailyWage, 0),
     overtimeAmount: workers.reduce(
       (total, worker) => total + worker.overtimeAmount,
       0,
@@ -100,10 +98,7 @@ function PayrollWeek({
       (total, worker) => total + worker.advanceDiscount,
       0,
     ),
-    paidAmount: workers.reduce(
-      (total, worker) => total + worker.paidAmount,
-      0,
-    ),
+    paidAmount: workers.reduce((total, worker) => total + worker.paidAmount, 0),
   });
 
   const renderTotalsRow = (
@@ -148,7 +143,7 @@ function PayrollWeek({
 
   return (
     <details
-      className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+      className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${can("finance.view") ? "" : "project-payroll-no-finance"}`}
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
@@ -169,7 +164,9 @@ function PayrollWeek({
           <div className="text-right">
             <p className="text-xs text-gray-500">Total pagado</p>
             <p className="text-lg font-extrabold text-emerald-700">
-              {moneyFormatter.format(week.totalAmount)}
+              {can("finance.view")
+                ? moneyFormatter.format(week.totalAmount)
+                : "Restringido"}
             </p>
           </div>
           <ChevronDown className="size-5 text-gray-400 transition-transform group-open:rotate-180" />
@@ -263,6 +260,7 @@ function PayrollWeek({
 }
 
 export default function ProjectPayrolls() {
+  const { can } = useAccess();
   const { user } = useCurrentUser();
   const { id } = useParams<{ id: string }>();
   const [currentPage, setCurrentPage] = useState(1);
@@ -283,7 +281,7 @@ export default function ProjectPayrolls() {
   return (
     <Permission
       user={user}
-      allow={logisticsTypes}
+      permission="payroll.view"
       fallback={
         <ErrorMessage errorMessage="No tienes permiso para ver esta sección." />
       }
@@ -313,21 +311,27 @@ export default function ProjectPayrolls() {
               {[
                 {
                   label: "Total pagado",
-                  value: moneyFormatter.format(data.totalAmount),
+                  value: can("finance.view")
+                    ? moneyFormatter.format(data.totalAmount)
+                    : "Restringido",
                   icon: WalletCards,
                   color: "text-emerald-700",
                   bg: "bg-emerald-50",
                 },
                 {
                   label: "Obreros",
-                  value: moneyFormatter.format(data.laborerAmount),
+                  value: can("finance.view")
+                    ? moneyFormatter.format(data.laborerAmount)
+                    : "Restringido",
                   icon: Users,
                   color: "text-[#0047a3]",
                   bg: "bg-[#eff5ff]",
                 },
                 {
                   label: "Técnicos",
-                  value: moneyFormatter.format(data.technicianAmount),
+                  value: can("finance.view")
+                    ? moneyFormatter.format(data.technicianAmount)
+                    : "Restringido",
                   icon: HardHat,
                   color: "text-amber-700",
                   bg: "bg-amber-50",

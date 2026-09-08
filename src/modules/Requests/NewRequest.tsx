@@ -1,16 +1,24 @@
+import {
+  TriangleAlert as IoWarning,
+  MailPlus as MdAttachEmail,
+  CircleHelp as RiQuestionFill,
+  ArrowLeft as TiArrowBack,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft as TiArrowBack,
-  CircleHelp as RiQuestionFill,
-  MailPlus as MdAttachEmail,
-  TriangleAlert as IoWarning,
-} from "lucide-react";
-
-
 
 import toast, { Toaster } from "react-hot-toast";
 
+import { ReturnButton, SaveButton } from "../../common/button";
+import { ErrorMessage } from "../../common/error";
+import {
+  ButtonContainer,
+  InputForm,
+  SelectForm,
+  TextAreaForm,
+} from "../../common/form";
+import { Button } from "../../components";
+import { projectApi } from "../../data/apiUrl";
 import type {
   ElementRequestType,
   ElementRequestWorkerPlan,
@@ -18,39 +26,36 @@ import type {
   Project,
   RequestWorker,
 } from "../../data/types";
-import HeaderNewRequest from "./components/HeaderNewRequest";
-import RowElementRequest from "./components/RowElementRequest";
-import { InputForm, SelectForm, TextAreaForm, ButtonContainer } from "../../common/form";
-import { projectApi } from "../../data/apiUrl";
 import { useFetch, useHandleForm } from "../../hooks";
-import { ErrorMessage } from "../../common/error";
-import { Button } from "../../components";
-import { ReturnButton, SaveButton } from "../../common/button";
-import RequestFamilyTabs from "./components/RequestFamilyTabs";
-import EpiPlanningModal from "./components/EpiPlanningModal";
-import RequestItemPicker from "./components/RequestItemPicker";
 import {
   formatInventoryQuantity,
   getInventoryFamilyConfig,
   getInventoryFamilyFromSource,
   type InventoryFamilyTabKey,
 } from "../Elements/inventoryCatalog";
+import EpiPlanningModal from "./components/EpiPlanningModal";
+import HeaderNewRequest from "./components/HeaderNewRequest";
+import RequestFamilyTabs from "./components/RequestFamilyTabs";
+import RequestItemPicker from "./components/RequestItemPicker";
+import RowElementRequest from "./components/RowElementRequest";
 import { getRequestFamilyDescription } from "./requestFamilies";
-import {
-  buildRequestWorkersFromPlans,
-  prunePlansByElementRequests,
-  type ElementPlanState,
-} from "./requestPlanning";
 import {
   attachRequestLineKeys,
   createElementRequestLine,
   getRequestLineKey,
   getUniqueElementsFromLines,
 } from "./requestLineUtils";
+import {
+  buildRequestWorkersFromPlans,
+  prunePlansByElementRequests,
+  type ElementPlanState,
+} from "./requestPlanning";
 
 function parsePlansFromStorage() {
   try {
-    return JSON.parse(localStorage.getItem("selectedElementRequestPlans") || "{}") as ElementPlanState;
+    return JSON.parse(
+      localStorage.getItem("selectedElementRequestPlans") || "{}",
+    ) as ElementPlanState;
   } catch {
     return {};
   }
@@ -60,24 +65,43 @@ export default function NewRequest() {
   const [searchParams] = useSearchParams();
   const projectIdParam = searchParams.get("projectId");
 
-  const [projectId, setProjectId] = useState<number>(projectIdParam ? Number(projectIdParam) : 0);
-  const [deliveryDueDate, setDeliveryDueDate] = useState<string>(localStorage.getItem("deliveryDueDate") || "");
+  const [projectId, setProjectId] = useState<number>(
+    projectIdParam ? Number(projectIdParam) : 0,
+  );
+  const [deliveryDueDate, setDeliveryDueDate] = useState<string>(
+    localStorage.getItem("deliveryDueDate") || "",
+  );
   const [description, setDescription] = useState<string>("");
-  const [activeFamily, setActiveFamily] = useState<InventoryFamilyTabKey>("epp");
-  const [elementPlans, setElementPlans] = useState<ElementPlanState>(parsePlansFromStorage());
-  const [planningElement, setPlanningElement] = useState<ElementRequestType | null>(null);
+  const [activeFamily, setActiveFamily] =
+    useState<InventoryFamilyTabKey>("epp");
+  const [elementPlans, setElementPlans] = useState<ElementPlanState>(
+    parsePlansFromStorage(),
+  );
+  const [planningElement, setPlanningElement] =
+    useState<ElementRequestType | null>(null);
 
-  const selectedElements: ElementType[] = JSON.parse(localStorage.getItem("selectedElements") || "[]");
+  const selectedElements: ElementType[] = JSON.parse(
+    localStorage.getItem("selectedElements") || "[]",
+  );
   const selectedElementRequest: ElementRequestType[] = attachRequestLineKeys(
     JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
   );
-  const selectedRequestWorkers: RequestWorker[] = JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]");
+  const selectedRequestWorkers: RequestWorker[] = JSON.parse(
+    localStorage.getItem("selectedRequestWorkers") || "[]",
+  );
 
   const [elements, setElements] = useState<ElementType[]>(selectedElements);
-  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(selectedElementRequest);
-  const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>(selectedRequestWorkers);
+  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(
+    selectedElementRequest,
+  );
+  const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>(
+    selectedRequestWorkers,
+  );
 
-  const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`, []);
+  const { data: projects } = useFetch<Project[]>(
+    `${projectApi}status/active`,
+    [],
+  );
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
   const [openWarning, setOpenWarning] = useState<boolean>(false);
@@ -90,18 +114,39 @@ export default function NewRequest() {
     nextElementRequests: ElementRequestType[],
   ) => {
     const normalizedLines = attachRequestLineKeys(nextElementRequests);
-    const normalizedElements = getUniqueElementsFromLines(normalizedLines, nextElements);
-    const nextPlans = prunePlansByElementRequests(elementPlans, normalizedLines);
-    const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+    const normalizedElements = getUniqueElementsFromLines(
+      normalizedLines,
+      nextElements,
+    );
+    const nextPlans = prunePlansByElementRequests(
+      elementPlans,
+      normalizedLines,
+    );
+    const nextRequestWorkers = buildRequestWorkersFromPlans(
+      nextPlans,
+      requestWorkers,
+    );
 
     setElements(normalizedElements);
     setElementRequests(normalizedLines);
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-    localStorage.setItem("selectedElements", JSON.stringify(normalizedElements));
-    localStorage.setItem("selectedElementRequest", JSON.stringify(normalizedLines));
-    localStorage.setItem("selectedElementRequestPlans", JSON.stringify(nextPlans));
-    localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
+    localStorage.setItem(
+      "selectedElements",
+      JSON.stringify(normalizedElements),
+    );
+    localStorage.setItem(
+      "selectedElementRequest",
+      JSON.stringify(normalizedLines),
+    );
+    localStorage.setItem(
+      "selectedElementRequestPlans",
+      JSON.stringify(nextPlans),
+    );
+    localStorage.setItem(
+      "selectedRequestWorkers",
+      JSON.stringify(nextRequestWorkers),
+    );
   };
 
   const handleAddElementFromPanel = (element: ElementType) => {
@@ -125,7 +170,8 @@ export default function NewRequest() {
             ? {
                 ...requestLine,
                 element,
-                quantityRequested: Number(requestLine.quantityRequested || 0) + 1,
+                quantityRequested:
+                  Number(requestLine.quantityRequested || 0) + 1,
               }
             : requestLine,
         );
@@ -167,7 +213,9 @@ export default function NewRequest() {
           JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
         ),
       );
-      setRequestWorkers(JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]"));
+      setRequestWorkers(
+        JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]"),
+      );
       setElementPlans(parsePlansFromStorage());
     };
 
@@ -179,7 +227,10 @@ export default function NewRequest() {
     const updatedElementRequests = elementRequests.filter(
       (requestLine) => getRequestLineKey(requestLine) !== lineKey,
     );
-    const updatedElements = getUniqueElementsFromLines(updatedElementRequests, elements);
+    const updatedElements = getUniqueElementsFromLines(
+      updatedElementRequests,
+      elements,
+    );
     const removedLine = elementRequests.find(
       (requestLine) => getRequestLineKey(requestLine) === lineKey,
     );
@@ -192,7 +243,10 @@ export default function NewRequest() {
     ) {
       delete nextPlans[String(removedLine.elementId)];
     }
-    const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+    const nextRequestWorkers = buildRequestWorkersFromPlans(
+      nextPlans,
+      requestWorkers,
+    );
 
     setElements(updatedElements);
     setElementRequests(updatedElementRequests);
@@ -200,9 +254,18 @@ export default function NewRequest() {
     setRequestWorkers(nextRequestWorkers);
 
     localStorage.setItem("selectedElements", JSON.stringify(updatedElements));
-    localStorage.setItem("selectedElementRequest", JSON.stringify(updatedElementRequests));
-    localStorage.setItem("selectedElementRequestPlans", JSON.stringify(nextPlans));
-    localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
+    localStorage.setItem(
+      "selectedElementRequest",
+      JSON.stringify(updatedElementRequests),
+    );
+    localStorage.setItem(
+      "selectedElementRequestPlans",
+      JSON.stringify(nextPlans),
+    );
+    localStorage.setItem(
+      "selectedRequestWorkers",
+      JSON.stringify(nextRequestWorkers),
+    );
   };
 
   const handleChangeElementRequest = (
@@ -214,10 +277,7 @@ export default function NewRequest() {
       getRequestLineKey(requestLine) === lineKey
         ? {
             ...requestLine,
-            [field]:
-              field === "quantityRequested"
-                ? Number(value)
-                : value,
+            [field]: field === "quantityRequested" ? Number(value) : value,
           }
         : requestLine,
     );
@@ -233,12 +293,21 @@ export default function NewRequest() {
       ...elementPlans,
       [String(planningElement.elementId)]: plans,
     };
-    const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+    const nextRequestWorkers = buildRequestWorkersFromPlans(
+      nextPlans,
+      requestWorkers,
+    );
 
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-    localStorage.setItem("selectedElementRequestPlans", JSON.stringify(nextPlans));
-    localStorage.setItem("selectedRequestWorkers", JSON.stringify(nextRequestWorkers));
+    localStorage.setItem(
+      "selectedElementRequestPlans",
+      JSON.stringify(nextPlans),
+    );
+    localStorage.setItem(
+      "selectedRequestWorkers",
+      JSON.stringify(nextRequestWorkers),
+    );
     setPlanningElement(null);
   };
 
@@ -284,7 +353,12 @@ export default function NewRequest() {
 
     try {
       await toast.promise(
-        handleSaveAndSend(projectId, deliveryDueDate, description, passwordCPanel),
+        handleSaveAndSend(
+          projectId,
+          deliveryDueDate,
+          description,
+          passwordCPanel,
+        ),
         {
           loading: "Guardando y enviando solicitud...",
           success: () => {
@@ -297,7 +371,8 @@ export default function NewRequest() {
             setTimeout(() => navigateToBack(), 1200);
             return "Solicitud guardada y enviada exitosamente.";
           },
-          error: (err) => err.message || "Error al guardar y enviar la solicitud.",
+          error: (err) =>
+            err.message || "Error al guardar y enviar la solicitud.",
         },
       );
     } catch {
@@ -307,21 +382,22 @@ export default function NewRequest() {
 
   const visibleElementRequests = useMemo(
     () =>
-      elementRequests.filter(
-        (requestLine) => {
-          const family = getInventoryFamilyFromSource(requestLine.element);
-          if (activeFamily === "epp") {
-            return ["epp", "epi", "uniform"].includes(family);
-          }
-          return family === activeFamily;
-        },
-      ),
+      elementRequests.filter((requestLine) => {
+        const family = getInventoryFamilyFromSource(requestLine.element);
+        if (activeFamily === "epp") {
+          return ["epp", "epi", "uniform"].includes(family);
+        }
+        return family === activeFamily;
+      }),
     [activeFamily, elementRequests],
   );
 
   const planningSummary = (elementId: number) => {
     const plans = elementPlans[String(elementId)] || [];
-    const planned = plans.reduce((total, plan) => total + Number(plan.plannedQuantity || 0), 0);
+    const planned = plans.reduce(
+      (total, plan) => total + Number(plan.plannedQuantity || 0),
+      0,
+    );
     return plans.length
       ? `${plans.length} trabajador(es), ${formatInventoryQuantity(planned)} planificado`
       : "Sin planificacion";
@@ -330,7 +406,9 @@ export default function NewRequest() {
   const selectedFamilyConfig = getInventoryFamilyConfig(activeFamily);
 
   if (!projects) {
-    return <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente mas tarde." />;
+    return (
+      <ErrorMessage errorMessage="Error al cargar los proyectos. Por favor, intenta nuevamente mas tarde." />
+    );
   }
 
   return (
@@ -370,7 +448,9 @@ export default function NewRequest() {
                   {openWarning ? (
                     <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
                       <IoWarning className="mt-1 w-8" />
-                      Recuerda que si el requerimiento es para mañana, la hora limite para pedirlo es 1 PM. Si es para pasado mañana, el limite es 5 PM.
+                      Recuerda que si el requerimiento es para mañana, la hora
+                      limite para pedirlo es 1 PM. Si es para pasado mañana, el
+                      limite es 5 PM.
                     </p>
                   ) : null}
                 </div>
@@ -388,8 +468,10 @@ export default function NewRequest() {
           </div>
 
           <div className="flex flex-col gap-4 w-full">
-
-            <RequestFamilyTabs activeFamily={activeFamily} onChange={setActiveFamily} />
+            <RequestFamilyTabs
+              activeFamily={activeFamily}
+              onChange={setActiveFamily}
+            />
 
             <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-1">
@@ -420,9 +502,15 @@ export default function NewRequest() {
                           key={getRequestLineKey(elementRequest)}
                           elementRequest={elementRequest}
                           handleRemoveElement={handleRemoveElement}
-                          handleChangeElementRequest={handleChangeElementRequest}
+                          handleChangeElementRequest={
+                            handleChangeElementRequest
+                          }
                           showPlanningButton={activeFamily === "epi"}
-                          planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
+                          planningSummary={
+                            activeFamily === "epi"
+                              ? planningSummary(elementRequest.elementId)
+                              : undefined
+                          }
                           onOpenPlanning={setPlanningElement}
                           showQuantityField={activeFamily !== "harness"}
                         />
@@ -430,7 +518,8 @@ export default function NewRequest() {
                     </div>
                   ) : (
                     <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
-                      No hay items seleccionados en {selectedFamilyConfig?.label || "esta familia"}.
+                      No hay items seleccionados en{" "}
+                      {selectedFamilyConfig?.label || "esta familia"}.
                     </div>
                   )}
                 </div>
@@ -447,6 +536,7 @@ export default function NewRequest() {
             <ReturnButton onClick={navigateToBack} />
             <SaveButton loading={false} />
             <Button
+              permission="requests.manage"
               type="button"
               icon={<MdAttachEmail />}
               label="Guardar y Enviar"
@@ -462,7 +552,11 @@ export default function NewRequest() {
         open={Boolean(planningElement)}
         elementRequest={planningElement}
         requestWorkers={requestWorkers}
-        plans={planningElement ? elementPlans[String(planningElement.elementId)] || [] : []}
+        plans={
+          planningElement
+            ? elementPlans[String(planningElement.elementId)] || []
+            : []
+        }
         onClose={() => setPlanningElement(null)}
         onSave={handleSavePlans}
       />
@@ -472,7 +566,9 @@ export default function NewRequest() {
       {openPasswordModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-all duration-300">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-lg font-semibold">Contraseña del Sistema de Correos</h2>
+            <h2 className="mb-4 text-lg font-semibold">
+              Contraseña del Sistema de Correos
+            </h2>
             <InputForm
               label="Contraseña"
               name="passwordCPanel"

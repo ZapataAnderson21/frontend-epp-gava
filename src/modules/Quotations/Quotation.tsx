@@ -1,20 +1,19 @@
-import { useNavigate, useParams } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import {
   CreditCard as FaCreditCard,
-  FileText as FaRegFilePdf,
   Globe as FaGlobe,
-  Mail as IoIosMail,
   MapPin as FaLocationDot,
   Pencil as FaPencil,
   Phone as FaPhoneAlt,
+  FileText as FaRegFilePdf,
+  Mail as IoIosMail,
 } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 
-
-import { Button } from "../../components";
 import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonForm } from "../../common/loading";
+import { Button } from "../../components";
 import { quotationApi } from "../../data/apiUrl";
 import type { Quotation } from "../../data/types";
 import { useFetch } from "../../hooks";
@@ -23,7 +22,11 @@ export default function Quotation() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: quotation, loading, error } = useFetch<Quotation>(`${quotationApi}${id ?? ""}`);
+  const {
+    data: quotation,
+    loading,
+    error,
+  } = useFetch<Quotation>(`${quotationApi}${id ?? ""}`);
 
   const redirectUpdate = () => {
     if (!quotation) return;
@@ -62,7 +65,8 @@ export default function Quotation() {
 
   if (loading) return <LoadingSkeletonForm numberRows={8} />;
   if (error) return <ErrorMessage errorMessage={error} />;
-  if (!quotation) return <ErrorMessage errorMessage="No se encontró la cotización." />;
+  if (!quotation)
+    return <ErrorMessage errorMessage="No se encontró la cotización." />;
 
   const commercialTerms = quotation.commercialTerms
     ? quotation.commercialTerms
@@ -71,11 +75,14 @@ export default function Quotation() {
         .filter(Boolean)
     : [];
 
-  const displayDate = new Date(quotation.createdAt).toLocaleDateString("es-PE", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const displayDate = new Date(quotation.createdAt).toLocaleDateString(
+    "es-PE",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    },
+  );
 
   return (
     <>
@@ -86,6 +93,7 @@ export default function Quotation() {
           </div>
           <div className="w-fit flex flex-row gap-2">
             <Button
+              permission="quotations.export"
               icon={<FaRegFilePdf />}
               label="Exportar"
               bgColor="oklch(27.9% 0.041 260.031)"
@@ -109,19 +117,41 @@ export default function Quotation() {
           <div className="flex flex-col gap-8 lg:w-[85%] w-full md:border border-gray-100 px-4 py-6 sm:px-6 md:px-10 md:py-10 lg:px-12 lg:py-12 md:shadow-md shadow-gray-300 bg-white rounded-sm">
             <div className="flex flex-col gap-8 text-center">
               <div className="flex flex-row flex-wrap items-center justify-center md:justify-between gap-8">
-                <img className="max-h-45 md:max-h-56" src="/pdf-images/Logo-Cabecera-OC.png" alt="Logo" />
+                <img
+                  className="max-h-45 md:max-h-56"
+                  src="/pdf-images/Logo-Cabecera-OC.png"
+                  alt="Logo"
+                />
                 <div className="flex flex-row gap-8 flex-wrap items-center justify-center">
-                  <img className="h-12 md:h-18 lg:h-24" src="/pdf-images/Logo-ISO9001.jpg" alt="Certificado ISO" />
-                  <img className="h-12 md:h-18 lg:h-24" src="/pdf-images/Logo-HODELPE.jpg" alt="Certificado HODELPE" />
-                  <img className="h-12 md:h-18 lg:h-24" src="/pdf-images/Logo-SGS.png" alt="Certificado SGS" />
+                  <img
+                    className="h-12 md:h-18 lg:h-24"
+                    src="/pdf-images/Logo-ISO9001.jpg"
+                    alt="Certificado ISO"
+                  />
+                  <img
+                    className="h-12 md:h-18 lg:h-24"
+                    src="/pdf-images/Logo-HODELPE.jpg"
+                    alt="Certificado HODELPE"
+                  />
+                  <img
+                    className="h-12 md:h-18 lg:h-24"
+                    src="/pdf-images/Logo-SGS.png"
+                    alt="Certificado SGS"
+                  />
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
-                <p className="text-[#03045a] font-bold italic text-lg">"Seguridad y Calidad a su Servicio"</p>
-                <h1 className="text-[#c00000] font-extrabold text-xl">COTIZACIÓN</h1>
+                <p className="text-[#03045a] font-bold italic text-lg">
+                  "Seguridad y Calidad a su Servicio"
+                </p>
+                <h1 className="text-[#c00000] font-extrabold text-xl">
+                  COTIZACIÓN
+                </h1>
                 <div className="border-t-4 border-[#c00000]" />
-                <h2 className="text-[#c00000] text-2xl font-bold">{quotation.code}</h2>
+                <h2 className="text-[#c00000] text-2xl font-bold">
+                  {quotation.code}
+                </h2>
                 <p className="self-end text-lg">
                   <span className="font-bold">Fecha:</span> {displayDate}
                 </p>
@@ -129,10 +159,22 @@ export default function Quotation() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xl px-1">
-              <p><span className="font-bold">Servicio:</span> {quotation.serviceDescription ?? "-"}</p>
-              <p><span className="font-bold">RUC:</span> {quotation.client?.ruc ?? "-"}</p>
-              <p><span className="font-bold">Nombre del Cliente:</span> {quotation.client?.name ?? "-"}</p>
-              <p><span className="font-bold">Atención:</span> {quotation.client?.contactName ?? "-"}</p>
+              <p>
+                <span className="font-bold">Servicio:</span>{" "}
+                {quotation.serviceDescription ?? "-"}
+              </p>
+              <p>
+                <span className="font-bold">RUC:</span>{" "}
+                {quotation.client?.ruc ?? "-"}
+              </p>
+              <p>
+                <span className="font-bold">Nombre del Cliente:</span>{" "}
+                {quotation.client?.name ?? "-"}
+              </p>
+              <p>
+                <span className="font-bold">Atención:</span>{" "}
+                {quotation.client?.contactName ?? "-"}
+              </p>
             </div>
 
             <div className="overflow-x-auto rounded-sm">
@@ -149,13 +191,22 @@ export default function Quotation() {
                 </thead>
                 <tbody>
                   {quotation.items?.map((item, index) => (
-                    <tr key={item.quotationItemId ?? index} className="border-b border-gray-300">
+                    <tr
+                      key={item.quotationItemId ?? index}
+                      className="border-b border-gray-300"
+                    >
                       <td className="p-3">{item.orderNumber ?? index + 1}</td>
                       <td className="p-3">{item.description}</td>
                       <td className="p-3">{item.unit}</td>
-                      <td className="p-3 text-right">{Number(item.quantity).toFixed(2)}</td>
-                      <td className="p-3 text-right">{Number(item.unitPrice).toFixed(2)}</td>
-                      <td className="p-3 text-right">{Number(item.lineTotal).toFixed(2)}</td>
+                      <td className="p-3 text-right">
+                        {Number(item.quantity).toFixed(2)}
+                      </td>
+                      <td className="p-3 text-right">
+                        {Number(item.unitPrice).toFixed(2)}
+                      </td>
+                      <td className="p-3 text-right">
+                        {Number(item.lineTotal).toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -169,7 +220,9 @@ export default function Quotation() {
                   <span>{Number(quotation.costDirectAmount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-gray-300 font-semibold">
-                  <span>IGV ({Number(quotation.igvRate * 100).toFixed(0)}%)</span>
+                  <span>
+                    IGV ({Number(quotation.igvRate * 100).toFixed(0)}%)
+                  </span>
                   <span>{Number(quotation.igvAmount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between py-3 text-[#c00000] font-bold border-t-4 border-[#c00000]">
@@ -180,7 +233,9 @@ export default function Quotation() {
             </div>
 
             <div className="pt-1">
-              <h3 className="text-xl font-bold mb-2">Condiciones Comerciales:</h3>
+              <h3 className="text-xl font-bold mb-2">
+                Condiciones Comerciales:
+              </h3>
               {commercialTerms.length > 0 ? (
                 <ol className="list-decimal list-inside text-lg space-y-1">
                   {commercialTerms.map((term, idx) => (
@@ -196,21 +251,72 @@ export default function Quotation() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-lg">
                 <div className="space-y-4">
                   <p className="font-bold text-lg">INFORMACIÓN BANCARIA:</p>
-                  <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta BBVA:</span> 0011-0216-0100000630</span></p>
-                  <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta Interbancaria:</span> 011216000100000630 92</span></p>
-                  <p className="flex items-center gap-3"><FaCreditCard className="shrink-0" /><span><span className="font-bold">N° Cuenta de detracción B. NACIÓN:</span> 230-003181</span></p>
+                  <p className="flex items-center gap-3">
+                    <FaCreditCard className="shrink-0" />
+                    <span>
+                      <span className="font-bold">N° Cuenta BBVA:</span>{" "}
+                      0011-0216-0100000630
+                    </span>
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <FaCreditCard className="shrink-0" />
+                    <span>
+                      <span className="font-bold">
+                        N° Cuenta Interbancaria:
+                      </span>{" "}
+                      011216000100000630 92
+                    </span>
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <FaCreditCard className="shrink-0" />
+                    <span>
+                      <span className="font-bold">
+                        N° Cuenta de detracción B. NACIÓN:
+                      </span>{" "}
+                      230-003181
+                    </span>
+                  </p>
                 </div>
                 <div className="space-y-4">
                   <p className="font-bold text-lg">CONTACTO:</p>
-                  <p className="flex items-center gap-3"><FaPhoneAlt className="shrink-0" /><span><span className="font-bold">Teléfono:</span> 978 994 903 / 950 528 865</span></p>
-                  <p className="flex items-center gap-3"><FaGlobe className="shrink-0" /><span><span className="font-bold">Página web:</span> www.gavacycelectricidad.com</span></p>
-                  <p className="flex items-center gap-3"><IoIosMail className="shrink-0 text-xl" /><span><span className="font-bold">Correo:</span> logistica@gavacyc.com</span></p>
+                  <p className="flex items-center gap-3">
+                    <FaPhoneAlt className="shrink-0" />
+                    <span>
+                      <span className="font-bold">Teléfono:</span> 978 994 903 /
+                      950 528 865
+                    </span>
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <FaGlobe className="shrink-0" />
+                    <span>
+                      <span className="font-bold">Página web:</span>{" "}
+                      www.gavacycelectricidad.com
+                    </span>
+                  </p>
+                  <p className="flex items-center gap-3">
+                    <IoIosMail className="shrink-0 text-xl" />
+                    <span>
+                      <span className="font-bold">Correo:</span>{" "}
+                      logistica@gavacyc.com
+                    </span>
+                  </p>
                 </div>
               </div>
               <div className="mt-8 text-lg">
                 <p className="font-bold text-lg mb-2">DIRECCIÓN:</p>
-                <p className="flex items-start gap-3"><FaLocationDot className="shrink-0 mt-1" /><span>Calle Vicente de la Vega No 1488 - 5to piso, Chiclayo</span></p>
-                <p className="flex items-start gap-3"><FaLocationDot className="shrink-0 mt-1" /><span>Mz C Dpto 206 Torre 4 Condominio Garden 360. Urb Las Palmeras del Chipre, Piura.</span></p>
+                <p className="flex items-start gap-3">
+                  <FaLocationDot className="shrink-0 mt-1" />
+                  <span>
+                    Calle Vicente de la Vega No 1488 - 5to piso, Chiclayo
+                  </span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <FaLocationDot className="shrink-0 mt-1" />
+                  <span>
+                    Mz C Dpto 206 Torre 4 Condominio Garden 360. Urb Las
+                    Palmeras del Chipre, Piura.
+                  </span>
+                </p>
               </div>
             </div>
           </div>

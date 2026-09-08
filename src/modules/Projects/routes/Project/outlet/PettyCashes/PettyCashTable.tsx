@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { DeleteButton, SeeButton } from "../../../../../../common/button";
 import { ErrorMessage } from "../../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
-import { DeleteButton, SeeButton } from "../../../../../../common/button";
 import { DeleteConfirmDialog } from "../../../../../../components";
 import { pettyCashApi } from "../../../../../../data/apiUrl";
 import { type PettyCashType } from "../../../../../../data/types";
@@ -11,7 +12,6 @@ import {
   useDebouncedValue,
   usePaginatedFetch,
 } from "../../../../../../hooks";
-import toast from "react-hot-toast";
 
 const expenseTypeOptions = [
   { value: "", label: "Todos los tipos" },
@@ -90,6 +90,7 @@ export default function PettyCashTable({
     { key: "expenseType", label: "Tipo", width: "12rem" },
     {
       label: "Monto (S/. )",
+      permission: "finance.view",
       width: "12rem",
       render: (row: PettyCashType) => (
         <span className="flex max-w-[6rem] justify-end">

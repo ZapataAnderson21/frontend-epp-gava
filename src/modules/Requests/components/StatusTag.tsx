@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAccess } from "../../../permissions/AccessProvider";
 
 interface StatusTagProps {
   status: string;
@@ -8,13 +9,13 @@ interface StatusTagProps {
 }
 
 export const statusColor = {
-  "Borrador": "#9ca3af", // gray-400
+  Borrador: "#9ca3af", // gray-400
   "En progreso": "#d97706", // amber-600
-  "Revisada": "#fbbf24", // yellow-600
-  "Aprobada": "#16a34a", // green-600
-  "Rechazada": "#ef4444", // red-500
-  "Atendida": "#06b6d4", // cyan-500
-  "Completada": "#3b82f6", // purple-500
+  Revisada: "#fbbf24", // yellow-600
+  Aprobada: "#16a34a", // green-600
+  Rechazada: "#ef4444", // red-500
+  Atendida: "#06b6d4", // cyan-500
+  Completada: "#3b82f6", // purple-500
 };
 
 export type RequestStatusValue =
@@ -58,6 +59,22 @@ export default function StatusTag({
   const tagRef = useRef<HTMLSpanElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const label = normalizeRequestStatusLabel(status);
+  const { can } = useAccess();
+  const available = requestStatusOptions.filter(
+    (option) =>
+      (option.value === "reviewed" &&
+        label === "En progreso" &&
+        can("requests.review")) ||
+      (option.value === "approved" &&
+        label === "Revisada" &&
+        can("requests.approve")) ||
+      (option.value === "rejected" &&
+        ["En progreso", "Revisada", "Aprobada"].includes(label) &&
+        can("requests.approve")) ||
+      (option.value === "addressed" &&
+        label === "Aprobada" &&
+        can("requests.attend")),
+  );
 
   useLayoutEffect(() => {
     if (!isOpen || !tagRef.current) return;
@@ -92,11 +109,14 @@ export default function StatusTag({
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, []);
 
-  if (!editable) {
+  if (!editable || !available.length) {
     return (
       <span
         className="px-2 py-1 rounded-full text-white font-semibold text-xs"
-        style={{ backgroundColor: statusColor[label as keyof typeof statusColor] || '#9ca3af' }}
+        style={{
+          backgroundColor:
+            statusColor[label as keyof typeof statusColor] || "#9ca3af",
+        }}
       >
         {label.toUpperCase()}
       </span>
@@ -108,24 +128,26 @@ export default function StatusTag({
       <span
         ref={tagRef}
         className="px-2 py-1 rounded-full text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: statusColor[label as keyof typeof statusColor] || '#9ca3af' }}
+        style={{
+          backgroundColor:
+            statusColor[label as keyof typeof statusColor] || "#9ca3af",
+        }}
         onClick={() => setIsOpen((current) => !current)}
       >
         {label.toUpperCase()} ▾
       </span>
 
-      {isOpen && createPortal(
-        <div
-          ref={dropdownRef}
-          className="fixed z-[9999] w-40 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
-          style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-          }}
-        >
-          {requestStatusOptions
-            .filter((option) => option.value !== "completed")
-            .map((option) => (
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] w-40 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+            }}
+          >
+            {available.map((option) => (
               <div
                 key={option.value}
                 className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 transition-colors"
@@ -141,9 +163,9 @@ export default function StatusTag({
                 <span className="text-xs text-gray-700">{option.label}</span>
               </div>
             ))}
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

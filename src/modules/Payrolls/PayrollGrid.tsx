@@ -1,5 +1,7 @@
-import { Check, LockKeyhole } from "lucide-react";
 import { motion } from "framer-motion";
+import { Check, LockKeyhole } from "lucide-react";
+import { useAccess } from "../../permissions/AccessProvider";
+import AttendanceIndicator from "./AttendanceIndicator";
 import type {
   GeneralPayrollEntry,
   GeneralPayrollProject,
@@ -174,18 +176,23 @@ const NumberInput = ({
   ariaLabel: string;
   className?: string;
   disabled?: boolean;
-}) => (
-  <input
-    type="number"
-    min="0"
-    step="0.01"
-    value={value}
-    aria-label={ariaLabel}
-    disabled={disabled}
-    onChange={(event) => onChange(Math.max(0, Number(event.target.value) || 0))}
-    className={`${className} rounded-md border border-gray-300 px-2 py-1.5 text-right outline-none transition focus:border-[#0047a3] focus:ring-2 focus:ring-[#0047a3]/10 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600`}
-  />
-);
+}) => {
+  const { can } = useAccess();
+  return (
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={value}
+      aria-label={ariaLabel}
+      disabled={disabled || !can("payroll.payments")}
+      onChange={(event) =>
+        onChange(Math.max(0, Number(event.target.value) || 0))
+      }
+      className={`${className} rounded-md border border-gray-300 px-2 py-1.5 text-right outline-none transition focus:border-[#0047a3] focus:ring-2 focus:ring-[#0047a3]/10 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600`}
+    />
+  );
+};
 
 const AttendanceCheck = ({
   checked,
@@ -199,62 +206,48 @@ const AttendanceCheck = ({
   disabledReason?: string;
   onChange: (checked: boolean) => void;
   ariaLabel: string;
-}) => (
-  <motion.button
-    type="button"
-    role="checkbox"
-    aria-checked={checked}
-    aria-label={ariaLabel}
-    disabled={disabled}
-    title={disabledReason || ariaLabel}
-    whileHover={disabled ? undefined : { scale: 1.08 }}
-    whileTap={disabled ? undefined : { scale: 0.88 }}
-    animate={{ scale: checked ? 1 : 0.96 }}
-    transition={{ type: "spring", stiffness: 460, damping: 24 }}
-    onClick={() => onChange(!checked)}
-    className={`inline-flex size-8 items-center justify-center rounded-lg border-2 transition-colors ${
-      disabled
-        ? checked
-          ? "cursor-not-allowed border-[#0047a3] bg-[#0047a3] text-white opacity-75"
-          : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-        : checked
-          ? "cursor-pointer border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
-          : "cursor-pointer border-gray-300 bg-white text-transparent hover:border-[#0047a3] hover:bg-[#eff5ff]"
-    }`}
-  >
-    {checked ? (
-      <motion.span
-        initial={{ scale: 0, rotate: -25 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 520, damping: 22 }}
-      >
-        <Check className="size-5" strokeWidth={3} />
-      </motion.span>
-    ) : disabled ? (
-      <LockKeyhole className="size-3.5" />
-    ) : (
-      <Check className="size-4 opacity-0" />
-    )}
-  </motion.button>
-);
-
-const AttendanceIndicator = ({ checked }: { checked: boolean }) => (
-  <motion.span
-    role="img"
-    aria-label={checked ? "Asistió" : "No asistió"}
-    title={checked ? "Asistió" : "No asistió"}
-    initial={false}
-    animate={{ scale: checked ? 1 : 0.94 }}
-    transition={{ type: "spring", stiffness: 460, damping: 24 }}
-    className={`mx-auto inline-flex size-8 items-center justify-center rounded-lg border-2 transition-colors ${
-      checked
-        ? "border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
-        : "border-gray-200 bg-white text-transparent"
-    }`}
-  >
-    <Check className="size-5" strokeWidth={3} />
-  </motion.span>
-);
+}) => {
+  const { can } = useAccess();
+  disabled = disabled || !can("payroll.attendance");
+  return (
+    <motion.button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      title={disabledReason || ariaLabel}
+      whileHover={disabled ? undefined : { scale: 1.08 }}
+      whileTap={disabled ? undefined : { scale: 0.88 }}
+      animate={{ scale: checked ? 1 : 0.96 }}
+      transition={{ type: "spring", stiffness: 460, damping: 24 }}
+      onClick={() => onChange(!checked)}
+      className={`inline-flex size-8 items-center justify-center rounded-lg border-2 transition-colors ${
+        disabled
+          ? checked
+            ? "cursor-not-allowed border-[#0047a3] bg-[#0047a3] text-white opacity-75"
+            : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+          : checked
+            ? "cursor-pointer border-[#0047a3] bg-[#0047a3] text-white shadow-sm"
+            : "cursor-pointer border-gray-300 bg-white text-transparent hover:border-[#0047a3] hover:bg-[#eff5ff]"
+      }`}
+    >
+      {checked ? (
+        <motion.span
+          initial={{ scale: 0, rotate: -25 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 520, damping: 22 }}
+        >
+          <Check className="size-5" strokeWidth={3} />
+        </motion.span>
+      ) : disabled ? (
+        <LockKeyhole className="size-3.5" />
+      ) : (
+        <Check className="size-4 opacity-0" />
+      )}
+    </motion.button>
+  );
+};
 
 export function ProjectPayrollGrid({
   project,
@@ -264,6 +257,7 @@ export function ProjectPayrollGrid({
   onWorkerChange,
   readOnly = false,
 }: ProjectGridProps) {
+  const { can } = useAccess();
   const entryByWorker = new Map(
     project.entries.map((entry) => [entry.generalPayrollWorkerId, entry]),
   );
@@ -280,7 +274,9 @@ export function ProjectPayrollGrid({
   );
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div
+      className={`overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm ${can("finance.view") ? "" : "payroll-attendance-only"}`}
+    >
       <table className="min-w-[1500px] w-full border-collapse text-sm">
         <thead className="bg-[#f3f5f8] text-[#0f2545]">
           <tr>
@@ -511,6 +507,7 @@ export function GeneralPayrollGrid({
   onWorkerChange,
   readOnly = false,
 }: GeneralGridProps) {
+  const { can } = useAccess();
   const aggregate = (worker: GeneralPayrollWorker) => {
     const entries = projects
       .flatMap((project) => project.entries)
@@ -646,7 +643,9 @@ export function GeneralPayrollGrid({
   const overallTotals = sumGeneralTotals(workers);
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div
+      className={`overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm ${can("finance.view") ? "" : "payroll-attendance-only"}`}
+    >
       <table className="min-w-[1850px] w-full border-collapse text-sm">
         <thead className="bg-[#f3f5f8] text-[#0f2545]">
           <tr>
@@ -715,10 +714,22 @@ export function GeneralPayrollGrid({
                     <td className="px-3 py-3 text-gray-600">
                       {worker.worker.dni}
                     </td>
-                    {dayFields.map(([field]) => (
+                    {dayFields.map(([field, label]) => (
                       <td key={field} className="px-2 py-3 text-center">
                         <AttendanceIndicator
                           checked={totals.days[field] > 0}
+                          label={`${label} de ${worker.worker.fullName}`}
+                          projectNames={projects
+                            .filter((project) =>
+                              project.entries.some(
+                                (entry) =>
+                                  entry.isActive &&
+                                  entry.generalPayrollWorkerId ===
+                                    worker.generalPayrollWorkerId &&
+                                  Number(entry[field]) > 0,
+                              ),
+                            )
+                            .map((project) => project.project.name)}
                         />
                       </td>
                     ))}

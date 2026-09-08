@@ -8,13 +8,14 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { Pagination } from "../../common/table";
 import Select from "../../components/Select";
 import { generalPayrollApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks";
 import getAuthHeaders from "../../hooks/getAuthHeaders";
+import { useAccess } from "../../permissions/AccessProvider";
 import type { GeneralPayrollWeekCard } from "./types";
 
 const dateFormatter = new Intl.DateTimeFormat("es-PE", {
@@ -68,6 +69,7 @@ export default function GeneralPayrolls() {
   const [month, setMonth] = useState(-1);
   const [year, setYear] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const { can } = useAccess();
   const [exportingWeekId, setExportingWeekId] = useState<number | null>(null);
   const {
     data: weeks,
@@ -248,7 +250,11 @@ export default function GeneralPayrolls() {
 
       <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {visibleWeeks.map((week) => {
-          const canExport = week.initialized && week.projectCount > 0;
+          const canExport =
+            can("payroll.export") &&
+            can("finance.view") &&
+            week.initialized &&
+            week.projectCount > 0;
           const isExporting = exportingWeekId === week.weekId;
           return (
             <article
@@ -304,7 +310,9 @@ export default function GeneralPayrolls() {
                 <div>
                   <p className="text-xs text-gray-500">Neto registrado</p>
                   <p className="font-bold text-[#0047a3]">
-                    {moneyFormatter.format(week.totalAmount)}
+                    {can("finance.view")
+                      ? moneyFormatter.format(week.totalAmount)
+                      : "Restringido"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useAccess } from "../../permissions/AccessProvider";
 import Pagination from "./Pagination";
 import type { PaginationMeta } from "./pagination.types";
 import { usePagination } from "./usePagination";
@@ -10,6 +11,7 @@ export type Column<T> = {
   truncate?: boolean;
   render?: (row: T) => React.ReactNode;
   align?: "left" | "center" | "right";
+  permission?: string;
 };
 
 interface TableProps<T> {
@@ -37,6 +39,10 @@ export default function Table<T>({
   rowClassName,
   getRowKey,
 }: TableProps<T>) {
+  const { can } = useAccess();
+  columns = columns.filter(
+    (column) => !column.permission || can(column.permission),
+  );
   const localPagination = usePagination({ data, itemsPerPage });
   const usesServerPagination = Boolean(pagination && onPageChange);
   const displayData = usesServerPagination
@@ -72,7 +78,10 @@ export default function Table<T>({
         <table className="w-full min-w-full whitespace-nowrap text-gray-700">
           <colgroup>
             {columns.map((column, index) => (
-              <col key={String(column.key ?? `col-${index}`)} style={{ width: column.width }} />
+              <col
+                key={String(column.key ?? `col-${index}`)}
+                style={{ width: column.width }}
+              />
             ))}
           </colgroup>
           <thead className="bg-gray-100 font-semibold">

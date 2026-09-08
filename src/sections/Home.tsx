@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import Sidebar from "./Sidebar";
-import { Outlet } from "react-router-dom";
 import { PanelLeftOpen } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { RouteAccess } from "../permissions/AccessProvider";
+import Sidebar from "./Sidebar";
 
 const SIDEBAR_PREFERENCE_KEY = "sir-gava:sidebar-collapsed";
 const MOBILE_QUERY = "(max-width: 767px)";
@@ -100,7 +101,9 @@ export default function Home() {
               onClick={() => {
                 setIsOpen(true);
                 requestAnimationFrame(() =>
-                  document.getElementById("sidebar-close-button")?.focus({ preventScroll: true }),
+                  document
+                    .getElementById("sidebar-close-button")
+                    ?.focus({ preventScroll: true }),
                 );
               }}
               className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-[#0047a3] shadow-sm transition-colors hover:bg-[#eff5ff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0047a3]"
@@ -109,7 +112,9 @@ export default function Home() {
             </button>
           </div>
         )}
-        <Outlet />
+        <RouteAccess>
+          <Outlet />
+        </RouteAccess>
       </div>
     </>
   );

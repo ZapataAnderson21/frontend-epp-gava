@@ -10,8 +10,8 @@ import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { generalPayrollApi } from "../../data/apiUrl";
-import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
-import { logisticsTypes } from "../../utils";
+import { useApiAction, useFetch } from "../../hooks";
+import { useAccess } from "../../permissions/AccessProvider";
 import PayrollConfigurationModal from "./PayrollConfigurationModal";
 import { GeneralPayrollGrid, ProjectPayrollGrid } from "./PayrollGrid";
 import ProjectWorkerSelectionModal from "./ProjectWorkerSelectionModal";
@@ -47,8 +47,11 @@ const dayKeys = [
 ] as const;
 
 export default function GeneralWeeklyPayroll() {
-  const { user } = useCurrentUser();
-  const canEdit = logisticsTypes.includes(user?.userType ?? "");
+  const { can } = useAccess();
+  const canConfigure = can("payroll.manage");
+  const canAttendance = can("payroll.attendance");
+  const canPayments = can("payroll.payments");
+  const canEdit = canAttendance || canPayments;
   const { weekId } = useParams();
   const navigate = useNavigate();
   const url = weekId ? `${generalPayrollApi}weeks/${weekId}` : "";
@@ -224,7 +227,7 @@ export default function GeneralWeeklyPayroll() {
         `${generalPayrollApi}weeks/${weekId}`,
         "PUT",
         {
-          workers: payroll.workers.map((worker) => ({
+          workers: (canPayments ? payroll.workers : []).map((worker) => ({
             generalPayrollWorkerId: worker.generalPayrollWorkerId,
             dailyWage: worker.dailyWage,
             additionalAmount: worker.additionalAmount,
@@ -236,16 +239,24 @@ export default function GeneralWeeklyPayroll() {
               .filter((entry) => entry.isActive)
               .map((entry) => ({
                 generalPayrollEntryId: entry.generalPayrollEntryId,
-                monday: entry.monday,
-                tuesday: entry.tuesday,
-                wednesday: entry.wednesday,
-                thursday: entry.thursday,
-                friday: entry.friday,
-                saturday: entry.saturday,
-                dominical: entry.dominical,
-                overtimeAmount: entry.overtimeAmount,
-                afpDiscount: entry.afpDiscount,
-                advanceDiscount: entry.advanceDiscount,
+                ...(canAttendance
+                  ? {
+                      monday: entry.monday,
+                      tuesday: entry.tuesday,
+                      wednesday: entry.wednesday,
+                      thursday: entry.thursday,
+                      friday: entry.friday,
+                      saturday: entry.saturday,
+                      dominical: entry.dominical,
+                    }
+                  : {}),
+                ...(canPayments
+                  ? {
+                      overtimeAmount: entry.overtimeAmount,
+                      afpDiscount: entry.afpDiscount,
+                      advanceDiscount: entry.advanceDiscount,
+                    }
+                  : {}),
               })),
           ),
         },
@@ -334,32 +345,38 @@ export default function GeneralWeeklyPayroll() {
           </div>
           {payroll && (
             <div className="flex flex-wrap items-center gap-3">
-              <div className="mr-2 rounded-xl bg-emerald-50 px-4 py-2">
-                <p className="text-xs text-emerald-700">
-                  Neto final a depositar
-                </p>
-                <p className="font-bold text-emerald-800">
-                  {moneyFormatter.format(totalNet)}
-                </p>
-              </div>
-              {canEdit ? (
+              {can("finance.view") && (
+                <div className="mr-2 rounded-xl bg-emerald-50 px-4 py-2">
+                  <p className="text-xs text-emerald-700">
+                    Neto final a depositar
+                  </p>
+                  <p className="font-bold text-emerald-800">
+                    {moneyFormatter.format(totalNet)}
+                  </p>
+                </div>
+              )}
+              {canConfigure || canEdit ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setConfigurationOpen(true)}
-                    className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
-                  >
-                    <Settings2 className="size-4" /> Configurar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:opacity-60"
-                  >
-                    <Save className="size-4" />{" "}
-                    {saving ? "Guardando..." : "Guardar"}
-                  </button>
+                  {canConfigure && (
+                    <button
+                      type="button"
+                      onClick={() => setConfigurationOpen(true)}
+                      className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
+                    >
+                      <Settings2 className="size-4" /> Configurar
+                    </button>
+                  )}
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:opacity-60"
+                    >
+                      <Save className="size-4" />{" "}
+                      {saving ? "Guardando..." : "Guardar"}
+                    </button>
+                  )}
                 </>
               ) : (
                 <span className="rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-600">
@@ -384,7 +401,7 @@ export default function GeneralWeeklyPayroll() {
               ? "Puedes crear un padrón vacío o reutilizar la lista de la última semana y modificarla después."
               : "La planilla todavía no ha sido configurada por administración."}
           </p>
-          {canEdit ? (
+          {canConfigure ? (
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
@@ -437,7 +454,7 @@ export default function GeneralWeeklyPayroll() {
               <p className="font-semibold text-[#0f2545]">
                 La lista de trabajadores está vacía.
               </p>
-              {canEdit ? (
+              {canConfigure ? (
                 <button
                   type="button"
                   onClick={() => setConfigurationOpen(true)}
@@ -456,7 +473,7 @@ export default function GeneralWeeklyPayroll() {
             />
           ) : selectedProject ? (
             <div className="space-y-4">
-              {canEdit && (
+              {canConfigure && (
                 <div className="flex justify-end">
                   <button
                     type="button"
@@ -487,7 +504,7 @@ export default function GeneralWeeklyPayroll() {
         </>
       )}
 
-      {canEdit && configurationOpen && payroll && (
+      {canConfigure && configurationOpen && payroll && (
         <PayrollConfigurationModal
           activeProjects={data.activeProjects}
           availableWorkers={data.availableWorkers}
@@ -498,7 +515,7 @@ export default function GeneralWeeklyPayroll() {
         />
       )}
 
-      {canEdit && projectWorkersOpen && payroll && selectedProject && (
+      {canConfigure && projectWorkersOpen && payroll && selectedProject && (
         <ProjectWorkerSelectionModal
           project={selectedProject}
           workers={payroll.workers}

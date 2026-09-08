@@ -1,7 +1,7 @@
+import { ArrowLeft as FaArrowLeft, Copy as FaRegCopy } from "lucide-react";
 import { useState } from "react";
 import { SelectForm } from "../../../../../../../common/form";
 import { Button } from "../../../../../../../components";
-import { ArrowLeft as FaArrowLeft, Copy as FaRegCopy } from "lucide-react";
 import { projectApi } from "../../../../../../../data/apiUrl";
 import type { Project } from "../../../../../../../data/types";
 import { useFetch } from "../../../../../../../hooks";
@@ -13,14 +13,22 @@ interface Props {
   isLoading?: boolean;
 }
 
-export default function DuplicateModal({ isOpen, onClose, onSubmit, isLoading }: Props) {
+export default function DuplicateModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  isLoading,
+}: Props) {
   const [projectId, setProjectId] = useState<number>(0);
   const [error, setError] = useState<string>("");
-  const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`, []);
+  const { data: projects } = useFetch<Project[]>(
+    `${projectApi}status/active`,
+    [],
+  );
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (projectId === 0) {
       setError("El ID del proyecto es requerido");
       return;
@@ -50,7 +58,7 @@ export default function DuplicateModal({ isOpen, onClose, onSubmit, isLoading }:
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <h2 className="text-lg font-bold mb-4">Duplicar Orden de Compra</h2>
-        
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <SelectForm
             label="Proyecto"
@@ -76,6 +84,7 @@ export default function DuplicateModal({ isOpen, onClose, onSubmit, isLoading }:
               onClick={handleClose}
             />
             <Button
+              permission="orders.manage"
               icon={<FaRegCopy />}
               label="Duplicar"
               bgColor="#9f7aea"

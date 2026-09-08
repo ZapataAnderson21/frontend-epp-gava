@@ -15,23 +15,32 @@ import {
   X as FaTimes,
 } from "lucide-react";
 
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
+import toast, { Toaster } from "react-hot-toast";
+import ErrorMessage from "../../common/error/ErrorMessage";
 import Button from "../../components/Button";
 import ContentTableSummary from "./components/TableSummary/ContentTableSummary";
-import ErrorMessage from "../../common/error/ErrorMessage";
-import toast, { Toaster } from "react-hot-toast";
 
-import { elementApi, elementRequestApi, inventoryApi, requestApi, requestResponseApi, elementRequestResponseApi } from "../../data/apiUrl";
-import { useFetch } from "../../hooks/useFetch";
-import { useApiAction } from "../../hooks/useApiAction";
-import { AddButton, ReturnButton } from "../../common/button";
 import Permission from "../../common/auth/Permission";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { adminTypes, gerencyTypes, logisticsTypes } from "../../utils";
+import { AddButton, ReturnButton } from "../../common/button";
 import { ButtonContainer } from "../../common/form";
 import Select from "../../components/Select";
-import { getInventoryBackendPayload, type InventoryFamilyTabKey } from "../Elements/inventoryCatalog";
+import {
+  elementApi,
+  elementRequestApi,
+  elementRequestResponseApi,
+  inventoryApi,
+  requestApi,
+  requestResponseApi,
+} from "../../data/apiUrl";
+import { useApiAction } from "../../hooks/useApiAction";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useFetch } from "../../hooks/useFetch";
+import {
+  getInventoryBackendPayload,
+  type InventoryFamilyTabKey,
+} from "../Elements/inventoryCatalog";
 import { requestFamilyTabs } from "./requestFamilies";
 import { getRequestLineFamily } from "./requestLineUtils";
 
@@ -73,13 +82,20 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [adminDescription, setAdminDescription] = useState("");
   const [managementDescription, setManagementDescription] = useState("");
   const [logisticsDescription, setLogisticsDescription] = useState("");
-  const [acceptedQuantities, setAcceptedQuantities] = useState<{ [key: number]: number }>({});
-  const [selectedSafetyElementIds, setSelectedSafetyElementIds] = useState<{ [key: number]: number[] }>({});
+  const [acceptedQuantities, setAcceptedQuantities] = useState<{
+    [key: number]: number;
+  }>({});
+  const [selectedSafetyElementIds, setSelectedSafetyElementIds] = useState<{
+    [key: number]: number[];
+  }>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
-  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
+  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(
+    [],
+  );
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
-  const [newElementFamily, setNewElementFamily] = useState<InventoryFamilyTabKey>("epp");
+  const [newElementFamily, setNewElementFamily] =
+    useState<InventoryFamilyTabKey>("epp");
   const [newElementId, setNewElementId] = useState<number>(0);
   const [newUnit, setNewUnit] = useState("");
   const [newQuantity, setNewQuantity] = useState<number>(1);
@@ -87,22 +103,22 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const projectId = searchParams.get("projectId");
-  
+
   // Detectar si venimos de la página del proyecto
   const cameFromProject = location.state?.fromProject as number | undefined;
 
   const navigate = useNavigate();
 
   // ✅ useFetch para traer la Request
-  const { data: request, loading: loadingRequest, error: errorRequest } = useFetch<RequestType>(
-    `${requestApi}${requestId}`,
-    [requestId]
-  );
+  const {
+    data: request,
+    loading: loadingRequest,
+    error: errorRequest,
+  } = useFetch<RequestType>(`${requestApi}${requestId}`, [requestId]);
 
-  const { data: fallProtectionGroupsForRequest } = useFetch<FallProtectionGroupType[]>(
-    `${elementApi}fall-protection-groups`,
-    [requestId]
-  );
+  const { data: fallProtectionGroupsForRequest } = useFetch<
+    FallProtectionGroupType[]
+  >(`${elementApi}fall-protection-groups`, [requestId]);
   const { data: safetyElements } = useFetch<ElementType[]>(
     `${elementApi}family/ese`,
     [requestId],
@@ -117,20 +133,21 @@ export default function RequestView({ requestId }: RequestViewProps) {
     newElementFamily === "harness"
       ? `${elementApi}fall-protection-groups`
       : `${elementApi}family/${backendFamilyPayload.family}`;
-  const { data: elementsByType, loading: loadingElements, error: errorElements } = useFetch<Array<ElementType | FallProtectionGroupType>>(
+  const {
+    data: elementsByType,
+    loading: loadingElements,
+    error: errorElements,
+  } = useFetch<Array<ElementType | FallProtectionGroupType>>(elementPickerUrl, [
     elementPickerUrl,
-    [elementPickerUrl]
-  );
+  ]);
 
   // ✅ useFetch para traer la RequestResponse
   const { data: requestResponse } = useFetch<RequestResponseType>(
     `${requestResponseApi}request/${requestId}`,
-    [requestId]
+    [requestId],
   );
 
   // Roles (coherentes con Permission/user.userType)
-  const adminOnlyTypes = adminTypes.filter((t) => !gerencyTypes.includes(t));
-  const logisticsOnlyTypes = logisticsTypes.filter((t) => !adminTypes.includes(t));
   const isRequestResponsible = !!user && request?.userId === user.userId;
 
   // Estados (derivados de la request)
@@ -140,8 +157,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
   const isAddressed = request?.status === "Atendida";
 
   // ✅ useApiAction para POST y PATCH
-  const { execute: createRequestResponse } = useApiAction<RequestResponseType>();
-  const { execute: updateRequestResponse } = useApiAction<RequestResponseType>();
+  const { execute: createRequestResponse } =
+    useApiAction<RequestResponseType>();
+  const { execute: updateRequestResponse } =
+    useApiAction<RequestResponseType>();
   const { execute: createElementRequestResponse } = useApiAction<unknown>();
   const { execute: updateElementRequestResponse } = useApiAction<unknown>();
   const { execute: updateRequestStatus } = useApiAction<unknown>();
@@ -160,7 +179,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
               group.anchorBandElementId,
               group.lifelineElementId,
               group.positioningLanyardElementId,
-              ...(group.components || []).map((component) => component.elementId),
+              ...(group.components || []).map(
+                (component) => component.elementId,
+              ),
             ].includes(line.elementId),
           );
 
@@ -242,7 +263,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
         : { status: newStatus };
 
     await toast.promise(
-      updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", payload),
+      updateRequestStatus(
+        `${requestApi}${request.requestId}/status`,
+        "PATCH",
+        payload,
+      ),
       {
         loading: "Actualizando estado...",
         success: (result) => {
@@ -250,7 +275,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
           return result.message || "Estado actualizado exitosamente.";
         },
         error: (err) => err.message || "Error al actualizar el estado.",
-      }
+      },
     );
   };
 
@@ -289,33 +314,45 @@ export default function RequestView({ requestId }: RequestViewProps) {
     try {
       const selectedItem = (elementsByType || []).find((item) =>
         newElementFamily === "harness"
-          ? isFallProtectionGroupPickerItem(item) && item.fallProtectionGroupId === newElementId
+          ? isFallProtectionGroupPickerItem(item) &&
+            item.fallProtectionGroupId === newElementId
           : isElementPickerItem(item) && item.elementId === newElementId,
       );
       const selectedGroup =
-        newElementFamily === "harness" && selectedItem && isFallProtectionGroupPickerItem(selectedItem)
+        newElementFamily === "harness" &&
+        selectedItem &&
+        isFallProtectionGroupPickerItem(selectedItem)
           ? selectedItem
           : null;
       const selectedElement =
         selectedItem && isElementPickerItem(selectedItem) ? selectedItem : null;
 
-      const response = await createElementRequest(`${elementRequestApi}`, "POST", {
-        elementId: selectedGroup?.harnessElementId ?? selectedElement?.elementId ?? newElementId,
-        fallProtectionGroupId: selectedGroup?.fallProtectionGroupId ?? null,
-        quantityRequested: newQuantity,
-        unit: newElementFamily === "ssomaSupply" ? "unidad" : newUnit.trim(),
-        requestId: request.requestId,
-      });
+      const response = await createElementRequest(
+        `${elementRequestApi}`,
+        "POST",
+        {
+          elementId:
+            selectedGroup?.harnessElementId ??
+            selectedElement?.elementId ??
+            newElementId,
+          fallProtectionGroupId: selectedGroup?.fallProtectionGroupId ?? null,
+          quantityRequested: newQuantity,
+          unit: newElementFamily === "ssomaSupply" ? "unidad" : newUnit.trim(),
+          requestId: request.requestId,
+        },
+      );
 
       if (response?.statusCode !== 201) {
         throw new Error(response?.message || "No se pudo agregar el elemento.");
       }
 
-      const elementRef = selectedGroup?.harnessElement ?? selectedElement ?? undefined;
+      const elementRef =
+        selectedGroup?.harnessElement ?? selectedElement ?? undefined;
       const created: ElementRequestType = {
         ...response.data,
         element: response.data.element ?? elementRef,
-        fallProtectionGroup: response.data.fallProtectionGroup ?? selectedGroup ?? null,
+        fallProtectionGroup:
+          response.data.fallProtectionGroup ?? selectedGroup ?? null,
       };
 
       setElementRequests((prev) => [...prev, created]);
@@ -342,45 +379,59 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
     if (family === "harness") {
       return elementRequest.elementRequestId !== undefined
-        ? acceptedQuantities[elementRequest.elementRequestId] ??
+        ? (acceptedQuantities[elementRequest.elementRequestId] ??
             elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
-            1
+            1)
         : 1;
     }
 
     return elementRequest.elementRequestId !== undefined
-      ? acceptedQuantities[elementRequest.elementRequestId] ??
+      ? (acceptedQuantities[elementRequest.elementRequestId] ??
           elementRequest.elementRequestResponses?.[0]?.quantityAccepted ??
-          0
+          0)
       : 0;
   };
 
-  const getSelectedSafetyElementIdsForLine = (elementRequest: ElementRequestType) => {
+  const getSelectedSafetyElementIdsForLine = (
+    elementRequest: ElementRequestType,
+  ) => {
     if (typeof elementRequest.elementRequestId !== "number") return [];
 
-    const selectedIds = selectedSafetyElementIds[elementRequest.elementRequestId];
+    const selectedIds =
+      selectedSafetyElementIds[elementRequest.elementRequestId];
     if (Array.isArray(selectedIds)) return selectedIds;
 
-    return elementRequest.elementRequestResponses?.[0]?.selectedElementIds || [];
+    return (
+      elementRequest.elementRequestResponses?.[0]?.selectedElementIds || []
+    );
   };
 
   const handleReviewed = async () => {
     if (!user) return;
     await toast.promise(
       (async () => {
-        const response = await createRequestResponse(`${requestResponseApi}`, "POST", {
-          requestId: Number(requestId),
-          responderUserId: Number(user.userId),
-          adminDescription: adminDescription || "Solicitud revisada por administración.",
-        });
+        const response = await createRequestResponse(
+          `${requestResponseApi}`,
+          "POST",
+          {
+            requestId: Number(requestId),
+            responderUserId: Number(user.userId),
+            adminDescription:
+              adminDescription || "Solicitud revisada por administración.",
+          },
+        );
 
         if (!request) throw new Error("No se encontró la solicitud.");
 
-        const currentElementRequests = elementRequests.length > 0 ? elementRequests : request.elementRequests || [];
+        const currentElementRequests =
+          elementRequests.length > 0
+            ? elementRequests
+            : request.elementRequests || [];
 
         for (const elementRequest of currentElementRequests) {
           const family = getRequestLineFamily(elementRequest);
-          const selectedElementIds = getSelectedSafetyElementIdsForLine(elementRequest);
+          const selectedElementIds =
+            getSelectedSafetyElementIdsForLine(elementRequest);
           const acceptedQuantity = getAcceptedQuantityForLine(
             elementRequest,
             family,
@@ -388,16 +439,24 @@ export default function RequestView({ requestId }: RequestViewProps) {
           );
 
           if (elementRequest.elementRequestId !== undefined) {
-            await createElementRequestResponse(`${elementRequestResponseApi}`, "POST", {
-              elementRequestId: elementRequest.elementRequestId,
-              quantityAccepted: acceptedQuantity,
-              selectedElementIds: family === "ese" ? selectedElementIds : [],
-              requestResponseId: response.data.requestResponseId,
-            });
+            await createElementRequestResponse(
+              `${elementRequestResponseApi}`,
+              "POST",
+              {
+                elementRequestId: elementRequest.elementRequestId,
+                quantityAccepted: acceptedQuantity,
+                selectedElementIds: family === "ese" ? selectedElementIds : [],
+                requestResponseId: response.data.requestResponseId,
+              },
+            );
           }
         }
 
-        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "reviewed" });
+        await updateRequestStatus(
+          `${requestApi}${request.requestId}/status`,
+          "PATCH",
+          { status: "reviewed" },
+        );
       })(),
       {
         loading: "Revisando solicitud...",
@@ -406,7 +465,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
           return "Solicitud revisada exitosamente.";
         },
         error: (err) => err.message || "Error al revisar la solicitud.",
-      }
+      },
     );
   };
 
@@ -421,20 +480,25 @@ export default function RequestView({ requestId }: RequestViewProps) {
       // Sin proyecto, ir a la lista general
       navigate("/admin/requests");
     }
-  }
+  };
 
   // Aprobado
   const handleApproved = async () => {
     if (!user) return;
     await toast.promise(
       (async () => {
-        if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
+        if (!request || !requestResponse)
+          throw new Error("No se encontró la solicitud o respuesta.");
 
-        const currentElementRequests = elementRequests.length > 0 ? elementRequests : request.elementRequests || [];
+        const currentElementRequests =
+          elementRequests.length > 0
+            ? elementRequests
+            : request.elementRequests || [];
 
         for (const elementRequest of currentElementRequests) {
           const family = getRequestLineFamily(elementRequest);
-          const selectedElementIds = getSelectedSafetyElementIdsForLine(elementRequest);
+          const selectedElementIds =
+            getSelectedSafetyElementIdsForLine(elementRequest);
           const acceptedQuantity = getAcceptedQuantityForLine(
             elementRequest,
             family,
@@ -453,7 +517,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
             await updateElementRequestResponse(
               `${elementRequestResponseApi}${existingResponse.elementRequestResponseId}`,
               "PATCH",
-              responsePayload
+              responsePayload,
             );
           } else if (elementRequest.elementRequestId !== undefined) {
             await createElementRequestResponse(
@@ -464,13 +528,21 @@ export default function RequestView({ requestId }: RequestViewProps) {
           }
         }
 
-        await updateRequestResponse(`${requestResponseApi}${requestResponse.requestResponseId}`, "PATCH", {
-          requestId: requestResponse.requestId,
-          responderUserId: Number(user.userId),
-          managementDescription: managementDescription,
-        });
+        await updateRequestResponse(
+          `${requestResponseApi}${requestResponse.requestResponseId}`,
+          "PATCH",
+          {
+            requestId: requestResponse.requestId,
+            responderUserId: Number(user.userId),
+            managementDescription: managementDescription,
+          },
+        );
 
-        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "approved" });
+        await updateRequestStatus(
+          `${requestApi}${request.requestId}/status`,
+          "PATCH",
+          { status: "approved" },
+        );
       })(),
       {
         loading: "Aprobando solicitud...",
@@ -479,7 +551,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
           return "Solicitud aprobada exitosamente.";
         },
         error: (err) => err.message || "Error al aprobar la solicitud.",
-      }
+      },
     );
   };
 
@@ -488,15 +560,24 @@ export default function RequestView({ requestId }: RequestViewProps) {
     if (!user) return;
     await toast.promise(
       (async () => {
-        if (!request || !requestResponse) throw new Error("No se encontró la solicitud o respuesta.");
+        if (!request || !requestResponse)
+          throw new Error("No se encontró la solicitud o respuesta.");
 
-        await updateRequestResponse(`${requestResponseApi}${requestResponse.requestResponseId}`, "PATCH", {
-          requestId: requestResponse.requestId,
-          responderUserId: Number(user.userId),
-          logisticsDescription: logisticsDescription,
-        });
+        await updateRequestResponse(
+          `${requestResponseApi}${requestResponse.requestResponseId}`,
+          "PATCH",
+          {
+            requestId: requestResponse.requestId,
+            responderUserId: Number(user.userId),
+            logisticsDescription: logisticsDescription,
+          },
+        );
 
-        await updateRequestStatus(`${requestApi}${request.requestId}/status`, "PATCH", { status: "addressed" });
+        await updateRequestStatus(
+          `${requestApi}${request.requestId}/status`,
+          "PATCH",
+          { status: "addressed" },
+        );
       })(),
       {
         loading: "Atendiendo solicitud...",
@@ -505,13 +586,14 @@ export default function RequestView({ requestId }: RequestViewProps) {
           return "Solicitud atendida exitosamente.";
         },
         error: (err) => err.message || "Error al atender la solicitud.",
-      }
+      },
     );
   };
 
   if (loadingRequest || loadingUser) return <p>Cargando...</p>;
   if (errorRequest) return <ErrorMessage errorMessage={errorRequest} />;
-  if (!request) return <ErrorMessage errorMessage="No se encontró la solicitud." />;
+  if (!request)
+    return <ErrorMessage errorMessage="No se encontró la solicitud." />;
 
   return (
     <>
@@ -553,7 +635,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
                           }`}
                           onClick={() => {
                             setNewElementFamily(tab.key);
-                            setNewUnit(tab.key === "ssomaSupply" ? "unidad" : "");
+                            setNewUnit(
+                              tab.key === "ssomaSupply" ? "unidad" : "",
+                            );
                           }}
                         >
                           {tab.label}
@@ -561,7 +645,10 @@ export default function RequestView({ requestId }: RequestViewProps) {
                       ))}
                     </div>
 
-                    <div className="grid w-full text-[14px] text-gray-700 gap-1" style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}>
+                    <div
+                      className="grid w-full text-[14px] text-gray-700 gap-1"
+                      style={{ gridTemplateColumns: "1fr 144px 112px 112px" }}
+                    >
                       <div className="w-full min-w-0">
                         <Select
                           name="newElementId"
@@ -571,19 +658,31 @@ export default function RequestView({ requestId }: RequestViewProps) {
                             .filter((item) =>
                               newElementFamily === "harness"
                                 ? isFallProtectionGroupPickerItem(item) &&
-                                  !elementRequests.some((er) => er.fallProtectionGroupId === item.fallProtectionGroupId)
+                                  !elementRequests.some(
+                                    (er) =>
+                                      er.fallProtectionGroupId ===
+                                      item.fallProtectionGroupId,
+                                  )
                                 : isElementPickerItem(item) &&
-                                  !elementRequests.some((er) => er.elementId === item.elementId)
+                                  !elementRequests.some(
+                                    (er) => er.elementId === item.elementId,
+                                  ),
                             )
                             .map((item) => ({
-                              value: isFallProtectionGroupPickerItem(item) ? item.fallProtectionGroupId : item.elementId,
+                              value: isFallProtectionGroupPickerItem(item)
+                                ? item.fallProtectionGroupId
+                                : item.elementId,
                               label: isFallProtectionGroupPickerItem(item)
                                 ? item.code
                                 : item.code
                                   ? `${item.name} - ${item.code}`
                                   : item.name,
                             }))}
-                          placeholder={loadingElements ? "Cargando..." : "Seleccionar elemento"}
+                          placeholder={
+                            loadingElements
+                              ? "Cargando..."
+                              : "Seleccionar elemento"
+                          }
                           disabled={loadingElements || !!errorElements}
                         />
                       </div>
@@ -591,7 +690,11 @@ export default function RequestView({ requestId }: RequestViewProps) {
                         type="text"
                         className="border-2 border-gray-800 w-full text-center px-3 py-1 rounded-md"
                         placeholder="Unidad"
-                        value={newElementFamily === "ssomaSupply" ? "unidad" : newUnit}
+                        value={
+                          newElementFamily === "ssomaSupply"
+                            ? "unidad"
+                            : newUnit
+                        }
                         onChange={(e) => setNewUnit(e.target.value)}
                         disabled={newElementFamily === "ssomaSupply"}
                       />
@@ -613,11 +716,14 @@ export default function RequestView({ requestId }: RequestViewProps) {
                     </div>
 
                     {errorElements && (
-                      <p className="text-red-600 text-xs mt-2">{errorElements}</p>
+                      <p className="text-red-600 text-xs mt-2">
+                        {errorElements}
+                      </p>
                     )}
 
                     <div className="flex flex-wrap gap-2 mt-3">
                       <Button
+                        permission="requests.manage"
                         icon={<FaCheck />}
                         label="Agregar"
                         onClick={handleCreateElementRequest}
@@ -640,7 +746,12 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 <ContentTableSummary
                   request={request}
                   elementRequests={elementRequests}
-                  onQuantityChange={(id, quantity) => setAcceptedQuantities((prev) => ({ ...prev, [id]: quantity }))}
+                  onQuantityChange={(id, quantity) =>
+                    setAcceptedQuantities((prev) => ({
+                      ...prev,
+                      [id]: quantity,
+                    }))
+                  }
                   selectedSafetyElementIds={selectedSafetyElementIds}
                   onSafetySelectionChange={(id, selectedIds) =>
                     setSelectedSafetyElementIds((prev) => ({
@@ -656,12 +767,27 @@ export default function RequestView({ requestId }: RequestViewProps) {
           </div>
 
           {/* Respuestas visibles para todos */}
-          {requestResponse?.adminDescription && <p className="text-black"><strong>Respuesta de Administración:</strong> {requestResponse.adminDescription}</p>}
-          {requestResponse?.managementDescription && <p className="text-black"><strong>Respuesta de Gerencia:</strong> {requestResponse.managementDescription}</p>}
-          {requestResponse?.logisticsDescription && <p className="text-black"><strong>Respuesta de Logística:</strong> {requestResponse.logisticsDescription}</p>}
+          {requestResponse?.adminDescription && (
+            <p className="text-black">
+              <strong>Respuesta de Administración:</strong>{" "}
+              {requestResponse.adminDescription}
+            </p>
+          )}
+          {requestResponse?.managementDescription && (
+            <p className="text-black">
+              <strong>Respuesta de Gerencia:</strong>{" "}
+              {requestResponse.managementDescription}
+            </p>
+          )}
+          {requestResponse?.logisticsDescription && (
+            <p className="text-black">
+              <strong>Respuesta de Logística:</strong>{" "}
+              {requestResponse.logisticsDescription}
+            </p>
+          )}
 
           {/* Acciones de Admin */}
-          <Permission user={user} allow={adminOnlyTypes}>
+          <Permission user={user} permission="requests.review">
             {isInProgress && (
               <>
                 <textarea
@@ -671,14 +797,21 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   onChange={(e) => setAdminDescription(e.target.value)}
                 ></textarea>
                 <ButtonContainer>
-                  <Button icon={<FaArrowRight />} label="Revisado" onClick={handleReviewed} bgColor="#f0b100" bgHoverColor="#f69f00" type="button" />
+                  <Button
+                    icon={<FaArrowRight />}
+                    label="Revisado"
+                    onClick={handleReviewed}
+                    bgColor="#f0b100"
+                    bgHoverColor="#f69f00"
+                    type="button"
+                  />
                 </ButtonContainer>
               </>
             )}
           </Permission>
 
           {/* Acciones de Gerencia */}
-          <Permission user={user} allow={gerencyTypes}>
+          <Permission user={user} permission="requests.approve">
             {isReviewed && (
               <>
                 <textarea
@@ -688,15 +821,29 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   onChange={(e) => setManagementDescription(e.target.value)}
                 ></textarea>
                 <ButtonContainer>
-                  <Button icon={<FaCheck />} label="Aprobar" onClick={handleApproved} bgColor="#008000" bgHoverColor="#0c4a28" type="button" />
-                  <Button icon={<FaTimes />} label="Rechazar" onClick={() => handleChangeStatus("rejected")} bgColor="#d80027" bgHoverColor="#c80008" type="button" />
+                  <Button
+                    icon={<FaCheck />}
+                    label="Aprobar"
+                    onClick={handleApproved}
+                    bgColor="#008000"
+                    bgHoverColor="#0c4a28"
+                    type="button"
+                  />
+                  <Button
+                    icon={<FaTimes />}
+                    label="Rechazar"
+                    onClick={() => handleChangeStatus("rejected")}
+                    bgColor="#d80027"
+                    bgHoverColor="#c80008"
+                    type="button"
+                  />
                 </ButtonContainer>
               </>
             )}
           </Permission>
 
           {/* Acciones de Logística */}
-          <Permission user={user} allow={logisticsOnlyTypes}>
+          <Permission user={user} permission="requests.attend">
             {isApproved && (
               <>
                 <textarea
@@ -706,7 +853,14 @@ export default function RequestView({ requestId }: RequestViewProps) {
                   onChange={(e) => setLogisticsDescription(e.target.value)}
                 ></textarea>
                 <ButtonContainer>
-                  <Button icon={<FaCheck />} label="Atendido" onClick={handleAttended} bgColor="#0047a3" bgHoverColor="#003d8f" type="button" />
+                  <Button
+                    icon={<FaCheck />}
+                    label="Atendido"
+                    onClick={handleAttended}
+                    bgColor="#0047a3"
+                    bgHoverColor="#003d8f"
+                    type="button"
+                  />
                 </ButtonContainer>
               </>
             )}
@@ -734,7 +888,7 @@ export default function RequestView({ requestId }: RequestViewProps) {
               fixed top-0 right-0 h-screen w-full xl:w-[50vw] bg-white z-50
               transform transition-transform duration-300 ease-in-out
               shadow-[-8px_0_24px_rgba(0,0,0,0.3)]
-              ${isPdfOpen ? 'translate-x-0' : 'translate-x-full'}
+              ${isPdfOpen ? "translate-x-0" : "translate-x-full"}
             `}
           >
             <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
@@ -747,9 +901,9 @@ export default function RequestView({ requestId }: RequestViewProps) {
                 <FaTimes className="text-lg" />
               </button>
             </div>
-            <iframe 
-              src={pdfUrl} 
-              title="Requerimiento PDF" 
+            <iframe
+              src={pdfUrl}
+              title="Requerimiento PDF"
               className="w-full h-[calc(100%-60px)]"
             />
           </div>

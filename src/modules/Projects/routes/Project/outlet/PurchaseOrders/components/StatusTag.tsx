@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAccess } from "../../../../../../../permissions/AccessProvider";
 
 interface StatusTagProps {
   status: string;
@@ -8,10 +9,10 @@ interface StatusTagProps {
 }
 
 export const statusColor = {
-  "Pendiente": "#f59e0b",
-  "Autorizada": "#10b981",
-  "Entregada": "#3b82f6",
-  "Cancelada": "#ef4444",
+  Pendiente: "#f59e0b",
+  Autorizada: "#10b981",
+  Entregada: "#3b82f6",
+  Cancelada: "#ef4444",
 };
 
 export const statusOptions = [
@@ -21,7 +22,15 @@ export const statusOptions = [
   { value: "cancelled", label: "Cancelada" },
 ];
 
-export default function StatusTag({ status, onStatusChange, editable = false }: StatusTagProps) {
+export default function StatusTag({
+  status,
+  onStatusChange,
+  editable = false,
+}: StatusTagProps) {
+  const { can } = useAccess();
+  const available = statusOptions.filter((option) =>
+    can(option.value === "delivered" ? "orders.manage" : "orders.authorize"),
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const tagRef = useRef<HTMLSpanElement>(null);
@@ -43,8 +52,10 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (
-        tagRef.current && !tagRef.current.contains(target) &&
-        dropdownRef.current && !dropdownRef.current.contains(target)
+        tagRef.current &&
+        !tagRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
@@ -68,11 +79,14 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
     setIsOpen(false);
   };
 
-  if (!editable) {
+  if (!editable || !available.length) {
     return (
-      <span 
+      <span
         className="px-2 py-1 rounded-full text-white font-semibold text-xs"
-        style={{ backgroundColor: statusColor[status as keyof typeof statusColor] || '#9ca3af' }}
+        style={{
+          backgroundColor:
+            statusColor[status as keyof typeof statusColor] || "#9ca3af",
+        }}
       >
         {status.toUpperCase()}
       </span>
@@ -81,40 +95,47 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
 
   return (
     <>
-      <span 
+      <span
         ref={tagRef}
         className="px-2 py-1 rounded-full text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: statusColor[status as keyof typeof statusColor] || '#9ca3af' }}
+        style={{
+          backgroundColor:
+            statusColor[status as keyof typeof statusColor] || "#9ca3af",
+        }}
         onClick={() => setIsOpen(!isOpen)}
       >
         {status.toUpperCase()} ▾
       </span>
 
-      {isOpen && createPortal(
-        <div 
-          ref={dropdownRef}
-          className="fixed z-[9999] w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
-          style={{ 
-            top: dropdownPosition.top, 
-            left: dropdownPosition.left,
-          }}
-        >
-          {statusOptions.map((option) => (
-            <div
-              key={option.value}
-              className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 transition-colors"
-              onClick={() => handleStatusClick(option.value)}
-            >
-              <span 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: statusColor[option.label as keyof typeof statusColor] }}
-              />
-              <span className="text-xs text-gray-700">{option.label}</span>
-            </div>
-          ))}
-        </div>,
-        document.body
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+            }}
+          >
+            {available.map((option) => (
+              <div
+                key={option.value}
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 transition-colors"
+                onClick={() => handleStatusClick(option.value)}
+              >
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor:
+                      statusColor[option.label as keyof typeof statusColor],
+                  }}
+                />
+                <span className="text-xs text-gray-700">{option.label}</span>
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

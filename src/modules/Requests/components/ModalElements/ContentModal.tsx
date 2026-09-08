@@ -1,12 +1,11 @@
+import { Delete as FaDeleteLeft, Save as FaSave } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { Delete as FaDeleteLeft, Save as FaSave } from "lucide-react";
 
-
-import type { ElementRequestType, ElementType } from "../../../../data/types";
-import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
 import LoadingSkeletonTable from "../../../../common/loading/LoadingSkeletonTable";
 import Button from "../../../../components/Button";
+import { elementApi, elementRequestApi } from "../../../../data/apiUrl";
+import type { ElementRequestType, ElementType } from "../../../../data/types";
 import { useApiAction } from "../../../../hooks/useApiAction";
 import { useFetch } from "../../../../hooks/useFetch";
 import {
@@ -43,7 +42,9 @@ export default function ContentModal({
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentElements = elements
-    .filter((item) => item.name?.toLowerCase().includes(searchItem.toLowerCase()))
+    .filter((item) =>
+      item.name?.toLowerCase().includes(searchItem.toLowerCase()),
+    )
     .slice(indexOfFirstItem, indexOfLastItem);
 
   const { id } = useParams();
@@ -52,8 +53,14 @@ export default function ContentModal({
 
   const backendPayload = getInventoryBackendPayload(familyKey);
   const isProtectionGroup = familyKey === "epp";
-  const { data: fetchedElements, loading, error } = useFetch<ElementType[]>(
-    isProtectionGroup ? elementApi : `${elementApi}family/${backendPayload.family}`,
+  const {
+    data: fetchedElements,
+    loading,
+    error,
+  } = useFetch<ElementType[]>(
+    isProtectionGroup
+      ? elementApi
+      : `${elementApi}family/${backendPayload.family}`,
     [backendPayload.family, isProtectionGroup],
   );
   const { data: fetchedElementRequests } = useFetch<ElementRequestType[]>(
@@ -71,7 +78,9 @@ export default function ContentModal({
     );
     const visibleElements = isProtectionGroup
       ? activeElements.filter((element) =>
-          ["epp", "epi", "uniform"].includes(getInventoryFamilyFromSource(element)),
+          ["epp", "epi", "uniform"].includes(
+            getInventoryFamilyFromSource(element),
+          ),
         )
       : activeElements;
     setElements(visibleElements);
@@ -86,14 +95,18 @@ export default function ContentModal({
         setSelectedIds(
           parsed
             .map((item) => item.elementId)
-            .filter((elementId): elementId is number => elementId !== undefined),
+            .filter(
+              (elementId): elementId is number => elementId !== undefined,
+            ),
         );
       }
       return;
     }
 
     if (!fetchedElementRequests) return;
-    const ids = fetchedElementRequests.map((elementRequest) => elementRequest.elementId);
+    const ids = fetchedElementRequests.map(
+      (elementRequest) => elementRequest.elementId,
+    );
     setSelectedIds(ids);
     setOriginalIds(ids);
   }, [isNewRequest, fetchedElementRequests]);
@@ -111,9 +124,15 @@ export default function ContentModal({
     const previousLines = attachRequestLineKeys(
       JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
     );
-    const modalElementIds = new Set(elements.map((element) => element.elementId));
-    const selectedElements = elements.filter((element) => selectedIds.includes(element.elementId));
-    const selectedElementIds = new Set(selectedElements.map((element) => element.elementId));
+    const modalElementIds = new Set(
+      elements.map((element) => element.elementId),
+    );
+    const selectedElements = elements.filter((element) =>
+      selectedIds.includes(element.elementId),
+    );
+    const selectedElementIds = new Set(
+      selectedElements.map((element) => element.elementId),
+    );
 
     const keepFromOtherGroups = previousLines.filter(
       (requestLine) => !modalElementIds.has(requestLine.elementId),
@@ -124,13 +143,16 @@ export default function ContentModal({
       .map((requestLine) => ({
         ...requestLine,
         element:
-          selectedElements.find((element) => element.elementId === requestLine.elementId) ??
-          requestLine.element,
+          selectedElements.find(
+            (element) => element.elementId === requestLine.elementId,
+          ) ?? requestLine.element,
       }));
     const newLines = selectedElements
       .filter(
         (element) =>
-          !keptSelectedLines.some((requestLine) => requestLine.elementId === element.elementId),
+          !keptSelectedLines.some(
+            (requestLine) => requestLine.elementId === element.elementId,
+          ),
       )
       .map((element) => createElementRequestLine(element));
 
@@ -149,18 +171,27 @@ export default function ContentModal({
     if (!id) return;
 
     const requestId = Number(id);
-    const added = selectedIds.filter((selectedId) => !originalIds.includes(selectedId));
-    const removed = originalIds.filter((originalId) => !selectedIds.includes(originalId));
+    const added = selectedIds.filter(
+      (selectedId) => !originalIds.includes(selectedId),
+    );
+    const removed = originalIds.filter(
+      (originalId) => !selectedIds.includes(originalId),
+    );
     const createdResponses: ElementRequestType[] = [];
 
     for (const addId of added) {
-      const response = await createElementRequest(`${elementRequestApi}`, "POST", {
-        elementId: addId,
-        quantityRequested: 0,
-        unit: "",
-        lineItemOrder: (fetchedElementRequests?.length || 0) + createdResponses.length + 1,
-        requestId,
-      });
+      const response = await createElementRequest(
+        `${elementRequestApi}`,
+        "POST",
+        {
+          elementId: addId,
+          quantityRequested: 0,
+          unit: "",
+          lineItemOrder:
+            (fetchedElementRequests?.length || 0) + createdResponses.length + 1,
+          requestId,
+        },
+      );
 
       if (response?.statusCode === 201) {
         createdResponses.push(response.data);
@@ -208,7 +239,11 @@ export default function ContentModal({
 
   if (loading) return <LoadingSkeletonTable />;
   if (error) {
-    return <div className="flex h-full w-full items-center justify-center">{error}</div>;
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        {error}
+      </div>
+    );
   }
 
   return (
@@ -235,12 +270,19 @@ export default function ContentModal({
             key={item.elementId ?? item.name}
             className="flex w-full items-center justify-between"
           >
-            <span className="flex w-12 items-center justify-start">{item.elementId}</span>
-            <span className="flex w-full items-center justify-start">{item.name}</span>
+            <span className="flex w-12 items-center justify-start">
+              {item.elementId}
+            </span>
+            <span className="flex w-full items-center justify-start">
+              {item.name}
+            </span>
             <input
               type="checkbox"
               className="size-4 p-2"
-              checked={item.elementId !== undefined && selectedIds.includes(item.elementId)}
+              checked={
+                item.elementId !== undefined &&
+                selectedIds.includes(item.elementId)
+              }
               onChange={() => handleCheckboxChange(item.elementId)}
             />
           </div>
@@ -259,6 +301,7 @@ export default function ContentModal({
           ))}
         </div>
         <Button
+          permission="requests.manage"
           icon={<FaSave />}
           label="Guardar"
           type="button"

@@ -1,19 +1,17 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Project } from "../../../../../../data/types";
-import { useFetch, useCurrentUser } from "../../../../../../hooks";
-import { projectApi } from "../../../../../../data/apiUrl";
-import { HeaderPanel, Panel } from "../../../../../../common/panel";
-import PurchaseOrderTable from "./PurchaseOrderTable";
-import { ErrorMessage } from "../../../../../../common/error";
-import { ReturnButton } from "../../../../../../common/button";
-import AddButton from "../../../../../../common/button/AddButton";
-import Permission from "../../../../../../common/auth/Permission";
-import { adminTypes, logisticsTypes } from "../../../../../../utils";
-import { Button } from "../../../../../../components";
 import { List as FaListUl } from "lucide-react";
 import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import Permission from "../../../../../../common/auth/Permission";
+import { ReturnButton } from "../../../../../../common/button";
+import AddButton from "../../../../../../common/button/AddButton";
+import { ErrorMessage } from "../../../../../../common/error";
+import { HeaderPanel, Panel } from "../../../../../../common/panel";
+import { Button } from "../../../../../../components";
+import { projectApi } from "../../../../../../data/apiUrl";
+import type { Project } from "../../../../../../data/types";
+import { useCurrentUser, useFetch } from "../../../../../../hooks";
 import { UnitValuesModal } from "./components";
-
+import PurchaseOrderTable from "./PurchaseOrderTable";
 
 export default function PurchaseOrders() {
   const { user } = useCurrentUser();
@@ -22,7 +20,11 @@ export default function PurchaseOrders() {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("projectId");
 
-  const { data: project, loading, error } = useFetch<Project>(`${projectApi}${projectId}`);
+  const {
+    data: project,
+    loading,
+    error,
+  } = useFetch<Project>(`${projectApi}${projectId}`);
 
   const navigate = useNavigate();
 
@@ -32,15 +34,22 @@ export default function PurchaseOrders() {
 
   const navigateToNewPurchaseOrder = () => {
     navigate(`/admin/purchase-orders/new?projectId=${projectId}`);
-  }
+  };
 
   if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
-    <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+    <Permission
+      user={user}
+      permission="orders.view"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permiso para ver esta página." />
+      }
+    >
       <Panel>
-
-        <HeaderPanel name={`${project ? `Órdenes de compra de ${project.name}` : loading ? "Cargando..." : "Proyecto no encontrado"}`}>
+        <HeaderPanel
+          name={`${project ? `Órdenes de compra de ${project.name}` : loading ? "Cargando..." : "Proyecto no encontrado"}`}
+        >
           <Button
             icon={<FaListUl />}
             label="Valores unitarios"
@@ -49,13 +58,12 @@ export default function PurchaseOrders() {
             type="button"
             onClick={() => setIsUnitValuesOpen(true)}
           />
-          
-          <Permission user={user} allow={adminTypes}>
+
+          <Permission user={user} permission="orders.manage">
             <AddButton onClick={navigateToNewPurchaseOrder} />
           </Permission>
-          
+
           <ReturnButton onClick={navigateBack} />
-          
         </HeaderPanel>
 
         <PurchaseOrderTable projectId={Number(projectId)} />
@@ -64,8 +72,7 @@ export default function PurchaseOrders() {
           projectId={Number(projectId)}
           onClose={() => setIsUnitValuesOpen(false)}
         />
-      
       </Panel>
     </Permission>
-  )
+  );
 }

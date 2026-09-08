@@ -1,15 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useCurrentUser, usePaginatedFetch } from "../../../../../hooks";
 
-import { LoadingSkeletonTable } from "../../../../../common/loading";
-import { SeeButton, EditButton } from "../../../../../common/button";
+import { EditButton, SeeButton } from "../../../../../common/button";
 import { ErrorMessage } from "../../../../../common/error";
+import { LoadingSkeletonTable } from "../../../../../common/loading";
 import { Table } from "../../../../../common/table";
 
-import { adminTypes } from "../../../../../utils";
-import { type Project } from "../../../../../data/types";
-import { projectApi } from "../../../../../data/apiUrl";
 import Permission from "../../../../../common/auth/Permission";
+import { projectApi } from "../../../../../data/apiUrl";
+import { type Project } from "../../../../../data/types";
 import StatusTag from "./StatusTag";
 
 interface ProjectTableProps {
@@ -17,9 +16,9 @@ interface ProjectTableProps {
 }
 
 export const statusColor = {
-  "Activo": "#228b22",
-  "Inactivo": "#c53030"
-}
+  Activo: "#228b22",
+  Inactivo: "#c53030",
+};
 
 export default function ProjectTable({ filter }: ProjectTableProps) {
   const navigate = useNavigate();
@@ -42,26 +41,28 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "code", label: "Código", width: "12rem" },
-    { 
+    {
       label: "Estado",
       width: "8rem",
       render: (row: Project) => {
-        return (
-          <StatusTag status={row.status} />
-        );
-      }
+        return <StatusTag status={row.status} />;
+      },
     },
     {
       label: "Acciones",
       width: "8rem",
       render: (row: Project) => (
         <div className="flex gap-2">
-          <SeeButton onClick={() => navigate(`/admin/projects/${row.projectId}`)} />
-          <Permission user={user} allow={adminTypes}>
-            <EditButton onClick={() => navigate(`/admin/projects/edit/${row.projectId}`)} />
+          <SeeButton
+            onClick={() => navigate(`/admin/projects/${row.projectId}`)}
+          />
+          <Permission user={user} permission="projects.manage">
+            <EditButton
+              onClick={() => navigate(`/admin/projects/edit/${row.projectId}`)}
+            />
           </Permission>
         </div>
-      )
+      ),
     },
   ] as const;
 
@@ -74,16 +75,20 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   }
 
   if (!projects.length) {
-    return <div className="text-center text-gray-500">No hay proyectos disponibles.</div>;
+    return (
+      <div className="text-center text-gray-500">
+        No hay proyectos disponibles.
+      </div>
+    );
   }
 
-  const processedProjects = projects?.map(project => ({
+  const processedProjects = projects?.map((project) => ({
     ...project,
     createdAt: new Date(project.createdAt).toLocaleDateString("es-ES", {
       year: "numeric",
       month: "numeric",
-      day: "numeric"
-    })
+      day: "numeric",
+    }),
   }));
 
   return (

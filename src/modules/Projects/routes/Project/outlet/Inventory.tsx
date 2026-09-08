@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import {
   RotateCcw as FaArrowRotateLeft,
   Trash2 as FaTrash,
   UserPlus as FaUserPlus,
   X as FaXmark,
 } from "lucide-react";
-import { Table } from "../../../../../common/table";
+import { useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useLocation, useParams } from "react-router-dom";
+import { SeeButton } from "../../../../../common/button";
 import { ErrorMessage } from "../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../common/loading";
-import { useApiAction, useCurrentUser, useFetch } from "../../../../../hooks";
+import { Table } from "../../../../../common/table";
+import ActionButton from "../../../../../components/ActionButton";
+import DeleteConfirmDialog from "../../../../../components/DeleteConfirmDialog";
+import Select from "../../../../../components/Select";
 import { inventoryApi, workerApi } from "../../../../../data/apiUrl";
 import type {
   ProjectInventoryEntry,
@@ -18,18 +21,15 @@ import type {
   Worker,
   WorkerInventoryAssignment,
 } from "../../../../../data/types";
-import { SeeButton } from "../../../../../common/button";
-import ActionButton from "../../../../../components/ActionButton";
-import DeleteConfirmDialog from "../../../../../components/DeleteConfirmDialog";
-import Select from "../../../../../components/Select";
-import { logisticsTypes, riskPreventionTypes } from "../../../../../utils";
+import { useApiAction, useCurrentUser, useFetch } from "../../../../../hooks";
+import { useAccess } from "../../../../../permissions/AccessProvider";
+import { formatDate, ymdLocalMidnightToUtc } from "../../../../../utils";
 import {
   formatInventoryQuantity,
   getInventoryFamilyConfig,
   getInventoryFamilyFromSource,
   getInventoryFamilyLabel,
 } from "../../../../Elements/inventoryCatalog";
-import { formatDate, ymdLocalMidnightToUtc } from "../../../../../utils";
 
 type ProjectInventoryTab =
   | "protection"
@@ -139,9 +139,8 @@ export default function ProjectInventory() {
   const { execute: deleteAssignment, loading: deletingAssignment } =
     useApiAction<WorkerInventoryAssignment>();
 
-  const [selectedEntry, setSelectedEntry] = useState<ProjectInventoryEntry | null>(
-    null,
-  );
+  const [selectedEntry, setSelectedEntry] =
+    useState<ProjectInventoryEntry | null>(null);
   const [selectedAssignEntry, setSelectedAssignEntry] =
     useState<ProjectInventoryEntry | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -159,7 +158,9 @@ export default function ProjectInventory() {
   const [activeTab, setActiveTab] = useState<ProjectInventoryTab>("protection");
   const [selectedDetailEntry, setSelectedDetailEntry] =
     useState<ProjectInventoryEntry | null>(null);
-  const [highlightedReturnIds, setHighlightedReturnIds] = useState<number[]>([]);
+  const [highlightedReturnIds, setHighlightedReturnIds] = useState<number[]>(
+    [],
+  );
   const [returnBlockers, setReturnBlockers] = useState<ProjectInventoryEntry[]>(
     [],
   );
@@ -172,7 +173,8 @@ export default function ProjectInventory() {
   useEffect(() => {
     if (!data || !projectId || returnBlockerPromptHandled) return;
 
-    const state = (location.state || null) as ReturnBlockerNavigationState | null;
+    const state = (location.state ||
+      null) as ReturnBlockerNavigationState | null;
     const storageKey = `project-return-blockers:${projectId}`;
     const storedRaw = sessionStorage.getItem(storageKey);
     let stored: StoredReturnBlockers | null = null;
@@ -196,8 +198,8 @@ export default function ProjectInventory() {
     const blockerIds = [
       ...(state?.blockerIds || []),
       ...(stored?.blockerIds || []),
-      ...((state?.blockers || []).flatMap(getProjectEntryIds)),
-      ...((stored?.blockers || []).flatMap(getProjectEntryIds)),
+      ...(state?.blockers || []).flatMap(getProjectEntryIds),
+      ...(stored?.blockers || []).flatMap(getProjectEntryIds),
     ];
     const uniqueBlockerIds = Array.from(new Set(blockerIds));
 
@@ -274,19 +276,9 @@ export default function ProjectInventory() {
     setAssignmentRows([emptyRow]);
   }, [selectedAssignEntry]);
 
-  const canManageInventory = Boolean(
-    user &&
-      (logisticsTypes.includes(user.userType) ||
-        riskPreventionTypes.includes(user.userType) ||
-        user.userType === "SISTEMAS"),
-  );
-  const canAssignInventory = Boolean(
-    user &&
-      (user.userType === "GERENTE" ||
-        user.userType === "ADMINISTRADORA" ||
-        user.userType === "SISTEMAS" ||
-        riskPreventionTypes.includes(user.userType)),
-  );
+  const { can } = useAccess();
+  const canManageInventory = can("inventory.movements");
+  const canAssignInventory = canManageInventory;
 
   const handleRegisterReturn = async () => {
     if (!selectedEntry || !user) return;
@@ -360,7 +352,10 @@ export default function ProjectInventory() {
       return;
     }
 
-    const totalToAssign = cleanRows.reduce((total, row) => total + row.quantity, 0);
+    const totalToAssign = cleanRows.reduce(
+      (total, row) => total + row.quantity,
+      0,
+    );
 
     if (totalToAssign > availableToAssign) {
       toast.error(
@@ -390,7 +385,8 @@ export default function ProjectInventory() {
           refetch();
           return "Asignaciones registradas exitosamente.";
         },
-        error: (err) => err.message || "No se pudieron registrar las asignaciones.",
+        error: (err) =>
+          err.message || "No se pudieron registrar las asignaciones.",
       },
     );
   };
@@ -455,19 +451,52 @@ export default function ProjectInventory() {
       key: "categoryName",
       label: "Categoria",
       width: "10rem",
-      render: (row: ProjectInventoryEntry) => row.categoryName || "Sin categoria",
+      render: (row: ProjectInventoryEntry) =>
+        row.categoryName || "Sin categoria",
     },
-    { key: "quantityReceived", label: "Recibido", width: "6rem", align: "center", render: (row: ProjectInventoryEntry) => formatInventoryQuantity(row.quantityReceived) },
-    { key: "quantityAssignedToWorkers", label: "Asignado", width: "6rem", align: "center", render: (row: ProjectInventoryEntry) => formatInventoryQuantity(row.quantityAssignedToWorkers ?? 0) },
-    { key: "quantityAvailableForAssignment", label: "En obra", width: "6rem", align: "center", render: (row: ProjectInventoryEntry) => formatInventoryQuantity(row.quantityAvailableForAssignment ?? row.quantityPending) },
-    { key: "quantityReturned", label: "Retornado", width: "6rem", align: "center", render: (row: ProjectInventoryEntry) => formatInventoryQuantity(row.quantityReturned) },
+    {
+      key: "quantityReceived",
+      label: "Recibido",
+      width: "6rem",
+      align: "center",
+      render: (row: ProjectInventoryEntry) =>
+        formatInventoryQuantity(row.quantityReceived),
+    },
+    {
+      key: "quantityAssignedToWorkers",
+      label: "Asignado",
+      width: "6rem",
+      align: "center",
+      render: (row: ProjectInventoryEntry) =>
+        formatInventoryQuantity(row.quantityAssignedToWorkers ?? 0),
+    },
+    {
+      key: "quantityAvailableForAssignment",
+      label: "En obra",
+      width: "6rem",
+      align: "center",
+      render: (row: ProjectInventoryEntry) =>
+        formatInventoryQuantity(
+          row.quantityAvailableForAssignment ?? row.quantityPending,
+        ),
+    },
+    {
+      key: "quantityReturned",
+      label: "Retornado",
+      width: "6rem",
+      align: "center",
+      render: (row: ProjectInventoryEntry) =>
+        formatInventoryQuantity(row.quantityReturned),
+    },
     {
       key: "quantityRequiredForProjectClosure",
       label: "Por retornar",
       width: "7rem",
       align: "center",
       render: (row: ProjectInventoryEntry) =>
-        ["uniform", "officeMaterial", "ssomaSupply"].includes(getEntryFamily(row)) ? (
+        ["uniform", "officeMaterial", "ssomaSupply"].includes(
+          getEntryFamily(row),
+        ) ? (
           <span className="text-gray-400">No aplica</span>
         ) : (
           formatInventoryQuantity(
@@ -485,12 +514,14 @@ export default function ProjectInventory() {
         const availableToAssign =
           row.quantityAvailableForAssignment ?? row.quantityPending;
         const hasAssignments = Boolean(row.workerAssignments?.length);
-        const canReturn = canManageInventory
-          && ["epp", "epi", "ese", "harness", "officeMaterial"].includes(family)
-          && availableToReturn > 0;
-        const canAssign = canAssignInventory
-          && ["epp", "epi", "uniform", "harness"].includes(family)
-          && (availableToAssign > 0 || hasAssignments);
+        const canReturn =
+          canManageInventory &&
+          ["epp", "epi", "ese", "harness", "officeMaterial"].includes(family) &&
+          availableToReturn > 0;
+        const canAssign =
+          canAssignInventory &&
+          ["epp", "epi", "uniform", "harness"].includes(family) &&
+          (availableToAssign > 0 || hasAssignments);
 
         return (
           <div className="flex items-center gap-2">
@@ -499,19 +530,22 @@ export default function ProjectInventory() {
               <ActionButton
                 icon={<FaUserPlus />}
                 bgColor={
-                  selectedAssignEntry?.projectInventoryEntryId === row.projectInventoryEntryId
+                  selectedAssignEntry?.projectInventoryEntryId ===
+                  row.projectInventoryEntryId
                     ? "#374151"
                     : "#059669"
                 }
                 bgHoverColor={
-                  selectedAssignEntry?.projectInventoryEntryId === row.projectInventoryEntryId
+                  selectedAssignEntry?.projectInventoryEntryId ===
+                  row.projectInventoryEntryId
                     ? "#1f2937"
                     : "#047857"
                 }
                 onClick={() => {
                   setSelectedEntry(null);
                   setSelectedAssignEntry((current) =>
-                    current?.projectInventoryEntryId === row.projectInventoryEntryId
+                    current?.projectInventoryEntryId ===
+                    row.projectInventoryEntryId
                       ? null
                       : row,
                   );
@@ -527,25 +561,26 @@ export default function ProjectInventory() {
               <ActionButton
                 icon={<FaArrowRotateLeft />}
                 bgColor={
-                  selectedEntry?.projectInventoryEntryId === row.projectInventoryEntryId
+                  selectedEntry?.projectInventoryEntryId ===
+                  row.projectInventoryEntryId
                     ? "#374151"
                     : "#0047a3"
                 }
                 bgHoverColor={
-                  selectedEntry?.projectInventoryEntryId === row.projectInventoryEntryId
+                  selectedEntry?.projectInventoryEntryId ===
+                  row.projectInventoryEntryId
                     ? "#1f2937"
                     : "#003d8f"
                 }
-                onClick={() =>
-                  {
-                    setSelectedAssignEntry(null);
-                    setSelectedEntry((current) =>
-                      current?.projectInventoryEntryId === row.projectInventoryEntryId
-                        ? null
-                        : row,
-                    );
-                  }
-                }
+                onClick={() => {
+                  setSelectedAssignEntry(null);
+                  setSelectedEntry((current) =>
+                    current?.projectInventoryEntryId ===
+                    row.projectInventoryEntryId
+                      ? null
+                      : row,
+                  );
+                }}
               />
             ) : null}
           </div>
@@ -567,9 +602,7 @@ export default function ProjectInventory() {
         entry.elementCode || "",
         entry.categoryName || "",
         entry.responsibleUserName || "",
-        getInventoryFamilyLabel(
-          getEntryFamily(entry),
-        ),
+        getInventoryFamilyLabel(getEntryFamily(entry)),
       ]
         .join(" ")
         .toLowerCase()
@@ -581,8 +614,9 @@ export default function ProjectInventory() {
     return projectInventoryTabs.reduce(
       (acc, tab) => ({
         ...acc,
-        [tab.key]: (data?.entries || []).filter((entry) => getEntryTab(entry) === tab.key)
-          .length,
+        [tab.key]: (data?.entries || []).filter(
+          (entry) => getEntryTab(entry) === tab.key,
+        ).length,
       }),
       {} as Record<ProjectInventoryTab, number>,
     );
@@ -602,7 +636,9 @@ export default function ProjectInventory() {
       projectInventoryTabs
         .map((tab) => ({
           ...tab,
-          entries: returnBlockers.filter((entry) => getEntryTab(entry) === tab.key),
+          entries: returnBlockers.filter(
+            (entry) => getEntryTab(entry) === tab.key,
+          ),
         }))
         .filter((group) => group.entries.length > 0),
     [returnBlockers],
@@ -613,11 +649,12 @@ export default function ProjectInventory() {
 
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
-  if (!data) return <ErrorMessage errorMessage="No se encontro el inventario del proyecto." />;
+  if (!data)
+    return (
+      <ErrorMessage errorMessage="No se encontro el inventario del proyecto." />
+    );
 
-  const selectedFamily = selectedEntry
-    ? getEntryFamily(selectedEntry)
-    : null;
+  const selectedFamily = selectedEntry ? getEntryFamily(selectedEntry) : null;
 
   return (
     <>
@@ -630,13 +667,17 @@ export default function ProjectInventory() {
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Pendiente por retorno</p>
+            <p className="text-xs font-semibold text-gray-500">
+              Pendiente por retorno
+            </p>
             <p className="text-2xl font-extrabold text-[#b45309]">
               {formatInventoryQuantity(data.summary.totalPendingReturn)}
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-semibold text-gray-500">Bloqueos de inactivacion</p>
+            <p className="text-xs font-semibold text-gray-500">
+              Bloqueos de inactivacion
+            </p>
             <p className="text-2xl font-extrabold text-[#b91c1c]">
               {data.summary.pendingBlockingEntries}
             </p>
@@ -691,21 +732,29 @@ export default function ProjectInventory() {
                   Registrar retorno de {selectedEntry.elementName}
                 </p>
                 <p className="text-xs text-blue-800">
-                  Familia: {selectedFamily ? getInventoryFamilyLabel(selectedFamily) : "Sin familia"}.
-                  Responsables:{" "}
+                  Familia:{" "}
+                  {selectedFamily
+                    ? getInventoryFamilyLabel(selectedFamily)
+                    : "Sin familia"}
+                  . Responsables:{" "}
                   {selectedEntry.responsibleUserNames?.length
                     ? selectedEntry.responsibleUserNames.join(", ")
-                    : selectedEntry.responsibleUserName || "Sin responsable"}.
-                  Disponible en obra:{" "}
+                    : selectedEntry.responsibleUserName || "Sin responsable"}
+                  . Disponible en obra:{" "}
                   {formatInventoryQuantity(
-                    selectedEntry.quantityAvailableForReturn ?? selectedEntry.quantityPending,
-                  )}.
+                    selectedEntry.quantityAvailableForReturn ??
+                      selectedEntry.quantityPending,
+                  )}
+                  .
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div className="flex flex-col">
-                  <label className="text-xs font-semibold text-gray-700" htmlFor="returnQuantity">
+                  <label
+                    className="text-xs font-semibold text-gray-700"
+                    htmlFor="returnQuantity"
+                  >
                     Cantidad
                   </label>
                   <input
@@ -715,12 +764,17 @@ export default function ProjectInventory() {
                     step={1}
                     className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
                     value={returnQuantity}
-                    onChange={(event) => setReturnQuantity(Number(event.target.value))}
+                    onChange={(event) =>
+                      setReturnQuantity(Number(event.target.value))
+                    }
                   />
                 </div>
 
                 <div className="flex min-w-[18rem] flex-col">
-                  <label className="text-xs font-semibold text-gray-700" htmlFor="returnNotes">
+                  <label
+                    className="text-xs font-semibold text-gray-700"
+                    htmlFor="returnNotes"
+                  >
                     Observacion
                   </label>
                   <input
@@ -764,7 +818,8 @@ export default function ProjectInventory() {
             onAssign={(entry) => {
               setSelectedEntry(null);
               setSelectedAssignEntry((current) =>
-                current?.projectInventoryEntryId === entry.projectInventoryEntryId
+                current?.projectInventoryEntryId ===
+                entry.projectInventoryEntryId
                   ? null
                   : entry,
               );
@@ -772,7 +827,8 @@ export default function ProjectInventory() {
             onReturn={(entry) => {
               setSelectedAssignEntry(null);
               setSelectedEntry((current) =>
-                current?.projectInventoryEntryId === entry.projectInventoryEntryId
+                current?.projectInventoryEntryId ===
+                entry.projectInventoryEntryId
                   ? null
                   : entry,
               );
@@ -802,7 +858,9 @@ export default function ProjectInventory() {
       {selectedDetailEntry ? (
         <ProjectInventoryDetailModal
           entry={selectedDetailEntry}
-          familyLabel={getInventoryFamilyLabel(getEntryFamily(selectedDetailEntry))}
+          familyLabel={getInventoryFamilyLabel(
+            getEntryFamily(selectedDetailEntry),
+          )}
           onClose={() => setSelectedDetailEntry(null)}
         />
       ) : null}
@@ -888,7 +946,9 @@ function ProjectReturnBlockersModal({
               </h4>
               <ul className="flex flex-col gap-3">
                 {group.entries.map((entry) => {
-                  const code = entry.elementCode ? ` - ${entry.elementCode}` : "";
+                  const code = entry.elementCode
+                    ? ` - ${entry.elementCode}`
+                    : "";
                   const title =
                     entry.fallProtectionGroup?.code ||
                     `${entry.elementName}${code}`;
@@ -962,7 +1022,8 @@ function FallProtectionProjectCards({
           entry.quantityAvailableForAssignment ?? entry.quantityPending;
         const hasAssignments = Boolean(entry.workerAssignments?.length);
         const canReturn = canManageInventory && availableToReturn > 0;
-        const canAssign = canAssignInventory && (availableToAssign > 0 || hasAssignments);
+        const canAssign =
+          canAssignInventory && (availableToAssign > 0 || hasAssignments);
         const isHighlighted = getProjectEntryIds(entry).some((id) =>
           highlightedEntryIds.includes(id),
         );
@@ -988,36 +1049,36 @@ function FallProtectionProjectCards({
               <div className="flex shrink-0 items-center gap-2">
                 <SeeButton onClick={() => onView(entry)} />
                 {canAssign ? (
-                    <ActionButton
-                      icon={<FaUserPlus />}
-                      bgColor={
-                        selectedAssignEntryId === entry.projectInventoryEntryId
-                          ? "#374151"
-                          : "#059669"
-                      }
-                      bgHoverColor={
-                        selectedAssignEntryId === entry.projectInventoryEntryId
-                          ? "#1f2937"
-                          : "#047857"
-                      }
-                      onClick={() => onAssign(entry)}
-                    />
+                  <ActionButton
+                    icon={<FaUserPlus />}
+                    bgColor={
+                      selectedAssignEntryId === entry.projectInventoryEntryId
+                        ? "#374151"
+                        : "#059669"
+                    }
+                    bgHoverColor={
+                      selectedAssignEntryId === entry.projectInventoryEntryId
+                        ? "#1f2937"
+                        : "#047857"
+                    }
+                    onClick={() => onAssign(entry)}
+                  />
                 ) : null}
                 {canReturn ? (
-                    <ActionButton
-                      icon={<FaArrowRotateLeft />}
-                      bgColor={
-                        selectedReturnEntryId === entry.projectInventoryEntryId
-                          ? "#374151"
-                          : "#0047a3"
-                      }
-                      bgHoverColor={
-                        selectedReturnEntryId === entry.projectInventoryEntryId
-                          ? "#1f2937"
-                          : "#003d8f"
-                      }
-                      onClick={() => onReturn(entry)}
-                    />
+                  <ActionButton
+                    icon={<FaArrowRotateLeft />}
+                    bgColor={
+                      selectedReturnEntryId === entry.projectInventoryEntryId
+                        ? "#374151"
+                        : "#0047a3"
+                    }
+                    bgHoverColor={
+                      selectedReturnEntryId === entry.projectInventoryEntryId
+                        ? "#1f2937"
+                        : "#003d8f"
+                    }
+                    onClick={() => onReturn(entry)}
+                  />
                 ) : null}
               </div>
             </div>
@@ -1120,7 +1181,10 @@ function ProjectInventoryDetailModal({
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <InventoryDetailRow label="Codigo" value={entry.elementCode || "Sin codigo"} />
+          <InventoryDetailRow
+            label="Codigo"
+            value={entry.elementCode || "Sin codigo"}
+          />
           <InventoryDetailRow
             label="Responsables"
             value={
@@ -1151,7 +1215,9 @@ function ProjectInventoryDetailModal({
 
         {entry.fallProtectionGroupId && entry.fallProtectionParts?.length ? (
           <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <p className="mb-2 font-extrabold text-gray-900">Partes del grupo EPA</p>
+            <p className="mb-2 font-extrabold text-gray-900">
+              Partes del grupo EPA
+            </p>
             <ul className="grid gap-2 text-xs text-gray-700 md:grid-cols-2">
               {entry.fallProtectionParts.map((part) => (
                 <li key={part} className="rounded-md bg-white px-3 py-2">
@@ -1205,9 +1271,7 @@ function ProjectInventoryAssignmentModal({
     patch: Partial<Omit<AssignmentDraft, "localId">>,
   ) => {
     onRowsChange(
-      rows.map((row) =>
-        row.localId === localId ? { ...row, ...patch } : row,
-      ),
+      rows.map((row) => (row.localId === localId ? { ...row, ...patch } : row)),
     );
   };
 
@@ -1339,7 +1403,8 @@ function ProjectInventoryAssignmentModal({
           </div>
         ) : (
           <div className="mb-6 rounded-lg border border-dashed border-gray-300 p-4 text-xs text-gray-500">
-            Todavia no hay asignaciones registradas para este item en este proyecto.
+            Todavia no hay asignaciones registradas para este item en este
+            proyecto.
           </div>
         )}
 
@@ -1382,10 +1447,15 @@ function ProjectInventoryAssignmentModal({
                   <Select<number>
                     name={`inventoryWorker-${row.localId}`}
                     value={row.workerId}
-                    onChange={(workerId) => updateRow(row.localId, { workerId })}
+                    onChange={(workerId) =>
+                      updateRow(row.localId, { workerId })
+                    }
                     options={[
                       { value: 0, label: "Seleccionar..." },
-                      ...workers.map((worker) => ({ value: worker.workerId, label: worker.fullName })),
+                      ...workers.map((worker) => ({
+                        value: worker.workerId,
+                        label: worker.fullName,
+                      })),
                     ]}
                   />
 
@@ -1397,7 +1467,9 @@ function ProjectInventoryAssignmentModal({
                     className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
                     value={row.quantity}
                     onChange={(event) =>
-                      updateRow(row.localId, { quantity: Number(event.target.value) })
+                      updateRow(row.localId, {
+                        quantity: Number(event.target.value),
+                      })
                     }
                   />
 
@@ -1425,24 +1497,24 @@ function ProjectInventoryAssignmentModal({
 
           {availableToAssign > 0 ? (
             <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={addRow}
-              className="rounded-md border border-gray-300 px-4 py-2 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              + Anadir trabajador
-            </button>
-            <p
-              className={`text-xs font-semibold ${
-                totalDraftQuantity > availableToAssign
-                  ? "text-red-600"
-                  : "text-gray-600"
-              }`}
-            >
-              Total a asignar: {formatInventoryQuantity(totalDraftQuantity)} /{" "}
-              {formatInventoryQuantity(availableToAssign)}
-            </p>
-          </div>
+              <button
+                type="button"
+                onClick={addRow}
+                className="rounded-md border border-gray-300 px-4 py-2 font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                + Anadir trabajador
+              </button>
+              <p
+                className={`text-xs font-semibold ${
+                  totalDraftQuantity > availableToAssign
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                Total a asignar: {formatInventoryQuantity(totalDraftQuantity)} /{" "}
+                {formatInventoryQuantity(availableToAssign)}
+              </p>
+            </div>
           ) : null}
         </div>
 
@@ -1468,7 +1540,13 @@ function ProjectInventoryAssignmentModal({
   );
 }
 
-function InventoryDetailCard({ label, value }: { label: string; value: string }) {
+function InventoryDetailCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold text-gray-500">{label}</p>
@@ -1477,7 +1555,13 @@ function InventoryDetailCard({ label, value }: { label: string; value: string })
   );
 }
 
-function InventoryDetailRow({ label, value }: { label: string; value: string }) {
+function InventoryDetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
       <p className="text-2xs font-bold uppercase text-gray-500">{label}</p>

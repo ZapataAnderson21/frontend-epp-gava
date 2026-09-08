@@ -1,15 +1,20 @@
 import React from "react";
 import type { User } from "../../data/types";
+import { useAccess } from "../../permissions/AccessProvider";
 
 type Props = {
-  user: User | null;
-  allow: string[];
+  user?: User | null;
+  permission: string;
   fallback?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export default function Permission({ user, allow, fallback = null, children }: Props) {
-  if (!user?.userType) return <>{fallback}</>;
-  const ok = allow.includes(user.userType);
+export default function Permission({
+  permission,
+  fallback = null,
+  children,
+}: Props) {
+  const { can } = useAccess();
+  const ok = can(permission);
   return <>{ok ? children : fallback}</>;
 }

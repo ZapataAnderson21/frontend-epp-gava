@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { SeeButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
-import { SeeButton } from "../../common/button";
 import { Table } from "../../common/table";
 import { Select } from "../../components";
 import { clientApi, quotationApi } from "../../data/apiUrl";
@@ -19,8 +19,17 @@ const formatDate = (value: string) => {
 const formatAmount = (value: number) => `S/ ${Number(value || 0).toFixed(2)}`;
 
 export default function QuotationTable() {
-  const { data: quotations, loading, error, setData } = useFetch<Quotation[]>(quotationApi);
-  const { data: clients, loading: loadingClients, error: clientsError } = useFetch<Client[]>(clientApi);
+  const {
+    data: quotations,
+    loading,
+    error,
+    setData,
+  } = useFetch<Quotation[]>(quotationApi);
+  const {
+    data: clients,
+    loading: loadingClients,
+    error: clientsError,
+  } = useFetch<Client[]>(clientApi);
   const { execute } = useApiAction<Quotation>();
   const navigate = useNavigate();
   const [clientFilter, setClientFilter] = useState<number>(0);
@@ -29,34 +38,52 @@ export default function QuotationTable() {
   const clientOptions = useMemo(() => {
     return [
       { value: 0, label: "Todos" },
-      ...((clients || []).map((client) => ({ value: client.clientId, label: client.name }))),
+      ...(clients || []).map((client) => ({
+        value: client.clientId,
+        label: client.name,
+      })),
     ];
   }, [clients]);
 
   const filteredQuotations = useMemo(() => {
     const q = codeQuery.trim().toLowerCase();
     return (quotations || []).filter((quotation) => {
-      const clientMatch = clientFilter === 0 || quotation.clientId === clientFilter;
-      const codeMatch = !q || String(quotation.code || "").toLowerCase().includes(q);
+      const clientMatch =
+        clientFilter === 0 || quotation.clientId === clientFilter;
+      const codeMatch =
+        !q ||
+        String(quotation.code || "")
+          .toLowerCase()
+          .includes(q);
       return clientMatch && codeMatch;
     });
   }, [quotations, clientFilter, codeQuery]);
 
-  const handleStatusChange = async (quotationId: number, newStatus: QuotationStatus) => {
+  const handleStatusChange = async (
+    quotationId: number,
+    newStatus: QuotationStatus,
+  ) => {
     if (!quotations) return;
 
     const previousQuotations = [...quotations];
-    const currentQuotation = quotations.find((quotation) => quotation.quotationId === quotationId);
+    const currentQuotation = quotations.find(
+      (quotation) => quotation.quotationId === quotationId,
+    );
     if (!currentQuotation || currentQuotation.status === newStatus) return;
 
-    setData((prev) =>
-      prev?.map((quotation) =>
-        quotation.quotationId === quotationId ? { ...quotation, status: newStatus } : quotation
-      ) ?? null
+    setData(
+      (prev) =>
+        prev?.map((quotation) =>
+          quotation.quotationId === quotationId
+            ? { ...quotation, status: newStatus }
+            : quotation,
+        ) ?? null,
     );
 
     try {
-      const result = await execute(`${quotationApi}${quotationId}`, "PATCH", { status: newStatus });
+      const result = await execute(`${quotationApi}${quotationId}`, "PATCH", {
+        status: newStatus,
+      });
 
       if (result.statusCode >= 200 && result.statusCode < 300) {
         toast.success("Estado actualizado con éxito");
@@ -76,7 +103,8 @@ export default function QuotationTable() {
     {
       label: "Cliente",
       width: "14rem",
-      render: (row: Quotation) => row.client?.name ?? `Cliente #${row.clientId}`,
+      render: (row: Quotation) =>
+        row.client?.name ?? `Cliente #${row.clientId}`,
     },
     {
       key: "createdAt",
@@ -92,12 +120,15 @@ export default function QuotationTable() {
         <StatusTag
           status={row.status}
           editable={true}
-          onStatusChange={(newStatus) => handleStatusChange(row.quotationId, newStatus)}
+          onStatusChange={(newStatus) =>
+            handleStatusChange(row.quotationId, newStatus)
+          }
         />
       ),
     },
     {
       key: "totalAmount",
+      permission: "finance.view",
       label: "Total",
       width: "9rem",
       align: "right" as const,
@@ -107,7 +138,9 @@ export default function QuotationTable() {
       label: "Acciones",
       width: "8rem",
       render: (row: Quotation) => (
-        <SeeButton onClick={() => navigate(`/admin/quotations/${row.quotationId}`)} />
+        <SeeButton
+          onClick={() => navigate(`/admin/quotations/${row.quotationId}`)}
+        />
       ),
     },
   ] as const;
@@ -116,7 +149,10 @@ export default function QuotationTable() {
     return <LoadingSkeletonTable />;
   }
 
-  if (error && !error.toLowerCase().includes("no se encontraron cotizaciones")) {
+  if (
+    error &&
+    !error.toLowerCase().includes("no se encontraron cotizaciones")
+  ) {
     return <ErrorMessage errorMessage={error} />;
   }
 
@@ -125,7 +161,11 @@ export default function QuotationTable() {
   }
 
   if (!quotations || quotations.length === 0) {
-    return <div className="text-center text-gray-500 w-full">No hay cotizaciones disponibles.</div>;
+    return (
+      <div className="text-center text-gray-500 w-full">
+        No hay cotizaciones disponibles.
+      </div>
+    );
   }
 
   return (
@@ -156,7 +196,9 @@ export default function QuotationTable() {
       <Table<Quotation> data={filteredQuotations} columns={columns} />
 
       {!filteredQuotations.length && (
-        <p className="text-center text-gray-500 mt-3">No hay resultados con esos filtros.</p>
+        <p className="text-center text-gray-500 mt-3">
+          No hay resultados con esos filtros.
+        </p>
       )}
     </>
   );

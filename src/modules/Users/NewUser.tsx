@@ -1,19 +1,22 @@
 import { useState } from "react";
-import { userApi } from "../../data/apiUrl";
-import { userTypeApi } from "../../data/apiUrl";
-import { useNavigate } from "react-router-dom";
-import { useFetch } from "../../hooks/useFetch";
 import toast, { Toaster } from "react-hot-toast";
-import { useApiAction } from "../../hooks/useApiAction";
-import type { UserType } from "../../data/types";
-import { ButtonContainer, Form, InputForm, SelectForm } from "../../common/form";
-import UserTypeCreateModal from "./components/UserTypeCreateModal";
-import ReturnButton from "../../common/button/ReturnButton";
-import { SaveButton } from "../../common/button";
-import { useCurrentUser } from "../../hooks";
-import { adminTypes } from "../../utils";
+import { useNavigate } from "react-router-dom";
 import Permission from "../../common/auth/Permission";
+import { SaveButton } from "../../common/button";
+import ReturnButton from "../../common/button/ReturnButton";
 import { ErrorMessage } from "../../common/error";
+import {
+  ButtonContainer,
+  Form,
+  InputForm,
+  SelectForm,
+} from "../../common/form";
+import { userApi, userTypeApi } from "../../data/apiUrl";
+import type { UserType } from "../../data/types";
+import { useCurrentUser } from "../../hooks";
+import { useApiAction } from "../../hooks/useApiAction";
+import { useFetch } from "../../hooks/useFetch";
+import UserTypeCreateModal from "./components/UserTypeCreateModal";
 
 interface UserResponse {
   userId: number;
@@ -43,7 +46,11 @@ export default function NewUser() {
   const navigate = useNavigate();
 
   // 🔹 fetch roles
-    const { data: userTypes, loading: loadingRoles, error: errorRoles } = useFetch<UserType[]>(userTypeApi, [reloadUserTypes]);
+  const {
+    data: userTypes,
+    loading: loadingRoles,
+    error: errorRoles,
+  } = useFetch<UserType[]>(userTypeApi, [reloadUserTypes]);
 
   // 🔹 acción POST
   const { execute, loading: saving } = useApiAction<UserResponse>();
@@ -76,15 +83,21 @@ export default function NewUser() {
     }
     if (!/(?=.*[A-Z])/.test(password)) {
       errors.push("La contraseña debe contener al menos una mayúscula");
-      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+      setErrorPassword(
+        "La contraseña debe contener al menos una mayúscula, un número y un carácter especial",
+      );
     }
     if (!/(?=.*\d)/.test(password)) {
       errors.push("La contraseña debe contener al menos un número");
-      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+      setErrorPassword(
+        "La contraseña debe contener al menos una mayúscula, un número y un carácter especial",
+      );
     }
     if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
       errors.push("La contraseña debe contener al menos un carácter especial");
-      setErrorPassword("La contraseña debe contener al menos una mayúscula, un número y un carácter especial");
+      setErrorPassword(
+        "La contraseña debe contener al menos una mayúscula, un número y un carácter especial",
+      );
     }
 
     if (errors.length > 0) {
@@ -108,50 +121,112 @@ export default function NewUser() {
       userTypeId,
     };
 
-    await toast.promise(
-      execute(userApi, "POST", payload),
-      {
-        loading: "Creando usuario...",
-        success: (response) => {
-          setTimeout(() => navigateToUsers(), 1200);
-          return response.message || "Usuario creado exitosamente";
-        },
-        error: (err) => err.message || "Error al crear usuario",
-      }
-    );
+    await toast.promise(execute(userApi, "POST", payload), {
+      loading: "Creando usuario...",
+      success: (response) => {
+        setTimeout(() => navigateToUsers(), 1200);
+        return response.message || "Usuario creado exitosamente";
+      },
+      error: (err) => err.message || "Error al crear usuario",
+    });
   };
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />}>
+    <Permission
+      user={user}
+      permission="users.manage"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />
+      }
+    >
       <Form name="REGISTRAR USUARIO" handleSubmit={handleSubmit}>
-        <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
-        <InputForm label="Apellido" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} optional={false} />
-        <InputForm label="Correo" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={false} />
-        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={true}  maxLength={9} error={errorPhone} />
-        <InputForm label="Contraseña" name="password" type="password" value={password} onChange={(e) => { setErrorPassword(""); setPassword(e.target.value)}} optional={false} error={errorPassword} />
-        
-        {loadingRoles && 
+        <InputForm
+          label="Nombre"
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          optional={false}
+        />
+        <InputForm
+          label="Apellido"
+          name="lastName"
+          type="text"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          optional={false}
+        />
+        <InputForm
+          label="Correo"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          optional={false}
+        />
+        <InputForm
+          label="Teléfono"
+          name="phone"
+          type="text"
+          value={phone}
+          onChange={(e) => {
+            setErrorPhone("");
+            const v = e.target.value;
+            if (/^\d{0,9}$/.test(v)) setPhone(v);
+          }}
+          optional={true}
+          maxLength={9}
+          error={errorPhone}
+        />
+        <InputForm
+          label="Contraseña"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => {
+            setErrorPassword("");
+            setPassword(e.target.value);
+          }}
+          optional={false}
+          error={errorPassword}
+        />
+
+        {loadingRoles && (
           <div className="w-full flex flex-col items-start justify-center gap-4">
             <div className="h-8 bg-gray-300 rounded animate-pulse w-48"></div>
             <div className="h-8 bg-gray-300 rounded animate-pulse w-full"></div>
           </div>
-        }
-        
+        )}
+
         {!loadingRoles && !errorRoles && userTypes && (
           <SelectForm
             label="Rol"
             name="role"
             value={userTypeId}
             onChange={(value) => setUserTypeId(Number(value))}
-            options={userTypes ? userTypes.map((role) => ({ value: role.userTypeId, label: role.name })) : []}
+            options={
+              userTypes
+                ? userTypes.map((role) => ({
+                    value: role.userTypeId,
+                    label: role.name,
+                  }))
+                : []
+            }
           >
-            <div className="text-[14px] font-bold underline cursor-pointer" onClick={() => setOpenUserTypesModal(true)}>¿Añadir un rol?</div>  
+            <Permission permission="roles.manage">
+              <div
+                className="text-[14px] font-bold underline cursor-pointer"
+                onClick={() => setOpenUserTypesModal(true)}
+              >
+                ¿Añadir un rol?
+              </div>
+            </Permission>
           </SelectForm>
         )}
 
         <ButtonContainer>
           <ReturnButton onClick={() => navigateToUsers()} />
-          <Permission user={user} allow={adminTypes}>
+          <Permission user={user} permission="users.assignRole">
             <SaveButton loading={saving} />
           </Permission>
         </ButtonContainer>

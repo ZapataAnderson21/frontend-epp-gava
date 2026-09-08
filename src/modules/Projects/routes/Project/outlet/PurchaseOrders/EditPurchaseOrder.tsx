@@ -1,18 +1,45 @@
-import Permission from "../../../../../../common/auth/Permission"
-import { logisticsTypes, lineAmount, roundMoney, totalFromRoundedLines } from "../../../../../../utils";
-import { useApiAction, useCurrentUser, useFetch } from "../../../../../../hooks";
-import { ErrorMessage } from "../../../../../../common/error";
-import { purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../../../../../../data/apiUrl";
-import type { PurchaseOrder, Resource, ResourcePurchaseOrder, Supplier } from "../../../../../../data/types";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
-import { ReturnButton, SaveButton } from "../../../../../../common/button";
-import { ConditionsSection, DeliveryInfoCard, DuplicateModal, ItemsTable, PaymentConditionsCard, PurchaseOrderHeader, SignaturesTable, SupplierSelectCard } from "./components";
-import type { ItemRow } from "../../../../../../hooks/usePurchaseOrderForm";
-import { ButtonContainer } from "../../../../../../common/form";
-import { Button } from "../../../../../../components";
 import { Copy as FaRegCopy, Star as TiStarOutline } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Permission from "../../../../../../common/auth/Permission";
+import { ReturnButton, SaveButton } from "../../../../../../common/button";
+import { ErrorMessage } from "../../../../../../common/error";
+import { ButtonContainer } from "../../../../../../common/form";
 import { Loading } from "../../../../../../common/loading";
+import { Button } from "../../../../../../components";
+import {
+  purchaseOrderApi,
+  resourceApi,
+  resourcePurchaseOrderApi,
+  supplierApi,
+} from "../../../../../../data/apiUrl";
+import type {
+  PurchaseOrder,
+  Resource,
+  ResourcePurchaseOrder,
+  Supplier,
+} from "../../../../../../data/types";
+import {
+  useApiAction,
+  useCurrentUser,
+  useFetch,
+} from "../../../../../../hooks";
+import type { ItemRow } from "../../../../../../hooks/usePurchaseOrderForm";
+import {
+  lineAmount,
+  roundMoney,
+  totalFromRoundedLines,
+} from "../../../../../../utils";
+import {
+  ConditionsSection,
+  DeliveryInfoCard,
+  DuplicateModal,
+  ItemsTable,
+  PaymentConditionsCard,
+  PurchaseOrderHeader,
+  SignaturesTable,
+  SupplierSelectCard,
+} from "./components";
 
 import toast, { Toaster } from "react-hot-toast";
 
@@ -37,7 +64,6 @@ export default function EditPurchaseOrder() {
   const [paymentConditions2, setPaymentConditions2] = useState<string>("");
   const [purchaseOrderType, setPurchaseOrderType] = useState<string>("");
 
-
   const [items, setItems] = useState<ItemRow[]>([]);
   // rpoIds[i] = id del resourcePurchaseOrder asociado a la fila i (o null si es nuevo)
   const [rpoIds, setRpoIds] = useState<(number | null)[]>([]);
@@ -47,17 +73,44 @@ export default function EditPurchaseOrder() {
 
   // ---- errores ----
   const [errorDni, setErrorDni] = useState<string | undefined>(undefined);
-  const [errorSupplier, setErrorSupplier] = useState<string | undefined>(undefined);
-  const [errorPaymentMethod, setErrorPaymentMethod] = useState<string | undefined>(undefined);
-  const [errorPaymentConditions, setErrorPaymentConditions] = useState<string | undefined>(undefined);
-  const [errorPurchaseOrderType, setErrorPurchaseOrderType] = useState<string | undefined>(undefined);
+  const [errorSupplier, setErrorSupplier] = useState<string | undefined>(
+    undefined,
+  );
+  const [errorPaymentMethod, setErrorPaymentMethod] = useState<
+    string | undefined
+  >(undefined);
+  const [errorPaymentConditions, setErrorPaymentConditions] = useState<
+    string | undefined
+  >(undefined);
+  const [errorPurchaseOrderType, setErrorPurchaseOrderType] = useState<
+    string | undefined
+  >(undefined);
 
   // ---- datos remotos ----
   const { user } = useCurrentUser();
-  const { data: purchaseOrder, loading, error } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
-  const { data: suppliers, loading: suppliersLoading, error: suppliersError } = useFetch<Supplier[]>(`${supplierApi}`);
-  const { data: resourcePurchaseOrders, loading: resourcePuchaseOrdersLoading, error: resourcePurchaseOrdersError } = useFetch<ResourcePurchaseOrder[]>(`${resourcePurchaseOrderApi}purchase-order/${purchaseOrderId}`);
-  const { data: resources, loading: resourcesLoading, error: resourcesError, refetch: refetchResources } = useFetch<Resource[]>(`${resourceApi}`);
+  const {
+    data: purchaseOrder,
+    loading,
+    error,
+  } = useFetch<PurchaseOrder>(`${purchaseOrderApi}${purchaseOrderId}`);
+  const {
+    data: suppliers,
+    loading: suppliersLoading,
+    error: suppliersError,
+  } = useFetch<Supplier[]>(`${supplierApi}`);
+  const {
+    data: resourcePurchaseOrders,
+    loading: resourcePuchaseOrdersLoading,
+    error: resourcePurchaseOrdersError,
+  } = useFetch<ResourcePurchaseOrder[]>(
+    `${resourcePurchaseOrderApi}purchase-order/${purchaseOrderId}`,
+  );
+  const {
+    data: resources,
+    loading: resourcesLoading,
+    error: resourcesError,
+    refetch: refetchResources,
+  } = useFetch<Resource[]>(`${resourceApi}`);
 
   const { execute, loading: saving } = useApiAction<unknown>();
 
@@ -77,15 +130,23 @@ export default function EditPurchaseOrder() {
     setDniCarePerson(purchaseOrder.dniCarePerson);
     setObservations(purchaseOrder.observations ?? "");
     setPaymentMethod(purchaseOrder.paymentMethod);
-    setPaymentConditions1(purchaseOrder.paymentConditions.split(" - ")[0] || "");
-    setPaymentConditions2(purchaseOrder.paymentConditions.split(" - ")[1] || "");
+    setPaymentConditions1(
+      purchaseOrder.paymentConditions.split(" - ")[0] || "",
+    );
+    setPaymentConditions2(
+      purchaseOrder.paymentConditions.split(" - ")[1] || "",
+    );
     setPaymentConditions(purchaseOrder.paymentConditions);
     setPurchaseOrderType(purchaseOrder.purchaseOrderType);
 
-    const gc = purchaseOrder.generalConditions ? purchaseOrder.generalConditions.split("|") : [""];
-    const qc = purchaseOrder.qualityConditions ? purchaseOrder.qualityConditions.split("|") : [""];
-    setGeneralConditions(gc.length ? gc.map(s => s.trim()) : [""]);
-    setQualityConditions(qc.length ? qc.map(s => s.trim()) : [""]);
+    const gc = purchaseOrder.generalConditions
+      ? purchaseOrder.generalConditions.split("|")
+      : [""];
+    const qc = purchaseOrder.qualityConditions
+      ? purchaseOrder.qualityConditions.split("|")
+      : [""];
+    setGeneralConditions(gc.length ? gc.map((s) => s.trim()) : [""]);
+    setQualityConditions(qc.length ? qc.map((s) => s.trim()) : [""]);
   }, [purchaseOrder]);
 
   useEffect(() => {
@@ -110,7 +171,7 @@ export default function EditPurchaseOrder() {
       subtotal: lineAmount(rpo.quantity, rpo.unitPurchasePrice),
     }));
     setItems(normalizeOrderNumbers(itemRows));
-    setRpoIds(sorted.map(r => r.resourcePurchaseOrderId));
+    setRpoIds(sorted.map((r) => r.resourcePurchaseOrderId));
   }, [resourcePurchaseOrders]);
 
   // ---- navegación ----
@@ -124,12 +185,12 @@ export default function EditPurchaseOrder() {
     field: K,
     value: ItemRow[K],
   ) => {
-    setItems(prev => {
+    setItems((prev) => {
       const normalizeOrderNumbers = (rows: ItemRow[]) =>
         rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
       const next = [...prev];
       if (field === "resourceId") {
-        const selected = resources?.find(r => r.resourceId === Number(value));
+        const selected = resources?.find((r) => r.resourceId === Number(value));
         if (selected) {
           next[index] = {
             ...next[index],
@@ -138,7 +199,12 @@ export default function EditPurchaseOrder() {
             unit: selected.unit,
           };
         } else {
-          next[index] = { ...next[index], resourceId: 0, description: "", unit: "" };
+          next[index] = {
+            ...next[index],
+            resourceId: 0,
+            description: "",
+            unit: "",
+          };
         }
       } else {
         next[index] = { ...next[index], [field]: value };
@@ -163,7 +229,7 @@ export default function EditPurchaseOrder() {
       unitSalesPrice: "",
       subtotal: 0,
     };
-    setItems(prev => {
+    setItems((prev) => {
       const normalizeOrderNumbers = (rows: ItemRow[]) =>
         rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
       if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
@@ -173,7 +239,7 @@ export default function EditPurchaseOrder() {
       next.splice(rowIndex + 1, 0, newRow);
       return normalizeOrderNumbers(next);
     });
-    setRpoIds(prev => {
+    setRpoIds((prev) => {
       if (rowIndex == null || rowIndex < 0 || rowIndex >= prev.length) {
         return [...prev, null];
       }
@@ -184,15 +250,27 @@ export default function EditPurchaseOrder() {
   };
 
   const removeItem = (index: number) => {
-    setItems(prev => {
+    setItems((prev) => {
       const normalizeOrderNumbers = (rows: ItemRow[]) =>
         rows.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
-      if (prev.length === 1) return [{ orderNumber: 1, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 }];
+      if (prev.length === 1)
+        return [
+          {
+            orderNumber: 1,
+            resourceId: 0,
+            description: "",
+            unit: "",
+            quantity: "",
+            unitPurchasePrice: "",
+            unitSalesPrice: "",
+            subtotal: 0,
+          },
+        ];
       const next = [...prev];
       next.splice(index, 1);
       return normalizeOrderNumbers(next);
     });
-    setRpoIds(prev => {
+    setRpoIds((prev) => {
       if (prev.length === 1) return [null];
       const next = [...prev];
       next.splice(index, 1);
@@ -204,12 +282,12 @@ export default function EditPurchaseOrder() {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
-    setItems(prev => {
+    setItems((prev) => {
       const next = [...prev];
       [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
       return next.map((row, idx) => ({ ...row, orderNumber: idx + 1 }));
     });
-    setRpoIds(prev => {
+    setRpoIds((prev) => {
       const next = [...prev];
       [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
       return next;
@@ -219,22 +297,32 @@ export default function EditPurchaseOrder() {
   // ---- montos ----
   const sale_amount = useMemo(
     () => totalFromRoundedLines(items, (it) => it.unitSalesPrice),
-    [items]
+    [items],
   );
 
   const purchase_amount = useMemo(
     () => totalFromRoundedLines(items, (it) => it.unitPurchasePrice),
-    [items]
+    [items],
   );
 
   // ---- helpers condiciones ----
-  const addGeneralCondition = (value = "") => setGeneralConditions(p => [...p, value]);
-  const removeGeneralCondition = (idx: number) => setGeneralConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
-  const handleGeneralChange = (idx: number, value: string) => setGeneralConditions(p => p.map((v, i) => (i === idx ? value : v)));
+  const addGeneralCondition = (value = "") =>
+    setGeneralConditions((p) => [...p, value]);
+  const removeGeneralCondition = (idx: number) =>
+    setGeneralConditions((p) =>
+      p.length === 1 ? [""] : p.filter((_, i) => i !== idx),
+    );
+  const handleGeneralChange = (idx: number, value: string) =>
+    setGeneralConditions((p) => p.map((v, i) => (i === idx ? value : v)));
 
-  const addQualityCondition = (value = "") => setQualityConditions(p => [...p, value]);
-  const removeQualityCondition = (idx: number) => setQualityConditions(p => (p.length === 1 ? [""] : p.filter((_, i) => i !== idx)));
-  const handleQualityChange = (idx: number, value: string) => setQualityConditions(p => p.map((v, i) => (i === idx ? value : v)));
+  const addQualityCondition = (value = "") =>
+    setQualityConditions((p) => [...p, value]);
+  const removeQualityCondition = (idx: number) =>
+    setQualityConditions((p) =>
+      p.length === 1 ? [""] : p.filter((_, i) => i !== idx),
+    );
+  const handleQualityChange = (idx: number, value: string) =>
+    setQualityConditions((p) => p.map((v, i) => (i === idx ? value : v)));
 
   // Mantener paymentConditions coherente si editas la primera parte
   useEffect(() => {
@@ -257,37 +345,38 @@ export default function EditPurchaseOrder() {
 
     if (!supplierId) {
       fieldErrors.supplier = "Seleccione un proveedor. ";
-      msgs.push("Selecciona un proveedor." );
+      msgs.push("Selecciona un proveedor.");
     }
     if (!paymentMethod) {
       fieldErrors.paymentMethod = "Seleccione un método de pago. ";
-      msgs.push("Selecciona el método de pago." );
+      msgs.push("Selecciona el método de pago.");
     }
     if (!paymentConditions) {
       fieldErrors.paymentConditions = "Defina las condiciones de pago. ";
-      msgs.push("Define las condiciones de pago." );
+      msgs.push("Define las condiciones de pago.");
     }
     if (!purchaseOrderType) {
       fieldErrors.purchaseOrderType = "Seleccione materiales o servicios. ";
-      msgs.push("Elige el tipo de pedido (materiales o servicios)." );
+      msgs.push("Elige el tipo de pedido (materiales o servicios).");
     }
     if (dniCarePerson && !/^\d{8}$/.test(dniCarePerson)) {
       fieldErrors.dni = "El DNI debe tener 8 dígitos. ";
-      msgs.push("El DNI de atención debe tener 8 dígitos." );
+      msgs.push("El DNI de atención debe tener 8 dígitos.");
     }
     if (code.trim() === "") {
       fieldErrors.code = "El código no puede estar vacío. ";
-      msgs.push("El código de la orden de compra no puede estar vacío." );
+      msgs.push("El código de la orden de compra no puede estar vacío.");
     }
 
-    const hasValidItem = items.some(r =>
-      r.resourceId > 0 &&
-      Number(r.quantity) > 0 &&
-      Number(r.unitPurchasePrice) >= 0 &&
-      Number(r.unitSalesPrice) >= 0
+    const hasValidItem = items.some(
+      (r) =>
+        r.resourceId > 0 &&
+        Number(r.quantity) > 0 &&
+        Number(r.unitPurchasePrice) >= 0 &&
+        Number(r.unitSalesPrice) >= 0,
     );
     if (!hasValidItem) {
-      msgs.push("Agrega al menos un ítem válido." );
+      msgs.push("Agrega al menos un ítem válido.");
     }
 
     return { ok: msgs.length === 0, msgs, fieldErrors };
@@ -312,10 +401,12 @@ export default function EditPurchaseOrder() {
         <div>
           <strong>Falta completar:</strong>
           <ul className="list-disc pl-4 mt-1">
-            {msgs.map((m, i) => <li key={i}>{m}</li>)}
+            {msgs.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
           </ul>
         </div>,
-        { duration: 5000 }
+        { duration: 5000 },
       );
       return;
     }
@@ -340,13 +431,21 @@ export default function EditPurchaseOrder() {
         purchaseOrderType,
       };
 
-      const resp = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", body);
+      const resp = await execute(
+        `${purchaseOrderApi}${purchaseOrderId}`,
+        "PATCH",
+        body,
+      );
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
-        throw new Error(resp.message || "No se pudo actualizar la orden de compra.");
+        throw new Error(
+          resp.message || "No se pudo actualizar la orden de compra.",
+        );
       }
 
       // 2) Sincronizar ítems (POST/PATCH/DELETE)
-      const originalIds = new Set<number>((resourcePurchaseOrders || []).map(r => r.resourcePurchaseOrderId));
+      const originalIds = new Set<number>(
+        (resourcePurchaseOrders || []).map((r) => r.resourcePurchaseOrderId),
+      );
       const keptIds = new Set<number>(
         rpoIds.filter((id): id is number => id !== null),
       );
@@ -381,13 +480,21 @@ export default function EditPurchaseOrder() {
 
         if (id) {
           // PATCH existente
-          const upd = await execute(`${resourcePurchaseOrderApi}${id}`, "PATCH", payload);
+          const upd = await execute(
+            `${resourcePurchaseOrderApi}${id}`,
+            "PATCH",
+            payload,
+          );
           if (upd.statusCode < 200 || upd.statusCode >= 300) {
             throw new Error("Hubo errores al actualizar algunos ítems.");
           }
         } else {
           // POST nuevo
-          const crt = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
+          const crt = await execute(
+            `${resourcePurchaseOrderApi}`,
+            "POST",
+            payload,
+          );
           if (crt.statusCode < 200 || crt.statusCode >= 300) {
             throw new Error("Hubo errores al crear algunos ítems.");
           }
@@ -397,17 +504,14 @@ export default function EditPurchaseOrder() {
       return resp;
     };
 
-    toast.promise(
-      updatePurchaseOrder(),
-      {
-        loading: 'Actualizando orden de compra...',
-        success: (result) => {
-          setTimeout(() => navigateToPurchaseOrders(), 1200);
-          return result.message || 'Orden de compra actualizada con éxito';
-        },
-        error: (err) => err.message || 'Error al actualizar la orden de compra',
-      }
-    );
+    toast.promise(updatePurchaseOrder(), {
+      loading: "Actualizando orden de compra...",
+      success: (result) => {
+        setTimeout(() => navigateToPurchaseOrders(), 1200);
+        return result.message || "Orden de compra actualizada con éxito";
+      },
+      error: (err) => err.message || "Error al actualizar la orden de compra",
+    });
   };
 
   const handleAuthorize = async () => {
@@ -425,10 +529,12 @@ export default function EditPurchaseOrder() {
         <div>
           <strong>Completa los campos antes de autorizar:</strong>
           <ul className="list-disc pl-4 mt-1">
-            {msgs.map((m, i) => <li key={i}>{m}</li>)}
+            {msgs.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
           </ul>
         </div>,
-        { duration: 5000 }
+        { duration: 5000 },
       );
       return;
     }
@@ -438,54 +544,74 @@ export default function EditPurchaseOrder() {
         status: "authorized",
       }),
       {
-        loading: 'Autorizando orden de compra...',
+        loading: "Autorizando orden de compra...",
         success: (result) => {
           setTimeout(() => navigateToPurchaseOrders(), 1200);
-          return result.message || 'Orden de compra autorizada con éxito';
+          return result.message || "Orden de compra autorizada con éxito";
         },
-        error: (err) => err.message || 'Error al autorizar la orden de compra',
-      }
+        error: (err) => err.message || "Error al autorizar la orden de compra",
+      },
     );
   };
 
-  const { execute: duplicatePurchaseOrder, loading: isDuplicating } = useApiAction<PurchaseOrder>();
+  const { execute: duplicatePurchaseOrder, loading: isDuplicating } =
+    useApiAction<PurchaseOrder>();
 
   const handleDuplicate = async (projectId: number) => {
     toast.promise(
       duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
-        'POST',
-        { projectId }
+        "POST",
+        { projectId },
       ),
       {
-        loading: 'Duplicando orden de compra...',
+        loading: "Duplicando orden de compra...",
         success: (result) => {
           setIsModalOpen(false);
-          setTimeout(() => navigate(`/admin/purchase-orders?projectId=${projectId}`), 1200);
-          return result.message || 'Orden de compra duplicada con éxito';
+          setTimeout(
+            () => navigate(`/admin/purchase-orders?projectId=${projectId}`),
+            1200,
+          );
+          return result.message || "Orden de compra duplicada con éxito";
         },
         error: (err) => {
           setIsModalOpen(false);
-          return err.message || 'Error al duplicar la orden de compra';
+          return err.message || "Error al duplicar la orden de compra";
         },
-      }
+      },
     );
   };
 
-  if (loading || suppliersLoading || resourcePuchaseOrdersLoading || (resourcesLoading && !resources)) {
+  if (
+    loading ||
+    suppliersLoading ||
+    resourcePuchaseOrdersLoading ||
+    (resourcesLoading && !resources)
+  ) {
     return <Loading />;
   }
   if (error) return <ErrorMessage errorMessage={error} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
-  if (resourcePurchaseOrdersError) return <ErrorMessage errorMessage={resourcePurchaseOrdersError} />;
-  if (resourcesError && !resources) return <ErrorMessage errorMessage={resourcesError} />;
+  if (resourcePurchaseOrdersError)
+    return <ErrorMessage errorMessage={resourcePurchaseOrdersError} />;
+  if (resourcesError && !resources)
+    return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
-    <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+    <Permission
+      user={user}
+      permission="orders.manage"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permiso para ver esta página." />
+      }
+    >
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col justify-center w-full">
         <div className="w-full flex flex-col items-center justify-center">
-          <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300"
+          >
             <PurchaseOrderHeader
               projectName={purchaseOrder?.project?.name ?? ""}
               code={code}
@@ -532,10 +658,16 @@ export default function EditPurchaseOrder() {
                 errorPaymentConditions={errorPaymentConditions}
               />
 
-              <div className="root-section rs2" style={{ borderTop: "0px", borderBottom: "0px" }}>
+              <div
+                className="root-section rs2"
+                style={{ borderTop: "0px", borderBottom: "0px" }}
+              >
                 <div className="section-info">
                   <div className="w-full">
-                    <p><strong>Señores:</strong> {supplier && (<>{supplier.name}</>)} </p>
+                    <p>
+                      <strong>Señores:</strong>{" "}
+                      {supplier && <>{supplier.name}</>}{" "}
+                    </p>
                     <div className="flex flex-row flex-wrap w-full items-center gap-2">
                       <div className="w-fit">
                         <ConditionsSection.SelectInline
@@ -550,7 +682,10 @@ export default function EditPurchaseOrder() {
                           purchaseOrderTypeError={errorPurchaseOrderType}
                         />
                       </div>
-                      <p className="text-gray-700 font-bold"> solicitados siguientes:</p>
+                      <p className="text-gray-700 font-bold">
+                        {" "}
+                        solicitados siguientes:
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -605,6 +740,7 @@ export default function EditPurchaseOrder() {
                 onClick={handleAuthorize}
               />
               <Button
+                permission="orders.manage"
                 icon={<FaRegCopy />}
                 label="Duplicar"
                 bgColor="#9f7aea"
@@ -624,5 +760,5 @@ export default function EditPurchaseOrder() {
         isLoading={isDuplicating}
       />
     </Permission>
-  )
+  );
 }

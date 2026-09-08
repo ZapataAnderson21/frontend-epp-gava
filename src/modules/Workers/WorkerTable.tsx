@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { DeleteButton, EditButton, SeeButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
+import type { PaginatedData } from "../../common/table";
 import { Table } from "../../common/table";
 import Select from "../../components/Select";
 import { workerApi } from "../../data/apiUrl";
 import { type Worker } from "../../data/types";
 import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
-import type { PaginatedData } from "../../common/table";
-import { DeleteButton, EditButton, SeeButton } from "../../common/button";
+import { useAccess } from "../../permissions/AccessProvider";
 import { formatDate } from "../../utils";
 
 interface ProjectTableProps {
@@ -36,6 +37,7 @@ export default function WorkerTable({
   onDelete,
   isAdmin,
 }: ProjectTableProps) {
+  const { can } = useAccess();
   const [search, setSearch] = useState("");
   const [workerTypeFilter, setWorkerTypeFilter] = useState("all");
   const debouncedSearch = useDebouncedValue(search);
@@ -87,14 +89,18 @@ export default function WorkerTable({
     { key: "phone", label: "Teléfono", width: "10rem" },
     { key: "personalEmail", label: "Correo Electrónico", width: "18rem" },
     { key: "workerType", label: "Tipo", width: "11rem" },
-    ...(isAdmin
+    ...(isAdmin || can("workers.delete")
       ? [
           {
             label: "Acciones",
             width: "8rem",
             render: (row: Worker) => (
               <div className="flex items-center justify-center gap-2">
-                <EditButton onClick={() => onSee(row.workerId)} />
+                {isAdmin ? (
+                  <EditButton onClick={() => onSee(row.workerId)} />
+                ) : (
+                  <SeeButton onClick={() => onSee(row.workerId)} />
+                )}
                 <DeleteButton onClick={() => onDelete(row)} />
               </div>
             ),
@@ -104,7 +110,9 @@ export default function WorkerTable({
           {
             label: "Acciones",
             width: "8rem",
-            render: (row: Worker) => <SeeButton onClick={() => onSee(row.workerId)} />,
+            render: (row: Worker) => (
+              <SeeButton onClick={() => onSee(row.workerId)} />
+            ),
           },
         ]),
   ] as const;
@@ -118,7 +126,11 @@ export default function WorkerTable({
   }
 
   if (!workers.length && !search && workerTypeFilter === "all") {
-    return <div className="text-center text-gray-500">No se encontraron trabajadores.</div>;
+    return (
+      <div className="text-center text-gray-500">
+        No se encontraron trabajadores.
+      </div>
+    );
   }
 
   return (
@@ -135,11 +147,13 @@ export default function WorkerTable({
                 : "border-gray-200 bg-white hover:border-[#0047a3]"
             }`}
           >
-            <p className="text-2xs font-bold uppercase text-gray-500">{type.label}</p>
+            <p className="text-2xs font-bold uppercase text-gray-500">
+              {type.label}
+            </p>
             <p className="mt-2 text-2xl font-extrabold text-gray-900">
               {type.value === "all"
                 ? allWorkerCount
-                : workerTypeCounts[type.value] ?? 0}
+                : (workerTypeCounts[type.value] ?? 0)}
             </p>
           </button>
         ))}

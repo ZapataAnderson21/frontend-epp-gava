@@ -1,18 +1,22 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
+import Permission from "../../../common/auth/Permission";
+import { ReturnButton, SaveButton } from "../../../common/button";
+import { ErrorMessage } from "../../../common/error";
+import ErrorWithButton from "../../../common/error/ErrorWithButton";
+import {
+  ButtonContainer,
+  Form,
+  InputForm,
+  TextAreaForm,
+} from "../../../common/form";
 import LoadingSkeletonForm from "../../../common/loading/LoadingSkeletonForm";
 import { projectApi } from "../../../data/apiUrl";
-import { useFetch } from "../../../hooks/useFetch";
-import { useApiAction } from "../../../hooks/useApiAction";
 import type { Project } from "../../../data/types";
-import ErrorWithButton from "../../../common/error/ErrorWithButton";
-import { ButtonContainer, Form, InputForm, TextAreaForm } from "../../../common/form";
-import { ReturnButton, SaveButton } from "../../../common/button";
-import Permission from "../../../common/auth/Permission";
-import { adminTypes } from "../../../utils";
 import { useCurrentUser } from "../../../hooks";
-import { ErrorMessage } from "../../../common/error";
-import { toast, Toaster } from "react-hot-toast";
+import { useApiAction } from "../../../hooks/useApiAction";
+import { useFetch } from "../../../hooks/useFetch";
 
 export default function EditProject() {
   const { user } = useCurrentUser();
@@ -20,7 +24,11 @@ export default function EditProject() {
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { data: project, loading, error } = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
+  const {
+    data: project,
+    loading,
+    error,
+  } = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
   const { execute: updateProject, loading: updating } = useApiAction<Project>();
   const { execute: updateStatus } = useApiAction<Project>();
 
@@ -38,12 +46,15 @@ export default function EditProject() {
       setCode(project.code);
       setDescription(project.description ?? "");
       setLocation(project.location ?? "");
-      setStartDate(project.startDate ? project.startDate.split('T')[0] : "");
-      setEndDate(project.endDate ? project.endDate.split('T')[0] : "");
+      setStartDate(project.startDate ? project.startDate.split("T")[0] : "");
+      setEndDate(project.endDate ? project.endDate.split("T")[0] : "");
 
-      const normalizedStatus = project.status === "Activo" ? "active" :
-                               project.status === "Inactivo" ? "inactive" :
-                               project.status;
+      const normalizedStatus =
+        project.status === "Activo"
+          ? "active"
+          : project.status === "Inactivo"
+            ? "inactive"
+            : project.status;
 
       setStatus(normalizedStatus);
     }
@@ -60,13 +71,13 @@ export default function EditProject() {
         status: changeStatus.value,
       }),
       {
-        loading: 'Cambiando estado...',
+        loading: "Cambiando estado...",
         success: (result) => {
           setStatus(changeStatus.value);
           return result.message || `Estado cambiado a ${changeStatus.label}`;
         },
-        error: (err) => err.message || 'Error al cambiar el estado',
-      }
+        error: (err) => err.message || "Error al cambiar el estado",
+      },
     );
   };
 
@@ -80,17 +91,21 @@ export default function EditProject() {
         code,
         status,
         location,
-        startDate: startDate ? new Date(startDate + 'T00:00:00.000Z').toISOString() : null,
-        endDate: endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null,
+        startDate: startDate
+          ? new Date(startDate + "T00:00:00.000Z").toISOString()
+          : null,
+        endDate: endDate
+          ? new Date(endDate + "T00:00:00.000Z").toISOString()
+          : null,
       }),
       {
-        loading: 'Actualizando proyecto...',
+        loading: "Actualizando proyecto...",
         success: (result) => {
           setTimeout(() => navigate("/admin/projects"), 1200);
-          return result.message || 'Proyecto actualizado con éxito';
+          return result.message || "Proyecto actualizado con éxito";
         },
-        error: (err) => err.message || 'Error al actualizar el proyecto',
-      }
+        error: (err) => err.message || "Error al actualizar el proyecto",
+      },
     );
   };
 
@@ -99,17 +114,18 @@ export default function EditProject() {
   }
 
   if (error) {
-    return (
-      <ErrorWithButton errorMessage={error} href="/admin/projects" />
-    );
+    return <ErrorWithButton errorMessage={error} href="/admin/projects" />;
   }
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta sección." />}>
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-      />
+    <Permission
+      user={user}
+      permission="projects.manage"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permiso para ver esta sección." />
+      }
+    >
+      <Toaster position="top-center" reverseOrder={false} />
       <Form name={`PROYECTO ${projectId}`} handleSubmit={handleUpdate}>
         <InputForm
           label="Nombre"
@@ -182,7 +198,7 @@ export default function EditProject() {
             </span>
           </div>
         </InputForm>
-        
+
         <ButtonContainer>
           <ReturnButton onClick={() => navigate("/admin/projects")} />
           <SaveButton loading={updating} />
@@ -191,4 +207,3 @@ export default function EditProject() {
     </Permission>
   );
 }
-

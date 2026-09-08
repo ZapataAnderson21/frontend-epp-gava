@@ -1,23 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft as TiArrowBack,
-  CircleX as IoIosCloseCircle,
   Plus as FaPlus,
   Save as FaSave,
+  CircleX as IoIosCloseCircle,
+  ArrowLeft as TiArrowBack,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-
+import { ButtonContainer } from "../../../common/form";
+import { LoadingSkeletonTable } from "../../../common/loading";
+import Button from "../../../components/Button";
+import Select from "../../../components/Select";
+import { workerApi } from "../../../data/apiUrl";
 import type {
   ElementRequestType,
   ElementRequestWorkerPlan,
   RequestWorker,
   Worker,
 } from "../../../data/types";
-import { workerApi } from "../../../data/apiUrl";
-import { LoadingSkeletonTable } from "../../../common/loading";
-import { ButtonContainer } from "../../../common/form";
-import Button from "../../../components/Button";
-import Select from "../../../components/Select";
 import { useFetch } from "../../../hooks";
 import { formatInventoryQuantity } from "../../Elements/inventoryCatalog";
 
@@ -37,11 +36,11 @@ const workerFilters: Array<{
   label: string;
   workerType?: string;
 }> = [
-    { key: "all", label: "Todos" },
-    { key: "Obrero", label: "Obreros", workerType: "Obrero" },
-    { key: "Técnico", label: "Técnicos", workerType: "Técnico" },
-    { key: "Ingeniero", label: "Ingenieros", workerType: "Ingeniero" },
-  ];
+  { key: "all", label: "Todos" },
+  { key: "Obrero", label: "Obreros", workerType: "Obrero" },
+  { key: "Técnico", label: "Técnicos", workerType: "Técnico" },
+  { key: "Ingeniero", label: "Ingenieros", workerType: "Ingeniero" },
+];
 
 function getWorkerTypeLabel(workerType?: string) {
   if (workerType === "Obrero") return "Obrero";
@@ -59,7 +58,8 @@ export default function EpiPlanningModal({
   onSave,
 }: EpiPlanningModalProps) {
   const [draftPlans, setDraftPlans] = useState<ElementRequestWorkerPlan[]>([]);
-  const [activeWorkerFilter, setActiveWorkerFilter] = useState<WorkerFilterKey>("all");
+  const [activeWorkerFilter, setActiveWorkerFilter] =
+    useState<WorkerFilterKey>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
 
@@ -81,7 +81,8 @@ export default function EpiPlanningModal({
 
       return {
         ...plan,
-        elementRequestId: elementRequest?.elementRequestId ?? plan.elementRequestId ?? 0,
+        elementRequestId:
+          elementRequest?.elementRequestId ?? plan.elementRequestId ?? 0,
         requestWorkerId:
           plan.requestWorkerId ||
           existingRequestWorker?.requestWorkerId ||
@@ -125,24 +126,31 @@ export default function EpiPlanningModal({
     return (workers || []).filter((worker) => {
       const matchesType =
         activeWorkerFilter === "all" ||
-        worker.workerType === workerFilters.find((item) => item.key === activeWorkerFilter)?.workerType;
+        worker.workerType ===
+          workerFilters.find((item) => item.key === activeWorkerFilter)
+            ?.workerType;
       const matchesSearch =
         !normalizedSearch ||
         worker.fullName.toLowerCase().includes(normalizedSearch) ||
         worker.dni?.toLowerCase().includes(normalizedSearch);
       const alreadySelected = selectedWorkerIds.has(worker.workerId);
 
-      return matchesType && matchesSearch && !alreadySelected && !worker.deletedAt;
+      return (
+        matchesType && matchesSearch && !alreadySelected && !worker.deletedAt
+      );
     });
   }, [activeWorkerFilter, searchTerm, selectedWorkerIds, workers]);
 
   const selectedCounts = useMemo(() => {
-    return draftPlans.reduce<Record<string, number>>((acc, plan) => {
-      const workerType = plan.requestWorker?.worker?.workerType || "all";
-      acc[workerType] = (acc[workerType] || 0) + 1;
-      acc.all = (acc.all || 0) + 1;
-      return acc;
-    }, { all: 0 });
+    return draftPlans.reduce<Record<string, number>>(
+      (acc, plan) => {
+        const workerType = plan.requestWorker?.worker?.workerType || "all";
+        acc[workerType] = (acc[workerType] || 0) + 1;
+        acc.all = (acc.all || 0) + 1;
+        return acc;
+      },
+      { all: 0 },
+    );
   }, [draftPlans]);
 
   const handleAddWorker = () => {
@@ -165,16 +173,15 @@ export default function EpiPlanningModal({
         plannedQuantity: 0,
         size: "",
         notes: "",
-        requestWorker:
-          existingRequestWorker || {
-            requestWorkerId: 0,
-            requestId: 0,
-            workerId: worker.workerId,
-            shirtSize: null,
-            pantsSize: null,
-            shoeSize: null,
-            worker,
-          },
+        requestWorker: existingRequestWorker || {
+          requestWorkerId: 0,
+          requestId: 0,
+          workerId: worker.workerId,
+          shirtSize: null,
+          pantsSize: null,
+          shoeSize: null,
+          worker,
+        },
       },
     ]);
     setSelectedWorkerId("");
@@ -191,7 +198,8 @@ export default function EpiPlanningModal({
               Detalles de {elementRequest.element?.name}
             </h2>
             <p className="text-xs text-gray-500">
-              Aqui defines la planificacion previa de reparto para este EPI. La entrega real al trabajador se registrara despues de forma manual.
+              Aqui defines la planificacion previa de reparto para este EPI. La
+              entrega real al trabajador se registrara despues de forma manual.
             </p>
           </div>
 
@@ -209,8 +217,12 @@ export default function EpiPlanningModal({
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Pendiente por planificar</p>
-              <p className={`text-2xl font-extrabold ${remainingTotal < 0 ? "text-[#b91c1c]" : "text-[#166534]"}`}>
+              <p className="text-xs font-semibold text-gray-500">
+                Pendiente por planificar
+              </p>
+              <p
+                className={`text-2xl font-extrabold ${remainingTotal < 0 ? "text-[#b91c1c]" : "text-[#166534]"}`}
+              >
                 {formatInventoryQuantity(remainingTotal)}
               </p>
             </div>
@@ -227,10 +239,11 @@ export default function EpiPlanningModal({
                   key={filter.key}
                   type="button"
                   onClick={() => setActiveWorkerFilter(filter.key)}
-                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${active
-                    ? "border-[#0047a3] bg-[#eff6ff] text-[#0047a3]"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                    }`}
+                  className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                    active
+                      ? "border-[#0047a3] bg-[#eff6ff] text-[#0047a3]"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                  }`}
                 >
                   <p className="text-2xs font-semibold uppercase tracking-wide text-gray-500">
                     {filter.label}
@@ -298,10 +311,13 @@ export default function EpiPlanningModal({
                   >
                     <div className="flex flex-col">
                       <span className="font-semibold text-gray-800">
-                        {plan.requestWorker?.worker?.fullName || "Sin trabajador"}
+                        {plan.requestWorker?.worker?.fullName ||
+                          "Sin trabajador"}
                       </span>
                       <span className="text-2xs uppercase text-gray-500">
-                        {getWorkerTypeLabel(plan.requestWorker?.worker?.workerType)}
+                        {getWorkerTypeLabel(
+                          plan.requestWorker?.worker?.workerType,
+                        )}
                       </span>
                     </div>
 
@@ -314,11 +330,14 @@ export default function EpiPlanningModal({
                       onChange={(event) =>
                         setDraftPlans((current) =>
                           current.map((item) =>
-                            item.requestWorker?.workerId === plan.requestWorker?.workerId
+                            item.requestWorker?.workerId ===
+                            plan.requestWorker?.workerId
                               ? {
-                                ...item,
-                                plannedQuantity: Number(event.target.value || 0),
-                              }
+                                  ...item,
+                                  plannedQuantity: Number(
+                                    event.target.value || 0,
+                                  ),
+                                }
                               : item,
                           ),
                         )
@@ -333,11 +352,12 @@ export default function EpiPlanningModal({
                       onChange={(event) =>
                         setDraftPlans((current) =>
                           current.map((item) =>
-                            item.requestWorker?.workerId === plan.requestWorker?.workerId
+                            item.requestWorker?.workerId ===
+                            plan.requestWorker?.workerId
                               ? {
-                                ...item,
-                                size: event.target.value,
-                              }
+                                  ...item,
+                                  size: event.target.value,
+                                }
                               : item,
                           ),
                         )
@@ -352,11 +372,12 @@ export default function EpiPlanningModal({
                       onChange={(event) =>
                         setDraftPlans((current) =>
                           current.map((item) =>
-                            item.requestWorker?.workerId === plan.requestWorker?.workerId
+                            item.requestWorker?.workerId ===
+                            plan.requestWorker?.workerId
                               ? {
-                                ...item,
-                                notes: event.target.value,
-                              }
+                                  ...item,
+                                  notes: event.target.value,
+                                }
                               : item,
                           ),
                         )
@@ -370,7 +391,8 @@ export default function EpiPlanningModal({
                         setDraftPlans((current) =>
                           current.filter(
                             (item) =>
-                              item.requestWorker?.workerId !== plan.requestWorker?.workerId,
+                              item.requestWorker?.workerId !==
+                              plan.requestWorker?.workerId,
                           ),
                         )
                       }
@@ -397,6 +419,7 @@ export default function EpiPlanningModal({
               icon={<TiArrowBack />}
             />
             <Button
+              permission="requests.manage"
               type="button"
               label="Guardar detalles"
               onClick={() =>

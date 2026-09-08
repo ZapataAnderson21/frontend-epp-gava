@@ -1,19 +1,18 @@
-import { Panel, HeaderPanel } from "../../common/panel";
-import UserTable from "./UserTable";
-import { useNavigate } from "react-router-dom";
-import AddButton from "../../common/button/AddButton";
-import { useCurrentUser } from "../../hooks";
-import Permission from "../../common/auth/Permission";
-import { adminTypes } from "../../utils";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Permission from "../../common/auth/Permission";
+import AddButton from "../../common/button/AddButton";
+import { HeaderPanel, Panel } from "../../common/panel";
+import { useCurrentUser } from "../../hooks";
+import UserTable from "./UserTable";
 
 export default function Users() {
-
   const { user } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<"active" | "inactive">("active");
 
   const navigate = useNavigate();
-  const tabBaseClass = "px-4 py-2 text-xs font-semibold border-b-2 transition-colors";
+  const tabBaseClass =
+    "px-4 py-2 text-xs font-semibold border-b-2 transition-colors";
   const tabClass = (tab: "active" | "inactive") =>
     `${tabBaseClass} ${
       activeTab === tab
@@ -24,8 +23,11 @@ export default function Users() {
   return (
     <Panel>
       <HeaderPanel name={`USUARIOS`}>
-        <Permission user={user} allow={adminTypes}>
-          <AddButton onClick={() => navigate("/admin/users/new")} />
+        <Permission user={user} permission="users.manage">
+          <AddButton
+            permission="users.assignRole"
+            onClick={() => navigate("/admin/users/new")}
+          />
         </Permission>
       </HeaderPanel>
 
@@ -47,7 +49,6 @@ export default function Users() {
       </div>
 
       <UserTable showInactive={activeTab === "inactive"} />
-
     </Panel>
   );
 }

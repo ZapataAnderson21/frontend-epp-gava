@@ -11,6 +11,7 @@ import type {
   Worker,
 } from "../../data/types";
 import { useFetch } from "../../hooks";
+import { useAccess } from "../../permissions/AccessProvider";
 import { formatInventoryQuantity } from "../Elements/inventoryCatalog";
 import DocumentExpirationDashboard from "./DocumentExpirationDashboard";
 import PurchaseOrdersDashboard from "./PurchaseOrdersDashboard";
@@ -31,7 +32,12 @@ const months = [
   "Diciembre",
 ];
 
-type DashboardTab = "general" | "protection" | "orders" | "birthdays" | "expirations";
+type DashboardTab =
+  | "general"
+  | "protection"
+  | "orders"
+  | "birthdays"
+  | "expirations";
 
 function formatMovementDate(value: string) {
   const date = new Date(value);
@@ -106,32 +112,56 @@ function getMovementRelatedLabel(movement: InventoryMovement) {
   }
 
   if (movement.projectName) return `Proyecto: ${movement.projectName}`;
-  if (movement.responsibleUserName) return `Responsable: ${movement.responsibleUserName}`;
-  if (movement.performedByUserName) return `Registrado por: ${movement.performedByUserName}`;
+  if (movement.responsibleUserName)
+    return `Responsable: ${movement.responsibleUserName}`;
+  if (movement.performedByUserName)
+    return `Registrado por: ${movement.performedByUserName}`;
 
   return "-";
 }
 
 export default function Dashboard() {
+  const { can } = useAccess();
   const today = new Date();
   const chartViewportRef = useRef<HTMLDivElement>(null);
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
   const [activeTab, setActiveTab] = useState<DashboardTab>("general");
 
+  useEffect(() => {
+    const required = {
+      protection: "inventory.view",
+      orders: "orders.view",
+      birthdays: "workers.view",
+      expirations: "documents.view",
+    };
+    if (activeTab !== "general" && !can(required[activeTab]))
+      setActiveTab("general");
+  }, [activeTab, can]);
+
   const { data, loading, error } = useFetch<InventoryDashboardResponse>(
-    activeTab === "protection" ? `${inventoryApi}dashboard?month=${month}&year=${year}` : "",
+    activeTab === "protection" && can("inventory.view")
+      ? `${inventoryApi}dashboard?month=${month}&year=${year}`
+      : "",
     [month, year],
   );
   const {
     data: workers,
     loading: workersLoading,
     error: workersError,
-  } = useFetch<Worker[]>(activeTab === "birthdays" ? `${workerApi}` : "", []);
+  } = useFetch<Worker[]>(
+    activeTab === "birthdays" && can("workers.view") ? `${workerApi}` : "",
+    [],
+  );
 
-  const mostDelivered = useMemo(() => data?.mostDelivered ?? [], [data?.mostDelivered]);
+  const mostDelivered = useMemo(
+    () => data?.mostDelivered ?? [],
+    [data?.mostDelivered],
+  );
   const selectedDefault = mostDelivered[0] ?? null;
-  const [selectedElementId, setSelectedElementId] = useState<number | null>(null);
+  const [selectedElementId, setSelectedElementId] = useState<number | null>(
+    null,
+  );
   const selectedElement =
     mostDelivered.find((item) => item.elementId === selectedElementId) ??
     selectedDefault;
@@ -157,17 +187,24 @@ export default function Dashboard() {
     return () => cancelAnimationFrame(animationFrame);
   }, [mostDelivered]);
 
-  const years = Array.from({ length: 5 }, (_, index) => today.getFullYear() - index);
+  const years = Array.from(
+    { length: 5 },
+    (_, index) => today.getFullYear() - index,
+  );
   const birthdayWorkers = useMemo(
     () => getBirthdayWorkers(workers ?? [], month, year),
     [workers, month, year],
   );
 
-  if ((activeTab === "protection" && loading) || (activeTab === "birthdays" && workersLoading)) {
+  if (
+    (activeTab === "protection" && loading) ||
+    (activeTab === "birthdays" && workersLoading)
+  ) {
     return <LoadingSkeletonTable />;
   }
 
-  if (activeTab === "protection" && error) return <ErrorMessage errorMessage={error} />;
+  if (activeTab === "protection" && error)
+    return <ErrorMessage errorMessage={error} />;
   if (activeTab === "birthdays" && workersError) {
     return <ErrorMessage errorMessage={workersError} />;
   }
@@ -177,35 +214,48 @@ export default function Dashboard() {
       <div className="flex w-full flex-col gap-7 p-2 text-gray-900">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">Dashboard</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Dashboard
+            </h1>
             <div className="mt-4 flex flex-wrap gap-6 border-b border-gray-300">
-              <TabButton active={activeTab === "general"} onClick={() => setActiveTab("general")}>
+              <TabButton
+                active={activeTab === "general"}
+                onClick={() => setActiveTab("general")}
+              >
                 General
               </TabButton>
-              <TabButton
-                active={activeTab === "protection"}
-                onClick={() => setActiveTab("protection")}
-              >
-                Elementos de Protección
-              </TabButton>
-              <TabButton
-                active={activeTab === "orders"}
-                onClick={() => setActiveTab("orders")}
-              >
-                Órdenes de Compra
-              </TabButton>
-              <TabButton
-                active={activeTab === "birthdays"}
-                onClick={() => setActiveTab("birthdays")}
-              >
-                Cumpleaños
-              </TabButton>
-              <TabButton
-                active={activeTab === "expirations"}
-                onClick={() => setActiveTab("expirations")}
-              >
-                Vencimientos
-              </TabButton>
+              {can("inventory.view") && (
+                <TabButton
+                  active={activeTab === "protection"}
+                  onClick={() => setActiveTab("protection")}
+                >
+                  Elementos de Protección
+                </TabButton>
+              )}
+              {can("orders.view") && (
+                <TabButton
+                  active={activeTab === "orders"}
+                  onClick={() => setActiveTab("orders")}
+                >
+                  Órdenes de Compra
+                </TabButton>
+              )}
+              {can("workers.view") && (
+                <TabButton
+                  active={activeTab === "birthdays"}
+                  onClick={() => setActiveTab("birthdays")}
+                >
+                  Cumpleaños
+                </TabButton>
+              )}
+              {can("documents.view") && (
+                <TabButton
+                  active={activeTab === "expirations"}
+                  onClick={() => setActiveTab("expirations")}
+                >
+                  Vencimientos
+                </TabButton>
+              )}
             </div>
           </div>
 
@@ -215,7 +265,10 @@ export default function Dashboard() {
               value={month}
               onChange={setMonth}
               className="min-w-[9rem] text-xs font-semibold"
-              options={months.map((label, index) => ({ value: index + 1, label }))}
+              options={months.map((label, index) => ({
+                value: index + 1,
+                label,
+              }))}
             />
             <Select<number>
               name="dashboardYear"
@@ -227,9 +280,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {activeTab === "general" ? <GeneralDashboard month={month} year={year} /> : null}
+        {activeTab === "general" ? (
+          <GeneralDashboard month={month} year={year} />
+        ) : null}
 
-        {activeTab === "protection" ? (
+        {activeTab === "protection" && can("inventory.view") ? (
           <>
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
               <div className="flex min-w-0 flex-col gap-4">
@@ -248,37 +303,45 @@ export default function Dashboard() {
                       aria-label="Gráfico desplazable de elementos de protección"
                     >
                       <div className="flex h-[22rem] w-max min-w-full items-end gap-4 border-b border-l border-gray-200 px-4 pb-8">
-                        {mostDelivered.map((item: InventoryDashboardDeliveredItem) => {
-                          const height = Math.max(
-                            10,
-                            (Number(item.deliveredQuantity) / maxDelivered) * 240,
-                          );
-                          const isActive = item.elementId === selectedElement?.elementId;
+                        {mostDelivered.map(
+                          (item: InventoryDashboardDeliveredItem) => {
+                            const height = Math.max(
+                              10,
+                              (Number(item.deliveredQuantity) / maxDelivered) *
+                                240,
+                            );
+                            const isActive =
+                              item.elementId === selectedElement?.elementId;
 
-                          return (
-                            <button
-                              key={item.elementId}
-                              type="button"
-                              className="group flex w-28 flex-none flex-col items-center justify-end gap-2"
-                              onClick={() => setSelectedElementId(item.elementId)}
-                            >
-                              <span className="text-2xs font-bold text-gray-500">
-                                {formatInventoryQuantity(item.deliveredQuantity)}
-                              </span>
-                              <span
-                                className={`w-9 rounded-t transition-all ${
-                                  isActive
-                                    ? "bg-[#0047a3]"
-                                    : "bg-[#146c8d] group-hover:bg-[#0047a3]"
-                                }`}
-                                style={{ height }}
-                              />
-                              <span className="line-clamp-2 min-h-9 text-center text-2xs font-semibold text-gray-600">
-                                {item.elementName}
-                              </span>
-                            </button>
-                          );
-                        })}
+                            return (
+                              <button
+                                key={item.elementId}
+                                type="button"
+                                className="group flex w-28 flex-none flex-col items-center justify-end gap-2"
+                                onClick={() =>
+                                  setSelectedElementId(item.elementId)
+                                }
+                              >
+                                <span className="text-2xs font-bold text-gray-500">
+                                  {formatInventoryQuantity(
+                                    item.deliveredQuantity,
+                                  )}
+                                </span>
+                                <span
+                                  className={`w-9 rounded-t transition-all ${
+                                    isActive
+                                      ? "bg-[#0047a3]"
+                                      : "bg-[#146c8d] group-hover:bg-[#0047a3]"
+                                  }`}
+                                  style={{ height }}
+                                />
+                                <span className="line-clamp-2 min-h-9 text-center text-2xs font-semibold text-gray-600">
+                                  {item.elementName}
+                                </span>
+                              </button>
+                            );
+                          },
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -294,21 +357,34 @@ export default function Dashboard() {
                   {selectedElement?.elementName ?? "Detalle del EP"}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  <Metric label="Tipo de elemento" value={selectedElement?.familyLabel ?? "-"} />
+                  <Metric
+                    label="Tipo de elemento"
+                    value={selectedElement?.familyLabel ?? "-"}
+                  />
                   <Metric
                     label="Entregados este mes"
                     value={
                       selectedElement
-                        ? formatInventoryQuantity(selectedElement.deliveredQuantity)
+                        ? formatInventoryQuantity(
+                            selectedElement.deliveredQuantity,
+                          )
                         : "0"
                     }
                   />
-                  <Metric label="Periodo" value={`${months[month - 1]} ${year}`} />
-                  <Metric label="Familia" value={selectedElement?.family ?? "-"} />
+                  <Metric
+                    label="Periodo"
+                    value={`${months[month - 1]} ${year}`}
+                  />
+                  <Metric
+                    label="Familia"
+                    value={selectedElement?.family ?? "-"}
+                  />
                 </div>
 
                 <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
-                  <h3 className="mb-3 text-base font-extrabold">Stock mínimo cercano</h3>
+                  <h3 className="mb-3 text-base font-extrabold">
+                    Stock mínimo cercano
+                  </h3>
                   <div className="flex flex-col gap-2">
                     {(data?.minimumStock ?? []).map((item) => (
                       <div
@@ -333,7 +409,9 @@ export default function Dashboard() {
                                 : "text-amber-600"
                             }`}
                           >
-                            {item.distanceToMinimum <= 0 ? "Bajo mínimo" : "Cerca"}
+                            {item.distanceToMinimum <= 0
+                              ? "Bajo mínimo"
+                              : "Cerca"}
                           </p>
                         </div>
                       </div>
@@ -349,7 +427,9 @@ export default function Dashboard() {
             </section>
 
             <section>
-              <h2 className="mb-3 text-xl font-extrabold">Últimos Movimientos</h2>
+              <h2 className="mb-3 text-xl font-extrabold">
+                Últimos Movimientos
+              </h2>
               <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
                 <table className="w-full min-w-[1040px] text-left text-xs">
                   <thead className="bg-gray-50 text-2xs uppercase text-gray-500">
@@ -364,50 +444,55 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data?.latestMovements ?? []).map((movement: InventoryMovement) => (
-                      <tr
-                        key={movement.inventoryMovementId}
-                        className="border-t border-gray-100"
-                      >
-                        <td className="whitespace-nowrap px-4 py-3 text-gray-600">
-                          {formatMovementDate(movement.createdAt)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="font-semibold text-gray-900">
-                            {movement.elementName || "Elemento"}
-                          </p>
-                          {movement.elementCode ? (
-                            <p className="text-2xs font-semibold text-gray-500">
-                              {movement.elementCode}
+                    {(data?.latestMovements ?? []).map(
+                      (movement: InventoryMovement) => (
+                        <tr
+                          key={movement.inventoryMovementId}
+                          className="border-t border-gray-100"
+                        >
+                          <td className="whitespace-nowrap px-4 py-3 text-gray-600">
+                            {formatMovementDate(movement.createdAt)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-gray-900">
+                              {movement.elementName || "Elemento"}
                             </p>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-3">
-                          {formatInventoryQuantity(movement.quantity)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex rounded-md px-3 py-1.5 text-2xs font-extrabold text-white ${getMovementTone(
-                              movement.movementType,
-                            )}`}
-                          >
-                            {translateMovementType(movement.movementType)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {translateInventoryLocation(movement.toLocation)}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-800">
-                          {getMovementRelatedLabel(movement)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {movement.notes || "-"}
-                        </td>
-                      </tr>
-                    ))}
+                            {movement.elementCode ? (
+                              <p className="text-2xs font-semibold text-gray-500">
+                                {movement.elementCode}
+                              </p>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatInventoryQuantity(movement.quantity)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex rounded-md px-3 py-1.5 text-2xs font-extrabold text-white ${getMovementTone(
+                                movement.movementType,
+                              )}`}
+                            >
+                              {translateMovementType(movement.movementType)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {translateInventoryLocation(movement.toLocation)}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-gray-800">
+                            {getMovementRelatedLabel(movement)}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {movement.notes || "-"}
+                          </td>
+                        </tr>
+                      ),
+                    )}
                     {!data?.latestMovements?.length ? (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <td
+                          colSpan={7}
+                          className="px-4 py-8 text-center text-gray-500"
+                        >
                           Todavía no hay movimientos registrados.
                         </td>
                       </tr>
@@ -419,7 +504,7 @@ export default function Dashboard() {
           </>
         ) : null}
 
-        {activeTab === "birthdays" ? (
+        {activeTab === "birthdays" && can("workers.view") ? (
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="text-xl font-extrabold">
@@ -446,7 +531,10 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {birthdayWorkers.map((worker) => (
-                    <tr key={worker.workerId} className="border-t border-gray-100">
+                    <tr
+                      key={worker.workerId}
+                      className="border-t border-gray-100"
+                    >
                       <td className="px-4 py-3">
                         <span className="inline-flex min-w-12 justify-center rounded-md bg-blue-50 px-3 py-2 text-sm font-extrabold text-[#0047a3]">
                           {String(worker.birthdayDay).padStart(2, "0")}
@@ -455,17 +543,24 @@ export default function Dashboard() {
                       <td className="px-4 py-3 font-bold text-gray-900">
                         {worker.fullName}
                       </td>
-                      <td className="px-4 py-3">{normalizeWorkerTypeLabel(worker.workerType)}</td>
+                      <td className="px-4 py-3">
+                        {normalizeWorkerTypeLabel(worker.workerType)}
+                      </td>
                       <td className="px-4 py-3 text-base font-extrabold">
                         {worker.ageTurning}
                       </td>
                       <td className="px-4 py-3">{worker.phone || "-"}</td>
-                      <td className="px-4 py-3">{worker.personalEmail || "-"}</td>
+                      <td className="px-4 py-3">
+                        {worker.personalEmail || "-"}
+                      </td>
                     </tr>
                   ))}
                   {!birthdayWorkers.length ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-gray-500"
+                      >
                         No hay cumpleaños registrados para este mes.
                       </td>
                     </tr>
@@ -476,11 +571,11 @@ export default function Dashboard() {
           </section>
         ) : null}
 
-        {activeTab === "orders" ? (
+        {activeTab === "orders" && can("orders.view") ? (
           <PurchaseOrdersDashboard month={month} year={year} />
         ) : null}
 
-        {activeTab === "expirations" ? (
+        {activeTab === "expirations" && can("documents.view") ? (
           <DocumentExpirationDashboard month={month} year={year} />
         ) : null}
       </div>
@@ -537,7 +632,10 @@ function getBirthdayWorkers(workers: Worker[], month: number, year: number) {
       };
     })
     .filter((worker): worker is BirthdayWorker => Boolean(worker))
-    .sort((a, b) => a.birthdayDay - b.birthdayDay || a.fullName.localeCompare(b.fullName));
+    .sort(
+      (a, b) =>
+        a.birthdayDay - b.birthdayDay || a.fullName.localeCompare(b.fullName),
+    );
 }
 
 function parseBirthDate(value?: string) {

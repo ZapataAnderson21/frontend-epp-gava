@@ -1,13 +1,13 @@
+import { Check as FaCheck } from "lucide-react";
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { Check as FaCheck } from "lucide-react";
 import { ReturnButton } from "../../../../../common/button";
 import { Button } from "../../../../../components";
 import { inventoryApi, projectApi } from "../../../../../data/apiUrl";
 import type { ProjectInventoryEntry } from "../../../../../data/types";
-import getAuthHeaders from "../../../../../hooks/getAuthHeaders";
 import { useApiAction } from "../../../../../hooks";
+import getAuthHeaders from "../../../../../hooks/getAuthHeaders";
 
 interface HeaderActionsProps {
   projectId: number;
@@ -104,6 +104,7 @@ export default function HeaderActions({ projectId }: HeaderActionsProps) {
       <div className="flex flex-row gap-2">
         <ReturnButton onClick={() => navigate("/admin/projects")} />
         <Button
+          permission="projects.status"
           icon={<FaCheck />}
           label={checking || finishing ? "Validando..." : "Finalizar"}
           onClick={handleFinishProject}

@@ -1,29 +1,37 @@
-import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  moduleForPath,
+  useAccess,
+} from "../../../../../../../permissions/AccessProvider";
 
 interface NavbarItemProjectProps {
   to: string;
   name: string;
 }
 
-export default function NavbarItemProject ({ to, name } : NavbarItemProjectProps ) {
-  
+export default function NavbarItemProject({
+  to,
+  name,
+}: NavbarItemProjectProps) {
   const { id: projectId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { can } = useAccess();
 
   const basePath = `/admin/projects/${projectId}`;
   const fullPath = to ? `${basePath}/${to}` : basePath;
-  
+  if (!can(`${moduleForPath(fullPath)}.view`)) return null;
+
   // Para "Resumen" (to=''), solo activo si la ruta es exactamente el basePath
   // Para otros, activo si la ruta incluye el segmento
-  const isActive = to 
-    ? location.pathname.includes(`/${to}`) 
+  const isActive = to
+    ? location.pathname.includes(`/${to}`)
     : location.pathname === basePath || location.pathname === `${basePath}/`;
 
   return (
-    <div 
-      onClick={() => navigate(fullPath)} 
+    <div
+      onClick={() => navigate(fullPath)}
       className={`relative text-gray-500 p-2 rounded-tr-xl rounded-tl-xl cursor-pointer z-10 ${
         isActive ? "text-primary font-semibold" : "hover:text-gray-700"
       }`}
@@ -41,12 +49,12 @@ export default function NavbarItemProject ({ to, name } : NavbarItemProjectProps
           }}
         />
       )}
-      
+
       {/* Borde inferior para items inactivos */}
       {!isActive && (
         <div className="absolute inset-0 border-b-2 border-transparent hover:border-gray-200 rounded-tr-xl rounded-tl-xl -z-10 transition-colors" />
       )}
-      
+
       {name}
     </div>
   );

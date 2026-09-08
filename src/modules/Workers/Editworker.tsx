@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { ButtonContainer, ButtonSubmit, Form, InputForm, SelectForm } from "../../common/form";
 import toast, { Toaster } from "react-hot-toast";
-import { workerApi } from "../../data/apiUrl";
-import { type  Worker, WorkerType } from "../../data/types";
-import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
-import { ReturnButton } from "../../common/button";
-import { logisticsTypes } from "../../utils";
 import Permission from "../../common/auth/Permission";
+import { ReturnButton } from "../../common/button";
+import {
+  ButtonContainer,
+  ButtonSubmit,
+  Form,
+  InputForm,
+  SelectForm,
+} from "../../common/form";
+import { workerApi } from "../../data/apiUrl";
+import { type Worker, WorkerType } from "../../data/types";
+import { useApiAction, useCurrentUser, useFetch } from "../../hooks";
 
 interface EditWorkerProps {
   workerId: number;
@@ -14,7 +19,11 @@ interface EditWorkerProps {
   closeAction: () => void;
 }
 
-export default function EditWorker({ workerId, successAction, closeAction }: EditWorkerProps) {
+export default function EditWorker({
+  workerId,
+  successAction,
+  closeAction,
+}: EditWorkerProps) {
   const { user } = useCurrentUser();
 
   const [fullName, setFullName] = useState("");
@@ -23,20 +32,25 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
   const [personalEmail, setPersonalEmail] = useState("");
   const [address, setAddress] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [workerType, setWorkerType] = useState<WorkerType>(WorkerType.Unspecified);
+  const [workerType, setWorkerType] = useState<WorkerType>(
+    WorkerType.Unspecified,
+  );
 
   const [errorDni, setErrorDni] = useState("");
   const [errorPhone, setErrorPhone] = useState("");
 
   const workerTypeOptions = Object.values(WorkerType).map((type, index) => ({
     value: index,
-    label: type[1]
+    label: type[1],
   }));
 
-  const {data: worker, error, loading} = useFetch<Worker>(`${workerApi}${workerId}`);
+  const {
+    data: worker,
+    error,
+    loading,
+  } = useFetch<Worker>(`${workerApi}${workerId}`);
 
   const { execute, loading: saving } = useApiAction<Worker>();
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +80,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
               <li key={i}>{err}</li>
             ))}
           </ul>
-        </div>
+        </div>,
       );
       return;
     }
@@ -80,21 +94,18 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       personalEmail,
       birthDate: birthDate || undefined,
     };
-    
-    await toast.promise(
-      execute(`${workerApi}${workerId}`, "PATCH", body),
-      {
-        loading: "Actualizando trabajador...",
-        success: (result) => {
-          setErrorDni("");
-          setErrorPhone("");
-          successAction();
-          setTimeout(() => closeAction(), 1200);
-          return result.message || "Trabajador actualizado exitosamente";
-        },
-        error: (err) => err.message || "Error al actualizar trabajador",
-      }
-    );
+
+    await toast.promise(execute(`${workerApi}${workerId}`, "PATCH", body), {
+      loading: "Actualizando trabajador...",
+      success: (result) => {
+        setErrorDni("");
+        setErrorPhone("");
+        successAction();
+        setTimeout(() => closeAction(), 1200);
+        return result.message || "Trabajador actualizado exitosamente";
+      },
+      error: (err) => err.message || "Error al actualizar trabajador",
+    });
   };
 
   useEffect(() => {
@@ -104,15 +115,30 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
       setPhone(worker.phone ? worker.phone : "");
       setPersonalEmail(worker.personalEmail ? worker.personalEmail : "");
       setAddress(worker.address ? worker.address : "");
-      setBirthDate(worker.birthDate ? (worker.birthDate.split("T")[0]) : "");
-      setWorkerType(Object.values(WorkerType).find(type => type[0] === worker.workerType) || WorkerType.Unspecified);
+      setBirthDate(worker.birthDate ? worker.birthDate.split("T")[0] : "");
+      setWorkerType(
+        Object.values(WorkerType).find(
+          (type) => type[0] === worker.workerType,
+        ) || WorkerType.Unspecified,
+      );
     }
-  }, [worker]); 
+  }, [worker]);
 
   return (
-    <Permission user={user} allow={logisticsTypes}>
+    <Permission user={user} permission="workers.manage">
       <div className="bg-white rounded-xl w-xl overflow-auto max-h-full">
-        <Form name={worker ? `Detalle del trabajador ${worker.workerId}` : loading ? "Cargando..." : error ? "Error" : "Salida de caja chica no encontrada"} handleSubmit={handleSubmit} >
+        <Form
+          name={
+            worker
+              ? `Detalle del trabajador ${worker.workerId}`
+              : loading
+                ? "Cargando..."
+                : error
+                  ? "Error"
+                  : "Salida de caja chica no encontrada"
+          }
+          handleSubmit={handleSubmit}
+        >
           <InputForm
             label="Nombre completo"
             name="fullName"
@@ -126,9 +152,11 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             name="workerType"
             value={Object.values(WorkerType).indexOf(workerType)}
             options={workerTypeOptions}
-            onChange={(value) => setWorkerType(Object.values(WorkerType)[value as number])}
+            onChange={(value) =>
+              setWorkerType(Object.values(WorkerType)[value as number])
+            }
           />
-          
+
           <div className="flex gap-4">
             <InputForm
               label="DNI"
@@ -152,7 +180,7 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
               optional={true}
             />
           </div>
-          
+
           <div className="flex gap-4">
             <InputForm
               label="Email Personal"
@@ -183,12 +211,12 @@ export default function EditWorker({ workerId, successAction, closeAction }: Edi
             optional={true}
           />
 
-          <ButtonContainer> 
-              <ButtonSubmit 
-                label="Guardar"
-                loading={saving}
-                loadingLabel="Guardando..."  
-              />
+          <ButtonContainer>
+            <ButtonSubmit
+              label="Guardar"
+              loading={saving}
+              loadingLabel="Guardando..."
+            />
             <ReturnButton onClick={closeAction} />
           </ButtonContainer>
         </Form>

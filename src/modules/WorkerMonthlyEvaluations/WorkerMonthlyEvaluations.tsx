@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
-import { AddButton, SeeButton } from "../../common/button";
 import Permission from "../../common/auth/Permission";
+import { AddButton, SeeButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { HeaderPanel, Panel } from "../../common/panel";
@@ -13,7 +13,6 @@ import type {
   WorkerMonthlyEvaluationPeriodStatusPayload,
 } from "../../data/types";
 import { useCurrentUser, useWorkerMonthlyEvaluationPeriods } from "../../hooks";
-import { monthlyEvaluationTypes } from "../../utils";
 import MonthlyEvaluationPeriodDetailModal from "./MonthlyEvaluationPeriodDetailModal";
 import TemplateManagerModal from "./TemplateManagerModal";
 import WorkerMonthlyEvaluationForm from "./WorkerMonthlyEvaluationForm";
@@ -41,12 +40,16 @@ type ModalState =
 const currentDate = new Date();
 const monthOptions = Array.from({ length: 12 }, (_, index) => ({
   value: index + 1,
-  label: new Date(2000, index, 1).toLocaleDateString("es-PE", { month: "long" }),
+  label: new Date(2000, index, 1).toLocaleDateString("es-PE", {
+    month: "long",
+  }),
 }));
 
 function monthName(month?: number) {
   if (!month) return "-";
-  return new Date(2000, month - 1, 1).toLocaleDateString("es-PE", { month: "long" });
+  return new Date(2000, month - 1, 1).toLocaleDateString("es-PE", {
+    month: "long",
+  });
 }
 
 function formatKpiValue(value: number | null) {
@@ -62,7 +65,9 @@ export default function WorkerMonthlyEvaluations() {
   const yearFromQuery = Number(searchParams.get("year") || 0);
 
   const [month, setMonth] = useState<number>(monthFromQuery || 0);
-  const [year, setYear] = useState<number>(yearFromQuery || currentDate.getFullYear());
+  const [year, setYear] = useState<number>(
+    yearFromQuery || currentDate.getFullYear(),
+  );
   const [refreshKey, setRefreshKey] = useState(0);
   const [modal, setModal] = useState<ModalState>({ mode: "none" });
 
@@ -103,7 +108,8 @@ export default function WorkerMonthlyEvaluations() {
       key: "year",
       label: "Periodo",
       width: "12rem",
-      render: (row: WorkerMonthlyEvaluationPeriod) => `${monthName(row.month)} ${row.year}`,
+      render: (row: WorkerMonthlyEvaluationPeriod) =>
+        `${monthName(row.month)} ${row.year}`,
     },
     {
       key: "status",
@@ -131,19 +137,22 @@ export default function WorkerMonthlyEvaluations() {
       key: "averageScore",
       label: "Prom.",
       width: "8rem",
-      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.averageScore),
+      render: (row: WorkerMonthlyEvaluationPeriod) =>
+        formatKpiValue(row.averageScore),
     },
     {
       key: "highestScore",
       label: "Max.",
       width: "8rem",
-      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.highestScore),
+      render: (row: WorkerMonthlyEvaluationPeriod) =>
+        formatKpiValue(row.highestScore),
     },
     {
       key: "lowestScore",
       label: "Min.",
       width: "8rem",
-      render: (row: WorkerMonthlyEvaluationPeriod) => formatKpiValue(row.lowestScore),
+      render: (row: WorkerMonthlyEvaluationPeriod) =>
+        formatKpiValue(row.lowestScore),
     },
     {
       label: "Acciones",
@@ -177,7 +186,10 @@ export default function WorkerMonthlyEvaluations() {
               name="evaluationMonth"
               value={month}
               onChange={setMonth}
-              options={[{ value: 0, label: "Todos los meses" }, ...monthOptions]}
+              options={[
+                { value: 0, label: "Todos los meses" },
+                ...monthOptions,
+              ]}
             />
           </div>
 
@@ -192,7 +204,7 @@ export default function WorkerMonthlyEvaluations() {
           </div>
 
           <div className="flex items-end justify-end">
-            <Permission user={user} allow={monthlyEvaluationTypes}>
+            <Permission user={user} permission="evaluations.manage">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -217,7 +229,10 @@ export default function WorkerMonthlyEvaluations() {
         ) : null}
 
         {!loading && !error && periods && periods.length > 0 ? (
-          <Table<WorkerMonthlyEvaluationPeriod> data={periods} columns={columns} />
+          <Table<WorkerMonthlyEvaluationPeriod>
+            data={periods}
+            columns={columns}
+          />
         ) : null}
       </div>
 
@@ -234,7 +249,10 @@ export default function WorkerMonthlyEvaluations() {
               lockPeriodFields={modal.lockPeriodFields}
               onClose={() =>
                 modal.returnPeriod
-                  ? setModal({ mode: "periodDetail", period: modal.returnPeriod })
+                  ? setModal({
+                      mode: "periodDetail",
+                      period: modal.returnPeriod,
+                    })
                   : setModal({ mode: "none" })
               }
               onSaved={handleSaved}
@@ -245,7 +263,10 @@ export default function WorkerMonthlyEvaluations() {
               evaluationId={modal.evaluationId}
               onClose={() =>
                 modal.returnPeriod
-                  ? setModal({ mode: "periodDetail", period: modal.returnPeriod })
+                  ? setModal({
+                      mode: "periodDetail",
+                      period: modal.returnPeriod,
+                    })
                   : setModal({ mode: "none" })
               }
               onSaved={handleSaved}

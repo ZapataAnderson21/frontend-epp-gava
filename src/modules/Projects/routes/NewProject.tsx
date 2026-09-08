@@ -1,16 +1,15 @@
 import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { ReturnButton, SaveButton } from "../../../common/button"
-import { useApiAction, useCurrentUser } from "../../../hooks/";
-import { projectApi } from "../../../data/apiUrl";
+import Permission from "../../../common/auth/Permission";
+import { ReturnButton, SaveButton } from "../../../common/button";
+import { ErrorMessage } from "../../../common/error";
+import { Form } from "../../../common/form";
+import ButtonContainer from "../../../common/form/ButtonContainer";
 import InputForm from "../../../common/form/InputForm";
 import TextAreaForm from "../../../common/form/TextAreaForm";
-import ButtonContainer from "../../../common/form/ButtonContainer";
-import { Form } from "../../../common/form";
-import { adminTypes } from "../../../utils";
-import Permission from "../../../common/auth/Permission";
-import { ErrorMessage } from "../../../common/error";
-import toast, { Toaster } from "react-hot-toast";
+import { projectApi } from "../../../data/apiUrl";
+import { useApiAction, useCurrentUser } from "../../../hooks/";
 
 interface Project {
   project_id: number;
@@ -30,45 +29,47 @@ export default function NewProject() {
   const [description, setDescription] = useState("");
 
   const navigate = useNavigate();
-  const { execute, loading} = useApiAction<Project>();
+  const { execute, loading } = useApiAction<Project>();
 
-  const navigateToProjects = () => { navigate("/admin/projects"); };
+  const navigateToProjects = () => {
+    navigate("/admin/projects");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const toIso = (d: string) => (d ? new Date(d + 'T00:00:00.000Z').toISOString() : undefined);
+    const toIso = (d: string) =>
+      d ? new Date(d + "T00:00:00.000Z").toISOString() : undefined;
 
     toast.promise(
-      execute(
-        `${projectApi}`,
-        "POST",
-        { 
-          name, 
-          code, 
-          description, 
-          location, 
-          startDate: toIso(startDate), 
-          endDate: toIso(endDate) 
-        }
-      ),
+      execute(`${projectApi}`, "POST", {
+        name,
+        code,
+        description,
+        location,
+        startDate: toIso(startDate),
+        endDate: toIso(endDate),
+      }),
       {
-        loading: 'Creando proyecto...',
+        loading: "Creando proyecto...",
         success: (result) => {
           setTimeout(() => navigateToProjects(), 1200);
-          return result.message || 'Proyecto creado con éxito';
+          return result.message || "Proyecto creado con éxito";
         },
-        error: (err) => err.message || 'Error al crear el proyecto',
-      }
+        error: (err) => err.message || "Error al crear el proyecto",
+      },
     );
   };
 
   return (
-    <Permission user={user} allow={adminTypes} fallback={<ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />}>
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-      />
+    <Permission
+      user={user}
+      permission="projects.manage"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permisos para acceder a esta página." />
+      }
+    >
+      <Toaster position="top-center" reverseOrder={false} />
       <Form name="REGISTRAR PROYECTO" handleSubmit={handleSubmit}>
         <InputForm
           label="Nombre"

@@ -1,12 +1,12 @@
+import { X as IoClose, CircleX as IoCloseCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CircleX as IoCloseCircle, X as IoClose } from "lucide-react";
-import type { UpdateUserDto, User } from "../data/types";
-import { userApi } from "../data/apiUrl";
-import { useApiAction } from "../hooks/useApiAction";
-import { ButtonContainer, InputForm } from "../common/form";
-import { SaveButton } from "../common/button";
-import { Button } from "../components";
 import toast, { Toaster } from "react-hot-toast";
+import { SaveButton } from "../common/button";
+import { ButtonContainer, InputForm } from "../common/form";
+import { Button } from "../components";
+import { userApi } from "../data/apiUrl";
+import type { UpdateUserDto, User } from "../data/types";
+import { useApiAction } from "../hooks/useApiAction";
 
 interface UserSettingsModalProps {
   open: boolean;
@@ -15,7 +15,12 @@ interface UserSettingsModalProps {
   onUpdated: (user: User) => void;
 }
 
-export default function UserSettingsModal({ open, user, onClose, onUpdated }: UserSettingsModalProps) {
+export default function UserSettingsModal({
+  open,
+  user,
+  onClose,
+  onUpdated,
+}: UserSettingsModalProps) {
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -42,10 +47,16 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
     if (!email.trim()) nextErrors.push("El correo es requerido");
 
     if (password.trim()) {
-      if (password.length < 8) nextErrors.push("La contraseña debe tener al menos 8 caracteres");
-      if (!/(?=.*[A-Z])/.test(password)) nextErrors.push("La contraseña debe contener al menos una mayúscula");
-      if (!/(?=.*\d)/.test(password)) nextErrors.push("La contraseña debe contener al menos un número");
-      if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) nextErrors.push("La contraseña debe contener al menos un carácter especial");
+      if (password.length < 8)
+        nextErrors.push("La contraseña debe tener al menos 8 caracteres");
+      if (!/(?=.*[A-Z])/.test(password))
+        nextErrors.push("La contraseña debe contener al menos una mayúscula");
+      if (!/(?=.*\d)/.test(password))
+        nextErrors.push("La contraseña debe contener al menos un número");
+      if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password))
+        nextErrors.push(
+          "La contraseña debe contener al menos un carácter especial",
+        );
     }
 
     setErrors(nextErrors);
@@ -63,16 +74,18 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
       ...(password.trim() ? { password: password.trim() } : {}),
     };
 
-    let response: { statusCode: number; message: string; data: User } | null = null;
+    let response: { statusCode: number; message: string; data: User } | null =
+      null;
 
     try {
       response = await toast.promise(
         updateUser(`${userApi}me`, "PATCH", body),
         {
           loading: "Actualizando usuario...",
-          success: (result) => result.message || "Usuario actualizado exitosamente",
+          success: (result) =>
+            result.message || "Usuario actualizado exitosamente",
           error: (err) => err.message || "Error al actualizar usuario",
-        }
+        },
       );
     } catch {
       return;
@@ -100,8 +113,11 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
     const mergedUser = {
       ...storedUser,
       ...updatedUser,
-      last_name: updatedUser.lastName ?? (storedUser as { last_name?: string }).last_name,
-      lastName: updatedUser.lastName ?? (storedUser as { lastName?: string }).lastName,
+      last_name:
+        updatedUser.lastName ??
+        (storedUser as { last_name?: string }).last_name,
+      lastName:
+        updatedUser.lastName ?? (storedUser as { lastName?: string }).lastName,
     };
 
     localStorage.setItem("user", JSON.stringify(mergedUser));
@@ -110,16 +126,24 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)] p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)] p-4"
+      onClick={onClose}
+    >
       <div
         className="relative bg-white rounded-xl w-full max-w-xl p-8 text-gray-900 overflow-auto max-h-[90vh]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="absolute right-2 top-2">
-          <IoCloseCircle className="size-8 aspect-square cursor-pointer" onClick={onClose} />
+          <IoCloseCircle
+            className="size-8 aspect-square cursor-pointer"
+            onClick={onClose}
+          />
         </div>
 
-        <h1 className="text-xl font-extrabold mb-4">CONFIGURACIÓN DE USUARIO</h1>
+        <h1 className="text-xl font-extrabold mb-4">
+          CONFIGURACIÓN DE USUARIO
+        </h1>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <InputForm
@@ -150,7 +174,7 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
             type="text"
             value={user?.userType ?? ""}
             disabled
-            onChange={()=>{}}
+            onChange={() => {}}
           />
 
           <InputForm
@@ -174,7 +198,7 @@ export default function UserSettingsModal({ open, user, onClose, onUpdated }: Us
           )}
 
           <ButtonContainer>
-            <SaveButton loading={saving} />
+            <SaveButton ownProfile loading={saving} />
             <Button
               icon={<IoClose />}
               label="Cancelar"

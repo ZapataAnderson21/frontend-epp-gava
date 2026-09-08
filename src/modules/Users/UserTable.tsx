@@ -1,16 +1,15 @@
 import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { DeleteButton, EditButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
 import { userApi } from "../../data/apiUrl";
 import type { User } from "../../data/types";
 import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
-import { useNavigate } from "react-router-dom";
-import { useCurrentUser } from "../../hooks";
-import { adminTypes } from "../../utils";
-import { DeleteButton, EditButton } from "../../common/button";
 import { useApiAction } from "../../hooks/useApiAction";
-import toast, { Toaster } from "react-hot-toast";
+import { useAccess } from "../../permissions/AccessProvider";
 
 interface UserTableProps {
   showInactive?: boolean;
@@ -33,13 +32,10 @@ const isReleasedEmail = (email: string) =>
 export default function UserTable({ showInactive = false }: UserTableProps) {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const { user } = useCurrentUser();
 
-  let isAdmin: boolean = false;
-
-  if(user) {
-    isAdmin = adminTypes.includes(user.userType);
-  }
+  const { can } = useAccess();
+  const isAdmin =
+    can("users.manage") || can("users.delete") || can("users.assignRole");
 
   const {
     items: users,
@@ -59,7 +55,7 @@ export default function UserTable({ showInactive = false }: UserTableProps) {
 
   const handleDisable = async (selectedUser: User) => {
     const confirmed = window.confirm(
-      `¿Deseas deshabilitar a ${selectedUser.name} ${selectedUser.lastName}? Sus registros históricos se conservarán y el correo quedará disponible para un nuevo usuario.`
+      `¿Deseas deshabilitar a ${selectedUser.name} ${selectedUser.lastName}? Sus registros históricos se conservarán y el correo quedará disponible para un nuevo usuario.`,
     );
 
     if (!confirmed) return;
@@ -73,12 +69,16 @@ export default function UserTable({ showInactive = false }: UserTableProps) {
           return response.message || "Usuario deshabilitado exitosamente.";
         },
         error: (err) => err.message || "No se pudo deshabilitar el usuario.",
-      }
+      },
     );
   };
 
   const columns = [
-    { label: "Nombre", width: "16rem", render : (user: User) => `${user.name} ${user.lastName}` },
+    {
+      label: "Nombre",
+      width: "16rem",
+      render: (user: User) => `${user.name} ${user.lastName}`,
+    },
     {
       label: "Correo",
       width: "16rem",
@@ -92,27 +92,40 @@ export default function UserTable({ showInactive = false }: UserTableProps) {
         ),
     },
     { key: "userType", label: "Rol", width: "20rem" },
-    ...(showInactive ? [{
-      label: "Inactivo desde",
-      width: "12rem",
-      render: (user: User) => formatDate(user.deletedAt),
-    }] : []),
-    ...(isAdmin && !showInactive ? [{ 
-      label: "Acciones", 
-      width: "10rem",  
-      render: (user: User) => (
-        <div className="flex items-center gap-2">
-          <EditButton onClick={() => navigate(`/admin/users/${user.userId}`)} />
-          <DeleteButton
-            onClick={() => handleDisable(user)}
-            disabled={disabling}
-          />
-        </div>
-      )
-    }] : []),
+    ...(showInactive
+      ? [
+          {
+            label: "Inactivo desde",
+            width: "12rem",
+            render: (user: User) => formatDate(user.deletedAt),
+          },
+        ]
+      : []),
+    ...(isAdmin && !showInactive
+      ? [
+          {
+            label: "Acciones",
+            width: "10rem",
+            render: (user: User) => (
+              <div className="flex items-center gap-2">
+                <EditButton
+                  permission={
+                    can("users.manage") ? "users.manage" : "users.assignRole"
+                  }
+                  onClick={() => navigate(`/admin/users/${user.userId}`)}
+                />
+                <DeleteButton
+                  onClick={() => handleDisable(user)}
+                  disabled={disabling}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ] as const;
 
-  if(loading && !pagination) {
+  if (loading && !pagination) {
     return <LoadingSkeletonTable />;
   }
 
@@ -123,7 +136,9 @@ export default function UserTable({ showInactive = false }: UserTableProps) {
   if (!users.length && !search) {
     return (
       <div className="text-gray-500">
-        {showInactive ? "No hay usuarios inactivos." : "No hay usuarios disponibles."}
+        {showInactive
+          ? "No hay usuarios inactivos."
+          : "No hay usuarios disponibles."}
       </div>
     );
   }

@@ -1,17 +1,16 @@
+import {
+  LoaderCircle as CgSpinner,
+  FileSpreadsheet as FaFileExcel,
+} from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useCurrentUser, useFetch } from "../../../../../../hooks";
-import { pettyCashApi } from "../../../../../../data/apiUrl";
-import { AddButton } from "../../../../../../common/button";
-import { Button } from "../../../../../../components";
-import { ErrorMessage } from "../../../../../../common/error";
-import { adminTypes } from "../../../../../../utils";
-import { PettyCash, NewPettyCash, PettyCashTable } from "./";
 import Permission from "../../../../../../common/auth/Permission";
-import {
-  FileSpreadsheet as FaFileExcel,
-  LoaderCircle as CgSpinner,
-} from "lucide-react";
+import { AddButton } from "../../../../../../common/button";
+import { ErrorMessage } from "../../../../../../common/error";
+import { Button } from "../../../../../../components";
+import { pettyCashApi } from "../../../../../../data/apiUrl";
+import { useCurrentUser, useFetch } from "../../../../../../hooks";
+import { NewPettyCash, PettyCash, PettyCashTable } from "./";
 
 import { motion } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
@@ -123,154 +122,156 @@ export default function PettyCashes() {
   return (
     <Permission
       user={user}
-      allow={adminTypes}
+      permission="cash.view"
       fallback={
         <ErrorMessage errorMessage="No tienes permiso para ver esta sección." />
       }
     >
       <Toaster position="top-center" />
       <div className="flex flex-col max-w-full w-full gap-6">
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Comidas</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {mealsAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(mealsAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+        <Permission permission="finance.view">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mt-4 w-full">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Comidas</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {mealsAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(mealsAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Combustible</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {fuelAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(fuelAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Combustible</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {fuelAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(fuelAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Transporte</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {transportAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(transportAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Transporte</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {transportAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(transportAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Suministros</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {suppliesAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(suppliesAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Suministros</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {suppliesAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(suppliesAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Equipos de Seguridad</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {safetyEquipmentAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(safetyEquipmentAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Equipos de Seguridad</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {safetyEquipmentAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(safetyEquipmentAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Servicios</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {servicesAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(servicesAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Servicios</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {servicesAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(servicesAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
 
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              boxShadow:
-                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-            }}
-            className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
-          >
-            <h4 className="text-lg font-bold">Otros Gastos</h4>
-            <p className="flex-1 text-xl font-extrabold">
-              {otherAmountLoading ? (
-                <CgSpinner className="animate-spin" />
-              ) : (
-                `S/ ${Number(otherAmount)?.toFixed(2) || "0.00"}`
-              )}
-            </p>
-          </motion.div>
-        </section>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              style={{
+                boxShadow:
+                  "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+              }}
+              className="border border-gray-100 text-base font-bold p-4 rounded-md col-span-1 flex flex-col gap-2"
+            >
+              <h4 className="text-lg font-bold">Otros Gastos</h4>
+              <p className="flex-1 text-xl font-extrabold">
+                {otherAmountLoading ? (
+                  <CgSpinner className="animate-spin" />
+                ) : (
+                  `S/ ${Number(otherAmount)?.toFixed(2) || "0.00"}`
+                )}
+              </p>
+            </motion.div>
+          </section>
+        </Permission>
 
         <div className="flex justify-end gap-2">
           <Button

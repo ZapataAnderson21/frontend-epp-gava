@@ -1,18 +1,18 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import {
   LoaderCircle as AiOutlineLoading,
   Minus as FaMinus,
   Plus as FaPlus,
   Save as FaSave,
 } from "lucide-react";
+import { useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-import { Button } from "../../components";
-import Select from "../../components/Select";
 import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonForm } from "../../common/loading";
+import { Button } from "../../components";
+import Select from "../../components/Select";
 import { clientApi, quotationApi } from "../../data/apiUrl";
 import type { Client, Quotation } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
@@ -29,19 +29,29 @@ const toMoney = (value: number) => Number(value.toFixed(2));
 
 export default function NewQuotation() {
   const navigate = useNavigate();
-  const { data: clients, loading: loadingClients, error: clientsError } = useFetch<Client[]>(clientApi);
+  const {
+    data: clients,
+    loading: loadingClients,
+    error: clientsError,
+  } = useFetch<Client[]>(clientApi);
   const { execute, loading: saving } = useApiAction<Quotation>();
 
   const [clientId, setClientId] = useState<number>(0);
   const [serviceDescription, setServiceDescription] = useState("");
   const [commercialTerms, setCommercialTerms] = useState("");
   const [items, setItems] = useState<DraftItem[]>([
-    { orderNumber: 1, description: "", unit: "", quantity: "1", unitPrice: "0" },
+    {
+      orderNumber: 1,
+      description: "",
+      unit: "",
+      quantity: "1",
+      unitPrice: "0",
+    },
   ]);
 
   const selectedClient = useMemo(
     () => (clients ?? []).find((client) => client.clientId === clientId),
-    [clients, clientId]
+    [clients, clientId],
   );
 
   const summary = useMemo(() => {
@@ -50,7 +60,7 @@ export default function NewQuotation() {
         const quantity = Number(item.quantity) || 0;
         const unitPrice = Number(item.unitPrice) || 0;
         return sum + quantity * unitPrice;
-      }, 0)
+      }, 0),
     );
     const igvRate = 0.18;
     const igvAmount = toMoney(costDirectAmount * igvRate);
@@ -58,7 +68,11 @@ export default function NewQuotation() {
     return { costDirectAmount, igvRate, igvAmount, totalAmount };
   }, [items]);
 
-  const updateItem = (index: number, field: keyof DraftItem, value: string | number) => {
+  const updateItem = (
+    index: number,
+    field: keyof DraftItem,
+    value: string | number,
+  ) => {
     setItems((prev) => {
       const next = [...prev];
       const current = { ...next[index], [field]: value };
@@ -70,14 +84,28 @@ export default function NewQuotation() {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { orderNumber: prev.length + 1, description: "", unit: "", quantity: "1", unitPrice: "0" },
+      {
+        orderNumber: prev.length + 1,
+        description: "",
+        unit: "",
+        quantity: "1",
+        unitPrice: "0",
+      },
     ]);
   };
 
   const removeItem = (index: number) => {
     setItems((prev) => {
       if (prev.length === 1) {
-        return [{ orderNumber: 1, description: "", unit: "", quantity: "1", unitPrice: "0" }];
+        return [
+          {
+            orderNumber: 1,
+            description: "",
+            unit: "",
+            quantity: "1",
+            unitPrice: "0",
+          },
+        ];
       }
       return prev
         .filter((_, i) => i !== index)
@@ -89,13 +117,16 @@ export default function NewQuotation() {
     const errors: string[] = [];
 
     if (clientId <= 0) errors.push("Debe seleccionar un cliente.");
-    if (!serviceDescription.trim()) errors.push("La descripción del servicio es obligatoria.");
+    if (!serviceDescription.trim())
+      errors.push("La descripción del servicio es obligatoria.");
     if (items.length === 0) errors.push("Debe agregar al menos un item.");
 
     items.forEach((item, index) => {
       const row = index + 1;
-      if (!item.description.trim()) errors.push(`Item ${row}: la descripción es obligatoria.`);
-      if (!item.unit.trim()) errors.push(`Item ${row}: la unidad es obligatoria.`);
+      if (!item.description.trim())
+        errors.push(`Item ${row}: la descripción es obligatoria.`);
+      if (!item.unit.trim())
+        errors.push(`Item ${row}: la unidad es obligatoria.`);
 
       const quantity = Number(item.quantity);
       if (!Number.isFinite(quantity) || quantity <= 0) {
@@ -104,7 +135,9 @@ export default function NewQuotation() {
 
       const unitPrice = Number(item.unitPrice);
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        errors.push(`Item ${row}: el precio unitario debe ser mayor o igual a 0.`);
+        errors.push(
+          `Item ${row}: el precio unitario debe ser mayor o igual a 0.`,
+        );
       }
     });
 
@@ -139,17 +172,14 @@ export default function NewQuotation() {
       })),
     };
 
-    await toast.promise(
-      execute(quotationApi, "POST", payload),
-      {
-        loading: "Creando cotización...",
-        success: (response) => {
-          setTimeout(() => navigate("/admin/quotations"), 1200);
-          return response.message || "Cotización creada exitosamente";
-        },
-        error: (err) => err.message || "Error al crear cotización",
-      }
-    );
+    await toast.promise(execute(quotationApi, "POST", payload), {
+      loading: "Creando cotización...",
+      success: (response) => {
+        setTimeout(() => navigate("/admin/quotations"), 1200);
+        return response.message || "Cotización creada exitosamente";
+      },
+      error: (err) => err.message || "Error al crear cotización",
+    });
   };
 
   if (loadingClients) return <LoadingSkeletonForm numberRows={8} />;
@@ -164,7 +194,14 @@ export default function NewQuotation() {
           </div>
           <div className="w-fit flex flex-row gap-2">
             <Button
-              icon={saving ? <AiOutlineLoading className="animate-spin" /> : <FaSave />}
+              permission="quotations.manage"
+              icon={
+                saving ? (
+                  <AiOutlineLoading className="animate-spin" />
+                ) : (
+                  <FaSave />
+                )
+              }
               label={saving ? "Guardando..." : "Guardar"}
               bgColor="#0047a3"
               bgHoverColor="#003366"
@@ -177,8 +214,12 @@ export default function NewQuotation() {
         <div className="w-full flex flex-col items-center justify-center">
           <div className="flex flex-col gap-8 lg:w-[85%] w-full md:border border-gray-100 px-4 py-6 sm:px-6 md:px-10 md:py-10 lg:px-12 lg:py-12 md:shadow-md shadow-gray-300 bg-white rounded-sm">
             <div className="flex flex-col gap-4 text-center">
-              <p className="text-[#03045a] font-bold italic text-lg">"Seguridad y Calidad a su Servicio"</p>
-              <h1 className="text-[#c00000] font-extrabold text-xl">REGISTRAR COTIZACIÓN</h1>
+              <p className="text-[#03045a] font-bold italic text-lg">
+                "Seguridad y Calidad a su Servicio"
+              </p>
+              <h1 className="text-[#c00000] font-extrabold text-xl">
+                REGISTRAR COTIZACIÓN
+              </h1>
               <div className="border-t-4 border-[#c00000]" />
             </div>
 
@@ -191,18 +232,29 @@ export default function NewQuotation() {
                   onChange={setClientId}
                   options={[
                     { value: 0, label: "Selecciona un cliente" },
-                    ...(clients ?? []).map((client) => ({ value: client.clientId, label: client.name })),
+                    ...(clients ?? []).map((client) => ({
+                      value: client.clientId,
+                      label: client.name,
+                    })),
                   ]}
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p><span className="font-bold">RUC:</span> {selectedClient?.ruc ?? "-"}</p>
-                <p><span className="font-bold">Atención:</span> {selectedClient?.contactName ?? "-"}</p>
+                <p>
+                  <span className="font-bold">RUC:</span>{" "}
+                  {selectedClient?.ruc ?? "-"}
+                </p>
+                <p>
+                  <span className="font-bold">Atención:</span>{" "}
+                  {selectedClient?.contactName ?? "-"}
+                </p>
               </div>
             </div>
 
             <div className="pt-1">
-              <h3 className="text-lg font-bold mb-2">Descripción del Servicio:</h3>
+              <h3 className="text-lg font-bold mb-2">
+                Descripción del Servicio:
+              </h3>
               <textarea
                 className="w-full min-h-28 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
                 value={serviceDescription}
@@ -226,7 +278,9 @@ export default function NewQuotation() {
                 </thead>
                 <tbody>
                   {items.map((item, index) => {
-                    const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+                    const lineTotal =
+                      (Number(item.quantity) || 0) *
+                      (Number(item.unitPrice) || 0);
                     return (
                       <tr key={index} className="border-b border-gray-300">
                         <td className="p-3">{item.orderNumber}</td>
@@ -234,14 +288,18 @@ export default function NewQuotation() {
                           <input
                             className="w-full border border-gray-300 rounded px-2 py-1"
                             value={item.description}
-                            onChange={(e) => updateItem(index, "description", e.target.value)}
+                            onChange={(e) =>
+                              updateItem(index, "description", e.target.value)
+                            }
                           />
                         </td>
                         <td className="p-3">
                           <input
                             className="w-full border border-gray-300 rounded px-2 py-1"
                             value={item.unit}
-                            onChange={(e) => updateItem(index, "unit", e.target.value)}
+                            onChange={(e) =>
+                              updateItem(index, "unit", e.target.value)
+                            }
                           />
                         </td>
                         <td className="p-3 text-right">
@@ -251,7 +309,9 @@ export default function NewQuotation() {
                             min="0"
                             className="w-28 border border-gray-300 rounded px-2 py-1 text-right"
                             value={item.quantity}
-                            onChange={(e) => updateItem(index, "quantity", e.target.value)}
+                            onChange={(e) =>
+                              updateItem(index, "quantity", e.target.value)
+                            }
                           />
                         </td>
                         <td className="p-3 text-right">
@@ -261,10 +321,14 @@ export default function NewQuotation() {
                             min="0"
                             className="w-28 border border-gray-300 rounded px-2 py-1 text-right"
                             value={item.unitPrice}
-                            onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
+                            onChange={(e) =>
+                              updateItem(index, "unitPrice", e.target.value)
+                            }
                           />
                         </td>
-                        <td className="p-3 text-right">{toMoney(lineTotal).toFixed(2)}</td>
+                        <td className="p-3 text-right">
+                          {toMoney(lineTotal).toFixed(2)}
+                        </td>
                         <td className="p-3 text-center">
                           <div className="flex justify-center gap-2">
                             <button
@@ -274,7 +338,11 @@ export default function NewQuotation() {
                             >
                               <FaMinus />
                             </button>
-                            <button type="button" className="bg-slate-800 text-white p-2 rounded" onClick={addItem}>
+                            <button
+                              type="button"
+                              className="bg-slate-800 text-white p-2 rounded"
+                              onClick={addItem}
+                            >
                               <FaPlus />
                             </button>
                           </div>
@@ -304,7 +372,9 @@ export default function NewQuotation() {
             </div>
 
             <div className="pt-1">
-              <h3 className="text-lg font-bold mb-2">Condiciones Comerciales:</h3>
+              <h3 className="text-lg font-bold mb-2">
+                Condiciones Comerciales:
+              </h3>
               <textarea
                 className="w-full min-h-36 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
                 value={commercialTerms}

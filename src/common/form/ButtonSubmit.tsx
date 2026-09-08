@@ -1,16 +1,25 @@
 import { motion } from "framer-motion";
 import { Save as FaSave } from "lucide-react";
+import { useModuleAction } from "../../permissions/AccessProvider";
 
 interface ButtonSubmitProps {
   label: string;
   loading: boolean;
   loadingLabel?: string;
+  permission?: string;
 }
 
-export default function ButtonSubmit({ loading, label, loadingLabel }: ButtonSubmitProps) {
+export default function ButtonSubmit({
+  loading,
+  label,
+  loadingLabel,
+  permission,
+}: ButtonSubmitProps) {
+  const allowed = useModuleAction("manage", permission);
+  if (!allowed) return null;
   return (
     <motion.button
-      initial={{ scale: 0.8 }} 
+      initial={{ scale: 0.8 }}
       animate={{ scale: 1 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -18,7 +27,9 @@ export default function ButtonSubmit({ loading, label, loadingLabel }: ButtonSub
       disabled={loading}
       className="bg-[#0047a3] text-white px-4 py-2 rounded-lg hover:bg-[#003366] cursor-pointer hover:scale-[101%] font-bold disabled:opacity-50"
     >
-      <div className="flex flex-row flex-nowrap gap-2 items-center"><FaSave /> {loading ? loadingLabel : label}</div>
+      <div className="flex flex-row flex-nowrap gap-2 items-center">
+        <FaSave /> {loading ? loadingLabel : label}
+      </div>
     </motion.button>
-  )
+  );
 }

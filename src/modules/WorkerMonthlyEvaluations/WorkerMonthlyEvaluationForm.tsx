@@ -1,22 +1,23 @@
+import { CircleX as IoCloseCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { CircleX as IoCloseCircle } from "lucide-react";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
 import Select from "../../components/Select";
 import { workerApi } from "../../data/apiUrl";
-import {
-  useFetch,
-  useMonthlyEvaluationTemplates,
-  useWorkerMonthlyEvaluationActions,
-  useWorkerMonthlyEvaluationById,
-} from "../../hooks";
 import type {
   CreateMonthlyEvaluationResponseDto,
   MonthlyEvaluationQuestion,
   MonthlyEvaluationTemplate,
   Worker,
 } from "../../data/types";
+import {
+  useFetch,
+  useMonthlyEvaluationTemplates,
+  useWorkerMonthlyEvaluationActions,
+  useWorkerMonthlyEvaluationById,
+} from "../../hooks";
+import { useAccess } from "../../permissions/AccessProvider";
 
 interface WorkerMonthlyEvaluationFormProps {
   mode: "create" | "edit";
@@ -40,14 +41,19 @@ const currentDate = new Date();
 const scoreOptions = [0, 1, 2, 3] as const;
 const monthOptions = Array.from({ length: 12 }, (_, index) => ({
   value: index + 1,
-  label: new Date(2000, index, 1).toLocaleDateString("es-PE", { month: "long" }),
+  label: new Date(2000, index, 1).toLocaleDateString("es-PE", {
+    month: "long",
+  }),
 }));
 
 function getTemplateVersion(template?: MonthlyEvaluationTemplate) {
   return template?.currentVersion ?? template?.versions?.[0];
 }
 
-function isResponseFilled(question: MonthlyEvaluationQuestion, response?: ResponseDraft): boolean {
+function isResponseFilled(
+  question: MonthlyEvaluationQuestion,
+  response?: ResponseDraft,
+): boolean {
   if (!response) return false;
 
   if (question.questionType === "score") {
@@ -59,7 +65,9 @@ function isResponseFilled(question: MonthlyEvaluationQuestion, response?: Respon
 
 function formatMonthName(month?: number) {
   if (!month) return "-";
-  return new Date(2000, month - 1, 1).toLocaleDateString("es-PE", { month: "long" });
+  return new Date(2000, month - 1, 1).toLocaleDateString("es-PE", {
+    month: "long",
+  });
 }
 
 export default function WorkerMonthlyEvaluationForm({
@@ -84,23 +92,33 @@ export default function WorkerMonthlyEvaluationForm({
     loading: loadingEvaluation,
     error: evaluationError,
     refetch,
-  } = useWorkerMonthlyEvaluationById(mode === "edit" ? evaluationId : undefined, [
-    mode,
-    evaluationId,
-  ]);
+  } = useWorkerMonthlyEvaluationById(
+    mode === "edit" ? evaluationId : undefined,
+    [mode, evaluationId],
+  );
 
-  const { createEvaluation, updateEvaluationResponses, loading: saving } =
-    useWorkerMonthlyEvaluationActions();
+  const {
+    createEvaluation,
+    updateEvaluationResponses,
+    loading: saving,
+  } = useWorkerMonthlyEvaluationActions();
 
   const [workerId, setWorkerId] = useState<number>(initialWorkerId ?? 0);
   const [templateId, setTemplateId] = useState<number>(initialTemplateId ?? 0);
-  const [year, setYear] = useState<number>(initialYear ?? currentDate.getFullYear());
-  const [month, setMonth] = useState<number>(initialMonth ?? currentDate.getMonth() + 1);
+  const [year, setYear] = useState<number>(
+    initialYear ?? currentDate.getFullYear(),
+  );
+  const [month, setMonth] = useState<number>(
+    initialMonth ?? currentDate.getMonth() + 1,
+  );
   const [generalComment, setGeneralComment] = useState("");
   const [responses, setResponses] = useState<Record<number, ResponseDraft>>({});
 
   const selectedTemplate = useMemo(
-    () => templates?.find((item) => item.monthlyEvaluationTemplateId === templateId),
+    () =>
+      templates?.find(
+        (item) => item.monthlyEvaluationTemplateId === templateId,
+      ),
     [templates, templateId],
   );
 
@@ -111,16 +129,29 @@ export default function WorkerMonthlyEvaluationForm({
 
   const activeQuestions = useMemo(() => {
     if (mode === "edit") {
-      return evaluation?.templateVersion?.sections.flatMap((section) => section.questions) ?? [];
+      return (
+        evaluation?.templateVersion?.sections.flatMap(
+          (section) => section.questions,
+        ) ?? []
+      );
     }
 
-    return selectedTemplateVersion?.sections.flatMap((section) => section.questions) ?? [];
+    return (
+      selectedTemplateVersion?.sections.flatMap(
+        (section) => section.questions,
+      ) ?? []
+    );
   }, [mode, evaluation, selectedTemplateVersion]);
 
-  const isClosed = mode === "edit" && evaluation?.status === "closed";
+  const { can } = useAccess();
+  const isClosed =
+    !can("evaluations.manage") ||
+    (mode === "edit" && evaluation?.status === "closed");
   const isContextReadOnly = mode === "edit" || lockPeriodFields;
 
-  const workerLabel = workers?.find((item) => item.workerId === workerId)?.fullName;
+  const workerLabel = workers?.find(
+    (item) => item.workerId === workerId,
+  )?.fullName;
 
   useEffect(() => {
     if (mode !== "create") return;
@@ -188,7 +219,9 @@ export default function WorkerMonthlyEvaluationForm({
     }));
   };
 
-  const validateAndBuildResponses = (): CreateMonthlyEvaluationResponseDto[] | null => {
+  const validateAndBuildResponses = ():
+    | CreateMonthlyEvaluationResponseDto[]
+    | null => {
     const validationErrors: string[] = [];
     const payloadResponses: CreateMonthlyEvaluationResponseDto[] = [];
 
@@ -197,7 +230,9 @@ export default function WorkerMonthlyEvaluationForm({
       const filled = isResponseFilled(question, response);
 
       if (question.isRequired && !filled) {
-        validationErrors.push(`La pregunta obligatoria "${question.prompt}" no fue respondida.`);
+        validationErrors.push(
+          `La pregunta obligatoria "${question.prompt}" no fue respondida.`,
+        );
         continue;
       }
 
@@ -208,8 +243,15 @@ export default function WorkerMonthlyEvaluationForm({
       if (question.questionType === "score") {
         const score = response?.score;
 
-        if (typeof score !== "number" || Number.isNaN(score) || score < 0 || score > 3) {
-          validationErrors.push(`La pregunta "${question.prompt}" debe tener puntaje entre 0 y 3.`);
+        if (
+          typeof score !== "number" ||
+          Number.isNaN(score) ||
+          score < 0 ||
+          score > 3
+        ) {
+          validationErrors.push(
+            `La pregunta "${question.prompt}" debe tener puntaje entre 0 y 3.`,
+          );
           continue;
         }
 
@@ -249,7 +291,8 @@ export default function WorkerMonthlyEvaluationForm({
     if (!payloadResponses) return;
 
     if (mode === "create") {
-      const versionId = selectedTemplateVersion?.monthlyEvaluationTemplateVersionId;
+      const versionId =
+        selectedTemplateVersion?.monthlyEvaluationTemplateVersionId;
 
       if (!workerId || !versionId || !year || !month) {
         toast.error("Completa trabajador, plantilla, anio y mes.");
@@ -294,7 +337,8 @@ export default function WorkerMonthlyEvaluationForm({
           refetch();
           return "Evaluacion actualizada correctamente";
         },
-        error: (err) => err.message || "No se pudieron actualizar las respuestas",
+        error: (err) =>
+          err.message || "No se pudieron actualizar las respuestas",
       },
     );
   };
@@ -310,20 +354,24 @@ export default function WorkerMonthlyEvaluationForm({
   if (templatesError || evaluationError) {
     return (
       <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
-        <ErrorMessage errorMessage={templatesError || evaluationError || "Error inesperado"} />
+        <ErrorMessage
+          errorMessage={templatesError || evaluationError || "Error inesperado"}
+        />
       </div>
     );
   }
 
   const sections =
     mode === "edit"
-      ? evaluation?.templateVersion?.sections ?? []
-      : selectedTemplateVersion?.sections ?? [];
+      ? (evaluation?.templateVersion?.sections ?? [])
+      : (selectedTemplateVersion?.sections ?? []);
 
   return (
     <div className="bg-white rounded-xl w-[min(1100px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
       <h2 className="text-xl font-extrabold mb-4">
-        {mode === "create" ? "Nueva evaluacion mensual" : `Evaluacion #${evaluationId}`}
+        {mode === "create"
+          ? "Nueva evaluacion mensual"
+          : `Evaluacion #${evaluationId}`}
       </h2>
 
       {mode === "edit" && evaluation ? (
@@ -370,7 +418,10 @@ export default function WorkerMonthlyEvaluationForm({
                 onChange={setWorkerId}
                 options={[
                   { value: 0, label: "Selecciona trabajador" },
-                  ...(workers ?? []).map((worker) => ({ value: worker.workerId, label: worker.fullName })),
+                  ...(workers ?? []).map((worker) => ({
+                    value: worker.workerId,
+                    label: worker.fullName,
+                  })),
                 ]}
               />
             </div>
@@ -448,10 +499,15 @@ export default function WorkerMonthlyEvaluationForm({
                 const draft = responses[question.monthlyEvaluationQuestionId];
 
                 return (
-                  <div key={question.monthlyEvaluationQuestionId} className="flex flex-col gap-2">
+                  <div
+                    key={question.monthlyEvaluationQuestionId}
+                    className="flex flex-col gap-2"
+                  >
                     <label className="font-semibold">
                       {question.prompt}
-                      {question.isRequired ? <span className="text-red-600 ml-1">*</span> : null}
+                      {question.isRequired ? (
+                        <span className="text-red-600 ml-1">*</span>
+                      ) : null}
                     </label>
 
                     {question.questionType === "score" ? (
@@ -464,7 +520,9 @@ export default function WorkerMonthlyEvaluationForm({
                               key={option}
                               type="button"
                               className={`flex items-center gap-2 rounded-md px-1 py-1 ${
-                                isClosed ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                                isClosed
+                                  ? "cursor-not-allowed opacity-60"
+                                  : "cursor-pointer"
                               }`}
                               onClick={() =>
                                 setScore(
@@ -477,16 +535,22 @@ export default function WorkerMonthlyEvaluationForm({
                             >
                               <span
                                 className={`size-5 rounded-full border-2 flex items-center justify-center ${
-                                  isSelected ? "border-[#0047a3]" : "border-gray-400"
+                                  isSelected
+                                    ? "border-[#0047a3]"
+                                    : "border-gray-400"
                                 }`}
                               >
                                 <span
                                   className={`size-2.5 rounded-full ${
-                                    isSelected ? "bg-[#0047a3]" : "bg-transparent"
+                                    isSelected
+                                      ? "bg-[#0047a3]"
+                                      : "bg-transparent"
                                   }`}
                                 />
                               </span>
-                              <span className="font-semibold text-gray-700">{option}</span>
+                              <span className="font-semibold text-gray-700">
+                                {option}
+                              </span>
                             </button>
                           );
                         })}
@@ -497,7 +561,10 @@ export default function WorkerMonthlyEvaluationForm({
                         rows={2}
                         value={draft?.textAnswer ?? ""}
                         onChange={(event) =>
-                          setTextAnswer(question.monthlyEvaluationQuestionId, event.target.value)
+                          setTextAnswer(
+                            question.monthlyEvaluationQuestionId,
+                            event.target.value,
+                          )
                         }
                         disabled={isClosed}
                       />
@@ -542,7 +609,11 @@ export default function WorkerMonthlyEvaluationForm({
         </div>
       </form>
 
-      <button type="button" className="absolute right-3 top-3" onClick={onClose}>
+      <button
+        type="button"
+        className="absolute right-3 top-3"
+        onClick={onClose}
+      >
         <IoCloseCircle className="size-8" />
       </button>
 

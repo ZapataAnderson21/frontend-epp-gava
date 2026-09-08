@@ -1,10 +1,13 @@
-import { HeaderPanel, Panel } from "../../common/panel";
-import ResourceTable from "./ResourceTable";
+import {
+  LoaderCircle as CgSpinner,
+  FileSpreadsheet as FaFileExcel,
+} from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AddButton } from "../../common/button";
+import { HeaderPanel, Panel } from "../../common/panel";
 import { Button } from "../../components";
-import { useState } from "react";
-import { FileSpreadsheet as FaFileExcel, LoaderCircle as CgSpinner } from "lucide-react";
+import ResourceTable from "./ResourceTable";
 
 import toast, { Toaster } from "react-hot-toast";
 import { resourceApi } from "../../data/apiUrl";
@@ -51,9 +54,12 @@ export default function Resources() {
   return (
     <Panel>
       <Toaster position="top-center" />
-      <HeaderPanel name={`RECURSOS`} >
+      <HeaderPanel name={`RECURSOS`}>
         <Button
-          icon={exporting ? <CgSpinner className="animate-spin" /> : <FaFileExcel />}
+          permission="resources.export"
+          icon={
+            exporting ? <CgSpinner className="animate-spin" /> : <FaFileExcel />
+          }
           label={exporting ? "Exportando..." : "Exportar"}
           onClick={handleExportExcel}
           bgColor="#008080"
@@ -65,7 +71,6 @@ export default function Resources() {
       </HeaderPanel>
 
       <ResourceTable />
-
     </Panel>
   );
 }

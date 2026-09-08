@@ -1,16 +1,23 @@
-import { useNavigate, useParams } from "react-router-dom";
 import { LoaderCircle as CgSpinner } from "lucide-react";
+import { Toaster } from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 import { ErrorMessage } from "../../../../../../common/error";
 import { ButtonContainer } from "../../../../../../common/form";
-import { Toaster } from "react-hot-toast";
 
-import { usePurchaseOrderForm } from "../../../../../../hooks/usePurchaseOrderForm";
-import { PurchaseOrderHeader, SupplierSelectCard, DeliveryInfoCard, PaymentConditionsCard, ItemsTable, ConditionsSection, SignaturesTable } from "./components";
-import { ReturnButton, SaveButton } from "../../../../../../common/button";
 import Permission from "../../../../../../common/auth/Permission";
-import { logisticsTypes } from "../../../../../../utils";
-import { useCurrentUser } from "../../../../../../hooks";
+import { ReturnButton, SaveButton } from "../../../../../../common/button";
 import { Select } from "../../../../../../components";
+import { useCurrentUser } from "../../../../../../hooks";
+import { usePurchaseOrderForm } from "../../../../../../hooks/usePurchaseOrderForm";
+import {
+  ConditionsSection,
+  DeliveryInfoCard,
+  ItemsTable,
+  PaymentConditionsCard,
+  PurchaseOrderHeader,
+  SignaturesTable,
+  SupplierSelectCard,
+} from "./components";
 
 export default function NewPurchaseOrder() {
   const { user } = useCurrentUser();
@@ -19,39 +26,70 @@ export default function NewPurchaseOrder() {
 
   const {
     // data
-    project, projectLoading, projectError,
-    suppliers, suppliersLoading, suppliersError,
-    supplier, resources, resourcesLoading, resourcesError, refetchResources,
+    project,
+    projectLoading,
+    projectError,
+    suppliers,
+    suppliersLoading,
+    suppliersError,
+    supplier,
+    resources,
+    resourcesLoading,
+    resourcesError,
+    refetchResources,
 
     // selections
-    selectSupplierId, setSelectSupplierId,
+    selectSupplierId,
+    setSelectSupplierId,
 
     // form fields
-    code, setCode,
-    destination, setDestination,
-    deliveryLocation, setDeliveryLocation,
-    carePerson, setCarePerson,
-    dniCarePerson, setDniCarePerson,
-    observations, setObservations,
-    quotation, setQuotation,
-    purchaseOrderType, setPurchaseOrderType,
-    paymentMethod, setPaymentMethod,
-    paymentConditions1, setPaymentConditions1,
+    code,
+    setCode,
+    destination,
+    setDestination,
+    deliveryLocation,
+    setDeliveryLocation,
+    carePerson,
+    setCarePerson,
+    dniCarePerson,
+    setDniCarePerson,
+    observations,
+    setObservations,
+    quotation,
+    setQuotation,
+    purchaseOrderType,
+    setPurchaseOrderType,
+    paymentMethod,
+    setPaymentMethod,
+    paymentConditions1,
+    setPaymentConditions1,
 
     //validate errors
     errors,
     setPaymentConditions,
 
     // conditions
-    generalConditions, addGeneralCondition, removeGeneralCondition, handleGeneralChange,
-    qualityConditions, addQualityCondition, removeQualityCondition, handleQualityChange,
+    generalConditions,
+    addGeneralCondition,
+    removeGeneralCondition,
+    handleGeneralChange,
+    qualityConditions,
+    addQualityCondition,
+    removeQualityCondition,
+    handleQualityChange,
 
     // items
-    items, handleItemChange, addItem, removeItem, moveItem,
-    sale_amount, purchase_amount,
+    items,
+    handleItemChange,
+    addItem,
+    removeItem,
+    moveItem,
+    sale_amount,
+    purchase_amount,
 
     // submit & UI
-    saving, handleSubmit,
+    saving,
+    handleSubmit,
   } = usePurchaseOrderForm({ projectId: projectId ?? "", navigate });
 
   if (!projectId) {
@@ -60,7 +98,7 @@ export default function NewPurchaseOrder() {
 
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/projects/${projectId}/purchase-orders`);
-  }
+  };
 
   if (projectLoading || suppliersLoading || (resourcesLoading && !resources)) {
     return (
@@ -69,19 +107,27 @@ export default function NewPurchaseOrder() {
       </div>
     );
   }
-  
+
   if (projectError) return <ErrorMessage errorMessage={projectError} />;
   if (suppliersError) return <ErrorMessage errorMessage={suppliersError} />;
-  if (resourcesError && !resources) return <ErrorMessage errorMessage={resourcesError} />;
+  if (resourcesError && !resources)
+    return <ErrorMessage errorMessage={resourcesError} />;
 
   return (
-    <Permission user={user} allow={logisticsTypes} fallback={<ErrorMessage errorMessage="No tienes permiso para ver esta página." />} >
+    <Permission
+      user={user}
+      permission="orders.manage"
+      fallback={
+        <ErrorMessage errorMessage="No tienes permiso para ver esta página." />
+      }
+    >
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col justify-center w-full">
-
         <div className="w-full flex flex-col items-center justify-center">
-          <form onSubmit={handleSubmit} className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300">
-
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300"
+          >
             <PurchaseOrderHeader
               projectName={project?.name ?? ""}
               code={code}
@@ -128,12 +174,20 @@ export default function NewPurchaseOrder() {
               />
 
               {/* Frase + selector de tipo de OC */}
-              <div className="root-section rs2" style={{ borderTop: "0px", borderBottom: "0px" }}>
+              <div
+                className="root-section rs2"
+                style={{ borderTop: "0px", borderBottom: "0px" }}
+              >
                 <div className="section-info">
                   <div className="w-full">
-                    <p><strong>Señores:</strong> {supplier && (<>{supplier.name}</>)} </p>
+                    <p>
+                      <strong>Señores:</strong>{" "}
+                      {supplier && <>{supplier.name}</>}{" "}
+                    </p>
                     <div className="flex flex-row flex-wrap w-full items-center gap-2">
-                      <p className="text-gray-700 font-bold">Sírvase a suministrarnos los </p>  
+                      <p className="text-gray-700 font-bold">
+                        Sírvase a suministrarnos los{" "}
+                      </p>
                       <Select
                         name="purchaseOrderType"
                         value={purchaseOrderType}
@@ -144,7 +198,10 @@ export default function NewPurchaseOrder() {
                         ]}
                         error={Boolean(errors.purchaseOrderType)}
                       />
-                      <p className="text-gray-700 font-bold"> solicitados siguientes:</p>
+                      <p className="text-gray-700 font-bold">
+                        {" "}
+                        solicitados siguientes:
+                      </p>
                     </div>
                   </div>
                 </div>

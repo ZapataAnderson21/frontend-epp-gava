@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useAccess } from "../permissions/AccessProvider";
 
 interface ActionButtonProps {
   icon: React.ReactNode;
@@ -6,11 +7,21 @@ interface ActionButtonProps {
   bgHoverColor: string;
   onClick?: () => void;
   disabled?: boolean;
+  permission?: string;
 }
 
-export default function ActionButton({ icon, onClick, disabled, bgColor, bgHoverColor }: ActionButtonProps) {
+export default function ActionButton({
+  icon,
+  onClick,
+  disabled,
+  bgColor,
+  bgHoverColor,
+  permission,
+}: ActionButtonProps) {
+  const { can } = useAccess();
+  if (permission && !can(permission)) return null;
   return (
-    <motion.button 
+    <motion.button
       onClick={onClick}
       type="button"
       style={{ backgroundColor: bgColor }}
@@ -18,7 +29,8 @@ export default function ActionButton({ icon, onClick, disabled, bgColor, bgHover
           border-gray-100 text-white w-fit 
           hover:scale-[105%] duration-300 disabled:opacity-60 [&_svg]:size-4 [&_svg]:shrink-0`}
       whileHover={{ backgroundColor: bgHoverColor }}
-      disabled={disabled}>
+      disabled={disabled}
+    >
       {icon}
     </motion.button>
   );

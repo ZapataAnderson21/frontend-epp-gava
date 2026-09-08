@@ -1,17 +1,17 @@
+import { useMemo } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { EditButton } from "../../common/button";
+import SeeButton from "../../common/button/SeeButton";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
 import { requestApi } from "../../data/apiUrl";
 import type { RequestType } from "../../data/types";
 import { useFetch } from "../../hooks";
-import { useMemo } from "react";
-import SeeButton from "../../common/button/SeeButton";
-import { EditButton } from "../../common/button";
-import StatusTag, { type RequestStatusValue } from "./components/StatusTag";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { useApiAction } from "../../hooks/useApiAction";
-import toast, { Toaster } from "react-hot-toast";
+import { useAccess } from "../../permissions/AccessProvider";
+import StatusTag, { type RequestStatusValue } from "./components/StatusTag";
 
 interface RequestTableProps {
   filter: string;
@@ -23,8 +23,11 @@ type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
 export default function RequestTable({ filter, projectId }: RequestTableProps) {
   // Lee y normaliza desde localStorage
   const stored = useMemo<StoredUser>(() => {
-    try { return JSON.parse(localStorage.getItem("user") || "{}"); }
-    catch { return {}; }
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
   }, []);
 
   const myUserId = Number(stored.userId);
@@ -45,30 +48,39 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
     // 👇 DEPENDENCIAS REALES USADAS ADENTRO
   }, [filter, projectId, myUserId]);
 
+  const {
+    data: requests,
+    loading,
+    error,
+    refetch,
+  } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
 
-  const { data: requests, loading, error, refetch } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
-  const { user } = useCurrentUser();
   const { execute: updateRequestStatus } = useApiAction<unknown>();
 
   const navigate = useNavigate();
+  const { can } = useAccess();
   const canEditRequestStatus =
-    user?.userType === "ADMINISTRADORA" || user?.userType === "GERENTE";
+    can("requests.review") || can("requests.approve") || can("requests.attend");
 
   const navigateToRequest = (requestId: number) => {
     if (projectId) {
-      navigate(`/admin/requests/${requestId}`, { state: { fromProject: projectId } });
+      navigate(`/admin/requests/${requestId}`, {
+        state: { fromProject: projectId },
+      });
     } else {
       navigate(`/admin/requests/${requestId}`);
     }
-  }
+  };
 
   const navigateToEditRequest = (requestId: number) => {
     if (projectId) {
-      navigate(`/admin/requests/edit/${requestId}`, { state: { fromProject: projectId } });
+      navigate(`/admin/requests/edit/${requestId}`, {
+        state: { fromProject: projectId },
+      });
     } else {
       navigate(`/admin/requests/edit/${requestId}`);
     }
-  }
+  };
 
   const handleStatusChange = async (
     requestId: number,
@@ -93,13 +105,14 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
   const columns = [
     { key: "requestId", label: "Id", width: "4rem" },
     { key: "createdAt", label: "F y H de Registro", width: "8rem" },
-    { 
+    {
       label: "Solicitante",
       width: "12rem",
-      render: (row: RequestType) => row.user?.name + " " + row.user?.lastName || "Desconocido"
+      render: (row: RequestType) =>
+        row.user?.name + " " + row.user?.lastName || "Desconocido",
     },
     { key: "deliveryDueDate", label: "F y H de Entrega", width: "8rem" },
-    { 
+    {
       label: "Estado",
       width: "8rem",
       render: (row: RequestType) => {
@@ -112,7 +125,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
             }
           />
         );
-     }
+      },
     },
     {
       label: "Acciones",
@@ -120,25 +133,35 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
       render: (row: RequestType) => {
         return (
           <div className="flex gap-2">
-            {
-              (row.status === "Borrador") ? 
-                <EditButton onClick={() => navigateToEditRequest(row.requestId)} /> 
-                : 
-                <SeeButton onClick={() => navigateToRequest(row.requestId)} />
-            }
+            {row.status === "Borrador" ? (
+              <EditButton
+                onClick={() => navigateToEditRequest(row.requestId)}
+              />
+            ) : (
+              <SeeButton onClick={() => navigateToRequest(row.requestId)} />
+            )}
           </div>
         );
-      }
-    }
+      },
+    },
   ] as const;
 
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
-  if (!requests?.length) return <div className="text-center text-gray-500">No hay requerimientos disponibles.</div>;
+  if (!requests?.length)
+    return (
+      <div className="text-center text-gray-500">
+        No hay requerimientos disponibles.
+      </div>
+    );
 
   const formatDateTime = (dateString: string) =>
     new Date(dateString).toLocaleDateString("es-ES", {
-      year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
   const processedRequests = requests.map((r) => ({
@@ -150,10 +173,7 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
 
   return (
     <>
-      <Table<RequestType>
-        data={processedRequests}
-        columns={columns}
-      />
+      <Table<RequestType> data={processedRequests} columns={columns} />
       <Toaster position="top-center" />
     </>
   );

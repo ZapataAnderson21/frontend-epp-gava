@@ -1,21 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
-import DeleteConfirmDialog from "../../components/DeleteConfirmDialog";
-import toast, { Toaster } from "react-hot-toast";
 import { CircleX as IoCloseCircle, Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
-import Select from "../../components/Select";
 import { Table } from "../../common/table";
+import DeleteConfirmDialog from "../../components/DeleteConfirmDialog";
+import Select from "../../components/Select";
 import type {
   WorkerMonthlyEvaluationPeriodStatusPayload,
   WorkerMonthlyEvaluationPeriodWorker,
 } from "../../data/types";
 import {
-  useCurrentUser,
   useMonthlyEvaluationTemplates,
   useWorkerMonthlyEvaluationActions,
   useWorkerMonthlyEvaluationPeriodDetail,
 } from "../../hooks";
+import { useAccess } from "../../permissions/AccessProvider";
 import BestWorkerCertificateModal from "./BestWorkerCertificateModal";
 
 interface CreateFromPeriodParams {
@@ -52,24 +52,26 @@ export default function MonthlyEvaluationPeriodDetailModal({
   onCreateEvaluation,
   onEditEvaluation,
 }: MonthlyEvaluationPeriodDetailModalProps) {
-  const { user } = useCurrentUser();
-  const {
-    data: templates,
-    loading: loadingTemplates,
-  } = useMonthlyEvaluationTemplates();
+  const { data: templates, loading: loadingTemplates } =
+    useMonthlyEvaluationTemplates();
   const {
     data: detail,
     loading,
     error,
     refetch,
-  } = useWorkerMonthlyEvaluationPeriodDetail(period, [period.year, period.month, period.sequence]);
-  const { openPeriod, closePeriod, loading: changingStatus } =
-    useWorkerMonthlyEvaluationActions();
+  } = useWorkerMonthlyEvaluationPeriodDetail(period, [
+    period.year,
+    period.month,
+    period.sequence,
+  ]);
+  const {
+    openPeriod,
+    closePeriod,
+    loading: changingStatus,
+  } = useWorkerMonthlyEvaluationActions();
 
-  const canToggleStatus = useMemo(
-    () => Boolean(user),
-    [user],
-  );
+  const { can } = useAccess();
+  const canToggleStatus = can("evaluations.close");
 
   const isPeriodClosed = detail?.status === "closed";
   const hasEvaluations = (detail?.kpis.evaluatedWorkers ?? 0) > 0;
@@ -77,8 +79,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showCertificate, setShowCertificate] = useState(false);
 
-  const lockedTemplateId = detail?.templateSuggestion?.monthlyEvaluationTemplateId ?? 0;
-  const periodTemplateId = hasEvaluations ? lockedTemplateId : selectedTemplateId;
+  const lockedTemplateId =
+    detail?.templateSuggestion?.monthlyEvaluationTemplateId ?? 0;
+  const periodTemplateId = hasEvaluations
+    ? lockedTemplateId
+    : selectedTemplateId;
 
   useEffect(() => {
     if (!detail) return;
@@ -99,7 +104,8 @@ export default function MonthlyEvaluationPeriodDetailModal({
     if (!detail) return;
 
     const nextStatus = detail.status === "closed" ? "open" : "closed";
-    const action = nextStatus === "open" ? openPeriod(period) : closePeriod(period);
+    const action =
+      nextStatus === "open" ? openPeriod(period) : closePeriod(period);
 
     await toast.promise(action, {
       loading:
@@ -113,7 +119,8 @@ export default function MonthlyEvaluationPeriodDetailModal({
           ? "Periodo abierto correctamente"
           : "Periodo cerrado correctamente";
       },
-      error: (err) => err.message || "No se pudo actualizar el estado del periodo",
+      error: (err) =>
+        err.message || "No se pudo actualizar el estado del periodo",
     });
   };
 
@@ -133,8 +140,9 @@ export default function MonthlyEvaluationPeriodDetailModal({
     if (evaluated.length === 0) return map;
 
     // Get unique scores sorted descending
-    const uniqueScores = [...new Set(evaluated.map((w) => w.totalScore as number))]
-      .sort((a, b) => b - a);
+    const uniqueScores = [
+      ...new Set(evaluated.map((w) => w.totalScore as number)),
+    ].sort((a, b) => b - a);
 
     // Assign rank 1, 2, 3 by distinct score tiers
     for (const worker of evaluated) {
@@ -228,7 +236,9 @@ export default function MonthlyEvaluationPeriodDetailModal({
                 templateId: periodTemplateId,
               })
             }
-            disabled={isPeriodClosed || !periodTemplateId}
+            disabled={
+              !can("evaluations.manage") || isPeriodClosed || !periodTemplateId
+            }
           >
             {isPeriodClosed
               ? "Periodo cerrado"
@@ -253,7 +263,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
     return (
       <div className="bg-white rounded-xl w-[min(1200px,96vw)] h-[85vh] p-6 overflow-y-auto relative">
         <ErrorMessage errorMessage={error || "No se pudo cargar el periodo"} />
-        <button type="button" className="absolute right-3 top-3" onClick={onClose}>
+        <button
+          type="button"
+          className="absolute right-3 top-3"
+          onClick={onClose}
+        >
           <IoCloseCircle className="size-8" />
         </button>
       </div>
@@ -279,13 +293,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
               Plantilla del periodo: {detail.templateSuggestion.templateName}
             </span>
           ) : null
-        ) : (
-          hasEvaluations ? (
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
-              No se encontro la plantilla del periodo
-            </span>
-          ) : null
-        )}
+        ) : hasEvaluations ? (
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
+            No se encontro la plantilla del periodo
+          </span>
+        ) : null}
 
         {!hasEvaluations ? (
           <div className="flex items-center gap-2">
@@ -297,7 +309,12 @@ export default function MonthlyEvaluationPeriodDetailModal({
               onChange={setSelectedTemplateId}
               disabled={loadingTemplates}
               options={[
-                { value: 0, label: loadingTemplates ? "Cargando plantillas..." : "Selecciona una plantilla" },
+                {
+                  value: 0,
+                  label: loadingTemplates
+                    ? "Cargando plantillas..."
+                    : "Selecciona una plantilla",
+                },
                 ...(templates ?? []).map((template) => ({
                   value: template.monthlyEvaluationTemplateId,
                   label: template.name,
@@ -321,7 +338,9 @@ export default function MonthlyEvaluationPeriodDetailModal({
               }}
               disabled={changingStatus || !hasEvaluations}
             >
-              {detail.status === "open" ? "Cerrar evaluacion" : "Abrir evaluacion"}
+              {detail.status === "open"
+                ? "Cerrar evaluacion"
+                : "Abrir evaluacion"}
             </button>
             <DeleteConfirmDialog
               isOpen={showCloseConfirm}
@@ -335,7 +354,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
           </>
         ) : null}
 
-        {isPeriodClosed && hasEvaluations ? (
+        {can("evaluations.export") && isPeriodClosed && hasEvaluations ? (
           <button
             type="button"
             className="px-4 py-2 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-semibold inline-flex items-center gap-2"
@@ -355,19 +374,29 @@ export default function MonthlyEvaluationPeriodDetailModal({
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-2xs font-semibold text-gray-500">Promedio de notas</p>
-          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.averageScore)}</p>
+          <p className="text-2xs font-semibold text-gray-500">
+            Promedio de notas
+          </p>
+          <p className="text-xl font-extrabold">
+            {formatKpi(detail.kpis.averageScore)}
+          </p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
           <p className="text-2xs font-semibold text-gray-500">Nota mas alta</p>
-          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.highestScore)}</p>
+          <p className="text-xl font-extrabold">
+            {formatKpi(detail.kpis.highestScore)}
+          </p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
           <p className="text-2xs font-semibold text-gray-500">Nota mas baja</p>
-          <p className="text-xl font-extrabold">{formatKpi(detail.kpis.lowestScore)}</p>
+          <p className="text-xl font-extrabold">
+            {formatKpi(detail.kpis.lowestScore)}
+          </p>
         </div>
         <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-          <p className="text-2xs font-semibold text-gray-500">Evaluados / Pendientes</p>
+          <p className="text-2xs font-semibold text-gray-500">
+            Evaluados / Pendientes
+          </p>
           <p className="text-xl font-extrabold">
             {detail.kpis.evaluatedWorkers} / {detail.kpis.pendingWorkers}
           </p>
@@ -380,7 +409,11 @@ export default function MonthlyEvaluationPeriodDetailModal({
         rowClassName={isPeriodClosed ? rankRowClassName : undefined}
       />
 
-      <button type="button" className="absolute right-3 top-3" onClick={onClose}>
+      <button
+        type="button"
+        className="absolute right-3 top-3"
+        onClick={onClose}
+      >
         <IoCloseCircle className="size-8" />
       </button>
 

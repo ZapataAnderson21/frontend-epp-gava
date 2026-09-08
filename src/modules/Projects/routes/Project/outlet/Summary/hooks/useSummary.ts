@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useFetch } from "../../../../../../../hooks";
-import type { Project } from "../../../../../../../data/types";
 import {
   generalPayrollApi,
   pettyCashApi,
@@ -9,7 +7,9 @@ import {
   purchaseOrderApi,
   serviceSaleApi,
 } from "../../../../../../../data/apiUrl";
-import type { Currency } from "../../../../../../../data/types";
+import type { Currency, Project } from "../../../../../../../data/types";
+import { useFetch } from "../../../../../../../hooks";
+import { useAccess } from "../../../../../../../permissions/AccessProvider";
 import type {
   AmountsByCurrency,
   PayrollTotals,
@@ -27,6 +27,8 @@ const toAmountsByCurrency = (
 });
 
 export function useSummary(): UseSummaryReturn {
+  const { can } = useAccess();
+  const finance = can("finance.view");
   const { id: projectId } = useParams<{ id: string }>();
 
   // Currency state
@@ -44,13 +46,15 @@ export function useSummary(): UseSummaryReturn {
   } = useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
 
   const { data: pettyCashPEN, loading: pettyCashLoading } = useFetch<number>(
-    `${pettyCashApi}sum/${projectId}`,
+    finance && can("cash.view") ? `${pettyCashApi}sum/${projectId}` : "",
     [projectId],
   );
 
   const { data: purchaseOrderSaleAmounts, loading: purchaseOrderSaleLoading } =
     useFetch<PurchaseOrderAmounts>(
-      `${purchaseOrderApi}saleAmounts/${projectId}?currency=${currency}`,
+      finance && can("orders.view")
+        ? `${purchaseOrderApi}saleAmounts/${projectId}?currency=${currency}`
+        : "",
       [projectId, currency],
     );
 
@@ -58,19 +62,25 @@ export function useSummary(): UseSummaryReturn {
     data: purchaseOrderPurchaseAmounts,
     loading: purchaseOrderPurchaseLoading,
   } = useFetch<PurchaseOrderAmounts>(
-    `${purchaseOrderApi}purchaseAmounts/${projectId}?currency=${currency}`,
+    finance && can("orders.view")
+      ? `${purchaseOrderApi}purchaseAmounts/${projectId}?currency=${currency}`
+      : "",
     [projectId, currency],
   );
 
   const { data: payrollTotals, loading: payrollTotalsLoading } =
     useFetch<PayrollTotals>(
-      `${generalPayrollApi}projects/${projectId}/totals`,
+      finance && can("payroll.view")
+        ? `${generalPayrollApi}projects/${projectId}/totals`
+        : "",
       [projectId],
     );
 
   const { data: registeredIncomeTotalsData, loading: serviceSaleLoading } =
     useFetch<AmountsByCurrency>(
-      `${serviceSaleApi}project/${projectId}/totals`,
+      finance && can("incomes.view")
+        ? `${serviceSaleApi}project/${projectId}/totals`
+        : "",
       [projectId],
     );
 
@@ -117,17 +127,20 @@ export function useSummary(): UseSummaryReturn {
 
   const utilitiesTotals = {
     PEN:
-      purchaseOrdersSaleTotals.PEN + registeredIncomeTotals.PEN -
+      purchaseOrdersSaleTotals.PEN +
+      registeredIncomeTotals.PEN -
       (purchaseOrdersPurchaseTotals.PEN +
         pettyCashTotals.PEN +
         payrollTotalsAmounts.PEN || 0),
     USD:
-      purchaseOrdersSaleTotals.USD + registeredIncomeTotals.USD -
+      purchaseOrdersSaleTotals.USD +
+      registeredIncomeTotals.USD -
       (purchaseOrdersPurchaseTotals.USD +
         pettyCashTotals.USD +
         payrollTotalsAmounts.USD || 0),
     EUR:
-      purchaseOrdersSaleTotals.EUR + registeredIncomeTotals.EUR -
+      purchaseOrdersSaleTotals.EUR +
+      registeredIncomeTotals.EUR -
       (purchaseOrdersPurchaseTotals.EUR +
         pettyCashTotals.EUR +
         payrollTotalsAmounts.EUR || 0),

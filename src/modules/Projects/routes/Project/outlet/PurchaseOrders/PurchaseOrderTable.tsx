@@ -1,15 +1,20 @@
-import { useFetch, useApiAction } from "../../../../../../hooks";
+import { useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import {
+  DeleteButton,
+  EditButton,
+  SeeButton,
+} from "../../../../../../common/button";
 import { ErrorMessage } from "../../../../../../common/error";
 import { LoadingSkeletonTable } from "../../../../../../common/loading";
 import { Table } from "../../../../../../common/table";
+import { DeleteConfirmDialog, Select } from "../../../../../../components";
 import { purchaseOrderApi } from "../../../../../../data/apiUrl";
 import type { Currency, PurchaseOrder } from "../../../../../../data/types";
-import { DeleteButton, EditButton, SeeButton } from "../../../../../../common/button";
-import { useNavigate } from "react-router-dom";
+import { useApiAction, useFetch } from "../../../../../../hooks";
+import { useAccess } from "../../../../../../permissions/AccessProvider";
 import StatusTag, { statusOptions } from "./components/StatusTag";
-import toast, { Toaster } from "react-hot-toast";
-import { useMemo, useState } from "react";
-import { DeleteConfirmDialog, Select } from "../../../../../../components";
 
 const CURRENCIES: Currency[] = ["PEN", "USD", "EUR"];
 
@@ -44,6 +49,8 @@ function FilteredTotalCard({
   totals: TotalsByCurrency;
   tone: "income" | "expense";
 }) {
+  const { can } = useAccess();
+  if (!can("finance.view")) return null;
   const toneClasses =
     tone === "income"
       ? "border-emerald-100 bg-emerald-50/60 text-emerald-800"
@@ -72,8 +79,17 @@ interface PurchaseOrderTableProps {
   projectId: number;
 }
 
-export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProps) {
-  const { data: purchaseOrders, loading, error, setData } = useFetch<PurchaseOrder[]>(`${purchaseOrderApi}project/${projectId}`, [projectId]);
+export default function PurchaseOrderTable({
+  projectId,
+}: PurchaseOrderTableProps) {
+  const {
+    data: purchaseOrders,
+    loading,
+    error,
+    setData,
+  } = useFetch<PurchaseOrder[]>(`${purchaseOrderApi}project/${projectId}`, [
+    projectId,
+  ]);
   const { execute } = useApiAction<unknown>();
   const [supplierFilter, setSupplierFilter] = useState<number>(0);
   const [codeQuery, setCodeQuery] = useState("");
@@ -110,8 +126,13 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
   const filteredPurchaseOrders = useMemo(() => {
     const q = codeQuery.trim().toLowerCase();
     return processedPurchaseOrders.filter((po) => {
-      const supplierMatch = supplierFilter === 0 || po.supplierId === supplierFilter;
-      const codeMatch = !q || String(po.code || "").toLowerCase().includes(q);
+      const supplierMatch =
+        supplierFilter === 0 || po.supplierId === supplierFilter;
+      const codeMatch =
+        !q ||
+        String(po.code || "")
+          .toLowerCase()
+          .includes(q);
       return supplierMatch && codeMatch;
     });
   }, [processedPurchaseOrders, supplierFilter, codeQuery]);
@@ -136,42 +157,53 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
   const totalsScopeLabel =
     supplierFilter === 0
       ? "todas las órdenes visibles"
-      : supplierOptions.find((option) => option.value === supplierFilter)
-          ?.label ?? "el proveedor seleccionado";
+      : (supplierOptions.find((option) => option.value === supplierFilter)
+          ?.label ?? "el proveedor seleccionado");
 
   const navigate = useNavigate();
 
   const handleEdit = (purchaseOrderId: number) => {
-    navigate(`/admin/projects/${projectId}/purchase-orders/edit/${purchaseOrderId}`);
+    navigate(
+      `/admin/projects/${projectId}/purchase-orders/edit/${purchaseOrderId}`,
+    );
   };
 
   const handleSee = (purchaseOrderId: number) => {
     navigate(`/admin/projects/${projectId}/purchase-orders/${purchaseOrderId}`);
   };
 
-  const handleStatusChange = async (purchaseOrderId: number, newStatus: string) => {
+  const handleStatusChange = async (
+    purchaseOrderId: number,
+    newStatus: string,
+  ) => {
     // Guardar estado anterior para poder revertir
     const previousOrders = purchaseOrders ? [...purchaseOrders] : [];
-    
+
     // Obtener el label del nuevo estado para mostrar en la UI
-    const newStatusLabel = statusOptions.find(opt => opt.value === newStatus)?.label || newStatus;
-    
+    const newStatusLabel =
+      statusOptions.find((opt) => opt.value === newStatus)?.label || newStatus;
+
     // Optimistic update - actualizar localmente de inmediato
-    setData((prev) => 
-      prev?.map(po => 
-        po.purchaseOrderId === purchaseOrderId 
-          ? { ...po, status: newStatusLabel }
-          : po
-      ) ?? null
+    setData(
+      (prev) =>
+        prev?.map((po) =>
+          po.purchaseOrderId === purchaseOrderId
+            ? { ...po, status: newStatusLabel }
+            : po,
+        ) ?? null,
     );
 
     try {
-      const result = await execute(`${purchaseOrderApi}${purchaseOrderId}`, "PATCH", { status: newStatus });
-      
+      const result = await execute(
+        `${purchaseOrderApi}${purchaseOrderId}`,
+        "PATCH",
+        { status: newStatus },
+      );
+
       if (result.statusCode >= 200 && result.statusCode < 300) {
-        toast.success('Estado actualizado con éxito');
+        toast.success("Estado actualizado con éxito");
       } else {
-        throw new Error(result.message || 'Error al actualizar');
+        throw new Error(result.message || "Error al actualizar");
       }
     } catch (err: unknown) {
       // Revertir al estado anterior si falla
@@ -193,7 +225,10 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
     const previousOrders = purchaseOrders ? [...purchaseOrders] : [];
 
     // Optimistic update - quitar localmente de inmediato
-    setData((prev) => prev?.filter((po) => po.purchaseOrderId !== pendingDeleteId) ?? null);
+    setData(
+      (prev) =>
+        prev?.filter((po) => po.purchaseOrderId !== pendingDeleteId) ?? null,
+    );
 
     try {
       await execute(`${purchaseOrderApi}${pendingDeleteId}`, "DELETE");
@@ -213,7 +248,10 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
 
   if (loading) return <LoadingSkeletonTable />;
   if (error) return <ErrorMessage errorMessage={error} />;
-  if (!processedPurchaseOrders.length) return <ErrorMessage errorMessage="No hay órdenes de compra disponibles." />;
+  if (!processedPurchaseOrders.length)
+    return (
+      <ErrorMessage errorMessage="No hay órdenes de compra disponibles." />
+    );
 
   return (
     <>
@@ -258,37 +296,51 @@ export default function PurchaseOrderTable({ projectId }: PurchaseOrderTableProp
       </section>
       <Table<PurchaseOrderRow>
         data={filteredPurchaseOrders}
-        columns={[
-          { key: "code", label: "Código", width: "12rem" },
-          { key: "supplierName", label: "Proveedor", width: "12rem" },
-          { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
-          { 
-            label: "Estado",
-            width: "8rem",
-            render: (row: PurchaseOrderRow) => {
-              return (
-                <StatusTag 
-                  status={row.status} 
-                  editable={true}
-                  onStatusChange={(newStatus) => handleStatusChange(row.purchaseOrderId, newStatus)}
-                />
-              );
-            }
-          },
-          { label: "Acciones", width: "8rem", render: (po) => (
-              <div className="flex items-center gap-2">
-                {po.status === "Pendiente" ? (
-                  <EditButton onClick={() => handleEdit(po.purchaseOrderId)} />
-                ) : (
-                  <SeeButton onClick={() => handleSee(po.purchaseOrderId)} />
-                )}
-                <DeleteButton onClick={() => handleDelete(po.purchaseOrderId)} />
-              </div>
-          ) }
-        ] as const}
+        columns={
+          [
+            { key: "code", label: "Código", width: "12rem" },
+            { key: "supplierName", label: "Proveedor", width: "12rem" },
+            { key: "createdAt", label: "Fecha de Registro", width: "12rem" },
+            {
+              label: "Estado",
+              width: "8rem",
+              render: (row: PurchaseOrderRow) => {
+                return (
+                  <StatusTag
+                    status={row.status}
+                    editable={true}
+                    onStatusChange={(newStatus) =>
+                      handleStatusChange(row.purchaseOrderId, newStatus)
+                    }
+                  />
+                );
+              },
+            },
+            {
+              label: "Acciones",
+              width: "8rem",
+              render: (po) => (
+                <div className="flex items-center gap-2">
+                  {po.status === "Pendiente" ? (
+                    <EditButton
+                      onClick={() => handleEdit(po.purchaseOrderId)}
+                    />
+                  ) : (
+                    <SeeButton onClick={() => handleSee(po.purchaseOrderId)} />
+                  )}
+                  <DeleteButton
+                    onClick={() => handleDelete(po.purchaseOrderId)}
+                  />
+                </div>
+              ),
+            },
+          ] as const
+        }
       />
       {!filteredPurchaseOrders.length && (
-        <p className="text-center text-gray-500 mt-3">No hay resultados con esos filtros.</p>
+        <p className="text-center text-gray-500 mt-3">
+          No hay resultados con esos filtros.
+        </p>
       )}
 
       <DeleteConfirmDialog

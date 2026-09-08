@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { Form, InputForm, ButtonSubmit, ButtonContainer } from "../../../common/form";
-import { useApiAction } from "../../../hooks/useApiAction";
-import { userTypeApi } from "../../../data/apiUrl";
-import { X as IoClose } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion"; // 👈 usa framer-motion, no motion/react
+import { X as IoClose } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ButtonContainer,
+  ButtonSubmit,
+  Form,
+  InputForm,
+} from "../../../common/form";
+import { userTypeApi } from "../../../data/apiUrl";
+import { useApiAction } from "../../../hooks/useApiAction";
 
 type CreatedUserType = { userTypeId: number; name: string };
 
@@ -13,7 +18,11 @@ interface Props {
   onCreated?: (created: CreatedUserType) => void;
 }
 
-export default function UserTypeCreateModal({ open, onClose, onCreated }: Props) {
+export default function UserTypeCreateModal({
+  open,
+  onClose,
+  onCreated,
+}: Props) {
   const [name, setName] = useState("");
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -91,6 +100,7 @@ export default function UserTypeCreateModal({ open, onClose, onCreated }: Props)
 
               <ButtonContainer>
                 <ButtonSubmit
+                  permission="roles.manage"
                   label="Guardar"
                   loading={loading}
                   loadingLabel="Guardando..."

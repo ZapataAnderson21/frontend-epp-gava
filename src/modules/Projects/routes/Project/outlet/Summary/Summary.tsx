@@ -1,18 +1,26 @@
+import { useAccess } from "../../../../../../permissions/AccessProvider";
 import { Toaster } from "react-hot-toast";
-import { useCurrentUser } from "../../../../../../hooks";
-import { ErrorMessage } from "../../../../../../common/error";
-import { adminTypes } from "../../../../../../utils";
 import Permission from "../../../../../../common/auth/Permission";
+import { ErrorMessage } from "../../../../../../common/error";
+import { useCurrentUser } from "../../../../../../hooks";
+import { useSummary } from "./hooks";
 import {
-  ProjectInfoCard,
-  RecordsSummaryCard,
   EconomicSummaryCard,
+  ProjectInfoCard,
   ProjectProgressCard,
   ProjectTimelineCard,
+  RecordsSummaryCard,
 } from "./sections";
-import { useSummary } from "./hooks";
 
 export default function Summary() {
+  const { can } = useAccess();
+  const completeFinance = [
+    "finance.view",
+    "orders.view",
+    "incomes.view",
+    "payroll.view",
+    "cash.view",
+  ].every(can);
   const { user } = useCurrentUser();
   const {
     project,
@@ -37,7 +45,7 @@ export default function Summary() {
     registeredIncomeTotals,
     utilitiesTotals,
   } = useSummary();
-  
+
   if (error) return <ErrorMessage errorMessage={error} />;
 
   return (
@@ -53,42 +61,52 @@ export default function Summary() {
         />
 
         {/* ===== Card 2: Resumen de registros ===== */}
-        <Permission user={user} allow={adminTypes}>
+        <Permission user={user} permission="projects.view">
           <RecordsSummaryCard project={project} />
         </Permission>
       </div>
 
       {/* ===== Card 3: Resumen económico ===== */}
-      <Permission user={user} allow={adminTypes}>
-        <EconomicSummaryCard
-          currency={currency}
-          setCurrency={setCurrency}
-          purchaseOrderSaleLoading={purchaseOrderSaleLoading}
-          purchaseOrderPurchaseLoading={purchaseOrderPurchaseLoading}
-          payrollTotalsLoading={payrollTotalsLoading}
-          serviceSaleLoading={serviceSaleLoading}
-          pettyCashLoading={pettyCashLoading}
-          loading={
-            loading ||
-            purchaseOrderSaleLoading ||
-            purchaseOrderPurchaseLoading ||
-            payrollTotalsLoading ||
-            pettyCashLoading ||
-            serviceSaleLoading
-          }
-          purchaseOrdersSaleTotals={purchaseOrdersSaleTotals}
-          purchaseOrdersPurchaseTotals={purchaseOrdersPurchaseTotals}
-          purchaseOrdersSaleTotalsByType={purchaseOrdersSaleTotalsByType}
-          purchaseOrdersPurchaseTotalsByType={purchaseOrdersPurchaseTotalsByType}
-          registeredIncomeTotals={registeredIncomeTotals}
-          payrollTotalsAmounts={payrollTotalsAmounts}
-          pettyCashTotals={pettyCashTotals}
-          utilitiesTotals={utilitiesTotals}
-        />
+      <Permission user={user} permission="finance.view">
+        {completeFinance ? (
+          <EconomicSummaryCard
+            currency={currency}
+            setCurrency={setCurrency}
+            purchaseOrderSaleLoading={purchaseOrderSaleLoading}
+            purchaseOrderPurchaseLoading={purchaseOrderPurchaseLoading}
+            payrollTotalsLoading={payrollTotalsLoading}
+            serviceSaleLoading={serviceSaleLoading}
+            pettyCashLoading={pettyCashLoading}
+            loading={
+              loading ||
+              purchaseOrderSaleLoading ||
+              purchaseOrderPurchaseLoading ||
+              payrollTotalsLoading ||
+              pettyCashLoading ||
+              serviceSaleLoading
+            }
+            purchaseOrdersSaleTotals={purchaseOrdersSaleTotals}
+            purchaseOrdersPurchaseTotals={purchaseOrdersPurchaseTotals}
+            purchaseOrdersSaleTotalsByType={purchaseOrdersSaleTotalsByType}
+            purchaseOrdersPurchaseTotalsByType={
+              purchaseOrdersPurchaseTotalsByType
+            }
+            registeredIncomeTotals={registeredIncomeTotals}
+            payrollTotalsAmounts={payrollTotalsAmounts}
+            pettyCashTotals={pettyCashTotals}
+            utilitiesTotals={utilitiesTotals}
+          />
+        ) : (
+          <p className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500">
+            El resumen económico requiere acceso a todas sus fuentes.
+          </p>
+        )}
       </Permission>
 
       {/* ===== Card 4: Avance del proyecto ===== */}
-      <ProjectProgressCard projectId={projectId} />
+      <Permission permission="progress.view">
+        <ProjectProgressCard projectId={projectId} />
+      </Permission>
 
       {/* ===== Card 5: Línea de tiempo del proyecto ===== */}
       <ProjectTimelineCard
