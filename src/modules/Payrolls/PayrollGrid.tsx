@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, LockKeyhole } from "lucide-react";
 import { useAccess } from "../../permissions/AccessProvider";
 import AttendanceIndicator from "./AttendanceIndicator";
+import WorkerSelectionCheck from "./WorkerSelectionCheck";
 import type {
   GeneralPayrollEntry,
   GeneralPayrollProject,
@@ -109,10 +110,12 @@ function ProjectTotalsRow({
   label,
   totals,
   overall = false,
+  selectionEnabled = false,
 }: {
   label: string;
   totals: ProjectColumnTotals;
   overall?: boolean;
+  selectionEnabled?: boolean;
 }) {
   return (
     <tr
@@ -122,7 +125,7 @@ function ProjectTotalsRow({
           : "border-t border-gray-200 bg-gray-100 font-bold text-[#0f2545]"
       }
     >
-      <td colSpan={3} className="px-4 py-3 text-right">
+      <td colSpan={selectionEnabled ? 4 : 3} className="px-4 py-3 text-right">
         {label}
       </td>
       {dayFields.map(([field]) => (
@@ -164,6 +167,8 @@ interface ProjectGridProps {
   ) => void;
   readOnly?: boolean;
   pendingAttendanceKeys?: ReadonlySet<string>;
+  selectedWorkerIds?: ReadonlySet<number>;
+  onSelectedWorkerIdsChange?: (workerIds: number[]) => void;
 }
 
 const NumberInput = ({
@@ -259,6 +264,8 @@ export function ProjectPayrollGrid({
   onWorkerChange,
   readOnly = false,
   pendingAttendanceKeys = new Set<string>(),
+  selectedWorkerIds = new Set<number>(),
+  onSelectedWorkerIdsChange,
 }: ProjectGridProps) {
   const { can } = useAccess();
   const entryByWorker = new Map(
@@ -267,6 +274,24 @@ export function ProjectPayrollGrid({
   const activeWorkers = workers.filter(
     (worker) => entryByWorker.get(worker.generalPayrollWorkerId)?.isActive,
   );
+  const selectionEnabled = Boolean(onSelectedWorkerIdsChange);
+  const activeWorkerIds = activeWorkers.map(
+    (worker) => worker.generalPayrollWorkerId,
+  );
+  const allWorkersSelected =
+    activeWorkerIds.length > 0 &&
+    activeWorkerIds.every((workerId) => selectedWorkerIds.has(workerId));
+  const someWorkersSelected = activeWorkerIds.some((workerId) =>
+    selectedWorkerIds.has(workerId),
+  );
+
+  const toggleWorkerSelection = (workerId: number, selected: boolean) => {
+    if (!onSelectedWorkerIdsChange) return;
+    const nextIds = new Set(selectedWorkerIds);
+    if (selected) nextIds.add(workerId);
+    else nextIds.delete(workerId);
+    onSelectedWorkerIdsChange([...nextIds]);
+  };
   const allProjectTotals = sumProjectColumnTotals(
     activeWorkers.map((worker) =>
       calculateProjectWorkerTotals(
@@ -280,13 +305,34 @@ export function ProjectPayrollGrid({
     <div
       className={`overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm ${can("finance.view") ? "" : "payroll-attendance-only"}`}
     >
-      <table className="min-w-[1500px] w-full border-collapse text-sm">
+      <table
+        className={`${selectionEnabled ? "min-w-[1550px]" : "min-w-[1500px]"} w-full border-collapse text-sm`}
+      >
         <thead className="bg-[#f3f5f8] text-[#0f2545]">
           <tr>
-            <th className="sticky left-0 z-20 min-w-12 bg-[#f3f5f8] px-3 py-4 text-center">
+            {selectionEnabled && (
+              <th className="sticky left-0 z-30 w-12 min-w-12 bg-[#f3f5f8] px-3 py-4 text-center">
+                <WorkerSelectionCheck
+                  checked={allWorkersSelected}
+                  indeterminate={someWorkersSelected && !allWorkersSelected}
+                  disabled={activeWorkerIds.length === 0}
+                  ariaLabel="Seleccionar todos los trabajadores de la ubicación"
+                  onChange={() =>
+                    onSelectedWorkerIdsChange?.(
+                      allWorkersSelected ? [] : activeWorkerIds,
+                    )
+                  }
+                />
+              </th>
+            )}
+            <th
+              className={`sticky ${selectionEnabled ? "left-12" : "left-0"} z-20 min-w-12 bg-[#f3f5f8] px-3 py-4 text-center`}
+            >
               Item
             </th>
-            <th className="sticky left-12 z-20 min-w-64 bg-[#f3f5f8] px-3 py-4 text-left">
+            <th
+              className={`sticky ${selectionEnabled ? "left-24" : "left-12"} z-20 min-w-64 bg-[#f3f5f8] px-3 py-4 text-left`}
+            >
               Nombre y apellido
             </th>
             <th className="min-w-24 px-3 py-4 text-left">DNI</th>
@@ -323,7 +369,7 @@ export function ProjectPayrollGrid({
                 className="bg-[#eaf2ff] text-[#0047a3]"
               >
                 <td
-                  colSpan={18}
+                  colSpan={selectionEnabled ? 18 : 17}
                   className="px-4 py-2.5 font-bold uppercase tracking-wide"
                 >
                   {groupLabel[group]}
@@ -339,13 +385,41 @@ export function ProjectPayrollGrid({
                 return (
                   <tr
                     key={worker.generalPayrollWorkerId}
-                    className="border-t border-gray-100 even:bg-gray-50/50"
+                    className={`border-t border-gray-100 ${
+                      selectedWorkerIds.has(worker.generalPayrollWorkerId)
+                        ? "bg-[#eef5ff]"
+                        : "even:bg-gray-50/50"
+                    }`}
                   >
-                    <td className="sticky left-0 z-10 bg-inherit px-3 py-3 text-center">
+                    {selectionEnabled && (
+                      <td className="sticky left-0 z-20 bg-inherit px-3 py-3 text-center">
+                        <WorkerSelectionCheck
+                          checked={selectedWorkerIds.has(
+                            worker.generalPayrollWorkerId,
+                          )}
+                          ariaLabel={`Seleccionar a ${worker.worker.fullName}`}
+                          onChange={(selected) =>
+                            toggleWorkerSelection(
+                              worker.generalPayrollWorkerId,
+                              selected,
+                            )
+                          }
+                        />
+                      </td>
+                    )}
+                    <td
+                      className={`sticky ${selectionEnabled ? "left-12" : "left-0"} z-10 bg-inherit px-3 py-3 text-center`}
+                    >
                       {index + 1}
                     </td>
                     <td
-                      className={`sticky left-12 z-10 ${index % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"} px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}
+                      className={`sticky ${selectionEnabled ? "left-24" : "left-12"} z-10 ${
+                        selectedWorkerIds.has(worker.generalPayrollWorkerId)
+                          ? "bg-[#eef5ff]"
+                          : index % 2 === 0
+                            ? "bg-[#f8fafc]"
+                            : "bg-white"
+                      } px-3 py-3 font-semibold text-[#0f2545] shadow-[6px_0_8px_-8px_rgba(15,37,69,0.35)]`}
                     >
                       {worker.worker.fullName}
                     </td>
@@ -474,7 +548,7 @@ export function ProjectPayrollGrid({
               groupedWorkers.length === 0 ? (
                 <tr key={`${group}-empty`}>
                   <td
-                    colSpan={18}
+                    colSpan={selectionEnabled ? 18 : 17}
                     className="px-4 py-6 text-center text-gray-400"
                   >
                     No hay trabajadores en este grupo.
@@ -485,6 +559,7 @@ export function ProjectPayrollGrid({
                   key={`${group}-totals`}
                   label={`Total ${groupLabel[group]}`}
                   totals={groupTotals}
+                  selectionEnabled={selectionEnabled}
                 />
               ),
             ];
@@ -493,6 +568,7 @@ export function ProjectPayrollGrid({
             label="Total de la ubicación"
             totals={allProjectTotals}
             overall
+            selectionEnabled={selectionEnabled}
           />
         </tbody>
       </table>

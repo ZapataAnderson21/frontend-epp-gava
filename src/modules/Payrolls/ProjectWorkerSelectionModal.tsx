@@ -1,48 +1,31 @@
 import { payrollLocationName } from "./payrollLocation";
-import { AlertTriangle, Search, UserRoundCheck, X } from "lucide-react";
+import { Search, UserRoundPlus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
   GeneralPayrollProject,
   GeneralPayrollWorker,
   PayrollWorkerGroup,
 } from "./types";
+import WorkerSelectionCheck from "./WorkerSelectionCheck";
 
 const groupLabels: Record<PayrollWorkerGroup, string> = {
   laborer: "Obreros",
   technician: "Técnicos",
 };
 
-const hasRecordedValues = (
-  project: GeneralPayrollProject,
-  generalPayrollWorkerId: number,
-) => {
-  const entry = project.entries.find(
-    (item) => item.generalPayrollWorkerId === generalPayrollWorkerId,
-  );
-  if (!entry) return false;
-  return [
-    entry.monday,
-    entry.tuesday,
-    entry.wednesday,
-    entry.thursday,
-    entry.friday,
-    entry.saturday,
-    entry.dominical,
-    entry.overtimeAmount,
-    entry.afpDiscount,
-    entry.advanceDiscount,
-  ].some((value) => Number(value) !== 0);
-};
+const normalizeSearch = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 
 interface Props {
   project: GeneralPayrollProject;
   workers: GeneralPayrollWorker[];
   saving: boolean;
   onClose: () => void;
-  onSave: (
-    generalPayrollWorkerIds: number[],
-    confirmClearAttendance: boolean,
-  ) => Promise<void>;
+  onSave: (generalPayrollWorkerIds: number[]) => Promise<void>;
 }
 
 export default function ProjectWorkerSelectionModal({
@@ -53,72 +36,62 @@ export default function ProjectWorkerSelectionModal({
   onSave,
 }: Props) {
   const [search, setSearch] = useState("");
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>(
-    project.entries
-      .filter((entry) => entry.isActive)
-      .map((entry) => entry.generalPayrollWorkerId),
-  );
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const normalizedSearch = search
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
+  const activeIds = useMemo(
+    () =>
+      new Set(
+        project.entries
+          .filter((entry) => entry.isActive)
+          .map((entry) => entry.generalPayrollWorkerId),
+      ),
+    [project.entries],
+  );
+  const removedWorkers = useMemo(
+    () =>
+      workers.filter(
+        (worker) => !activeIds.has(worker.generalPayrollWorkerId),
+      ),
+    [activeIds, workers],
+  );
+  const normalizedSearch = normalizeSearch(search);
   const visibleWorkers = useMemo(
     () =>
-      workers.filter((worker) =>
-        `${worker.worker.fullName} ${worker.worker.dni}`
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .includes(normalizedSearch),
+      removedWorkers.filter((worker) =>
+        normalizeSearch(`${worker.worker.fullName} ${worker.worker.dni}`).includes(
+          normalizedSearch,
+        ),
       ),
-    [normalizedSearch, workers],
-  );
-  const removedWithRecords = workers.filter(
-    (worker) =>
-      !selectedIds.includes(worker.generalPayrollWorkerId) &&
-      project.entries.some(
-        (entry) =>
-          entry.generalPayrollWorkerId === worker.generalPayrollWorkerId &&
-          entry.isActive,
-      ) &&
-      hasRecordedValues(project, worker.generalPayrollWorkerId),
+    [normalizedSearch, removedWorkers],
   );
 
-  const toggleWorker = (workerId: number) => {
+  const toggleWorker = (workerId: number, selected: boolean) => {
     setSelectedIds((current) =>
-      current.includes(workerId)
-        ? current.filter((id) => id !== workerId)
-        : [...current, workerId],
+      selected
+        ? [...new Set([...current, workerId])]
+        : current.filter((id) => id !== workerId),
     );
   };
 
-  const selectVisible = () => {
-    setSelectedIds((current) => [
-      ...new Set([
-        ...current,
-        ...visibleWorkers.map((worker) => worker.generalPayrollWorkerId),
-      ]),
-    ]);
-  };
+  const allVisibleSelected =
+    visibleWorkers.length > 0 &&
+    visibleWorkers.every((worker) =>
+      selectedIds.includes(worker.generalPayrollWorkerId),
+    );
 
-  const clearVisible = () => {
+  const toggleVisible = () => {
     const visibleIds = new Set(
       visibleWorkers.map((worker) => worker.generalPayrollWorkerId),
     );
     setSelectedIds((current) =>
-      current.filter((workerId) => !visibleIds.has(workerId)),
+      allVisibleSelected
+        ? current.filter((workerId) => !visibleIds.has(workerId))
+        : [...new Set([...current, ...visibleIds])],
     );
   };
 
   const submit = async () => {
-    if (removedWithRecords.length > 0) {
-      setConfirmationOpen(true);
-      return;
-    }
-    await onSave(selectedIds, false);
+    await onSave([...activeIds, ...selectedIds]);
   };
 
   return (
@@ -127,11 +100,11 @@ export default function ProjectWorkerSelectionModal({
         <header className="flex items-start justify-between border-b border-gray-200 px-6 py-5">
           <div className="flex gap-3">
             <span className="rounded-xl bg-[#eff5ff] p-3 text-[#0047a3]">
-              <UserRoundCheck className="size-5" />
+              <UserRoundPlus className="size-5" />
             </span>
             <div>
               <h2 className="text-xl font-bold text-[#0f2545]">
-                Trabajadores de la ubicación
+                Seleccionar trabajadores
               </h2>
               <p className="mt-1 text-sm text-gray-500">
                 {project.project ? `${project.project.code} · ` : ""}
@@ -142,6 +115,7 @@ export default function ProjectWorkerSelectionModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Cerrar selección de trabajadores"
             className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
           >
             <X className="size-5" />
@@ -151,24 +125,20 @@ export default function ProjectWorkerSelectionModal({
         <section className="min-h-0 flex-1 overflow-y-auto p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold text-gray-600">
-              {selectedIds.length} de {workers.length} seleccionados
+              {selectedIds.length} seleccionados · {removedWorkers.length}{" "}
+              disponibles
             </p>
-            <div className="flex gap-2">
+            {visibleWorkers.length > 0 && (
               <button
                 type="button"
-                onClick={clearVisible}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
-              >
-                Quitar visibles
-              </button>
-              <button
-                type="button"
-                onClick={selectVisible}
+                onClick={toggleVisible}
                 className="rounded-lg border border-[#0047a3] px-3 py-1.5 text-xs font-bold text-[#0047a3] hover:bg-[#eff5ff]"
               >
-                Seleccionar visibles
+                {allVisibleSelected
+                  ? "Limpiar visibles"
+                  : "Seleccionar visibles"}
               </button>
-            </div>
+            )}
           </div>
 
           <label className="my-4 flex items-center gap-2 rounded-xl border border-gray-300 px-3 focus-within:border-[#0047a3]">
@@ -188,34 +158,52 @@ export default function ProjectWorkerSelectionModal({
                 worker.generalPayrollWorkerId,
               );
               return (
-                <label
+                <div
                   key={worker.generalPayrollWorkerId}
-                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 ${
+                  className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
                     selected
                       ? "border-[#0047a3]/40 bg-[#f7faff]"
                       : "border-gray-200"
                   }`}
                 >
-                  <input
-                    type="checkbox"
+                  <WorkerSelectionCheck
                     checked={selected}
-                    onChange={() => toggleWorker(worker.generalPayrollWorkerId)}
-                    className="size-4 accent-[#0047a3]"
+                    ariaLabel={`Seleccionar a ${worker.worker.fullName}`}
+                    onChange={(nextSelected) =>
+                      toggleWorker(
+                        worker.generalPayrollWorkerId,
+                        nextSelected,
+                      )
+                    }
                   />
-                  <span className="min-w-0 flex-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toggleWorker(worker.generalPayrollWorkerId, !selected)
+                    }
+                    className="min-w-0 flex-1 text-left"
+                  >
                     <span className="block truncate font-semibold text-[#0f2545]">
                       {worker.worker.fullName}
                     </span>
                     <span className="block text-xs text-gray-500">
                       DNI {worker.worker.dni}
                     </span>
-                  </span>
+                  </button>
                   <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-600">
                     {groupLabels[worker.group]}
                   </span>
-                </label>
+                </div>
               );
             })}
+
+            {visibleWorkers.length === 0 && (
+              <div className="rounded-xl border border-dashed border-gray-300 px-5 py-10 text-center text-sm text-gray-500">
+                {removedWorkers.length === 0
+                  ? "Todos los trabajadores de la semana ya están en esta ubicación."
+                  : "No hay trabajadores quitados que coincidan con la búsqueda."}
+              </div>
+            )}
           </div>
         </section>
 
@@ -229,55 +217,14 @@ export default function ProjectWorkerSelectionModal({
           </button>
           <button
             type="button"
-            disabled={saving}
+            disabled={saving || selectedIds.length === 0}
             onClick={submit}
-            className="rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white hover:bg-[#003b88] disabled:opacity-60"
+            className="rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white hover:bg-[#003b88] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? "Guardando..." : "Aplicar selección"}
+            {saving ? "Agregando..." : "Agregar seleccionados"}
           </button>
         </footer>
       </div>
-
-      {confirmationOpen && (
-        <div className="fixed inset-0 z-[320] flex items-center justify-center bg-slate-950/55 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-            <span className="mb-4 flex size-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-              <AlertTriangle className="size-6" />
-            </span>
-            <h3 className="text-xl font-bold text-[#0f2545]">
-              ¿Quitar trabajadores con registros?
-            </h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Se borrarán sus asistencias y montos de esta ubicación durante
-              esta semana. Ya no serán considerados en los totales:
-            </p>
-            <ul className="mt-3 max-h-36 list-disc overflow-y-auto pl-5 text-sm font-semibold text-gray-700">
-              {removedWithRecords.map((worker) => (
-                <li key={worker.generalPayrollWorkerId}>
-                  {worker.worker.fullName}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmationOpen(false)}
-                className="rounded-xl border border-gray-300 px-4 py-2.5 font-semibold text-gray-700"
-              >
-                Volver
-              </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() => onSave(selectedIds, true)}
-                className="rounded-xl bg-red-600 px-4 py-2.5 font-bold text-white hover:bg-red-700 disabled:opacity-60"
-              >
-                {saving ? "Quitando..." : "Sí, quitar y borrar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

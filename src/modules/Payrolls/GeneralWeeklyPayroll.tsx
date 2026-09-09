@@ -7,6 +7,7 @@ import {
   LoaderCircle,
   Save,
   Settings2,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,6 +19,7 @@ import { useAccess } from "../../permissions/AccessProvider";
 import PayrollConfigurationModal from "./PayrollConfigurationModal";
 import { GeneralPayrollGrid, ProjectPayrollGrid } from "./PayrollGrid";
 import ProjectWorkerSelectionModal from "./ProjectWorkerSelectionModal";
+import RemoveProjectWorkersDialog from "./RemoveProjectWorkersDialog";
 import type {
   GeneralPayroll,
   GeneralPayrollDetail,
@@ -53,6 +55,14 @@ const isAttendanceField = (
   field: keyof GeneralPayrollEntry,
 ): field is AttendanceField => dayKeys.includes(field as AttendanceField);
 
+const hasEntryRecords = (entry: GeneralPayrollEntry) =>
+  [
+    ...dayKeys.map((field) => entry[field]),
+    entry.overtimeAmount,
+    entry.afpDiscount,
+    entry.advanceDiscount,
+  ].some((value) => Number(value) !== 0);
+
 interface AttendanceUpdate {
   generalPayrollEntryId: number;
   field: AttendanceField;
@@ -85,6 +95,11 @@ export default function GeneralWeeklyPayroll() {
   const [activeTab, setActiveTab] = useState<number | "general">("general");
   const [configurationOpen, setConfigurationOpen] = useState(false);
   const [projectWorkersOpen, setProjectWorkersOpen] = useState(false);
+  const [removeWorkersConfirmationOpen, setRemoveWorkersConfirmationOpen] =
+    useState(false);
+  const [selectedProjectWorkerIds, setSelectedProjectWorkerIds] = useState(
+    new Set<number>(),
+  );
   const pendingAttendanceRef = useRef(new Set<string>());
   const [pendingAttendanceKeys, setPendingAttendanceKeys] = useState(
     new Set<string>(),
@@ -108,6 +123,12 @@ export default function GeneralWeeklyPayroll() {
     }
   }, [activeTab, payroll]);
 
+  useEffect(() => {
+    setSelectedProjectWorkerIds(new Set());
+    setRemoveWorkersConfirmationOpen(false);
+    setProjectWorkersOpen(false);
+  }, [activeTab]);
+
   const selectedProject = useMemo(
     () =>
       activeTab === "general"
@@ -116,6 +137,24 @@ export default function GeneralWeeklyPayroll() {
             (project) => project.generalPayrollProjectId === activeTab,
           ) ?? null),
     [activeTab, payroll],
+  );
+
+  const selectedWorkersForRemoval = useMemo(
+    () =>
+      payroll?.workers.filter((worker) =>
+        selectedProjectWorkerIds.has(worker.generalPayrollWorkerId),
+      ) ?? [],
+    [payroll, selectedProjectWorkerIds],
+  );
+  const selectedRemovalHasRecords = useMemo(
+    () =>
+      selectedProject?.entries.some(
+        (entry) =>
+          entry.isActive &&
+          selectedProjectWorkerIds.has(entry.generalPayrollWorkerId) &&
+          hasEntryRecords(entry),
+      ) ?? false,
+    [selectedProject, selectedProjectWorkerIds],
   );
 
   const totalNet = useMemo(() => {
@@ -349,8 +388,9 @@ export default function GeneralWeeklyPayroll() {
       );
       setPayroll(response.data.payroll);
       setProjectWorkersOpen(false);
-      toast.success("Trabajadores del proyecto actualizados.");
-      refetch();
+      setRemoveWorkersConfirmationOpen(false);
+      setSelectedProjectWorkerIds(new Set());
+      toast.success("Trabajadores de la ubicación actualizados.");
     } catch (actionError) {
       toast.error(
         actionError instanceof Error
@@ -358,6 +398,30 @@ export default function GeneralWeeklyPayroll() {
           : "No se pudo actualizar la asignación del proyecto.",
       );
     }
+  };
+
+  const removeSelectedProjectWorkers = (confirmClearAttendance: boolean) => {
+    if (!selectedProject || selectedProjectWorkerIds.size === 0) return;
+    const remainingWorkerIds = selectedProject.entries
+      .filter(
+        (entry) =>
+          entry.isActive &&
+          !selectedProjectWorkerIds.has(entry.generalPayrollWorkerId),
+      )
+      .map((entry) => entry.generalPayrollWorkerId);
+    void handleProjectWorkersSave(
+      remainingWorkerIds,
+      confirmClearAttendance,
+    );
+  };
+
+  const requestRemoveSelectedProjectWorkers = () => {
+    if (selectedProjectWorkerIds.size === 0) return;
+    if (selectedRemovalHasRecords) {
+      setRemoveWorkersConfirmationOpen(true);
+      return;
+    }
+    removeSelectedProjectWorkers(false);
   };
 
   if (loading) {
@@ -551,13 +615,31 @@ export default function GeneralWeeklyPayroll() {
           ) : selectedProject ? (
             <div className="space-y-4">
               {canConfigure && (
-                <div className="flex justify-end">
+                <div className="flex flex-wrap justify-end gap-3">
+                  <button
+                    type="button"
+                    disabled={
+                      selectedProjectWorkerIds.size === 0 ||
+                      updatingProjectWorkers ||
+                      pendingAttendanceKeys.size > 0
+                    }
+                    onClick={requestRemoveSelectedProjectWorkers}
+                    className="flex items-center gap-2 rounded-xl border border-red-300 bg-white px-4 py-2.5 font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 className="size-4" />
+                    Quitar trabajadores
+                    {selectedProjectWorkerIds.size > 0 && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs">
+                        {selectedProjectWorkerIds.size}
+                      </span>
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setProjectWorkersOpen(true)}
                     className="flex items-center gap-2 rounded-xl border border-[#0047a3] bg-white px-4 py-2.5 font-bold text-[#0047a3] hover:bg-[#eff5ff]"
                   >
-                    <Users className="size-4" /> Seleccionar trabajadores
+                    <Users className="size-4" /> Seleccionar
                   </button>
                 </div>
               )}
@@ -569,6 +651,13 @@ export default function GeneralWeeklyPayroll() {
                 onWorkerChange={handleWorkerChange}
                 readOnly={!canEdit}
                 pendingAttendanceKeys={pendingAttendanceKeys}
+                selectedWorkerIds={selectedProjectWorkerIds}
+                onSelectedWorkerIdsChange={
+                  canConfigure
+                    ? (workerIds) =>
+                        setSelectedProjectWorkerIds(new Set(workerIds))
+                    : undefined
+                }
               />
             </div>
           ) : null}
@@ -599,9 +688,22 @@ export default function GeneralWeeklyPayroll() {
           workers={payroll.workers}
           saving={updatingProjectWorkers}
           onClose={() => setProjectWorkersOpen(false)}
-          onSave={handleProjectWorkersSave}
+          onSave={(generalPayrollWorkerIds) =>
+            handleProjectWorkersSave(generalPayrollWorkerIds, false)
+          }
         />
       )}
+
+      {canConfigure &&
+        removeWorkersConfirmationOpen &&
+        selectedWorkersForRemoval.length > 0 && (
+          <RemoveProjectWorkersDialog
+            workers={selectedWorkersForRemoval}
+            saving={updatingProjectWorkers}
+            onClose={() => setRemoveWorkersConfirmationOpen(false)}
+            onConfirm={() => removeSelectedProjectWorkers(true)}
+          />
+        )}
     </main>
   );
 }
