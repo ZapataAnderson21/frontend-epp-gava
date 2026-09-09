@@ -1,4 +1,4 @@
-import { Search, Settings2, UserPlus, X } from "lucide-react";
+import { Check, Search, Settings2, UserPlus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
   GeneralPayroll,
@@ -15,6 +15,8 @@ interface Props {
   onClose: () => void;
   onSave: (configuration: {
     projectIds: number[];
+    includeServices: boolean;
+    confirmRemoveServices: boolean;
     workers: Array<{ workerId: number; group: PayrollWorkerGroup }>;
   }) => Promise<void>;
 }
@@ -28,8 +30,30 @@ export default function PayrollConfigurationModal({
   onSave,
 }: Props) {
   const [projectIds, setProjectIds] = useState<number[]>(
-    payroll.projects.map((project) => project.projectId),
+    payroll.projects
+      .map((project) => project.projectId)
+      .filter((id): id is number => id !== null),
   );
+  const hadServices = payroll.projects.some(
+    (location) => location.locationType === "services",
+  );
+  const [includeServices, setIncludeServices] = useState(hadServices);
+  const applyConfiguration = () => {
+    const removingServices = hadServices && !includeServices;
+    if (
+      removingServices &&
+      !window.confirm(
+        "¿Quitar Servicios de esta semana? Se eliminarán sus asistencias y pagos registrados.",
+      )
+    )
+      return;
+    return onSave({
+      projectIds,
+      workers,
+      includeServices,
+      confirmRemoveServices: removingServices,
+    });
+  };
   const [workers, setWorkers] = useState(
     payroll.workers.map((worker) => ({
       workerId: worker.workerId,
@@ -150,7 +174,8 @@ export default function PayrollConfigurationModal({
                 Configurar semana
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                Elige los proyectos visibles y organiza el padrón en dos grupos.
+                Elige las ubicaciones visibles y organiza el padrón en dos
+                grupos.
               </p>
             </div>
           </div>
@@ -165,6 +190,30 @@ export default function PayrollConfigurationModal({
 
         <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[0.8fr_1.2fr]">
           <section className="border-b border-gray-200 p-5 lg:border-b-0 lg:border-r md:p-7">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={includeServices}
+              disabled={saving}
+              onClick={() => setIncludeServices((value) => !value)}
+              className={`mb-5 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-4 text-left transition-colors ${includeServices ? "border-[#0047a3] bg-[#eff5ff]" : "border-gray-200 hover:bg-gray-50"}`}
+            >
+              <span
+                className={`flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors ${includeServices ? "border-[#0047a3] bg-[#0047a3] text-white" : "border-gray-300 bg-white"}`}
+              >
+                {includeServices && (
+                  <Check className="size-4" aria-hidden="true" />
+                )}
+              </span>
+              <span>
+                <span className="block font-bold text-[#0f2545]">
+                  Servicios
+                </span>
+                <span className="block text-xs text-gray-500">
+                  Ubicación independiente, no asociada a un proyecto.
+                </span>
+              </span>
+            </button>
             <h3 className="font-bold text-[#0f2545]">Proyectos activos</h3>
             <p className="mb-4 mt-1 text-xs text-gray-500">
               {projectIds.length} seleccionados
@@ -346,7 +395,7 @@ export default function PayrollConfigurationModal({
           <button
             type="button"
             disabled={saving}
-            onClick={() => onSave({ projectIds, workers })}
+            onClick={applyConfiguration}
             className="rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Guardando..." : "Aplicar configuración"}

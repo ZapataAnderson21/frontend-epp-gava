@@ -1,3 +1,4 @@
+import { payrollLocationName } from "./payrollLocation";
 import { motion } from "framer-motion";
 import { Check, LockKeyhole } from "lucide-react";
 import { useAccess } from "../../permissions/AccessProvider";
@@ -162,6 +163,7 @@ interface ProjectGridProps {
     value: number,
   ) => void;
   readOnly?: boolean;
+  pendingAttendanceKeys?: ReadonlySet<string>;
 }
 
 const NumberInput = ({
@@ -256,6 +258,7 @@ export function ProjectPayrollGrid({
   onEntryChange,
   onWorkerChange,
   readOnly = false,
+  pendingAttendanceKeys = new Set<string>(),
 }: ProjectGridProps) {
   const { can } = useAccess();
   const entryByWorker = new Map(
@@ -365,8 +368,13 @@ export function ProjectPayrollGrid({
                               ),
                           );
                           const checked = Number(entry[field]) === 1;
+                          const attendanceKey = `${entry.generalPayrollEntryId}:${field}`;
+                          const attendancePending =
+                            pendingAttendanceKeys.has(attendanceKey);
                           const disabled =
-                            readOnly || (Boolean(occupiedProject) && !checked);
+                            readOnly ||
+                            attendancePending ||
+                            (Boolean(occupiedProject) && !checked);
                           return (
                             <AttendanceCheck
                               checked={checked}
@@ -374,9 +382,11 @@ export function ProjectPayrollGrid({
                               disabledReason={
                                 readOnly
                                   ? "Vista de solo lectura"
-                                  : occupiedProject
-                                    ? `Ya registró asistencia en ${occupiedProject.project.name}`
-                                    : undefined
+                                  : attendancePending
+                                    ? "Guardando asistencia..."
+                                    : occupiedProject
+                                      ? `Ya registró asistencia en ${payrollLocationName(occupiedProject)}`
+                                      : undefined
                               }
                               onChange={(nextChecked) =>
                                 onEntryChange(
@@ -480,7 +490,7 @@ export function ProjectPayrollGrid({
             ];
           })}
           <ProjectTotalsRow
-            label="Total del proyecto"
+            label="Total de la ubicación"
             totals={allProjectTotals}
             overall
           />
@@ -729,7 +739,7 @@ export function GeneralPayrollGrid({
                                   Number(entry[field]) > 0,
                               ),
                             )
-                            .map((project) => project.project.name)}
+                            .map(payrollLocationName)}
                         />
                       </td>
                     ))}

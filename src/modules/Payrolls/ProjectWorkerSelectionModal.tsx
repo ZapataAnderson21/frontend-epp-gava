@@ -1,3 +1,4 @@
+import { payrollLocationName } from "./payrollLocation";
 import { AlertTriangle, Search, UserRoundCheck, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type {
@@ -130,10 +131,11 @@ export default function ProjectWorkerSelectionModal({
             </span>
             <div>
               <h2 className="text-xl font-bold text-[#0f2545]">
-                Trabajadores del proyecto
+                Trabajadores de la ubicación
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                {project.project.code} · {project.project.name}
+                {project.project ? `${project.project.code} · ` : ""}
+                {payrollLocationName(project)}
               </p>
             </div>
           </div>
@@ -197,9 +199,7 @@ export default function ProjectWorkerSelectionModal({
                   <input
                     type="checkbox"
                     checked={selected}
-                    onChange={() =>
-                      toggleWorker(worker.generalPayrollWorkerId)
-                    }
+                    onChange={() => toggleWorker(worker.generalPayrollWorkerId)}
                     className="size-4 accent-[#0047a3]"
                   />
                   <span className="min-w-0 flex-1">
@@ -248,7 +248,7 @@ export default function ProjectWorkerSelectionModal({
               ¿Quitar trabajadores con registros?
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Se borrarán sus asistencias y montos de este proyecto durante
+              Se borrarán sus asistencias y montos de esta ubicación durante
               esta semana. Ya no serán considerados en los totales:
             </p>
             <ul className="mt-3 max-h-36 list-disc overflow-y-auto pl-5 text-sm font-semibold text-gray-700">

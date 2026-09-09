@@ -6,6 +6,8 @@ export interface GeneralPayrollWeekCard {
   endDate: string;
   initialized: boolean;
   projectCount: number;
+  locationCount?: number;
+  includesServices?: boolean;
   workerCount: number;
   totalAmount: number;
 }
@@ -55,9 +57,11 @@ export interface GeneralPayrollEntry {
 
 export interface GeneralPayrollProject {
   generalPayrollProjectId: number;
-  projectId: number;
+  projectId: number | null;
+  locationType?: "project" | "services";
+  locationName?: string;
   displayOrder: number;
-  project: PayrollProjectOption;
+  project: PayrollProjectOption | null;
   entries: GeneralPayrollEntry[];
 }
 

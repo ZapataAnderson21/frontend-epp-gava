@@ -116,7 +116,12 @@ export default function GeneralPayrolls() {
   }, [currentPage, totalPages]);
 
   const handleExport = async (week: GeneralPayrollWeekCard) => {
-    if (!week.initialized || week.projectCount === 0 || exportingWeekId) return;
+    if (
+      !week.initialized ||
+      (week.locationCount ?? week.projectCount) === 0 ||
+      exportingWeekId
+    )
+      return;
 
     setExportingWeekId(week.weekId);
     try {
@@ -254,7 +259,7 @@ export default function GeneralPayrolls() {
             can("payroll.export") &&
             can("finance.view") &&
             week.initialized &&
-            week.projectCount > 0;
+            (week.locationCount ?? week.projectCount) > 0;
           const isExporting = exportingWeekId === week.weekId;
           return (
             <article
@@ -295,6 +300,11 @@ export default function GeneralPayrolls() {
                       {week.projectCount}
                     </p>
                     <p className="text-xs text-gray-500">Proyectos</p>
+                    {week.includesServices && (
+                      <p className="mt-1 text-xs font-semibold text-[#0047a3]">
+                        + Servicios
+                      </p>
+                    )}
                   </div>
                   <div className="rounded-xl bg-gray-50 p-3">
                     <Users className="mb-1 size-4 text-gray-500" />
@@ -322,7 +332,7 @@ export default function GeneralPayrolls() {
                     title={
                       canExport
                         ? "Exportar planilla semanal a Excel"
-                        : "Configura proyectos en la semana antes de exportar"
+                        : "Configura ubicaciones en la semana antes de exportar"
                     }
                     onClick={() => void handleExport(week)}
                     className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"

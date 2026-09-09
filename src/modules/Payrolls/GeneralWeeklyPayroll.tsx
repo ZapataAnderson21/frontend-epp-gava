@@ -1,12 +1,15 @@
+import { payrollLocationName } from "./payrollLocation";
 import {
   ArrowLeft,
   CalendarDays,
+  CheckCircle2,
   ClipboardList,
+  LoaderCircle,
   Save,
   Settings2,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { generalPayrollApi } from "../../data/apiUrl";
@@ -45,6 +48,16 @@ const dayKeys = [
   "saturday",
   "dominical",
 ] as const;
+type AttendanceField = (typeof dayKeys)[number];
+const isAttendanceField = (
+  field: keyof GeneralPayrollEntry,
+): field is AttendanceField => dayKeys.includes(field as AttendanceField);
+
+interface AttendanceUpdate {
+  generalPayrollEntryId: number;
+  field: AttendanceField;
+  value: number;
+}
 
 export default function GeneralWeeklyPayroll() {
   const { can } = useAccess();
@@ -65,15 +78,22 @@ export default function GeneralWeeklyPayroll() {
     useApiAction<GeneralPayrollDetail>();
   const { execute: persist, loading: saving } =
     useApiAction<GeneralPayrollDetail>();
+  const { execute: persistAttendance } = useApiAction<AttendanceUpdate>();
   const { execute: updateProjectWorkers, loading: updatingProjectWorkers } =
     useApiAction<GeneralPayrollDetail>();
   const [payroll, setPayroll] = useState<GeneralPayroll | null>(null);
   const [activeTab, setActiveTab] = useState<number | "general">("general");
   const [configurationOpen, setConfigurationOpen] = useState(false);
   const [projectWorkersOpen, setProjectWorkersOpen] = useState(false);
+  const pendingAttendanceRef = useRef(new Set<string>());
+  const [pendingAttendanceKeys, setPendingAttendanceKeys] = useState(
+    new Set<string>(),
+  );
+  const [hasSavedAttendance, setHasSavedAttendance] = useState(false);
 
   useEffect(() => {
     setPayroll(data?.payroll ? structuredClone(data.payroll) : null);
+    setHasSavedAttendance(false);
   }, [data]);
 
   useEffect(() => {
@@ -156,6 +176,8 @@ export default function GeneralWeeklyPayroll() {
 
   const handleConfigure = async (configuration: {
     projectIds: number[];
+    includeServices: boolean;
+    confirmRemoveServices: boolean;
     workers: Array<{ workerId: number; group: PayrollWorkerGroup }>;
   }) => {
     if (!weekId) return;
@@ -179,7 +201,7 @@ export default function GeneralWeeklyPayroll() {
     }
   };
 
-  const handleEntryChange = (
+  const updateEntryLocally = (
     entryId: number,
     field: keyof GeneralPayrollEntry,
     value: number,
@@ -199,6 +221,63 @@ export default function GeneralWeeklyPayroll() {
           }
         : current,
     );
+  };
+
+  const handleEntryChange = (
+    entryId: number,
+    field: keyof GeneralPayrollEntry,
+    value: number,
+  ) => {
+    const previousValue = payroll?.projects
+      .flatMap((project) => project.entries)
+      .find((entry) => entry.generalPayrollEntryId === entryId)?.[field];
+    if (typeof previousValue !== "number") return;
+
+    if (!isAttendanceField(field) || !weekId) {
+      updateEntryLocally(entryId, field, value);
+      return;
+    }
+
+    const attendanceKey = `${entryId}:${field}`;
+    if (pendingAttendanceRef.current.has(attendanceKey)) return;
+    updateEntryLocally(entryId, field, value);
+    pendingAttendanceRef.current.add(attendanceKey);
+    setPendingAttendanceKeys(new Set(pendingAttendanceRef.current));
+
+    void persistAttendance(
+      `${generalPayrollApi}weeks/${weekId}/entries/${entryId}/attendance`,
+      "PATCH",
+      { field, value },
+    )
+      .then(() => setHasSavedAttendance(true))
+      .catch((actionError) => {
+        setHasSavedAttendance(false);
+        setPayroll((current) =>
+          current
+            ? {
+                ...current,
+                projects: current.projects.map((project) => ({
+                  ...project,
+                  entries: project.entries.map((entry) =>
+                    entry.generalPayrollEntryId === entryId &&
+                    entry[field] === value
+                      ? { ...entry, [field]: previousValue }
+                      : entry,
+                  ),
+                })),
+              }
+            : current,
+        );
+        toast.error(
+          actionError instanceof Error
+            ? actionError.message
+            : "No se pudo guardar la asistencia.",
+        );
+      })
+      .finally(() => {
+        pendingAttendanceRef.current.delete(attendanceKey);
+        setPendingAttendanceKeys(new Set(pendingAttendanceRef.current));
+      });
   };
 
   const handleWorkerChange = (
@@ -227,7 +306,7 @@ export default function GeneralWeeklyPayroll() {
         `${generalPayrollApi}weeks/${weekId}`,
         "PUT",
         {
-          workers: (canPayments ? payroll.workers : []).map((worker) => ({
+          workers: payroll.workers.map((worker) => ({
             generalPayrollWorkerId: worker.generalPayrollWorkerId,
             dailyWage: worker.dailyWage,
             additionalAmount: worker.additionalAmount,
@@ -239,36 +318,20 @@ export default function GeneralWeeklyPayroll() {
               .filter((entry) => entry.isActive)
               .map((entry) => ({
                 generalPayrollEntryId: entry.generalPayrollEntryId,
-                ...(canAttendance
-                  ? {
-                      monday: entry.monday,
-                      tuesday: entry.tuesday,
-                      wednesday: entry.wednesday,
-                      thursday: entry.thursday,
-                      friday: entry.friday,
-                      saturday: entry.saturday,
-                      dominical: entry.dominical,
-                    }
-                  : {}),
-                ...(canPayments
-                  ? {
-                      overtimeAmount: entry.overtimeAmount,
-                      afpDiscount: entry.afpDiscount,
-                      advanceDiscount: entry.advanceDiscount,
-                    }
-                  : {}),
+                overtimeAmount: entry.overtimeAmount,
+                afpDiscount: entry.afpDiscount,
+                advanceDiscount: entry.advanceDiscount,
               })),
           ),
         },
       );
       setPayroll(response.data.payroll);
-      toast.success("Planilla guardada correctamente.");
-      refetch();
+      toast.success("Montos guardados correctamente.");
     } catch (actionError) {
       toast.error(
         actionError instanceof Error
           ? actionError.message
-          : "No se pudo guardar la planilla.",
+          : "No se pudieron guardar los montos.",
       );
     }
   };
@@ -357,6 +420,20 @@ export default function GeneralWeeklyPayroll() {
               )}
               {canConfigure || canEdit ? (
                 <>
+                  {canAttendance && pendingAttendanceKeys.size > 0 && (
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#0047a3]">
+                      <LoaderCircle className="size-4 animate-spin" />
+                      Guardando asistencia...
+                    </span>
+                  )}
+                  {canAttendance &&
+                    pendingAttendanceKeys.size === 0 &&
+                    hasSavedAttendance && (
+                      <span className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                        <CheckCircle2 className="size-4" />
+                        Asistencias guardadas
+                      </span>
+                    )}
                   {canConfigure && (
                     <button
                       type="button"
@@ -366,15 +443,15 @@ export default function GeneralWeeklyPayroll() {
                       <Settings2 className="size-4" /> Configurar
                     </button>
                   )}
-                  {canEdit && (
+                  {canPayments && (
                     <button
                       type="button"
                       onClick={handleSave}
-                      disabled={saving}
+                      disabled={saving || pendingAttendanceKeys.size > 0}
                       className="flex items-center gap-2 rounded-xl bg-[#0047a3] px-5 py-2.5 font-bold text-white shadow-sm hover:bg-[#003b88] disabled:opacity-60"
                     >
                       <Save className="size-4" />{" "}
-                      {saving ? "Guardando..." : "Guardar"}
+                      {saving ? "Guardando..." : "Guardar montos"}
                     </button>
                   )}
                 </>
@@ -441,10 +518,10 @@ export default function GeneralWeeklyPayroll() {
                 key={project.generalPayrollProjectId}
                 type="button"
                 onClick={() => setActiveTab(project.generalPayrollProjectId)}
-                title={project.project.name}
+                title={payrollLocationName(project)}
                 className={`max-w-64 shrink-0 truncate border-b-2 px-4 py-3 font-bold transition ${activeTab === project.generalPayrollProjectId ? "border-[#0047a3] text-[#0047a3]" : "border-transparent text-gray-500 hover:text-[#0f2545]"}`}
               >
-                {project.project.name}
+                {payrollLocationName(project)}
               </button>
             ))}
           </nav>
@@ -491,13 +568,14 @@ export default function GeneralWeeklyPayroll() {
                 onEntryChange={handleEntryChange}
                 onWorkerChange={handleWorkerChange}
                 readOnly={!canEdit}
+                pendingAttendanceKeys={pendingAttendanceKeys}
               />
             </div>
           ) : null}
 
           {payroll.projects.length === 0 && payroll.workers.length > 0 && (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
-              Selecciona al menos un proyecto para empezar a registrar la
+              Selecciona un proyecto o Servicios para empezar a registrar la
               distribución semanal.
             </div>
           )}
