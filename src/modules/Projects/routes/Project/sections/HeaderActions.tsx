@@ -33,7 +33,7 @@ export default function HeaderActions({ projectId }: HeaderActionsProps) {
   const fetchReturnBlockers = async () => {
     const response = await fetch(
       `${inventoryApi}project/${projectId}/inactivation-blockers`,
-      { headers: getAuthHeaders() },
+      { headers: getAuthHeaders(), credentials: "include" },
     );
     const payload = (await response.json()) as ApiResponse<
       ProjectInventoryEntry[]

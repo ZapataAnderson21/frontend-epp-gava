@@ -64,12 +64,9 @@ export default function PurchaseOrder() {
     if (!purchaseOrderId) return;
 
     try {
-      const token = localStorage.getItem("accessToken");
       const res = await fetch(`${purchaseOrderApi}pdf/${purchaseOrderId}`, {
         method: "GET",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("No se pudo generar el PDF");

@@ -58,9 +58,7 @@ export default function Emergency() {
       setStatus(emergency.status);
       if (emergency.image) {
         fetch(`${emergencyApi}image/${emergency.image}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-          }
+          credentials: "include",
         })
         .then(res => res.blob())
         .then(blob => {

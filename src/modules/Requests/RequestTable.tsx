@@ -18,35 +18,17 @@ interface RequestTableProps {
   projectId?: number;
 }
 
-type StoredUser = { userId?: unknown; userType?: unknown; type?: unknown };
-
 export default function RequestTable({ filter, projectId }: RequestTableProps) {
-  // Lee y normaliza desde localStorage
-  const stored = useMemo<StoredUser>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
-
-  const myUserId = Number(stored.userId);
-
   const urlFetch = useMemo(() => {
     const params = new URLSearchParams();
 
     if (filter && filter !== "all") params.set("status", filter);
     if (projectId) params.set("projectId", String(projectId));
 
-    // The backend uses viewerId only to keep drafts private.
-    if (Number.isFinite(myUserId)) {
-      params.set("viewerId", String(myUserId));
-    }
-
     const qs = params.toString();
     return qs ? `${requestApi}?${qs}` : requestApi;
     // 👇 DEPENDENCIAS REALES USADAS ADENTRO
-  }, [filter, projectId, myUserId]);
+  }, [filter, projectId]);
 
   const {
     data: requests,

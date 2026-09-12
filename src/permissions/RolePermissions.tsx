@@ -89,9 +89,9 @@ export default function RolePermissions() {
     const response = await fetch(`${permissionsApi}${path}`, {
       method,
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         "Content-Type": "application/json",
       },
+      credentials: "include",
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const json = await response.json();

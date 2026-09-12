@@ -79,15 +79,11 @@ export default function PettyCashes() {
   const handleExportExcel = async () => {
     const exportPromise = async () => {
       setExporting(true);
-      const token = localStorage.getItem("accessToken");
-
       const response = await fetch(
         `${pettyCashApi}project/${projectId}/excel`,
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         },
       );
 

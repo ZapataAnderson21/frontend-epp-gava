@@ -25,6 +25,7 @@ export default function UserSettingsModal({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
   const { execute: updateUser, loading: saving } = useApiAction<User>();
@@ -35,6 +36,7 @@ export default function UserSettingsModal({
     setLastName(user?.lastName ?? "");
     setEmail(user?.email ?? "");
     setPassword("");
+    setCurrentPassword("");
     setErrors([]);
   }, [open, user]);
 
@@ -47,6 +49,8 @@ export default function UserSettingsModal({
     if (!email.trim()) nextErrors.push("El correo es requerido");
 
     if (password.trim()) {
+      if (!currentPassword)
+        nextErrors.push("La contraseña actual es requerida para cambiarla");
       if (password.length < 8)
         nextErrors.push("La contraseña debe tener al menos 8 caracteres");
       if (!/(?=.*[A-Z])/.test(password))
@@ -71,7 +75,9 @@ export default function UserSettingsModal({
       name: name.trim(),
       lastName: lastName.trim(),
       email: email.trim(),
-      ...(password.trim() ? { password: password.trim() } : {}),
+      ...(password.trim()
+        ? { password: password.trim(), currentPassword }
+        : {}),
     };
 
     let response: { statusCode: number; message: string; data: User } | null =
@@ -121,6 +127,11 @@ export default function UserSettingsModal({
     };
 
     localStorage.setItem("user", JSON.stringify(mergedUser));
+    if (password.trim()) {
+      localStorage.removeItem("user");
+      window.location.replace("/");
+      return;
+    }
     onUpdated(updatedUser);
     onClose();
   };
@@ -175,6 +186,15 @@ export default function UserSettingsModal({
             value={user?.userType ?? ""}
             disabled
             onChange={() => {}}
+          />
+
+          <InputForm
+            label="Contraseña actual"
+            name="currentPassword"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            optional={true}
           />
 
           <InputForm

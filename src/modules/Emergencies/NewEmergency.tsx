@@ -15,7 +15,6 @@ export default function NewEmergency() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlProjectId = searchParams.get("projectId");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
   
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -34,6 +33,7 @@ export default function NewEmergency() {
     if (!title.trim()) errors.push("El asunto es requerido");
     if (!description.trim()) errors.push("La descripción es requerida");
     if (projectId === 0) errors.push("Debe seleccionar un proyecto");
+    if (!image) errors.push("Debe seleccionar una imagen");
 
     if (errors.length > 0) {
       toast.error(
@@ -53,7 +53,6 @@ export default function NewEmergency() {
     if (image) formData.append("image", image);
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("userId", user.userId);
     formData.append("projectId", projectId.toString());
 
     await toast.promise(
@@ -114,6 +113,7 @@ export default function NewEmergency() {
           <input
             type="file"
             id="image"
+            accept="image/jpeg,image/png,image/webp"
             className="border border-gray-400 p-2 rounded-sm focus:outline-[#0047a3]"
             onChange={(e) => {
               if (e.target.files && e.target.files.length > 0) {

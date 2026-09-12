@@ -21,9 +21,8 @@ export default function Resources() {
     try {
       await toast.promise(
         (async () => {
-          const token = localStorage.getItem("accessToken");
           const response = await fetch(`${resourceApi}export/excel`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           });
 
           if (!response.ok) {

@@ -16,19 +16,21 @@ const AccessContext = createContext({
   permissions: [] as string[],
   loading: true,
   error: "",
-  can: (_permission: string): boolean => false,
+  can: (permission: string): boolean => {
+    void permission;
+    return false;
+  },
   refresh: () => {},
 });
 
 export function AccessProvider({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const token = localStorage.getItem("accessToken");
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const generation = useRef(0);
-  const verifiedToken = useRef<string | null>(null);
+  const verifiedPath = useRef<string | null>(null);
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
   useEffect(() => {
     window.addEventListener("focus", refresh);
@@ -43,17 +45,17 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const current = ++generation.current;
     const controller = new AbortController();
-    if (!token || !pathname.startsWith("/admin")) {
+    if (!pathname.startsWith("/admin")) {
       setPermissions([]);
       setLoading(false);
       return;
     }
-    if (verifiedToken.current !== token) {
+    if (verifiedPath.current !== pathname) {
       setLoading(true);
       setPermissions([]);
     }
     fetch(`${permissionsApi}me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
       signal: controller.signal,
     })
       .then(async (response) => {
@@ -63,7 +65,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
       })
       .then((result) => {
         if (current === generation.current) {
-          verifiedToken.current = token;
+          verifiedPath.current = pathname;
           setPermissions(result.data);
           setError("");
         }
@@ -82,7 +84,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [token, pathname, revision]);
+  }, [pathname, revision]);
   const value = useMemo(
     () => ({
       permissions,

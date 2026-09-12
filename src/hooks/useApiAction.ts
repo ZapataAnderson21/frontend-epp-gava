@@ -40,6 +40,7 @@ export function useApiAction<T>() {
       const res = await fetch(url, {
         method,
         headers: getAuthHeaders(),
+        credentials: "include",
         body: body ? JSON.stringify(body) : undefined,
       });
 

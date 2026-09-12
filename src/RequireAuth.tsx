@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { buildLoginRedirectURL, getToken, isTokenExpired } from "./auth";
+import { buildLoginRedirectURL } from "./auth";
 import { userApi } from "./data/apiUrl";
-
-type ValidateTokenResponse =
-  | boolean
-  | {
-      data?: boolean | { valid?: boolean };
-    };
 
 export default function RequireAuth({
   children,
@@ -17,39 +11,16 @@ export default function RequireAuth({
   const location = useLocation();
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
-  const token = getToken();
-  const tokenInvalid = !token || isTokenExpired(token);
-
   useEffect(() => {
-    if (tokenInvalid) {
-      setAllowed(false);
-      return;
-    }
-
     let cancelled = false;
 
-    fetch(`${userApi}validateToken`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: token }),
+    setAllowed(null);
+    fetch(`${userApi}me`, {
+      credentials: "include",
     })
-      .then((response) => response.json())
-      .then((json: ValidateTokenResponse) => {
+      .then((response) => {
         if (cancelled) return;
-
-        let isValid = false;
-
-        if (typeof json === "boolean") {
-          // Backward compatibility: old contract returned "isBlacklisted".
-          isValid = !json;
-        } else if (typeof json?.data === "boolean") {
-          // Backward compatibility: wrapped boolean.
-          isValid = !json.data;
-        } else if (typeof json?.data === "object" && json.data !== null) {
-          isValid = !!json.data.valid;
-        }
-
-        setAllowed(isValid);
+        setAllowed(response.ok);
       })
       .catch(() => {
         if (!cancelled) {
@@ -60,12 +31,7 @@ export default function RequireAuth({
     return () => {
       cancelled = true;
     };
-  }, [location.key, token, tokenInvalid]);
-
-  if (tokenInvalid) {
-    const to = buildLoginRedirectURL(location.pathname + location.search);
-    return <Navigate to={to} replace />;
-  }
+  }, [location.key]);
 
   if (allowed === null) {
     return (
@@ -77,7 +43,6 @@ export default function RequireAuth({
 
   if (!allowed) {
     const to = buildLoginRedirectURL(location.pathname + location.search);
-    localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     return <Navigate to={to} replace />;
   }

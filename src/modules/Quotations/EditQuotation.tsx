@@ -235,12 +235,9 @@ export default function EditQuotation() {
     if (!id) return;
 
     try {
-      const token = localStorage.getItem("accessToken");
       const res = await fetch(`${quotationApi}pdf/${id}`, {
         method: "GET",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("No se pudo generar el PDF");

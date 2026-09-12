@@ -38,6 +38,7 @@ export function useFetch<T>(url: string, extraDeps: unknown[] = []) {
       try {
         const res = await fetch(url, {
           headers: getAuthHeaders(),
+          credentials: "include",
           signal: controller.signal,
         });
 

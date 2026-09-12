@@ -235,13 +235,8 @@ export default function RequestView({ requestId }: RequestViewProps) {
 
   // Cargar PDF
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
     fetch(`${requestApi}pdf/${requestId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      credentials: "include",
     })
       .then((res) => res.blob())
       .then((blob) => {
@@ -415,7 +410,6 @@ export default function RequestView({ requestId }: RequestViewProps) {
           "POST",
           {
             requestId: Number(requestId),
-            responderUserId: Number(user.userId),
             adminDescription:
               adminDescription || "Solicitud revisada por administración.",
           },
@@ -532,8 +526,6 @@ export default function RequestView({ requestId }: RequestViewProps) {
           `${requestResponseApi}${requestResponse.requestResponseId}`,
           "PATCH",
           {
-            requestId: requestResponse.requestId,
-            responderUserId: Number(user.userId),
             managementDescription: managementDescription,
           },
         );
@@ -567,8 +559,6 @@ export default function RequestView({ requestId }: RequestViewProps) {
           `${requestResponseApi}${requestResponse.requestResponseId}`,
           "PATCH",
           {
-            requestId: requestResponse.requestId,
-            responderUserId: Number(user.userId),
             logisticsDescription: logisticsDescription,
           },
         );

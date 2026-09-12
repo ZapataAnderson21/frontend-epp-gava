@@ -50,15 +50,10 @@ export default function Sidebar({
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const accessToken = localStorage.getItem("accessToken");
-
   const { execute: logoutAction, loading: loggingOut } = useApiAction<null>();
   const handleLogout = async () => {
-    const response = await logoutAction(`${userApi}logout`, "POST", {
-      accessToken,
-    });
+    const response = await logoutAction(`${userApi}logout`, "POST");
     if (response.statusCode === 200) {
-      localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
       navigate("/");
     }
@@ -70,8 +65,6 @@ export default function Sidebar({
 
   const baseDelay = 0.1;
   const perItemDelay = 0.075;
-
-  if (!accessToken) return null;
 
   return (
     <>

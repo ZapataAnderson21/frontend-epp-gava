@@ -127,7 +127,7 @@ export default function GeneralPayrolls() {
     try {
       const response = await fetch(
         `${generalPayrollApi}weeks/${week.weekId}/export/excel`,
-        { headers: getAuthHeaders() },
+        { headers: getAuthHeaders(), credentials: "include" },
       );
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {

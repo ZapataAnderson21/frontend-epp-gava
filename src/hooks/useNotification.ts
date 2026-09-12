@@ -37,10 +37,9 @@ export interface RequestMailProgressEvent {
 interface UseNotificationsOptions {
   apiUrl: string;
   wsUrl: string;
-  token: string;
 }
 
-export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptions) {
+export function useNotifications({ apiUrl, wsUrl }: UseNotificationsOptions) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -50,10 +49,8 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
 
   // Conectar WebSocket
   useEffect(() => {
-    if (!token) return;
-
     const socket = io(`${wsUrl}/notifications`, {
-      auth: { token },
+      withCredentials: true,
       transports: ['websocket', 'polling'],
     });
 
@@ -104,19 +101,15 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [wsUrl, token]);
+  }, [wsUrl]);
 
   // Cargar notificaciones iniciales via REST API
   useEffect(() => {
-    if (!token) return;
-
     const fetchNotifications = async () => {
       try {
         setIsLoading(true);
         const response = await fetch(notificationsBaseUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include',
         });
         const result = await response.json();
         if (result.data) {
@@ -132,9 +125,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     const fetchUnreadCount = async () => {
       try {
         const response = await fetch(`${notificationsBaseUrl}/unread-count`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include',
         });
         const result = await response.json();
         if (result.data) {
@@ -147,7 +138,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
 
     fetchNotifications();
     fetchUnreadCount();
-  }, [notificationsBaseUrl, token]);
+  }, [notificationsBaseUrl]);
 
   // Marcar como leída
   const markAsRead = useCallback(
@@ -155,9 +146,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
       try {
         await fetch(`${notificationsBaseUrl}/${notificationId}/read`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include',
         });
 
         setNotifications((prev) =>
@@ -170,7 +159,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
         console.error('Error marcando como leída:', error);
       }
     },
-    [notificationsBaseUrl, token]
+    [notificationsBaseUrl]
   );
 
   // Marcar todas como leídas
@@ -178,9 +167,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     try {
       await fetch(`${notificationsBaseUrl}/read-all`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
@@ -188,7 +175,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
     } catch (error) {
       console.error('Error marcando todas como leídas:', error);
     }
-  }, [notificationsBaseUrl, token]);
+  }, [notificationsBaseUrl]);
 
   // Eliminar notificación
   const deleteNotification = useCallback(
@@ -196,9 +183,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
       try {
         await fetch(`${notificationsBaseUrl}/${notificationId}`, {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include',
         });
 
         setNotifications((prev) => {
@@ -216,7 +201,7 @@ export function useNotifications({ apiUrl, wsUrl, token }: UseNotificationsOptio
         console.error('Error eliminando notificación:', error);
       }
     },
-    [notificationsBaseUrl, token]
+    [notificationsBaseUrl]
   );
 
   return {

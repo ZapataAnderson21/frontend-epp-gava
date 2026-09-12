@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { getAccessToken } from "../utils/auth";
 import { userApi } from "../data/apiUrl";
 import type { User } from "../data/types";
 
@@ -26,15 +25,8 @@ export function useCurrentUser() {
       try {
         setLoading(true);
         setError(null);
-        const token = getAccessToken();
-        if (!token) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-
         const res = await fetch(`${userApi}me`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
 
         if (!res.ok) {

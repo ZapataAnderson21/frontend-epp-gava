@@ -13,9 +13,6 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate(); // Agregar este hook
   
-  // Obtener token del localStorage o tu sistema de auth
-  const token = localStorage.getItem("accessToken") || "";
-
   const {
     notifications,
     unreadCount,
@@ -26,7 +23,6 @@ export default function NotificationBell() {
   } = useNotifications({
     apiUrl: config.apiUrl,
     wsUrl: config.wsUrl,
-    token,
   });
 
   // Cerrar al hacer clic fuera

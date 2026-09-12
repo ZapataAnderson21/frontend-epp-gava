@@ -5,6 +5,7 @@ import { userApi } from "../../data/apiUrl";
 import InputForm from "../../common/form/InputForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { Button } from "../../components";
+import { safeInternalRedirect } from "../../auth";
 import {
   Eye as FaEye,
   EyeOff as FaEyeSlash,
@@ -15,7 +16,6 @@ import {
 
 
 interface LoginResponse {
-  accessToken: string;
   user: {
     id: number;
     name: string;
@@ -61,12 +61,8 @@ export default function Login() {
     });
 
     if (response.statusCode === 200) {
-      localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      const redirectTo = redirectParam && redirectParam !== "/" ? redirectParam : "/admin";
-
-      navigate(redirectTo, { replace: true });
+      navigate(safeInternalRedirect(redirectParam), { replace: true });
     } else {
       setError(response.message || "Error desconocido");
     }

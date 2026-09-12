@@ -516,13 +516,10 @@ export interface RequestResponseType {
 
 export interface CreateRequestResponseDto {
   requestId: number;
-  responderUserId: number;
   description?: string;
 }
 
 export interface UpdateRequestResponseDto {
-  requestId: number;
-  responderUserId: number;
   description?: string;
 }
 
@@ -539,6 +536,7 @@ export interface UpdateUserDto {
   lastName?: string;
   email?: string;
   password?: string;
+  currentPassword?: string;
 }
 
 export interface User {
@@ -663,6 +661,7 @@ export interface PurchaseOrder {
   saleAmount: number;
   purchaseAmount: number;
   status: string;
+  statusCode?: PurchaseOrderDashboardStatus;
   carePerson: string;
   dniCarePerson: string;
   observations?: string;

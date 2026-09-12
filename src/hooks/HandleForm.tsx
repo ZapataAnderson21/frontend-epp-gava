@@ -18,20 +18,10 @@ type ElementPlanState = Record<string, ElementRequestWorkerPlan[]>;
 
 export interface SendRequestOptions {
   operationId?: string;
-  progressUserId?: number;
 }
 
 interface SaveRequestOptions {
   clearDraft?: boolean;
-}
-
-function getStoredUserId() {
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return Number(user.userId || user.user_id || user.id || 0) || undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 function getTypeFromElements(elements: ElementType[]) {
@@ -302,7 +292,6 @@ export function useHandleForm() {
     description?: string,
     options: SaveRequestOptions = {},
   ) => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
     const selectedElements: ElementType[] = JSON.parse(
       localStorage.getItem("selectedElements") || "[]",
     );
@@ -325,7 +314,6 @@ export function useHandleForm() {
     }
 
     const requestData = {
-      userId: Number(user.userId),
       projectId,
       deliveryDueDate,
       description,
@@ -386,7 +374,6 @@ export function useHandleForm() {
       requestId,
       passwordCPanel,
       operationId: options.operationId,
-      progressUserId: options.progressUserId ?? getStoredUserId(),
     });
 
     if (response.statusCode !== 200) {
@@ -448,13 +435,10 @@ export function useHandleForm() {
       .map((elementRequest) => elementRequest.element)
       .filter((element): element is ElementType => Boolean(element));
 
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
     const requestData = {
-      userId: Number(user.userId),
       projectId,
       description,
       deliveryDueDate,
-      status: "draft",
       type: getTypeFromElements(selectedElements),
     };
 
