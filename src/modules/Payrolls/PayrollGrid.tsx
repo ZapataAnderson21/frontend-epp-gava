@@ -392,7 +392,7 @@ export function ProjectPayrollGrid({
                     }`}
                   >
                     {selectionEnabled && (
-                      <td className="sticky left-0 z-20 bg-inherit px-3 py-3 text-center">
+                      <td className={`sticky left-0 z-20 ${index % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"} px-3 py-3 text-center`}>
                         <WorkerSelectionCheck
                           checked={selectedWorkerIds.has(
                             worker.generalPayrollWorkerId,
@@ -408,7 +408,13 @@ export function ProjectPayrollGrid({
                       </td>
                     )}
                     <td
-                      className={`sticky ${selectionEnabled ? "left-12" : "left-0"} z-10 bg-inherit px-3 py-3 text-center`}
+                      className={`sticky ${selectionEnabled ? "left-12" : "left-0"} z-10 ${
+                        selectedWorkerIds.has(worker.generalPayrollWorkerId)
+                          ? "bg-[#eef5ff]"
+                          : index % 2 === 0
+                            ? "bg-[#f8fafc]"
+                            : "bg-white"
+                      } px-3 py-3 text-center`}
                     >
                       {index + 1}
                     </td>
