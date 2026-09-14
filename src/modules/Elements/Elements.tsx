@@ -102,13 +102,28 @@ function getInitialTab(family: ReturnType<typeof resolveInventoryRouteFamily>): 
 
 export default function Elements() {
   const { family, type } = useParams<{ family?: string; type?: string }>();
+  const routeFamily = resolveInventoryRouteFamily(family ?? type);
+
+  return (
+    <InventoryContent
+      key={`${type ? "legacy" : "inventory"}:${routeFamily}`}
+      routeFamily={routeFamily}
+      isLegacyRoute={Boolean(type)}
+    />
+  );
+}
+
+function InventoryContent({
+  routeFamily,
+  isLegacyRoute,
+}: {
+  routeFamily: ReturnType<typeof resolveInventoryRouteFamily>;
+  isLegacyRoute: boolean;
+}) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<InventoryMainTab>(() =>
-    getInitialTab(resolveInventoryRouteFamily(family ?? type)),
-  );
+  const activeTab = getInitialTab(routeFamily);
   const [familyFilter, setFamilyFilter] = useState<InventoryFilter>(() => {
-    const routeFamily = resolveInventoryRouteFamily(family ?? type);
     return routeFamily === "all" || routeFamily === "operative" ? "all" : routeFamily;
   });
   const [safetyTypeFilter, setSafetyTypeFilter] = useState("all");
@@ -118,8 +133,6 @@ export default function Elements() {
   const [deletingElementId, setDeletingElementId] = useState<number | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<ElementCategoryType | null>(null);
-
-  const isLegacyRoute = Boolean(type);
 
   const {
     data: elements,
@@ -279,14 +292,12 @@ export default function Elements() {
                   : "epp";
 
   const handleTabChange = (tab: InventoryMainTab) => {
-    setActiveTab(tab);
-    setFamilyFilter("all");
-    setSafetyTypeFilter("all");
-    setEpaCategoryFilter("all");
-    if (tab === "fall") {
-      setEpaView("groups");
-    }
-    navigate("/admin/inventory", { replace: true });
+    if (tab === activeTab) return;
+    navigate(
+      tab === "protection"
+        ? "/admin/inventory"
+        : `/admin/inventory/${tabFamilies[tab][0]}`,
+    );
   };
 
   const handleConfirmDelete = () => {
