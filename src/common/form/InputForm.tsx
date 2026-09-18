@@ -9,10 +9,11 @@ interface InputFormProps {
   error?: string;
   optional?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   children?: React.ReactNode;
 }
 
-export default function InputForm({ label, name, type, value, maxLength, onChange, error, optional, disabled, children }: InputFormProps) {
+export default function InputForm({ label, name, type, value, maxLength, onChange, error, optional, disabled, readOnly, children }: InputFormProps) {
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2">
@@ -32,6 +33,7 @@ export default function InputForm({ label, name, type, value, maxLength, onChang
           maxLength={maxLength}
           required={!optional}
           disabled={disabled}
+          readOnly={readOnly}
         />
       </div>
       {error && <p className="text-red-600 text-2xs">{error}</p>}
