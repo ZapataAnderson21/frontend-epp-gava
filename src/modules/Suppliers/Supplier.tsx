@@ -83,7 +83,7 @@ export default function Supplier() {
     // Validación
     const errors: string[] = [];
     if (!name.trim()) errors.push("El nombre es requerido");
-    if (!/^[A-Z0-9]{1,8}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 8 letras o números, sin espacios ni símbolos");
+    if (!/^[A-Z0-9]{1,10}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 10 letras o números, sin espacios ni símbolos");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (!phone.trim()) errors.push("El teléfono es requerido");
     if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
@@ -188,8 +188,8 @@ export default function Supplier() {
       <Form name={`PROVEEDOR ${supplierId}`} handleSubmit={handleSubmit}>
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <div className="flex flex-col gap-1">
-          <InputForm label="Abreviatura del proveedor" name="abbreviation" type="text" value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} maxLength={8} optional={false} />
-          <p className="text-xs text-gray-500">De 1 a 8 letras o números, sin espacios. Cambiarla no modifica los códigos de órdenes existentes.</p>
+          <InputForm label="Abreviatura del proveedor" name="abbreviation" type="text" value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} maxLength={10} optional={false} />
+          <p className="text-xs text-gray-500">De 1 a 10 letras o números, sin espacios. Cambiarla no modifica los códigos de órdenes existentes.</p>
         </div>
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
@@ -199,7 +199,7 @@ export default function Supplier() {
         {documentType === "ruc" ? (
           <InputForm label="RUC" name="ruc" type="text" value={ruc} onChange={(e) => {setErrorRuc(""); const v = e.target.value; if (/^\d{0,11}$/.test(v)) setRuc(v); }} optional={false} maxLength={11} error={errorRuc} />
         ) : (
-          <InputForm label="DNI" name="dni" type="text" value={dni} onChange={(e) => {setErrorDni(""); const v = e.target.value; if (/^\d{0,8}$/.test(v)) setDni(v); }} optional={false} maxLength={8} error={errorDni} />
+          <InputForm label="DNI" name="dni" type="text" value={dni} onChange={(e) => {setErrorDni(""); const v = e.target.value; if (/^\d{0,8}$/.test(v)) setDni(v); }} optional={false} maxLength={10} error={errorDni} />
         )}
         <InputForm label="Número de cuenta" name="accountNumber" type="text" value={accountNumber} onChange={(e) => {setErrorAccountNumber(""); const v = e.target.value; if (/^\d*$/.test(v)) setAccountNumber(v); }} optional={false} maxLength={20} error={errorAccountNumber} />
         <InputForm label="Banco" name="bank" type="text" value={bank} onChange={(e) => setBank(e.target.value)} optional={false} />
