@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { ErrorMessage } from "../../../../../../common/error";
 import { ButtonContainer } from "../../../../../../common/form";
+import PurchaseOrderDraftNotice from '../../../../../../common/form/PurchaseOrderDraftNotice';
 
 import Permission from "../../../../../../common/auth/Permission";
 import { ReturnButton, SaveButton } from "../../../../../../common/button";
@@ -20,6 +21,11 @@ import {
 } from "./components";
 
 export default function NewPurchaseOrder() {
+  const { id } = useParams();
+  return <NewPurchaseOrderForm key={id} />;
+}
+
+function NewPurchaseOrderForm() {
   const { user } = useCurrentUser();
   const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -63,6 +69,9 @@ export default function NewPurchaseOrder() {
     setPaymentMethod,
     paymentConditions1,
     setPaymentConditions1,
+    paymentConditions2,
+    setPaymentConditions2,
+    draft,
 
     //validate errors
     errors,
@@ -90,7 +99,7 @@ export default function NewPurchaseOrder() {
     // submit & UI
     saving,
     handleSubmit,
-  } = usePurchaseOrderForm({ projectId: projectId ?? "", navigate });
+  } = usePurchaseOrderForm({ projectId: projectId ?? "", navigate, userId: user?.userId });
 
   if (!projectId) {
     return <ErrorMessage errorMessage="Project ID is required." />;
@@ -128,6 +137,8 @@ export default function NewPurchaseOrder() {
             onSubmit={handleSubmit}
             className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300"
           >
+            <fieldset disabled={saving} className="contents">
+            <PurchaseOrderDraftNotice draft={draft} />
             <PurchaseOrderHeader
               projectName={project?.name ?? ""}
               code={code}
@@ -165,6 +176,8 @@ export default function NewPurchaseOrder() {
               <PaymentConditionsCard
                 paymentConditions1={paymentConditions1}
                 setPaymentConditions1={setPaymentConditions1}
+                paymentConditions2={paymentConditions2}
+                setPaymentConditions2={setPaymentConditions2}
                 supplier={supplier || undefined}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
@@ -249,6 +262,7 @@ export default function NewPurchaseOrder() {
               <ReturnButton onClick={navigateToPurchaseOrders} />
               <SaveButton loading={saving} />
             </ButtonContainer>
+            </fieldset>
           </form>
         </div>
       </div>

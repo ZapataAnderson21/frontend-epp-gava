@@ -42,8 +42,15 @@ import {
 } from "./components";
 
 import toast, { Toaster } from "react-hot-toast";
+import { usePurchaseOrderDraft } from '../../../../../../hooks/usePurchaseOrderDraft';
+import PurchaseOrderDraftNotice from '../../../../../../common/form/PurchaseOrderDraftNotice';
 
 export default function EditPurchaseOrder() {
+  const { purchaseOrderId } = useParams();
+  return <EditPurchaseOrderForm key={purchaseOrderId} />;
+}
+
+function EditPurchaseOrderForm() {
   const { purchaseOrderId } = useParams<{ purchaseOrderId: string }>();
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -112,13 +119,16 @@ export default function EditPurchaseOrder() {
     refetch: refetchResources,
   } = useFetch<Resource[]>(`${resourceApi}`);
 
-  const { execute, loading: saving } = useApiAction<unknown>();
+  const { execute, loading: requestSaving } = useApiAction<unknown>();
+  const [submitting, setSubmitting] = useState(false);
+  const saving = requestSaving || submitting;
 
   const navigate = useNavigate();
+  const [hydrated, setHydrated] = useState(false);
 
   // ---- hidratar el formulario al cargar ----
   useEffect(() => {
-    if (!purchaseOrder) return;
+    if (!purchaseOrder || !resourcePurchaseOrders || hydrated) return;
 
     setCode(purchaseOrder.code);
     setSupplierId(purchaseOrder.supplierId);
@@ -134,7 +144,7 @@ export default function EditPurchaseOrder() {
       purchaseOrder.paymentConditions.split(" - ")[0] || "",
     );
     setPaymentConditions2(
-      purchaseOrder.paymentConditions.split(" - ")[1] || "",
+      purchaseOrder.paymentConditions.split(" - ").slice(1).join(" - "),
     );
     setPaymentConditions(purchaseOrder.paymentConditions);
     setPurchaseOrderType(purchaseOrder.purchaseOrderType);
@@ -147,10 +157,6 @@ export default function EditPurchaseOrder() {
       : [""];
     setGeneralConditions(gc.length ? gc.map((s) => s.trim()) : [""]);
     setQualityConditions(qc.length ? qc.map((s) => s.trim()) : [""]);
-  }, [purchaseOrder]);
-
-  useEffect(() => {
-    if (!resourcePurchaseOrders) return;
     const normalizeOrderNumbers = (rows: ItemRow[]) =>
       rows.map((row, index) => ({ ...row, orderNumber: index + 1 }));
 
@@ -172,7 +178,30 @@ export default function EditPurchaseOrder() {
     }));
     setItems(normalizeOrderNumbers(itemRows));
     setRpoIds(sorted.map((r) => r.resourcePurchaseOrderId));
-  }, [resourcePurchaseOrders]);
+    setHydrated(true);
+  }, [purchaseOrder, resourcePurchaseOrders, hydrated]);
+
+  const draft = usePurchaseOrderDraft({
+    userId: user?.userId, projectId: String(purchaseOrder?.projectId ?? ''),
+    slot: purchaseOrderId, enabled: hydrated,
+    value: { schemaVersion: 1, code, supplierId, quotation, destination,
+      deliveryLocation, carePerson, dniCarePerson, observations, paymentMethod,
+      paymentConditions, paymentConditions1, paymentConditions2, purchaseOrderType,
+      generalConditions, qualityConditions, items, rpoIds },
+    restore: (data) => {
+      setCode(data.code); setSupplierId(data.supplierId); setQuotation(data.quotation);
+      setDestination(data.destination); setDeliveryLocation(data.deliveryLocation);
+      setCarePerson(data.carePerson); setDniCarePerson(data.dniCarePerson); setObservations(data.observations);
+      setPaymentMethod(data.paymentMethod); setPaymentConditions(data.paymentConditions);
+      setPaymentConditions1(data.paymentConditions1); setPaymentConditions2(data.paymentConditions2);
+      setPurchaseOrderType(data.purchaseOrderType); setGeneralConditions(data.generalConditions);
+      setQualityConditions(data.qualityConditions); setItems(data.items); setRpoIds(data.rpoIds);
+    },
+  });
+
+  useEffect(() => {
+    if (suppliers) setSupplier(suppliers.find(item => item.supplierId === supplierId));
+  }, [supplierId, suppliers]);
 
   // ---- navegación ----
   const navigateToPurchaseOrders = () => {
@@ -324,13 +353,6 @@ export default function EditPurchaseOrder() {
   const handleQualityChange = (idx: number, value: string) =>
     setQualityConditions((p) => p.map((v, i) => (i === idx ? value : v)));
 
-  // Mantener paymentConditions coherente si editas la primera parte
-  useEffect(() => {
-    if (!paymentConditions1) {
-      setPaymentConditions("");
-    }
-  }, [paymentConditions1]);
-
   // 1) Nueva función que valida y DEVUELVE mensajes + errores de campo
   const validateAndCollect = () => {
     const msgs: string[] = [];
@@ -385,6 +407,11 @@ export default function EditPurchaseOrder() {
   // ---- submit ----
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submitting) return;
+    if (draft.status === 'conflict' || draft.status === 'invalid') {
+      toast.error('Resuelve el aviso del borrador antes de guardar la orden.');
+      return;
+    }
 
     // Validación local
     const { ok, msgs, fieldErrors } = validateAndCollect();
@@ -501,17 +528,19 @@ export default function EditPurchaseOrder() {
         }
       }
 
+      await draft.complete();
       return resp;
     };
 
-    toast.promise(updatePurchaseOrder(), {
+    setSubmitting(true);
+    void toast.promise(updatePurchaseOrder(), {
       loading: "Actualizando orden de compra...",
       success: (result) => {
         setTimeout(() => navigateToPurchaseOrders(), 1200);
         return result.message || "Orden de compra actualizada con éxito";
       },
       error: (err) => err.message || "Error al actualizar la orden de compra",
-    });
+    }).catch(() => setSubmitting(false));
   };
 
   const handleAuthorize = async () => {
@@ -612,6 +641,8 @@ export default function EditPurchaseOrder() {
             onSubmit={handleSubmit}
             className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300"
           >
+            <fieldset disabled={saving} className="contents">
+            <PurchaseOrderDraftNotice draft={draft} />
             <PurchaseOrderHeader
               projectName={purchaseOrder?.project?.name ?? ""}
               code={code}
@@ -749,6 +780,7 @@ export default function EditPurchaseOrder() {
                 onClick={() => setIsModalOpen(true)}
               />
             </ButtonContainer>
+            </fieldset>
           </form>
         </div>
       </div>

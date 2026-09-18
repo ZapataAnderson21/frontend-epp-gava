@@ -1,3 +1,4 @@
+import type { RequestFormDraftData } from "../utils/requestFormDraft";
 import { useApiAction } from "./useApiAction";
 import type {
   CreateElementRequestDto,
@@ -16,25 +17,37 @@ import {
 
 type ElementPlanState = Record<string, ElementRequestWorkerPlan[]>;
 
+async function settleWrites<T>(operations: Promise<T>[]): Promise<T[]> {
+  const results = await Promise.allSettled(operations);
+  const failed = results.find((result) => result.status === "rejected");
+  if (failed?.status === "rejected") throw failed.reason;
+  return results.map((result) => (result as PromiseFulfilledResult<T>).value);
+}
+
 export interface SendRequestOptions {
   operationId?: string;
+  data?: RequestFormDraftData;
 }
 
 interface SaveRequestOptions {
+  onCreated?: (requestId: number) => void;
   clearDraft?: boolean;
+  data?: RequestFormDraftData;
 }
 
 function getTypeFromElements(elements: ElementType[]) {
-  const families = elements.map((element) => element.family?.toLowerCase() || "");
+  const families = elements.map(
+    (element) => element.family?.toLowerCase() || "",
+  );
   const types = elements.map((element) => element.type?.toLowerCase() || "");
   const hasSecurity =
     families.some((family) =>
       ["epp", "epi", "uniform", "officematerial"].includes(family),
-    ) ||
-    types.some((type) => ["epp", "epps"].includes(type));
+    ) || types.some((type) => ["epp", "epps"].includes(type));
   const hasOperative =
-    families.some((family) => ["ese", "harness", "measurement"].includes(family)) ||
-    types.some((type) => ["operative", "operativo"].includes(type));
+    families.some((family) =>
+      ["ese", "harness", "measurement"].includes(family),
+    ) || types.some((type) => ["operative", "operativo"].includes(type));
 
   if (hasSecurity && hasOperative) return "eppAndOperative";
   if (hasSecurity) return "epp";
@@ -48,14 +61,6 @@ function getTypeFromRequestLines(elementRequests: ElementRequestType[]) {
       .map((elementRequest) => elementRequest.element)
       .filter((element): element is ElementType => Boolean(element)),
   );
-}
-
-function parseStoredPlans(): ElementPlanState {
-  try {
-    return JSON.parse(localStorage.getItem("selectedElementRequestPlans") || "{}");
-  } catch {
-    return {};
-  }
 }
 
 function isEpiElement(element?: ElementType) {
@@ -101,19 +106,13 @@ function buildPlanPayload(
     );
 }
 
-function clearRequestDraftStorage() {
-  localStorage.removeItem("selectedWorkers");
-  localStorage.removeItem("selectedRequestWorkers");
-  localStorage.removeItem("selectedElements");
-  localStorage.removeItem("selectedElementRequest");
-  localStorage.removeItem("selectedElementRequestPlans");
-}
-
 export function useHandleForm() {
+  const { execute: readRequest } = useApiAction<RequestType>();
   const { execute: createRequest } = useApiAction<RequestType>();
   const { execute: updateRequest } = useApiAction<RequestType>();
   const { execute: sendRequestToLogistics } = useApiAction<unknown>();
   const { execute: createElementRequest } = useApiAction<ElementRequestType>();
+  const { execute: deleteElementRequest } = useApiAction<unknown>();
   const { execute: updateElementRequest } = useApiAction<ElementRequestType>();
   const { execute: createRequestWorker } = useApiAction<RequestWorker>();
   const { execute: updateRequestWorker } = useApiAction<RequestWorker>();
@@ -128,7 +127,8 @@ export function useHandleForm() {
     const syncOperations = elementRequests
       .filter(
         (elementRequest) =>
-          Boolean(elementRequest.elementRequestId) && isEpiElement(elementRequest.element),
+          Boolean(elementRequest.elementRequestId) &&
+          isEpiElement(elementRequest.element),
       )
       .map(async (elementRequest) => {
         const sourcePlans = plansState[String(elementRequest.elementId)] || [];
@@ -141,7 +141,7 @@ export function useHandleForm() {
         );
       });
 
-    await Promise.all(syncOperations);
+    await settleWrites(syncOperations);
   };
 
   const saveRequestWorkers = async (
@@ -152,7 +152,7 @@ export function useHandleForm() {
       return [] as RequestWorker[];
     }
 
-    const responses = await Promise.all(
+    const responses = await settleWrites(
       selectedRequestWorkers.map((requestWorker) =>
         createRequestWorker(`${requestWorkerApi}`, "POST", {
           requestId,
@@ -176,7 +176,9 @@ export function useHandleForm() {
     existingRequestWorkers: RequestWorker[] = [],
   ) => {
     const selectedWorkerIds = new Set(
-      (selectedRequestWorkers || []).map((requestWorker) => requestWorker.workerId),
+      (selectedRequestWorkers || []).map(
+        (requestWorker) => requestWorker.workerId,
+      ),
     );
 
     const removedRequestWorkers = (existingRequestWorkers || []).filter(
@@ -185,7 +187,7 @@ export function useHandleForm() {
         !selectedWorkerIds.has(requestWorker.workerId),
     );
 
-    await Promise.all(
+    await settleWrites(
       removedRequestWorkers.map((requestWorker) =>
         deleteRequestWorker(
           `${requestWorkerApi}${requestWorker.requestWorkerId}`,
@@ -198,7 +200,7 @@ export function useHandleForm() {
       return [] as RequestWorker[];
     }
 
-    const responses = await Promise.all(
+    const responses = await settleWrites(
       (selectedRequestWorkers || []).map((requestWorker) => {
         const body = {
           requestId,
@@ -230,7 +232,7 @@ export function useHandleForm() {
     requestId: number,
     selectedElementRequests: ElementRequestType[],
   ) => {
-    const responses = await Promise.all(
+    const responses = await settleWrites(
       selectedElementRequests.map((elementRequest, index) => {
         const payload = {
           quantityRequested: Number(elementRequest.quantityRequested || 0),
@@ -262,7 +264,11 @@ export function useHandleForm() {
           requestId,
         };
 
-        return createElementRequest(`${elementRequestApi}`, "POST", createPayload);
+        return createElementRequest(
+          `${elementRequestApi}`,
+          "POST",
+          createPayload,
+        );
       }),
     );
 
@@ -292,16 +298,14 @@ export function useHandleForm() {
     description?: string,
     options: SaveRequestOptions = {},
   ) => {
-    const selectedElements: ElementType[] = JSON.parse(
-      localStorage.getItem("selectedElements") || "[]",
-    );
-    const selectedElementRequest: ElementRequestType[] = JSON.parse(
-      localStorage.getItem("selectedElementRequest") || "[]",
-    );
-    const selectedRequestWorkers: RequestWorker[] = JSON.parse(
-      localStorage.getItem("selectedRequestWorkers") || "[]",
-    );
-    const selectedElementRequestPlans = parseStoredPlans();
+    if (!options.data)
+      throw new Error("No hay datos del formulario para guardar.");
+    const selectedElementRequest = options.data.elementRequests;
+    const selectedElements = selectedElementRequest
+      .map((line) => line.element)
+      .filter((element): element is ElementType => Boolean(element));
+    const selectedRequestWorkers = options.data.requestWorkers;
+    const selectedElementRequestPlans = options.data.elementPlans;
 
     const type =
       getTypeFromRequestLines(selectedElementRequest) ||
@@ -330,6 +334,7 @@ export function useHandleForm() {
     }
 
     const requestId = response.data.requestId;
+    options.onCreated?.(requestId);
     const savedRequestWorkers = await saveRequestWorkers(
       requestId,
       selectedRequestWorkers,
@@ -344,10 +349,6 @@ export function useHandleForm() {
       savedRequestWorkers,
       selectedElementRequestPlans,
     );
-
-    if (options.clearDraft !== false) {
-      clearRequestDraftStorage();
-    }
 
     return {
       loading: false,
@@ -370,11 +371,15 @@ export function useHandleForm() {
       throw new Error("La contraseña del panel de control es requerida.");
     }
 
-    const response = await sendRequestToLogistics(`${requestApi}sendLogistics`, "POST", {
-      requestId,
-      passwordCPanel,
-      operationId: options.operationId,
-    });
+    const response = await sendRequestToLogistics(
+      `${requestApi}sendLogistics`,
+      "POST",
+      {
+        requestId,
+        passwordCPanel,
+        operationId: options.operationId,
+      },
+    );
 
     if (response.statusCode !== 200) {
       throw new Error(response.message);
@@ -398,6 +403,7 @@ export function useHandleForm() {
 
     result = await handleSave(projectId, deliveryDueDate, description, {
       clearDraft: false,
+      data: options.data,
     });
 
     if (!result?.data) {
@@ -410,11 +416,10 @@ export function useHandleForm() {
         passwordCPanel,
         options,
       );
-      clearRequestDraftStorage();
       return sent;
     } catch (error) {
-      clearRequestDraftStorage();
-      const message = error instanceof Error ? error.message : "Error desconocido";
+      const message =
+        error instanceof Error ? error.message : "Error desconocido";
       throw new Error(
         `La solicitud N° ${result.data.request.requestId} fue guardada, pero no se pudo enviar por correo. ${message}`,
       );
@@ -429,12 +434,34 @@ export function useHandleForm() {
     description: string,
     selectedRequestWorkers: RequestWorker[] = [],
     existingRequestWorkers: RequestWorker[] = [],
-    selectedElementRequestPlans: ElementPlanState = parseStoredPlans(),
+    selectedElementRequestPlans: ElementPlanState = {},
+    existingElementRequests: ElementRequestType[] = [],
   ) => {
     const selectedElements: ElementType[] = selectedElementRequests
       .map((elementRequest) => elementRequest.element)
       .filter((element): element is ElementType => Boolean(element));
 
+    // Read actual persisted IDs before retrying a partially completed save.
+    const current = (await readRequest(`${requestApi}${requestId}`, "GET"))
+      .data;
+    const currentLines = current.elementRequests ?? existingElementRequests;
+    const currentWorkers = current.requestWorkers ?? existingRequestWorkers;
+    selectedElementRequests = selectedElementRequests.map((line, index) => ({
+      ...line,
+      elementRequestId:
+        line.elementRequestId ??
+        currentLines.find(
+          (saved) =>
+            saved.elementId === line.elementId &&
+            saved.lineItemOrder === index + 1,
+        )?.elementRequestId,
+    }));
+    selectedRequestWorkers = selectedRequestWorkers.map((worker) => ({
+      ...worker,
+      requestWorkerId:
+        currentWorkers.find((saved) => saved.workerId === worker.workerId)
+          ?.requestWorkerId ?? worker.requestWorkerId,
+    }));
     const requestData = {
       projectId,
       description,
@@ -442,15 +469,33 @@ export function useHandleForm() {
       type: getTypeFromElements(selectedElements),
     };
 
-    const response = await updateRequest(`${requestApi}${requestId}`, "PATCH", requestData);
+    const response = await updateRequest(
+      `${requestApi}${requestId}`,
+      "PATCH",
+      requestData,
+    );
     if (!response || response.statusCode !== 200) {
-      return null;
+      throw new Error(
+        response?.message || "No se pudo actualizar el requerimiento.",
+      );
+    }
+
+    const retainedIds = new Set(
+      selectedElementRequests.map((line) => line.elementRequestId),
+    );
+    for (const line of currentLines) {
+      if (line.elementRequestId && !retainedIds.has(line.elementRequestId)) {
+        await deleteElementRequest(
+          `${elementRequestApi}${line.elementRequestId}`,
+          "DELETE",
+        );
+      }
     }
 
     const savedRequestWorkers = await upsertRequestWorkers(
       requestId,
       selectedRequestWorkers,
-      existingRequestWorkers,
+      currentWorkers,
     );
     const savedElementRequests = await upsertElementRequests(
       requestId,
@@ -483,7 +528,7 @@ export function useHandleForm() {
     description: string,
     selectedRequestWorkers: RequestWorker[] = [],
     existingRequestWorkers: RequestWorker[] = [],
-    selectedElementRequestPlans: ElementPlanState = parseStoredPlans(),
+    selectedElementRequestPlans: ElementPlanState = {},
     options: SendRequestOptions = {},
   ) => {
     const updateResult = await handleUpdate(
@@ -501,7 +546,6 @@ export function useHandleForm() {
       throw new Error("Error al actualizar la solicitud.");
     }
 
-    clearRequestDraftStorage();
     return await handleSend(requestId, passwordCPanel, options);
   };
 

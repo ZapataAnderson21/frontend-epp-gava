@@ -35,7 +35,10 @@ export default function PaymentConditionsCard({...props}: Props) {
                   label="Condiciones de pago"
                   name="paymentConditions1"
                   value={paymentConditions1}
-                  onChange={(val) => setPaymentConditions1(val)}
+                  onChange={(val) => {
+                    setPaymentConditions1(val);
+                    setPaymentConditions(val ? `${val} - ${paymentConditions2 ?? ''}` : '');
+                  }}
                   options={[
                     { value: "Crédito", label: "Crédito" },
                     { value: "Contado", label: "Contado" },

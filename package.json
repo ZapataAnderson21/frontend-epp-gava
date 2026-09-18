@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test:drafts": "node --test scripts/test-purchase-order-draft.cjs scripts/test-request-form-draft.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

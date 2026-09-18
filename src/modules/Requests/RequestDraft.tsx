@@ -1,5 +1,13 @@
+import { useRequestFormDraft } from "../../hooks/useRequestFormDraft";
+import PurchaseOrderDraftNotice from "../../common/form/PurchaseOrderDraftNotice";
+import type { RequestFormDraftData } from "../../utils/requestFormDraft";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useSearchParams,
+  useParams,
+} from "react-router-dom";
 import {
   ArrowLeft as TiArrowBack,
   CircleHelp as RiQuestionFill,
@@ -7,9 +15,7 @@ import {
   TriangleAlert as IoWarning,
 } from "lucide-react";
 
-
 import toast, { Toaster } from "react-hot-toast";
-
 
 import type {
   ElementRequestType,
@@ -19,16 +25,17 @@ import type {
   RequestType,
   RequestWorker,
 } from "../../data/types";
-import { useApiAction, useFetch, useHandleForm } from "../../hooks";
+import { useCurrentUser, useFetch, useHandleForm } from "../../hooks";
 import { ErrorMessage } from "../../common/error";
 import { Button } from "../../components";
-import { ButtonContainer, InputForm, SelectForm, TextAreaForm } from "../../common/form";
-import { ReturnButton, SaveButton } from "../../common/button";
 import {
-  elementRequestApi,
-  projectApi,
-  requestApi,
-} from "../../data/apiUrl";
+  ButtonContainer,
+  InputForm,
+  SelectForm,
+  TextAreaForm,
+} from "../../common/form";
+import { ReturnButton, SaveButton } from "../../common/button";
+import { projectApi, requestApi } from "../../data/apiUrl";
 import HeaderNewRequest from "./components/HeaderNewRequest";
 import RowElementRequest from "./components/RowElementRequest";
 import RequestFamilyTabs from "./components/RequestFamilyTabs";
@@ -61,6 +68,13 @@ function buildPlanState(elementRequests: ElementRequestType[]) {
 }
 
 export default function RequestDraft() {
+  const { user, error } = useCurrentUser();
+  const { id } = useParams();
+  if (!user)
+    return <ErrorMessage errorMessage={error || "Cargando usuario..."} />;
+  return <RequestDraftForm key={`${user.userId}:${id}`} userId={user.userId} />;
+}
+function RequestDraftForm({ userId }: { userId: number }) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const projectIdParam = searchParams.get("projectId");
@@ -70,39 +84,83 @@ export default function RequestDraft() {
   const [projectId, setProjectId] = useState<number>(0);
   const [description, setDescription] = useState<string>("");
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
-  const [activeFamily, setActiveFamily] = useState<InventoryFamilyTabKey>("epp");
-  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>([]);
+  const [activeFamily, setActiveFamily] =
+    useState<InventoryFamilyTabKey>("epp");
+  const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(
+    [],
+  );
   const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>([]);
   const [elementPlans, setElementPlans] = useState<ElementPlanState>({});
-  const [planningElement, setPlanningElement] = useState<ElementRequestType | null>(null);
+  const [planningElement, setPlanningElement] =
+    useState<ElementRequestType | null>(null);
   const [passwordCPanel, setPasswordCPanel] = useState<string>("");
   const [openPasswordModal, setOpenPasswordModal] = useState<boolean>(false);
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
-  const { execute: deleteElementRequest } = useApiAction<unknown>();
-  const { data: request, loading, error } = useFetch<RequestType>(
-    requestId ? `${requestApi}${requestId}` : "",
-    [requestId],
-  );
+  const [hydrated, setHydrated] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [pendingPlanning, setPendingPlanning] =
+    useState<RequestFormDraftData["pendingPlanning"]>(null);
+  const {
+    data: request,
+    loading,
+    error,
+  } = useFetch<RequestType>(requestId ? `${requestApi}${requestId}` : "", [
+    requestId,
+  ]);
   const { data: projects } = useFetch<Project[]>(`${projectApi}status/active`);
   const navigate = useNavigate();
-  const { handleUpdate, handleUpdateAndSend } = useHandleForm();
+  const { handleUpdate, handleSend } = useHandleForm();
 
   useEffect(() => {
-    if (!request) return;
+    if (!request || hydrated) return;
 
     setProjectId(request.projectId);
     setDescription(request.description || "");
     setDeliveryDueDate(
-      request.deliveryDueDate ? toDatetimeLocalValue(request.deliveryDueDate) : "",
+      request.deliveryDueDate
+        ? toDatetimeLocalValue(request.deliveryDueDate)
+        : "",
     );
 
-    const nextElementRequests = attachRequestLineKeys(request.elementRequests || []);
+    const nextElementRequests = attachRequestLineKeys(
+      request.elementRequests || [],
+    );
     const nextRequestWorkers = request.requestWorkers || [];
     setElementRequests(nextElementRequests);
     setRequestWorkers(nextRequestWorkers);
     setElementPlans(buildPlanState(nextElementRequests));
-  }, [request]);
+    setHydrated(true);
+  }, [request, hydrated]);
+
+  const draft = useRequestFormDraft({
+    userId,
+    slot: String(requestId),
+    enabled: hydrated,
+    value: {
+      schemaVersion: 1,
+      createdRequestId: requestId,
+      projectId,
+      deliveryDueDate,
+      description,
+      activeFamily,
+      elementRequests,
+      requestWorkers,
+      elementPlans,
+      pendingPlanning,
+    },
+    restore: (data) => {
+      setProjectId(data.projectId);
+      setDeliveryDueDate(data.deliveryDueDate);
+      setDescription(data.description);
+      setActiveFamily(data.activeFamily);
+      setElementRequests(data.elementRequests);
+      setRequestWorkers(data.requestWorkers);
+      setElementPlans(data.elementPlans);
+      setPendingPlanning(data.pendingPlanning);
+      setPlanningElement(null);
+    },
+  });
 
   const navigateToBack = () => {
     if (cameFromProject) {
@@ -125,8 +183,14 @@ export default function RequestDraft() {
     const normalizedLines = attachRequestLineKeys(nextElementRequests);
     setElementRequests(normalizedLines);
 
-    const nextPlans = prunePlansByElementRequests(elementPlans, normalizedLines);
-    const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+    const nextPlans = prunePlansByElementRequests(
+      elementPlans,
+      normalizedLines,
+    );
+    const nextRequestWorkers = buildRequestWorkersFromPlans(
+      nextPlans,
+      requestWorkers,
+    );
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
   };
@@ -135,7 +199,8 @@ export default function RequestDraft() {
     if (activeFamily === "harness" && element.fallProtectionGroupId) {
       const existingLine = elementRequests.find(
         (elementRequest) =>
-          elementRequest.fallProtectionGroupId === element.fallProtectionGroupId,
+          elementRequest.fallProtectionGroupId ===
+          element.fallProtectionGroupId,
       );
 
       if (existingLine) return;
@@ -152,7 +217,8 @@ export default function RequestDraft() {
             ? {
                 ...elementRequest,
                 element,
-                quantityRequested: Number(elementRequest.quantityRequested || 0) + 1,
+                quantityRequested:
+                  Number(elementRequest.quantityRequested || 0) + 1,
               }
             : elementRequest,
         );
@@ -171,22 +237,12 @@ export default function RequestDraft() {
   };
 
   const handleRemoveElement = async (lineKey: string) => {
+    if (pendingPlanning?.lineKey === lineKey) setPendingPlanning(null);
     try {
       const current = elementRequests.find(
         (item) => getRequestLineKey(item) === lineKey,
       );
       if (!current) return;
-
-      if (current.elementRequestId) {
-        const response = await deleteElementRequest(
-          `${elementRequestApi}${current.elementRequestId}`,
-          "DELETE",
-        );
-
-        if (response.statusCode !== 200) {
-          return;
-        }
-      }
 
       const nextElementRequests = elementRequests.filter(
         (item) => getRequestLineKey(item) !== lineKey,
@@ -194,11 +250,16 @@ export default function RequestDraft() {
       const nextPlans = { ...elementPlans };
       if (
         current &&
-        !nextElementRequests.some((item) => item.elementId === current.elementId)
+        !nextElementRequests.some(
+          (item) => item.elementId === current.elementId,
+        )
       ) {
         delete nextPlans[String(current.elementId)];
       }
-      const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+      const nextRequestWorkers = buildRequestWorkersFromPlans(
+        nextPlans,
+        requestWorkers,
+      );
       setElementRequests(nextElementRequests);
       setElementPlans(nextPlans);
       setRequestWorkers(nextRequestWorkers);
@@ -219,14 +280,27 @@ export default function RequestDraft() {
         getRequestLineKey(elementRequest) === lineKey
           ? {
               ...elementRequest,
-              [field]:
-                field === "quantityRequested"
-                  ? Number(value)
-                  : value,
+              [field]: field === "quantityRequested" ? Number(value) : value,
             }
           : elementRequest,
       ),
     );
+  };
+
+  const openPlanning = (line: ElementRequestType) => {
+    if (
+      pendingPlanning &&
+      pendingPlanning.lineKey !== getRequestLineKey(line)
+    ) {
+      toast.error("Primero guarda los detalles de la planificación pendiente.");
+      setPlanningElement(
+        elementRequests.find(
+          (item) => getRequestLineKey(item) === pendingPlanning.lineKey,
+        ) ?? null,
+      );
+      return;
+    }
+    setPlanningElement(line);
   };
 
   const handleSavePlans = (plans: ElementRequestWorkerPlan[]) => {
@@ -236,89 +310,103 @@ export default function RequestDraft() {
       ...elementPlans,
       [String(planningElement.elementId)]: plans,
     };
-    const nextRequestWorkers = buildRequestWorkersFromPlans(nextPlans, requestWorkers);
+    const nextRequestWorkers = buildRequestWorkersFromPlans(
+      nextPlans,
+      requestWorkers,
+    );
 
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
+    setPendingPlanning(null);
     setPlanningElement(null);
   };
 
-  const handleUpdateRequest = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const saveForm = async (send: boolean) => {
+    if (saving) return;
+    if (["conflict", "invalid"].includes(draft.status)) {
+      toast.error("Resuelve el aviso del borrador antes de guardar.");
+      return;
+    }
+    if (pendingPlanning) {
+      toast.error(
+        "Revisa y guarda la planificación pendiente antes de guardar el requerimiento.",
+      );
+      return;
+    }
+    if (send && !passwordCPanel) {
+      toast.error("Ingresa la contraseña del correo.");
+      return;
+    }
+    setOpenPasswordModal(false);
+    setSaving(true);
+    let saved = false;
     try {
       await toast.promise(
-        handleUpdate(
-          requestId,
-          projectId,
-          elementRequests,
-          deliveryDueDate,
-          description,
-          requestWorkers,
-          request?.requestWorkers || [],
-          elementPlans,
-        ),
+        (async () => {
+          const result = await handleUpdate(
+            requestId,
+            projectId,
+            elementRequests,
+            deliveryDueDate,
+            description,
+            requestWorkers,
+            request?.requestWorkers || [],
+            elementPlans,
+            request?.elementRequests || [],
+          );
+          if (!result?.data)
+            throw new Error("No se pudo actualizar el requerimiento.");
+          saved = true;
+          await draft.complete();
+          if (send) await handleSend(requestId, passwordCPanel);
+        })(),
         {
-          loading: "Actualizando solicitud...",
-          success: () => {
-            setTimeout(() => navigateToBack(), 1200);
-            return "Solicitud actualizada exitosamente.";
-          },
-          error: (err) => err.message || "No se pudo actualizar la solicitud.",
+          loading: send
+            ? "Actualizando y enviando solicitud..."
+            : "Actualizando solicitud...",
+          success: send
+            ? "Solicitud actualizada y enviada exitosamente."
+            : "Solicitud actualizada exitosamente.",
+          error: (err) =>
+            saved
+              ? `Solicitud actualizada; no se pudo enviar el correo. ${err.message}`
+              : err.message || "No se pudo actualizar la solicitud.",
         },
       );
+      setTimeout(navigateToBack, 1200);
     } catch {
-      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+      if (saved) setTimeout(navigateToBack, 1200);
+      else setSaving(false);
+    } finally {
+      setPasswordCPanel("");
     }
   };
-
-  const handleUpdateAndSendRequest = async () => {
-    setOpenPasswordModal(false);
-
-    try {
-      await toast.promise(
-        handleUpdateAndSend(
-          requestId,
-          projectId,
-          elementRequests,
-          passwordCPanel,
-          deliveryDueDate,
-          description,
-          requestWorkers,
-          request?.requestWorkers || [],
-          elementPlans,
-        ),
-        {
-          loading: "Actualizando y enviando solicitud...",
-          success: () => {
-            setTimeout(() => navigateToBack(), 1200);
-            return "Solicitud actualizada y enviada exitosamente.";
-          },
-          error: (err) => err.message || "No se pudo actualizar y enviar la solicitud.",
-        },
-      );
-    } catch {
-      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
-    }
+  const handleUpdateRequest = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveForm(false);
+  };
+  const handleUpdateAndSendRequest = () => {
+    void saveForm(true);
   };
 
   const visibleElementRequests = useMemo(
     () =>
-      elementRequests.filter(
-        (elementRequest) => {
-          const family = getInventoryFamilyFromSource(elementRequest.element);
-          if (activeFamily === "epp") {
-            return ["epp", "epi", "uniform"].includes(family);
-          }
-          return family === activeFamily;
-        },
-      ),
+      elementRequests.filter((elementRequest) => {
+        const family = getInventoryFamilyFromSource(elementRequest.element);
+        if (activeFamily === "epp") {
+          return ["epp", "epi", "uniform"].includes(family);
+        }
+        return family === activeFamily;
+      }),
     [activeFamily, elementRequests],
   );
 
   const planningSummary = (elementId: number) => {
     const plans = elementPlans[String(elementId)] || [];
-    const planned = plans.reduce((total, plan) => total + Number(plan.plannedQuantity || 0), 0);
+    const planned = plans.reduce(
+      (total, plan) => total + Number(plan.plannedQuantity || 0),
+      0,
+    );
     return plans.length
       ? `${plans.length} trabajador(es), ${formatInventoryQuantity(planned)} planificado`
       : "Sin planificacion";
@@ -328,7 +416,11 @@ export default function RequestDraft() {
 
   if (loading) return <ErrorMessage errorMessage="Cargando requerimiento..." />;
   if (error || !request) {
-    return <ErrorMessage errorMessage={error || "No se encontro el requerimiento."} />;
+    return (
+      <ErrorMessage
+        errorMessage={error || "No se encontro el requerimiento."}
+      />
+    );
   }
   if (!projects) {
     return <ErrorMessage errorMessage="No se pudieron cargar los proyectos." />;
@@ -336,133 +428,191 @@ export default function RequestDraft() {
 
   return (
     <>
-      <form onSubmit={handleUpdateRequest} className="w-full p-10 text-gray-800">
-        <h1 className="mb-4 text-xl font-bold">EDITAR SOLICITUD</h1>
-
-        <div className="flex h-full w-full flex-col items-start justify-start gap-4">
-          <div className="flex max-w-4xl w-full flex-col gap-4">
-            <div className="w-full flex flex-row gap-4">
-            <SelectForm
-              label="Proyecto"
-              name="projectId"
-              value={projectId}
-              onChange={(value) => setProjectId(Number(value))}
-              options={[
-                ...projects.map((project) => ({
-                  value: project.projectId,
-                  label: project.name,
-                })),
-              ]}
-              disabled={Boolean(projectIdParam)}
-            />
-
-            <InputForm
-              label="Fecha y Hora de Entrega"
-              name="deliveryDueDate"
-              type="datetime-local"
-              value={deliveryDueDate}
-              onChange={(e) => setDeliveryDueDate(e.target.value)}
+      <form
+        onSubmit={handleUpdateRequest}
+        className="w-full p-10 text-gray-800"
+      >
+        <fieldset disabled={saving} inert={saving} className="contents">
+          <h1 className="mb-4 text-xl font-bold">EDITAR SOLICITUD</h1>
+          <PurchaseOrderDraftNotice draft={draft} requirement />
+          {pendingPlanning && (
+            <button
+              type="button"
+              className="my-2 underline"
+              onClick={() =>
+                setPlanningElement(
+                  elementRequests.find(
+                    (line) =>
+                      getRequestLineKey(line) === pendingPlanning.lineKey,
+                  ) ?? null,
+                )
+              }
             >
-              <div className="relative flex w-full justify-end">
-                <RiQuestionFill
-                  className="inline-flex size-5 cursor-pointer text-amber-500"
-                  onClick={() => setOpenWarning(!openWarning)}
+              Revisar planificación pendiente
+            </button>
+          )}
+
+          <div className="flex h-full w-full flex-col items-start justify-start gap-4">
+            <div className="flex max-w-4xl w-full flex-col gap-4">
+              <div className="w-full flex flex-row gap-4">
+                <SelectForm
+                  label="Proyecto"
+                  name="projectId"
+                  value={projectId}
+                  onChange={(value) => setProjectId(Number(value))}
+                  options={[
+                    ...projects.map((project) => ({
+                      value: project.projectId,
+                      label: project.name,
+                    })),
+                  ]}
+                  disabled={Boolean(projectIdParam)}
                 />
-                {openWarning ? (
-                  <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
-                    <IoWarning className="mt-1 w-8" />
-                    Recuerda que si el requerimiento es para mañana, la hora limite para pedirlo es 1 PM. Si es para pasado mañana, el limite es 5 PM.
-                  </p>
-                ) : null}
+
+                <InputForm
+                  label="Fecha y Hora de Entrega"
+                  name="deliveryDueDate"
+                  type="datetime-local"
+                  value={deliveryDueDate}
+                  onChange={(e) => setDeliveryDueDate(e.target.value)}
+                >
+                  <div className="relative flex w-full justify-end">
+                    <RiQuestionFill
+                      className="inline-flex size-5 cursor-pointer text-amber-500"
+                      onClick={() => setOpenWarning(!openWarning)}
+                    />
+                    {openWarning ? (
+                      <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
+                        <IoWarning className="mt-1 w-8" />
+                        Recuerda que si el requerimiento es para mañana, la hora
+                        limite para pedirlo es 1 PM. Si es para pasado mañana,
+                        el limite es 5 PM.
+                      </p>
+                    ) : null}
+                  </div>
+                </InputForm>
               </div>
-            </InputForm>
+
+              <TextAreaForm
+                label="Descripcion"
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                optional={true}
+              />
             </div>
 
-            <TextAreaForm
-              label="Descripcion"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              optional={true}
-            />
-          </div>
+            <div className="flex flex-col gap-4 w-full">
+              <RequestFamilyTabs
+                activeFamily={activeFamily}
+                onChange={setActiveFamily}
+              />
 
-          <div className="flex flex-col gap-4 w-full">
-            <RequestFamilyTabs activeFamily={activeFamily} onChange={setActiveFamily} />
-
-            <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {getRequestFamilyDescription(activeFamily)}
-                </h2>
-                <p className="text-xs text-gray-500">
-                  {selectedFamilyConfig?.requiresCode
-                    ? "Mantiene unidades unicas con codigo obligatorio."
-                    : activeFamily === "harness"
-                      ? "Selecciona el grupo EPA."
-                    : selectedFamilyConfig?.consumable
-                      ? "Permite cantidades decimales y retornos parciales."
-                      : "Puedes ajustar cantidades y mantener la trazabilidad del borrador."}
-                </p>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
-                  {visibleElementRequests.length > 0 ? (
-                    <div className="w-full">
-                      <HeaderNewRequest
-                        showDetailsColumn={activeFamily === "epi"}
-                        showQuantityColumn={activeFamily !== "harness"}
-                      />
-                      {visibleElementRequests.map((elementRequest) => (
-                        <RowElementRequest
-                          key={getRequestLineKey(elementRequest)}
-                          elementRequest={elementRequest}
-                          handleRemoveElement={handleRemoveElement}
-                          handleChangeElementRequest={handleChangeElementRequest}
-                          showPlanningButton={activeFamily === "epi"}
-                          planningSummary={activeFamily === "epi" ? planningSummary(elementRequest.elementId) : undefined}
-                          onOpenPlanning={setPlanningElement}
-                          showQuantityField={activeFamily !== "harness"}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
-                      No hay items seleccionados en {selectedFamilyConfig?.label || "esta familia"}.
-                    </div>
-                  )}
+              <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {getRequestFamilyDescription(activeFamily)}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {selectedFamilyConfig?.requiresCode
+                      ? "Mantiene unidades unicas con codigo obligatorio."
+                      : activeFamily === "harness"
+                        ? "Selecciona el grupo EPA."
+                        : selectedFamilyConfig?.consumable
+                          ? "Permite cantidades decimales y retornos parciales."
+                          : "Puedes ajustar cantidades y mantener la trazabilidad del borrador."}
+                  </p>
                 </div>
 
-                <RequestItemPicker
-                  familyKey={activeFamily}
-                  onAddElement={handleAddElementFromPanel}
-                />
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+                  <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
+                    {visibleElementRequests.length > 0 ? (
+                      <div className="w-full">
+                        <HeaderNewRequest
+                          showDetailsColumn={visibleElementRequests.some(
+                            (line) =>
+                              getInventoryFamilyFromSource(line.element) ===
+                              "epi",
+                          )}
+                          showQuantityColumn={activeFamily !== "harness"}
+                        />
+                        {visibleElementRequests.map((elementRequest) => (
+                          <RowElementRequest
+                            key={getRequestLineKey(elementRequest)}
+                            elementRequest={elementRequest}
+                            handleRemoveElement={handleRemoveElement}
+                            handleChangeElementRequest={
+                              handleChangeElementRequest
+                            }
+                            showPlanningButton={
+                              getInventoryFamilyFromSource(
+                                elementRequest.element,
+                              ) === "epi"
+                            }
+                            planningSummary={
+                              getInventoryFamilyFromSource(
+                                elementRequest.element,
+                              ) === "epi"
+                                ? planningSummary(elementRequest.elementId)
+                                : undefined
+                            }
+                            onOpenPlanning={openPlanning}
+                            showQuantityField={activeFamily !== "harness"}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
+                        No hay items seleccionados en{" "}
+                        {selectedFamilyConfig?.label || "esta familia"}.
+                      </div>
+                    )}
+                  </div>
+
+                  <RequestItemPicker
+                    familyKey={activeFamily}
+                    onAddElement={handleAddElementFromPanel}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <ButtonContainer>
-            <ReturnButton onClick={navigateToBack} />
-            <SaveButton loading={false} />
-            <Button
-              type="button"
-              icon={<MdAttachEmail />}
-              label="Actualizar y Enviar"
-              onClick={() => setOpenPasswordModal(true)}
-              bgColor="black"
-              bgHoverColor="gray-900"
-            />
-          </ButtonContainer>
-        </div>
+            <ButtonContainer>
+              <ReturnButton onClick={navigateToBack} />
+              <SaveButton loading={saving} />
+              <Button
+                type="button"
+                icon={<MdAttachEmail />}
+                label="Actualizar y Enviar"
+                onClick={() => setOpenPasswordModal(true)}
+                bgColor="black"
+                bgHoverColor="gray-900"
+              />
+            </ButtonContainer>
+          </div>
+        </fieldset>
       </form>
 
       <EpiPlanningModal
         open={Boolean(planningElement)}
         elementRequest={planningElement}
         requestWorkers={requestWorkers}
-        plans={planningElement ? elementPlans[String(planningElement.elementId)] || [] : []}
+        plans={
+          planningElement &&
+          pendingPlanning?.lineKey === getRequestLineKey(planningElement)
+            ? pendingPlanning.plans
+            : planningElement
+              ? elementPlans[String(planningElement.elementId)] || []
+              : []
+        }
         onClose={() => setPlanningElement(null)}
+        onDraftChange={(plans) => {
+          if (planningElement)
+            setPendingPlanning({
+              lineKey: getRequestLineKey(planningElement),
+              plans,
+            });
+        }}
         onSave={handleSavePlans}
       />
 
@@ -471,7 +621,9 @@ export default function RequestDraft() {
       {openPasswordModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-all duration-300">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-lg font-semibold">Contraseña del Sistema de Correos</h2>
+            <h2 className="mb-4 text-lg font-semibold">
+              Contraseña del Sistema de Correos
+            </h2>
             <InputForm
               label="Contraseña"
               name="passwordCPanel"

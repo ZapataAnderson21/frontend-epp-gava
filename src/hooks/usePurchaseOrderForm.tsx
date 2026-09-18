@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useFetch, useApiAction } from "../hooks";
 import type { Project, PurchaseOrder, Resource, Supplier } from "../data/types";
 import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
 import toast from "react-hot-toast";
 import { lineAmount, roundMoney, totalFromRoundedLines } from "../utils";
+import { usePurchaseOrderDraft } from './usePurchaseOrderDraft';
 
 export type ItemRow = {
   orderNumber: number;
@@ -38,11 +39,12 @@ type FormErrors = Partial<{
 }>;
 
 interface Params {
+  userId?: number;
   projectId: string;
   navigate: (path: string) => void;
 }
 
-export function usePurchaseOrderForm({ projectId, navigate }: Params) {
+export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
   // --- fetch ---
   const { data: project, loading: projectLoading, error: projectError } =
     useFetch<Project>(`${projectApi}${projectId}`, [projectId]);
@@ -63,13 +65,15 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   } = useFetch<Resource[]>(`${resourceApi}`, []);
 
   const { execute, loading: saving } = useApiAction<PurchaseOrder>();
+  const [submitting, setSubmitting] = useState(false);
 
-  // --- form state (sin localStorage) ---
+  // --- form state ---
   const [code, setCode] = useState("");
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [destination, setDestination] = useState("");
   const [paymentConditions, setPaymentConditions] = useState("");
   const [paymentConditions1, setPaymentConditions1] = useState("");
+  const [paymentConditions2, setPaymentConditions2] = useState("");
   const [generalConditions, setGeneralConditions] = useState<string[]>([""]);
   const [qualityConditions, setQualityConditions] = useState<string[]>([""]);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -82,6 +86,23 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
   const [items, setItems] = useState<ItemRow[]>([
     { orderNumber: 1, resourceId: 0, description: "", unit: "", quantity: "", unitPurchasePrice: "", unitSalesPrice: "", subtotal: 0 },
   ]);
+
+  const draft = usePurchaseOrderDraft({
+    userId, projectId,
+    value: { schemaVersion: 1, code, supplierId: selectSupplierId, quotation, destination,
+      deliveryLocation, carePerson, dniCarePerson, observations, paymentMethod,
+      paymentConditions, paymentConditions1, paymentConditions2, purchaseOrderType,
+      generalConditions, qualityConditions, items, rpoIds: [] },
+    restore: (data) => {
+      setCode(data.code); setSelectSupplierId(data.supplierId); setQuotation(data.quotation);
+      setDestination(data.destination); setDeliveryLocation(data.deliveryLocation);
+      setCarePerson(data.carePerson); setDniCarePerson(data.dniCarePerson); setObservations(data.observations);
+      setPaymentMethod(data.paymentMethod); setPaymentConditions(data.paymentConditions);
+      setPaymentConditions1(data.paymentConditions1); setPaymentConditions2(data.paymentConditions2);
+      setPurchaseOrderType(data.purchaseOrderType); setGeneralConditions(data.generalConditions);
+      setQualityConditions(data.qualityConditions); setItems(data.items);
+    },
+  });
 
   const normalizeOrderNumbers = (rows: ItemRow[]) =>
     rows.map((row, index) => ({ ...row, orderNumber: index + 1 }));
@@ -171,14 +192,6 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     });
   };
 
-  // paymentConditions compuesto (si cambian la 1ra parte y no hay detalle, queda vacío)
-  useEffect(() => {
-    if (!paymentConditions1) {
-      setPaymentConditions("");
-      return;
-    }
-  }, [paymentConditions1]);
-
   // montos
   const sale_amount = useMemo(
     () => totalFromRoundedLines(items, (it) => it.unitSalesPrice),
@@ -264,6 +277,11 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    if (draft.status === 'conflict' || draft.status === 'invalid') {
+      toast.error('Resuelve el aviso del borrador antes de guardar la orden.');
+      return;
+    }
 
     // VALIDACIÓN granular
     const { valid, errors: found, messages } = validateAll();
@@ -328,10 +346,12 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         }
       }
 
+      await draft.complete();
       return ocResp;
     };
 
-    toast.promise(
+    setSubmitting(true);
+    void toast.promise(
       createPurchaseOrder(),
       {
         loading: 'Creando orden de compra...',
@@ -341,7 +361,7 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
         },
         error: (err) => err.message || 'Error al crear la orden de compra',
       }
-    );
+    ).catch(() => setSubmitting(false));
   };
 
   return {
@@ -359,6 +379,8 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     destination, setDestination,
     paymentConditions, setPaymentConditions,
     paymentConditions1, setPaymentConditions1,
+    paymentConditions2, setPaymentConditions2,
+    draft,
     paymentMethod, setPaymentMethod,
     carePerson, setCarePerson,
     dniCarePerson, setDniCarePerson,
@@ -379,6 +401,6 @@ export function usePurchaseOrderForm({ projectId, navigate }: Params) {
     validationMessages,
 
     // submit & UI
-    saving, handleSubmit,
+    saving: saving || submitting, handleSubmit,
   };
 }

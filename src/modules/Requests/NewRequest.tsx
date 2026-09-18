@@ -1,10 +1,13 @@
+import { useRequestFormDraft } from "../../hooks/useRequestFormDraft";
+import PurchaseOrderDraftNotice from "../../common/form/PurchaseOrderDraftNotice";
+import type { RequestFormDraftData } from "../../utils/requestFormDraft";
 import {
   TriangleAlert as IoWarning,
   MailPlus as MdAttachEmail,
   CircleHelp as RiQuestionFill,
   ArrowLeft as TiArrowBack,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import toast, { Toaster } from "react-hot-toast";
@@ -26,7 +29,7 @@ import type {
   Project,
   RequestWorker,
 } from "../../data/types";
-import { useFetch, useHandleForm } from "../../hooks";
+import { useCurrentUser, useFetch, useHandleForm } from "../../hooks";
 import {
   formatInventoryQuantity,
   getInventoryFamilyConfig,
@@ -51,52 +54,69 @@ import {
   type ElementPlanState,
 } from "./requestPlanning";
 
-function parsePlansFromStorage() {
-  try {
-    return JSON.parse(
-      localStorage.getItem("selectedElementRequestPlans") || "{}",
-    ) as ElementPlanState;
-  } catch {
-    return {};
-  }
-}
-
 export default function NewRequest() {
+  const { user, error } = useCurrentUser();
+  const [params] = useSearchParams();
+  if (!user)
+    return <ErrorMessage errorMessage={error || "Cargando usuario..."} />;
+  return (
+    <NewRequestForm
+      key={`${user.userId}:${params.get("projectId") || "new"}`}
+      userId={user.userId}
+    />
+  );
+}
+function NewRequestForm({ userId }: { userId: number }) {
   const [searchParams] = useSearchParams();
   const projectIdParam = searchParams.get("projectId");
-
-  const [projectId, setProjectId] = useState<number>(
+  const [projectId, setProjectId] = useState(
     projectIdParam ? Number(projectIdParam) : 0,
   );
-  const [deliveryDueDate, setDeliveryDueDate] = useState<string>(
-    localStorage.getItem("deliveryDueDate") || "",
-  );
-  const [description, setDescription] = useState<string>("");
+  const [deliveryDueDate, setDeliveryDueDate] = useState("");
+  const [description, setDescription] = useState("");
   const [activeFamily, setActiveFamily] =
     useState<InventoryFamilyTabKey>("epp");
-  const [elementPlans, setElementPlans] = useState<ElementPlanState>(
-    parsePlansFromStorage(),
-  );
+  const [elementPlans, setElementPlans] = useState<ElementPlanState>({});
   const [planningElement, setPlanningElement] =
     useState<ElementRequestType | null>(null);
-
-  const selectedElements: ElementType[] = JSON.parse(
-    localStorage.getItem("selectedElements") || "[]",
-  );
-  const selectedElementRequest: ElementRequestType[] = attachRequestLineKeys(
-    JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
-  );
-  const selectedRequestWorkers: RequestWorker[] = JSON.parse(
-    localStorage.getItem("selectedRequestWorkers") || "[]",
-  );
-
-  const [elements, setElements] = useState<ElementType[]>(selectedElements);
+  const [pendingPlanning, setPendingPlanning] =
+    useState<RequestFormDraftData["pendingPlanning"]>(null);
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(
-    selectedElementRequest,
+    [],
   );
-  const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>(
-    selectedRequestWorkers,
-  );
+  const [requestWorkers, setRequestWorkers] = useState<RequestWorker[]>([]);
+  const elements = getUniqueElementsFromLines(elementRequests);
+  const [saving, setSaving] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState<number | null>(null);
+  const snapshot: RequestFormDraftData = {
+    schemaVersion: 1,
+    createdRequestId,
+    projectId,
+    deliveryDueDate,
+    description,
+    activeFamily,
+    elementRequests,
+    requestWorkers,
+    elementPlans,
+    pendingPlanning,
+  };
+  const draft = useRequestFormDraft({
+    userId,
+    slot: projectIdParam ? `project-${projectIdParam}` : "new",
+    value: snapshot,
+    restore: (data) => {
+      setCreatedRequestId(data.createdRequestId);
+      setProjectId(data.projectId);
+      setDeliveryDueDate(data.deliveryDueDate);
+      setDescription(data.description);
+      setActiveFamily(data.activeFamily);
+      setElementRequests(data.elementRequests);
+      setRequestWorkers(data.requestWorkers);
+      setElementPlans(data.elementPlans);
+      setPendingPlanning(data.pendingPlanning);
+      setPlanningElement(null);
+    },
+  });
 
   const { data: projects } = useFetch<Project[]>(
     `${projectApi}status/active`,
@@ -107,17 +127,13 @@ export default function NewRequest() {
   const [openWarning, setOpenWarning] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  const { handleSave, handleSaveAndSend } = useHandleForm();
+  const { handleSave, handleSend, handleUpdate } = useHandleForm();
 
   const handleSelectionElementsUpdate = (
-    nextElements: ElementType[],
+    _nextElements: ElementType[],
     nextElementRequests: ElementRequestType[],
   ) => {
     const normalizedLines = attachRequestLineKeys(nextElementRequests);
-    const normalizedElements = getUniqueElementsFromLines(
-      normalizedLines,
-      nextElements,
-    );
     const nextPlans = prunePlansByElementRequests(
       elementPlans,
       normalizedLines,
@@ -127,26 +143,9 @@ export default function NewRequest() {
       requestWorkers,
     );
 
-    setElements(normalizedElements);
     setElementRequests(normalizedLines);
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-    localStorage.setItem(
-      "selectedElements",
-      JSON.stringify(normalizedElements),
-    );
-    localStorage.setItem(
-      "selectedElementRequest",
-      JSON.stringify(normalizedLines),
-    );
-    localStorage.setItem(
-      "selectedElementRequestPlans",
-      JSON.stringify(nextPlans),
-    );
-    localStorage.setItem(
-      "selectedRequestWorkers",
-      JSON.stringify(nextRequestWorkers),
-    );
   };
 
   const handleAddElementFromPanel = (element: ElementType) => {
@@ -205,31 +204,10 @@ export default function NewRequest() {
     navigate(`/admin/requests`);
   };
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setElements(JSON.parse(localStorage.getItem("selectedElements") || "[]"));
-      setElementRequests(
-        attachRequestLineKeys(
-          JSON.parse(localStorage.getItem("selectedElementRequest") || "[]"),
-        ),
-      );
-      setRequestWorkers(
-        JSON.parse(localStorage.getItem("selectedRequestWorkers") || "[]"),
-      );
-      setElementPlans(parsePlansFromStorage());
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
   const handleRemoveElement = (lineKey: string) => {
+    if (pendingPlanning?.lineKey === lineKey) setPendingPlanning(null);
     const updatedElementRequests = elementRequests.filter(
       (requestLine) => getRequestLineKey(requestLine) !== lineKey,
-    );
-    const updatedElements = getUniqueElementsFromLines(
-      updatedElementRequests,
-      elements,
     );
     const removedLine = elementRequests.find(
       (requestLine) => getRequestLineKey(requestLine) === lineKey,
@@ -248,24 +226,9 @@ export default function NewRequest() {
       requestWorkers,
     );
 
-    setElements(updatedElements);
     setElementRequests(updatedElementRequests);
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-
-    localStorage.setItem("selectedElements", JSON.stringify(updatedElements));
-    localStorage.setItem(
-      "selectedElementRequest",
-      JSON.stringify(updatedElementRequests),
-    );
-    localStorage.setItem(
-      "selectedElementRequestPlans",
-      JSON.stringify(nextPlans),
-    );
-    localStorage.setItem(
-      "selectedRequestWorkers",
-      JSON.stringify(nextRequestWorkers),
-    );
   };
 
   const handleChangeElementRequest = (
@@ -283,7 +246,22 @@ export default function NewRequest() {
     );
 
     setElementRequests(updated);
-    localStorage.setItem("selectedElementRequest", JSON.stringify(updated));
+  };
+
+  const openPlanning = (line: ElementRequestType) => {
+    if (
+      pendingPlanning &&
+      pendingPlanning.lineKey !== getRequestLineKey(line)
+    ) {
+      toast.error("Primero guarda los detalles de la planificación pendiente.");
+      setPlanningElement(
+        elementRequests.find(
+          (item) => getRequestLineKey(item) === pendingPlanning.lineKey,
+        ) ?? null,
+      );
+      return;
+    }
+    setPlanningElement(line);
   };
 
   const handleSavePlans = (plans: ElementRequestWorkerPlan[]) => {
@@ -300,84 +278,85 @@ export default function NewRequest() {
 
     setElementPlans(nextPlans);
     setRequestWorkers(nextRequestWorkers);
-    localStorage.setItem(
-      "selectedElementRequestPlans",
-      JSON.stringify(nextPlans),
-    );
-    localStorage.setItem(
-      "selectedRequestWorkers",
-      JSON.stringify(nextRequestWorkers),
-    );
+    setPendingPlanning(null);
     setPlanningElement(null);
   };
 
-  const handleSaveRequest = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (projectId === 0) {
+  const saveForm = async (send: boolean) => {
+    if (saving) return;
+    if (!projectId) {
       toast.error("Por favor, selecciona un proyecto.");
       return;
     }
-
-    try {
-      await toast.promise(handleSave(projectId, deliveryDueDate, description), {
-        loading: "Guardando solicitud...",
-        success: (result) => {
-          if (result?.data && !result?.loading && !result?.error) {
-            setElements([]);
-            setElementRequests([]);
-            setRequestWorkers([]);
-            setElementPlans({});
-            localStorage.removeItem("projectId");
-            localStorage.removeItem("deliveryDueDate");
-            setTimeout(() => navigateToBack(), 1200);
-            return result.data.message || "Solicitud guardada exitosamente.";
-          }
-
-          throw new Error("Error al guardar la solicitud.");
-        },
-        error: (err) => err.message || "Error al guardar la solicitud.",
-      });
-    } catch {
-      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+    if (["conflict", "invalid"].includes(draft.status)) {
+      toast.error("Resuelve el aviso del borrador antes de guardar.");
+      return;
     }
-  };
-
-  const handleSaveAndSendRequest = async () => {
+    if (pendingPlanning) {
+      toast.error(
+        "Revisa y guarda la planificación pendiente antes de guardar el requerimiento.",
+      );
+      return;
+    }
+    if (send && !passwordCPanel) {
+      toast.error("Ingresa la contraseña del correo.");
+      return;
+    }
     setOpenPasswordModal(false);
-
-    if (projectId === 0) {
-      toast.error("Por favor, selecciona un proyecto.");
-      return;
-    }
-
+    setSaving(true);
+    let savedId: number | null = null;
     try {
       await toast.promise(
-        handleSaveAndSend(
-          projectId,
-          deliveryDueDate,
-          description,
-          passwordCPanel,
-        ),
+        (async () => {
+          const result = createdRequestId
+            ? await handleUpdate(
+                createdRequestId,
+                projectId,
+                elementRequests,
+                deliveryDueDate,
+                description,
+                requestWorkers,
+                [],
+                elementPlans,
+              )
+            : await handleSave(projectId, deliveryDueDate, description, {
+                data: snapshot,
+                onCreated: setCreatedRequestId,
+              });
+          if (!result?.data || result.error)
+            throw new Error("No se pudo guardar el requerimiento.");
+          savedId = result.data.request.requestId;
+          await draft.complete();
+          if (send) await handleSend(savedId, passwordCPanel);
+        })(),
         {
-          loading: "Guardando y enviando solicitud...",
-          success: () => {
-            setElements([]);
-            setElementRequests([]);
-            setRequestWorkers([]);
-            setElementPlans({});
-            localStorage.removeItem("projectId");
-            localStorage.removeItem("deliveryDueDate");
-            setTimeout(() => navigateToBack(), 1200);
-            return "Solicitud guardada y enviada exitosamente.";
-          },
+          loading: send
+            ? "Guardando y enviando solicitud..."
+            : "Guardando solicitud...",
+          success: send
+            ? "Solicitud guardada y enviada exitosamente."
+            : "Solicitud guardada exitosamente.",
           error: (err) =>
-            err.message || "Error al guardar y enviar la solicitud.",
+            savedId
+              ? `Solicitud N° ${savedId} guardada; no se pudo enviar el correo. ${err.message}`
+              : err.message || "No se pudo guardar la solicitud.",
         },
       );
+      setTimeout(navigateToBack, 1200);
     } catch {
-      // El toast ya muestra el error; evitamos promesas sin capturar en consola.
+      if (savedId)
+        setTimeout(() => navigate(`/admin/requests/${savedId}`), 1200);
+      else setSaving(false);
+    } finally {
+      setPasswordCPanel("");
     }
+  };
+  const handleSaveRequest = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveForm(false);
+  };
+  const handleSaveAndSendRequest = () => {
+    void saveForm(true);
   };
 
   const visibleElementRequests = useMemo(
@@ -414,138 +393,167 @@ export default function NewRequest() {
   return (
     <>
       <form onSubmit={handleSaveRequest} className="w-full p-10 text-gray-800">
-        <h1 className="mb-4 text-xl font-bold">REGISTRAR SOLICITUD</h1>
+        <fieldset disabled={saving} inert={saving} className="contents">
+          <h1 className="mb-4 text-xl font-bold">REGISTRAR SOLICITUD</h1>
+          <PurchaseOrderDraftNotice draft={draft} requirement />
+          {pendingPlanning && (
+            <button
+              type="button"
+              className="my-2 underline"
+              onClick={() =>
+                setPlanningElement(
+                  elementRequests.find(
+                    (line) =>
+                      getRequestLineKey(line) === pendingPlanning.lineKey,
+                  ) ?? null,
+                )
+              }
+            >
+              Revisar planificación pendiente
+            </button>
+          )}
 
-        <div className="flex h-full w-full flex-col items-start justify-start gap-4">
-          <div className="flex max-w-4xl w-full flex-col gap-4">
-            <div className="w-full flex flex-row gap-4">
-              <SelectForm
-                label="Proyecto"
-                name="projectId"
-                value={projectId}
-                onChange={(value) => setProjectId(Number(value))}
-                options={[
-                  ...projects.map((project) => ({
-                    value: project.projectId,
-                    label: project.name,
-                  })),
-                ]}
-                disabled={!!projectIdParam}
-              />
+          <div className="flex h-full w-full flex-col items-start justify-start gap-4">
+            <div className="flex max-w-4xl w-full flex-col gap-4">
+              <div className="w-full flex flex-row gap-4">
+                <SelectForm
+                  label="Proyecto"
+                  name="projectId"
+                  value={projectId}
+                  onChange={(value) => setProjectId(Number(value))}
+                  options={[
+                    ...projects.map((project) => ({
+                      value: project.projectId,
+                      label: project.name,
+                    })),
+                  ]}
+                  disabled={!!projectIdParam}
+                />
 
-              <InputForm
-                label="Fecha y Hora de Entrega"
-                name="deliveryDueDate"
-                type="datetime-local"
-                value={deliveryDueDate}
-                onChange={(e) => setDeliveryDueDate(e.target.value)}
-              >
-                <div className="relative flex w-full justify-end">
-                  <RiQuestionFill
-                    className="inline-flex size-5 cursor-pointer text-amber-500"
-                    onClick={() => setOpenWarning(!openWarning)}
-                  />
-                  {openWarning ? (
-                    <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
-                      <IoWarning className="mt-1 w-8" />
-                      Recuerda que si el requerimiento es para mañana, la hora
-                      limite para pedirlo es 1 PM. Si es para pasado mañana, el
-                      limite es 5 PM.
-                    </p>
-                  ) : null}
-                </div>
-              </InputForm>
-            </div>
-            <div className="w-full">
-              <TextAreaForm
-                label="Descripcion"
-                name="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                optional={true}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 w-full">
-            <RequestFamilyTabs
-              activeFamily={activeFamily}
-              onChange={setActiveFamily}
-            />
-
-            <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {getRequestFamilyDescription(activeFamily)}
-                </h2>
-                <p className="text-xs text-gray-500">
-                  {selectedFamilyConfig?.requiresCode
-                    ? "Selecciona unidades con codigo obligatorio."
-                    : activeFamily === "ese"
-                      ? "Se pide el tipo y la cantidad; el stock disponible no bloquea el pedido."
-                      : activeFamily === "harness"
-                        ? "Selecciona el grupo EPA."
-                        : "Unidad fija: unidad. Registra cantidad y una descripcion opcional."}
-                </p>
+                <InputForm
+                  label="Fecha y Hora de Entrega"
+                  name="deliveryDueDate"
+                  type="datetime-local"
+                  value={deliveryDueDate}
+                  onChange={(e) => setDeliveryDueDate(e.target.value)}
+                >
+                  <div className="relative flex w-full justify-end">
+                    <RiQuestionFill
+                      className="inline-flex size-5 cursor-pointer text-amber-500"
+                      onClick={() => setOpenWarning(!openWarning)}
+                    />
+                    {openWarning ? (
+                      <p className="absolute right-0 top-6 mb-1 inline-flex w-78 gap-1 rounded-md bg-amber-500 p-2 font-semibold text-white">
+                        <IoWarning className="mt-1 w-8" />
+                        Recuerda que si el requerimiento es para mañana, la hora
+                        limite para pedirlo es 1 PM. Si es para pasado mañana,
+                        el limite es 5 PM.
+                      </p>
+                    ) : null}
+                  </div>
+                </InputForm>
               </div>
-
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
-                  {visibleElementRequests.length > 0 ? (
-                    <div className="w-full">
-                      <HeaderNewRequest
-                        showDetailsColumn={activeFamily === "epi"}
-                        showQuantityColumn={activeFamily !== "harness"}
-                      />
-                      {visibleElementRequests.map((elementRequest) => (
-                        <RowElementRequest
-                          key={getRequestLineKey(elementRequest)}
-                          elementRequest={elementRequest}
-                          handleRemoveElement={handleRemoveElement}
-                          handleChangeElementRequest={
-                            handleChangeElementRequest
-                          }
-                          showPlanningButton={activeFamily === "epi"}
-                          planningSummary={
-                            activeFamily === "epi"
-                              ? planningSummary(elementRequest.elementId)
-                              : undefined
-                          }
-                          onOpenPlanning={setPlanningElement}
-                          showQuantityField={activeFamily !== "harness"}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
-                      No hay items seleccionados en{" "}
-                      {selectedFamilyConfig?.label || "esta familia"}.
-                    </div>
-                  )}
-                </div>
-
-                <RequestItemPicker
-                  familyKey={activeFamily}
-                  onAddElement={handleAddElementFromPanel}
+              <div className="w-full">
+                <TextAreaForm
+                  label="Descripcion"
+                  name="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  optional={true}
                 />
               </div>
             </div>
-          </div>
 
-          <ButtonContainer>
-            <ReturnButton onClick={navigateToBack} />
-            <SaveButton loading={false} />
-            <Button
-              permission="requests.manage"
-              type="button"
-              icon={<MdAttachEmail />}
-              label="Guardar y Enviar"
-              onClick={() => setOpenPasswordModal(true)}
-              bgColor="black"
-              bgHoverColor="gray-900"
-            />
-          </ButtonContainer>
-        </div>
+            <div className="flex flex-col gap-4 w-full">
+              <RequestFamilyTabs
+                activeFamily={activeFamily}
+                onChange={setActiveFamily}
+              />
+
+              <div className="flex flex-col gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {getRequestFamilyDescription(activeFamily)}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {selectedFamilyConfig?.requiresCode
+                      ? "Selecciona unidades con codigo obligatorio."
+                      : activeFamily === "ese"
+                        ? "Se pide el tipo y la cantidad; el stock disponible no bloquea el pedido."
+                        : activeFamily === "harness"
+                          ? "Selecciona el grupo EPA."
+                          : "Unidad fija: unidad. Registra cantidad y una descripcion opcional."}
+                  </p>
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+                  <div className="flex min-w-0 flex-col gap-2 overflow-x-auto">
+                    {visibleElementRequests.length > 0 ? (
+                      <div className="w-full">
+                        <HeaderNewRequest
+                          showDetailsColumn={visibleElementRequests.some(
+                            (line) =>
+                              getInventoryFamilyFromSource(line.element) ===
+                              "epi",
+                          )}
+                          showQuantityColumn={activeFamily !== "harness"}
+                        />
+                        {visibleElementRequests.map((elementRequest) => (
+                          <RowElementRequest
+                            key={getRequestLineKey(elementRequest)}
+                            elementRequest={elementRequest}
+                            handleRemoveElement={handleRemoveElement}
+                            handleChangeElementRequest={
+                              handleChangeElementRequest
+                            }
+                            showPlanningButton={
+                              getInventoryFamilyFromSource(
+                                elementRequest.element,
+                              ) === "epi"
+                            }
+                            planningSummary={
+                              getInventoryFamilyFromSource(
+                                elementRequest.element,
+                              ) === "epi"
+                                ? planningSummary(elementRequest.elementId)
+                                : undefined
+                            }
+                            onOpenPlanning={openPlanning}
+                            showQuantityField={activeFamily !== "harness"}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex min-h-[14rem] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-xs text-gray-500">
+                        No hay items seleccionados en{" "}
+                        {selectedFamilyConfig?.label || "esta familia"}.
+                      </div>
+                    )}
+                  </div>
+
+                  <RequestItemPicker
+                    familyKey={activeFamily}
+                    onAddElement={handleAddElementFromPanel}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <ButtonContainer>
+              <ReturnButton onClick={navigateToBack} />
+              <SaveButton loading={saving} />
+              <Button
+                permission="requests.manage"
+                type="button"
+                icon={<MdAttachEmail />}
+                label="Guardar y Enviar"
+                onClick={() => setOpenPasswordModal(true)}
+                bgColor="black"
+                bgHoverColor="gray-900"
+              />
+            </ButtonContainer>
+          </div>
+        </fieldset>
       </form>
 
       <EpiPlanningModal
@@ -553,11 +561,21 @@ export default function NewRequest() {
         elementRequest={planningElement}
         requestWorkers={requestWorkers}
         plans={
-          planningElement
-            ? elementPlans[String(planningElement.elementId)] || []
-            : []
+          planningElement &&
+          pendingPlanning?.lineKey === getRequestLineKey(planningElement)
+            ? pendingPlanning.plans
+            : planningElement
+              ? elementPlans[String(planningElement.elementId)] || []
+              : []
         }
         onClose={() => setPlanningElement(null)}
+        onDraftChange={(plans) => {
+          if (planningElement)
+            setPendingPlanning({
+              lineKey: getRequestLineKey(planningElement),
+              plans,
+            });
+        }}
         onSave={handleSavePlans}
       />
 

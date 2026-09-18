@@ -31,7 +31,7 @@ export function useApiAction<T>() {
 
   const execute = async (
     url: string,
-    method: "POST" | "PUT" | "PATCH" | "DELETE",
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     body?: object
   ): Promise<ApiResponse<T>> => {
     setLoading(true);

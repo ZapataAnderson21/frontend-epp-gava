@@ -4,7 +4,7 @@ import {
   CircleX as IoIosCloseCircle,
   ArrowLeft as TiArrowBack,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 
 import { ButtonContainer } from "../../../common/form";
 import { LoadingSkeletonTable } from "../../../common/loading";
@@ -26,6 +26,7 @@ interface EpiPlanningModalProps {
   requestWorkers: RequestWorker[];
   plans: ElementRequestWorkerPlan[];
   onClose: () => void;
+  onDraftChange?: (plans: ElementRequestWorkerPlan[]) => void;
   onSave: (plans: ElementRequestWorkerPlan[]) => void;
 }
 
@@ -56,6 +57,7 @@ export default function EpiPlanningModal({
   plans,
   onClose,
   onSave,
+  onDraftChange,
 }: EpiPlanningModalProps) {
   const [draftPlans, setDraftPlans] = useState<ElementRequestWorkerPlan[]>([]);
   const [activeWorkerFilter, setActiveWorkerFilter] =
@@ -69,8 +71,22 @@ export default function EpiPlanningModal({
     error,
   } = useFetch<Worker[]>(open ? workerApi : "", [open]);
 
+  const initializedFor = useRef("");
+  const updateDraftPlans = (
+    update: (current: ElementRequestWorkerPlan[]) => ElementRequestWorkerPlan[],
+  ) => {
+    const next = update(draftPlans);
+    setDraftPlans(next);
+    onDraftChange?.(next);
+  };
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      initializedFor.current = "";
+      return;
+    }
+    const key = elementRequest?.lineKey || String(elementRequest?.elementId);
+    if (initializedFor.current === key) return;
+    initializedFor.current = key;
 
     const mappedPlans = plans.map((plan) => {
       const existingRequestWorker = requestWorkers.find(
@@ -164,7 +180,7 @@ export default function EpiPlanningModal({
       (requestWorker) => requestWorker.workerId === workerId,
     );
 
-    setDraftPlans((current) => [
+    updateDraftPlans((current) => [
       ...current,
       {
         elementRequestId: elementRequest?.elementRequestId ?? 0,
@@ -328,7 +344,7 @@ export default function EpiPlanningModal({
                       className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
                       value={plan.plannedQuantity}
                       onChange={(event) =>
-                        setDraftPlans((current) =>
+                        updateDraftPlans((current) =>
                           current.map((item) =>
                             item.requestWorker?.workerId ===
                             plan.requestWorker?.workerId
@@ -350,7 +366,7 @@ export default function EpiPlanningModal({
                       value={plan.size || ""}
                       placeholder="Talla"
                       onChange={(event) =>
-                        setDraftPlans((current) =>
+                        updateDraftPlans((current) =>
                           current.map((item) =>
                             item.requestWorker?.workerId ===
                             plan.requestWorker?.workerId
@@ -370,7 +386,7 @@ export default function EpiPlanningModal({
                       value={plan.notes || ""}
                       placeholder="Detalle u observacion"
                       onChange={(event) =>
-                        setDraftPlans((current) =>
+                        updateDraftPlans((current) =>
                           current.map((item) =>
                             item.requestWorker?.workerId ===
                             plan.requestWorker?.workerId
@@ -388,7 +404,7 @@ export default function EpiPlanningModal({
                       type="button"
                       className="inline-flex items-center justify-center text-red-500 hover:scale-110"
                       onClick={() =>
-                        setDraftPlans((current) =>
+                        updateDraftPlans((current) =>
                           current.filter(
                             (item) =>
                               item.requestWorker?.workerId !==
