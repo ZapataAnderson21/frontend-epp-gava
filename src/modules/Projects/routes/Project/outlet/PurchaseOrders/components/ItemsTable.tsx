@@ -138,6 +138,8 @@ export default function ItemsTable({
                 <td className="p-2 border-1 border-gray-400 align-top">
                   <div className="flex min-w-0 flex-col">
                     <Select
+                      portal
+                      staggerMs={0}
                       name={`resource-${index}`}
                       value={item.resourceId || ""}
                     onChange={(value) =>
