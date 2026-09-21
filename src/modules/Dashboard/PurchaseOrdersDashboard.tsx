@@ -12,6 +12,7 @@ import type {
   PurchaseOrderDashboardStatus,
 } from "../../data/types";
 import { useFetch } from "../../hooks";
+import PurchaseOrderDirectoryModal from "./PurchaseOrderDirectoryModal";
 
 interface PurchaseOrdersDashboardProps {
   month: number;
@@ -528,13 +529,18 @@ function LatestOrdersTable({
   currency: PurchaseOrderDashboardCurrency;
   onOpen: (purchaseOrder: PurchaseOrderDashboardOrder) => void;
 }) {
+  const [showAll, setShowAll] = useState(false);
   return (
     <article className="min-w-0">
-      <div className="mb-3">
+      {showAll && <PurchaseOrderDirectoryModal onClose={() => setShowAll(false)} />}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
         <h3 className="text-xl font-extrabold">Últimas órdenes registradas</h3>
         <p className="text-xs font-semibold text-gray-500">
           Detalle de las diez órdenes más recientes del periodo
         </p>
+        </div>
+        <button type="button" onClick={() => setShowAll(true)} className="rounded-md bg-[#0047a3] px-4 py-2 text-sm font-bold text-white hover:bg-[#00357a]">Ver todas</button>
       </div>
       <div className="overflow-x-auto rounded-md border border-gray-200 bg-white shadow-sm">
         <table className="w-full min-w-[1280px] text-left text-xs">
