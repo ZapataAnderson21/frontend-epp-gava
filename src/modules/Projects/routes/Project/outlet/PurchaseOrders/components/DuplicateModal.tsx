@@ -28,6 +28,7 @@ export default function DuplicateModal({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLoading) return;
 
     if (projectId === 0) {
       setError("El ID del proyecto es requerido");
@@ -65,6 +66,7 @@ export default function DuplicateModal({
             name="projectId"
             value={projectId}
             onChange={(value) => setProjectId(Number(value))}
+            disabled={isLoading}
             options={[
               ...projects.map((project) => ({
                 value: project.projectId,
@@ -82,6 +84,7 @@ export default function DuplicateModal({
               bgColor="oklch(57.7% 0.245 27.325)"
               bgHoverColor="oklch(50.5% 0.213 27.518)"
               onClick={handleClose}
+              disabled={isLoading}
             />
             <Button
               permission="orders.manage"

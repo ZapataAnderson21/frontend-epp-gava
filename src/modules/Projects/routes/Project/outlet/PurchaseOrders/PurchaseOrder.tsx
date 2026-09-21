@@ -1,5 +1,5 @@
 import { Copy as FaRegCopy, FileText as FaRegFilePdf } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { duplicateCreationKey, completeDuplicate } from "../../../../../../utils/purchaseOrderCreation";
 import { useNavigate, useParams } from "react-router-dom";
 import Permission from "../../../../../../common/auth/Permission";
@@ -39,12 +39,15 @@ export default function PurchaseOrder() {
     useApiAction<PurchaseOrder>();
 
   const navigate = useNavigate();
+  const duplicateLock = useRef(false);
 
   const navigateToPurchaseOrders = () => {
     navigate(`/admin/projects/${projectId}/purchase-orders`);
   };
 
   const handleDuplicate = async (projectId: number) => {
+    if (duplicateLock.current) return;
+    duplicateLock.current = true;
     try {
       const response = await duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
@@ -58,6 +61,7 @@ export default function PurchaseOrder() {
         navigate(`/admin/projects/${projectId}/purchase-orders`);
       }
     } catch (error) {
+      duplicateLock.current = false;
       console.error("Error duplicating purchase order:", error);
     }
   };

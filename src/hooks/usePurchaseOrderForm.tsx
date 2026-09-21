@@ -67,7 +67,7 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
   const { execute, loading: saving } = useApiAction<PurchaseOrder>();
   const [submitting, setSubmitting] = useState(false);
   const submitLock = useRef(false);
-  const [creationKey, setCreationKey] = useState(() => crypto.randomUUID());
+  const [creationKey, setCreationKey] = useState<string>(() => crypto.randomUUID());
 
   // --- form state ---
   const [code, setCode] = useState("");
@@ -333,7 +333,7 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
         purchaseOrderType,
       };
 
-      const ocResp = await execute(`${purchaseOrderApi}`, "POST", body);
+      const ocResp = await execute(`${purchaseOrderApi}complete`, "POST", body);
 
       if (ocResp.statusCode !== 201) {
         throw new Error(ocResp.message || "Error al crear la orden de compra");

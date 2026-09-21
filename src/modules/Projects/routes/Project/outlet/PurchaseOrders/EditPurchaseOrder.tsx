@@ -1,5 +1,5 @@
 import { Copy as FaRegCopy, Star as TiStarOutline } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Permission from "../../../../../../common/auth/Permission";
 import { ReturnButton, SaveButton } from "../../../../../../common/button";
@@ -589,9 +589,13 @@ function EditPurchaseOrderForm() {
 
   const { execute: duplicatePurchaseOrder, loading: isDuplicating } =
     useApiAction<PurchaseOrder>();
+  const duplicateLock = useRef(false);
 
   const handleDuplicate = async (projectId: number) => {
-    toast.promise(
+    if (duplicateLock.current) return;
+    duplicateLock.current = true;
+    try {
+    await toast.promise(
       duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
         "POST",
@@ -614,6 +618,10 @@ function EditPurchaseOrderForm() {
         },
       },
     );
+    } catch (error) {
+      duplicateLock.current = false;
+      toast.error(error instanceof Error ? error.message : 'No se pudo duplicar la orden.');
+    }
   };
 
   if (
