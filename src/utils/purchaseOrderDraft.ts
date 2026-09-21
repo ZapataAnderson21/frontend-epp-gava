@@ -4,6 +4,7 @@ import type { ItemRow } from "../hooks/usePurchaseOrderForm";
 
 export interface PurchaseOrderDraftData {
   schemaVersion: 1;
+  creationKey?: string;
   code: string;
   supplierId: number;
   quotation: string;
@@ -44,6 +45,7 @@ export function isPurchaseOrderDraft(
   ];
   return (
     data.schemaVersion === 1 &&
+    (data.creationKey === undefined || (typeof data.creationKey === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.creationKey))) &&
     typeof data.supplierId === "number" &&
     strings.every((key) => typeof data[key] === "string") &&
     ["generalConditions", "qualityConditions"].every(

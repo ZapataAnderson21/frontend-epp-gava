@@ -1,5 +1,6 @@
 import { Copy as FaRegCopy, FileText as FaRegFilePdf } from "lucide-react";
 import { useState } from "react";
+import { duplicateCreationKey, completeDuplicate } from "../../../../../../utils/purchaseOrderCreation";
 import { useNavigate, useParams } from "react-router-dom";
 import Permission from "../../../../../../common/auth/Permission";
 import { ReturnButton } from "../../../../../../common/button";
@@ -48,10 +49,11 @@ export default function PurchaseOrder() {
       const response = await duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
         "POST",
-        { projectId },
+        { projectId, creationKey: duplicateCreationKey(user?.userId, purchaseOrderId, projectId) },
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        completeDuplicate(user?.userId, purchaseOrderId, projectId);
         setIsModalOpen(false);
         navigate(`/admin/projects/${projectId}/purchase-orders`);
       }

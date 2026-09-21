@@ -7,6 +7,7 @@ import { ErrorMessage } from "../../../../../../common/error";
 import { ButtonContainer } from "../../../../../../common/form";
 import { Loading } from "../../../../../../common/loading";
 import { Button } from "../../../../../../components";
+import { duplicateCreationKey, completeDuplicate } from "../../../../../../utils/purchaseOrderCreation";
 import {
   purchaseOrderApi,
   resourceApi,
@@ -390,7 +391,10 @@ function EditPurchaseOrderForm() {
       msgs.push("El código de la orden de compra no puede estar vacío.");
     }
 
-    const hasValidItem = items.some(
+    if (new Set(items.map(item => item.resourceId)).size !== items.length) {
+      msgs.push("No repitas el mismo recurso en varias filas. Unifica su cantidad antes de guardar.");
+    }
+    const hasValidItem = items.length > 0 && items.every(
       (r) =>
         r.resourceId > 0 &&
         Number(r.quantity) > 0 &&
@@ -591,14 +595,15 @@ function EditPurchaseOrderForm() {
       duplicatePurchaseOrder(
         `${purchaseOrderApi}${purchaseOrderId}/duplicate`,
         "POST",
-        { projectId },
+        { projectId, creationKey: duplicateCreationKey(user?.userId, purchaseOrderId, projectId) },
       ),
       {
         loading: "Duplicando orden de compra...",
         success: (result) => {
+          completeDuplicate(user?.userId, purchaseOrderId, projectId);
           setIsModalOpen(false);
           setTimeout(
-            () => navigate(`/admin/purchase-orders?projectId=${projectId}`),
+            () => navigate(`/admin/projects/${projectId}/purchase-orders`),
             1200,
           );
           return result.message || "Orden de compra duplicada con éxito";

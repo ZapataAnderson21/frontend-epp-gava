@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useFetch, useApiAction } from "../hooks";
 import type { Project, PurchaseOrder, Resource, Supplier } from "../data/types";
-import { projectApi, purchaseOrderApi, resourceApi, resourcePurchaseOrderApi, supplierApi } from "../data/apiUrl";
+import { projectApi, purchaseOrderApi, resourceApi, supplierApi } from "../data/apiUrl";
 import toast from "react-hot-toast";
 import { lineAmount, roundMoney, totalFromRoundedLines } from "../utils";
 import { usePurchaseOrderDraft } from './usePurchaseOrderDraft';
@@ -66,6 +66,8 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
 
   const { execute, loading: saving } = useApiAction<PurchaseOrder>();
   const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
+  const [creationKey, setCreationKey] = useState(() => crypto.randomUUID());
 
   // --- form state ---
   const [code, setCode] = useState("");
@@ -89,11 +91,12 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
 
   const draft = usePurchaseOrderDraft({
     userId, projectId,
-    value: { schemaVersion: 1, code, supplierId: selectSupplierId, quotation, destination,
+    value: { schemaVersion: 1, creationKey, code, supplierId: selectSupplierId, quotation, destination,
       deliveryLocation, carePerson, dniCarePerson, observations, paymentMethod,
       paymentConditions, paymentConditions1, paymentConditions2, purchaseOrderType,
       generalConditions, qualityConditions, items, rpoIds: [] },
     restore: (data) => {
+      if (data.creationKey) setCreationKey(data.creationKey);
       setCode(data.code); setSelectSupplierId(data.supplierId); setQuotation(data.quotation);
       setDestination(data.destination); setDeliveryLocation(data.deliveryLocation);
       setCarePerson(data.carePerson); setDniCarePerson(data.dniCarePerson); setObservations(data.observations);
@@ -244,6 +247,8 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
     }
 
     // Ítems
+    const repeatedResources = items.filter((row, index) => row.resourceId > 0 && items.findIndex(item => item.resourceId === row.resourceId) !== index);
+    if (repeatedResources.length) msgs.push("No repitas el mismo recurso en varias filas. Unifica su cantidad antes de guardar.");
     const itemErrors: ItemErrors[] = items.map((row) => {
       const ie: ItemErrors = {};
       if (!row.resourceId) ie.resourceId = "Requerido.";
@@ -267,6 +272,7 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
 
     if (itemErrors.some((ie) => Object.keys(ie).length > 0)) {
       nextErrors.items = itemErrors;
+      msgs.push("Corrige los datos de todas las filas antes de guardar.");
     }
 
     const valid = msgs.length === 0;
@@ -277,7 +283,11 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitLock.current || submitting) return;
+    if (draft.storageFailed) {
+      toast.error('No se pudo guardar el borrador local. Habilita el almacenamiento del navegador antes de enviar para proteger los reintentos.');
+      return;
+    }
     if (draft.status === 'conflict' || draft.status === 'invalid') {
       toast.error('Resuelve el aviso del borrador antes de guardar la orden.');
       return;
@@ -303,6 +313,8 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
 
     const createPurchaseOrder = async () => {
       const body = {
+        creationKey,
+        items: items.map(it => ({ resourceId: Number(it.resourceId), orderNumber: Number(it.orderNumber), quantity: Number(it.quantity), unitSalesPrice: Number(it.unitSalesPrice), unitPurchasePrice: Number(it.unitPurchasePrice) })),
         code,
         deliveryLocation,
         destination,
@@ -327,29 +339,11 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
         throw new Error(ocResp.message || "Error al crear la orden de compra");
       }
 
-      const purchaseOrderId = Number(ocResp.data.purchaseOrderId);
-
-      for (const it of items) {
-        const payload = {
-          resourceId: Number(it.resourceId),
-          purchaseOrderId: Number(purchaseOrderId),
-          orderNumber: Number(it.orderNumber),
-          quantity: Number(it.quantity),
-          unitSalesPrice: Number(it.unitSalesPrice),
-          unitPurchasePrice: Number(it.unitPurchasePrice),
-        };
-
-        const itemResp = await execute(`${resourcePurchaseOrderApi}`, "POST", payload);
-
-        if (itemResp.statusCode !== 201) {
-          throw new Error(itemResp.message || "Error al agregar los ítems");
-        }
-      }
-
       await draft.complete();
       return ocResp;
     };
 
+    submitLock.current = true;
     setSubmitting(true);
     void toast.promise(
       createPurchaseOrder(),
@@ -361,7 +355,7 @@ export function usePurchaseOrderForm({ projectId, navigate, userId }: Params) {
         },
         error: (err) => err.message || 'Error al crear la orden de compra',
       }
-    ).catch(() => setSubmitting(false));
+    ).catch(() => { submitLock.current = false; setSubmitting(false); });
   };
 
   return {
