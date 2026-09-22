@@ -3,8 +3,10 @@ import type { usePurchaseOrderDraft } from "../../hooks/usePurchaseOrderDraft";
 export default function PurchaseOrderDraftNotice({
   draft,
   requirement = false,
+  editing = false,
 }: {
   requirement?: boolean;
+  editing?: boolean;
   draft: ReturnType<typeof usePurchaseOrderDraft>;
 }) {
   const messages = {
@@ -33,10 +35,14 @@ export default function PurchaseOrderDraftNotice({
       <p>
         {draft.storageFailed
           ? "El navegador no permite guardar el borrador local. No cierres esta página hasta que se sincronice con el servidor."
-          : messages[draft.status]}
+          : editing && draft.status === 'synced'
+            ? 'Cambios pendientes sincronizados. Puedes retomarlos con tu usuario desde otra computadora.'
+            : messages[draft.status]}
       </p>
       <p className="mt-1">
-        {requirement
+        {editing
+          ? 'La OC ya está registrada. Usa Guardar para aplicar estos cambios a la orden.'
+          : requirement
           ? "El borrador automático no envía el requerimiento. Usa Guardar cuando esté completo."
           : "El borrador no emite la orden. Usa Guardar cuando esté completa."}
       </p>

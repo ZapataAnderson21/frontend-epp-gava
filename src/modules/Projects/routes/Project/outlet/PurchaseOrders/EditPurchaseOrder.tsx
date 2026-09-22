@@ -655,7 +655,7 @@ function EditPurchaseOrderForm() {
             className="flex flex-col m-2 gap-6 lg:w-[85%] w-full md:border-1 border-gray-100 md:p-12 md:shadow-md shadow-gray-300"
           >
             <fieldset disabled={saving} className="contents">
-            <PurchaseOrderDraftNotice draft={draft} />
+            <PurchaseOrderDraftNotice draft={draft} editing />
             <PurchaseOrderHeader
               projectName={purchaseOrder?.project?.name ?? ""}
               code={code}
