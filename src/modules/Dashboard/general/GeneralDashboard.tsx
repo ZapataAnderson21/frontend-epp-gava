@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowDownLeft,
@@ -340,6 +340,7 @@ export default function GeneralDashboard({
   const [currency, setCurrency] = useState("PEN");
   const url = `${dashboardApi}general?month=${month}&year=${year}&currency=${currency}${projectId ? `&projectId=${projectId}` : ""}`;
   const { data, loading, error, refetch } = useFetch<GeneralDashboardData>(url);
+  useEffect(() => { window.addEventListener('purchase-order-renumbered', refetch); return () => window.removeEventListener('purchase-order-renumbered', refetch); }, [refetch]);
   const matches =
     data &&
     data.period.month === month &&

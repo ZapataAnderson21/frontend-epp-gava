@@ -1,3 +1,5 @@
+import { useAccess } from '../../../../../../permissions/AccessProvider';
+import PurchaseOrderRenumberModal from '../../../../../Dashboard/PurchaseOrderRenumberModal';
 import { Copy as FaRegCopy, FileText as FaRegFilePdf } from "lucide-react";
 import { useRef, useState } from "react";
 import { duplicateCreationKey, completeDuplicate } from "../../../../../../utils/purchaseOrderCreation";
@@ -23,12 +25,14 @@ import TableViewPO from "./components/Table/TableViewPO";
 
 export default function PurchaseOrder() {
   const { user } = useCurrentUser();
+  const { can } = useAccess();
 
   const { purchaseOrderId } = useParams<{ purchaseOrderId: string }>();
 
   const { id: projectId } = useParams<{ id: string }>();
 
-  const { data: purchaseOrder } = useFetch<PurchaseOrder>(
+  const [renumberOpen, setRenumberOpen] = useState(false);
+  const { data: purchaseOrder, refetch } = useFetch<PurchaseOrder>(
     `${purchaseOrderApi}${purchaseOrderId}`,
   );
 
@@ -100,12 +104,14 @@ export default function PurchaseOrder() {
         <ErrorMessage errorMessage="No tienes permiso para ver esta página." />
       }
     >
+      {renumberOpen && <PurchaseOrderRenumberModal initialId={Number(purchaseOrderId)} initialYear={Number(purchaseOrder?.codeComplete?.match(/-(\d{4})\//)?.[1]) || undefined} onClose={() => setRenumberOpen(false)} onApplied={refetch} />}
       <div className="flex flex-col w-full">
         <div className="flex w-full items-center justify-between">
           <div className="w-fit">
             <ReturnButton onClick={navigateToPurchaseOrders} />
           </div>
           <div className="w-fit flex flex-row gap-2">
+            {(can('orders.renumber') || can('orders.renumberHistory')) && <button type="button" className="rounded border px-3 py-2" onClick={() => setRenumberOpen(true)}>Numeración de OC</button>}
             <Button
               permission="orders.export"
               icon={<FaRegFilePdf />}

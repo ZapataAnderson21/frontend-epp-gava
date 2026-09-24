@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
@@ -78,9 +78,10 @@ export default function PurchaseOrdersDashboard({
     return `${purchaseOrderApi}dashboard?${params.toString()}`;
   }, [currency, month, projectId, purchaseOrderType, status, year]);
 
-  const { data, loading, error } =
+  const { data, loading, error, refetch } =
     useFetch<PurchaseOrderDashboardResponse>(dashboardUrl);
 
+  useEffect(() => { window.addEventListener('purchase-order-renumbered', refetch); return () => window.removeEventListener('purchase-order-renumbered', refetch); }, [refetch]);
   const openPurchaseOrder = (purchaseOrder: PurchaseOrderDashboardOrder) => {
     navigate(
       `/admin/projects/${purchaseOrder.projectId}/purchase-orders/${purchaseOrder.purchaseOrderId}`,
