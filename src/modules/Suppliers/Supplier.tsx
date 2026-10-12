@@ -15,8 +15,8 @@ interface ResourceResponse {
   name: string;
   abbreviation: string;
   contactName: string;
-  phone: string;
-  email: string;
+  phone?: string | null;
+  email?: string | null;
   address: string;
   documentType: "ruc" | "dni";
   ruc: string;
@@ -58,7 +58,7 @@ export default function Supplier() {
       setName(supplier.name);
       setAbbreviation(supplier.abbreviation ?? "");
       setContactName(supplier.contactName);
-      setPhone(supplier.phone);
+      setPhone(supplier.phone ?? "");
       setEmail(supplier.email ?? "");
       setDocumentType(supplier.documentType ?? "ruc");
       setRuc(supplier.ruc ?? "");
@@ -85,14 +85,13 @@ export default function Supplier() {
     if (!name.trim()) errors.push("El nombre es requerido");
     if (!/^[A-Z0-9]{1,10}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 10 letras o números, sin espacios ni símbolos");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
-    if (!phone.trim()) errors.push("El teléfono es requerido");
     if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
     if (documentType === "ruc" && !ruc.trim()) errors.push("El RUC es requerido");
     if (documentType === "dni" && !dni.trim()) errors.push("El DNI es requerido");
     if (!accountNumber.trim()) errors.push("El número de cuenta es requerido");
     if (!bank.trim()) errors.push("El banco es requerido");
     if (!currency) errors.push("Debe seleccionar una moneda");
-    if (phone.length !== 9) {
+    if (phone.trim() && phone.trim().length !== 9) {
       errors.push("El teléfono debe tener exactamente 9 dígitos");
       setErrorPhone("El teléfono debe tener exactamente 9 dígitos");
     } else {
@@ -192,7 +191,7 @@ export default function Supplier() {
           <p className="text-xs text-gray-500">De 1 a 10 letras o números, sin espacios. Cambiarla no modifica los códigos de órdenes existentes.</p>
         </div>
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
-        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={false} maxLength={9} error={errorPhone} />
+        <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={true} maxLength={9} error={errorPhone} />
         <InputForm label="Email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} optional={true} />
         <TextAreaForm label="Dirección" name="address" value={address} onChange={(e) => setAddress(e.target.value)} optional={true} />
         <SelectForm<DocumentType> label="Tipo de documento" name="documentType" options={documentTypeOptions} value={documentType} onChange={(value) => { setDocumentType(value); setErrorRuc(""); setErrorDni(""); if (value === "ruc") { setDni(""); } else { setRuc(""); } }} />
