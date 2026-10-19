@@ -83,7 +83,7 @@ export default function Supplier() {
     // Validación
     const errors: string[] = [];
     if (!name.trim()) errors.push("El nombre es requerido");
-    if (!/^[A-Z0-9]{1,10}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 10 letras o números, sin espacios ni símbolos");
+    if (!/^[!-\x2E\x30-\x60\x7B-\x7E]{1,10}$/.test(abbreviation.trim())) errors.push("La abreviatura debe tener de 1 a 10 caracteres: letras A-Z, números o símbolos ASCII, sin espacios ni /");
     if (!contactName.trim()) errors.push("El nombre de contacto es requerido");
     if (email.trim() && !email.includes("@")) errors.push("El email no tiene formato válido");
     if (documentType === "ruc" && !ruc.trim()) errors.push("El RUC es requerido");
@@ -188,7 +188,7 @@ export default function Supplier() {
         <InputForm label="Nombre" name="name" type="text" value={name} onChange={(e) => setName(e.target.value)} optional={false} />
         <div className="flex flex-col gap-1">
           <InputForm label="Abreviatura del proveedor" name="abbreviation" type="text" value={abbreviation} onChange={(e) => setAbbreviation(e.target.value.toUpperCase())} maxLength={10} optional={false} />
-          <p className="text-xs text-gray-500">De 1 a 10 letras o números, sin espacios. Cambiarla no modifica los códigos de órdenes existentes.</p>
+          <p className="text-xs text-gray-500">De 1 a 10 letras (A-Z), números o símbolos ASCII. Sin espacios ni /. Cambiarla no modifica los códigos de órdenes existentes.</p>
         </div>
         <InputForm label="Nombre de contacto" name="contactName" type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} optional={false} />
         <InputForm label="Teléfono" name="phone" type="text" value={phone} onChange={(e) => {setErrorPhone(""); const v = e.target.value; if (/^\d{0,9}$/.test(v)) setPhone(v); }} optional={true} maxLength={9} error={errorPhone} />
