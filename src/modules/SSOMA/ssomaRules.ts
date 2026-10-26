@@ -214,7 +214,7 @@ export async function closeAndVerifyTalk<TPublication, TTalk extends { status: S
 
 export function documentVersionLabel(status: string): string {
   if (status === "CURRENT") return "Vigente";
-  if (status === "SUPERSEDED") return "Reemplazado";
+  if (status === "HISTORICAL") return "Histórico / reemplazado";
   return "Estado de publicación no confirmado";
 }
 

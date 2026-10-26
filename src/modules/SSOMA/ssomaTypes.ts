@@ -111,7 +111,7 @@ export interface SsomaSignatureResult {
 export interface SsomaDocumentVersionSummary {
   ssomaTalkDocumentVersionId: number;
   versionNumber: number;
-  status: "CURRENT" | "SUPERSEDED";
+  status: "CURRENT" | "HISTORICAL";
   sha256: string;
   byteSize: string;
   publishedAt: string;

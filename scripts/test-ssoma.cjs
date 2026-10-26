@@ -177,9 +177,9 @@ test("authorized PDF fetch uses cookie credentials and blob URLs are revoked aft
   assert.equal(revokeCount, 1);
 });
 
-test("document versions distinguish current and superseded versions", () => {
+test("document versions label backend CURRENT and HISTORICAL statuses", () => {
   assert.equal(rules.documentVersionLabel("CURRENT"), "Vigente");
-  assert.equal(rules.documentVersionLabel("SUPERSEDED"), "Reemplazado");
+  assert.equal(rules.documentVersionLabel("HISTORICAL"), "Histórico / reemplazado");
   assert.equal(rules.documentVersionLabel("PENDING"), "Estado de publicación no confirmado");
 });
 
