@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test:drafts": "node --test scripts/test-purchase-order-draft.cjs scripts/test-request-form-draft.cjs",
+    "test:ssoma": "node --experimental-strip-types --test scripts/test-ssoma.cjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.6.2",
+    "signature_pad": "5.1.4",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.10"
   },

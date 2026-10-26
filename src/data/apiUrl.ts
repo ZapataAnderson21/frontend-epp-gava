@@ -67,3 +67,5 @@ export const workerMonthlyEvaluationTemplateApi = `${workerMonthlyEvaluationApi}
 export const workerMonthlyEvaluationInstanceApi = `${workerMonthlyEvaluationApi}instance/`;
 
 export const workerMonthlyEvaluationPeriodApi = `${workerMonthlyEvaluationApi}period/`;
+
+export const ssomaApi = `${root}ssoma/`;
