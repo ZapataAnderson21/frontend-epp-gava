@@ -16,6 +16,7 @@ import {
   isConfirmedRevisionPublication,
   runExclusively,
   safeDocumentErrorMessage,
+  ssomaPermissionFlags,
 } from "./ssomaRules";
 import type {
   SsomaDocumentVersionSummary,
@@ -33,9 +34,10 @@ function idempotencyKey() {
 
 export default function DocumentCenter({ talk, onRefresh }: { talk: SsomaTalk; onRefresh: () => Promise<SsomaTalk> }) {
   const { can } = useAccess();
-  const canExport = can("ssoma.export");
-  const canRevise = can("ssoma.revise");
-  const canAudit = can("ssoma.audit");
+  const permissions = ssomaPermissionFlags(can);
+  const canExport = permissions.export;
+  const canRevise = permissions.revise;
+  const canAudit = permissions.audit;
   const [versions, setVersions] = useState<SsomaDocumentVersionSummary[]>([]);
   const [revisions, setRevisions] = useState<SsomaRevisionSummary[]>([]);
   const [reconciliation, setReconciliation] = useState<SsomaPublicationReconciliation[]>([]);

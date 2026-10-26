@@ -43,6 +43,7 @@ import { NewUser, User, Users } from "./modules/Users";
 import { WorkerMonthlyEvaluations } from "./modules/WorkerMonthlyEvaluations";
 import Workers from "./modules/Workers/Workers.tsx";
 import { SsomaTalk, SsomaTalkForm, SsomaTalks } from "./modules/SSOMA";
+import { SSOMA_ROUTE_PATHS } from "./modules/SSOMA/ssomaRules";
 import RequireAuth from "./RequireAuth.tsx";
 
 export default function App() {
@@ -151,10 +152,10 @@ export default function App() {
             <Route path="payrolls" element={<GeneralPayrolls />} />
             <Route path="payrolls/:weekId" element={<GeneralWeeklyPayroll />} />
             {/* SSOMA talks */}
-            <Route path="ssoma" element={<SsomaTalks />} />
-            <Route path="ssoma/new" element={<SsomaTalkForm />} />
-            <Route path="ssoma/:id/edit" element={<SsomaTalkForm />} />
-            <Route path="ssoma/:id" element={<SsomaTalk />} />
+            <Route path={SSOMA_ROUTE_PATHS.list} element={<SsomaTalks />} />
+            <Route path={SSOMA_ROUTE_PATHS.create} element={<SsomaTalkForm />} />
+            <Route path={SSOMA_ROUTE_PATHS.edit} element={<SsomaTalkForm />} />
+            <Route path={SSOMA_ROUTE_PATHS.detail} element={<SsomaTalk />} />
             {/* End workers routes */}
           </Route>
         </Routes>

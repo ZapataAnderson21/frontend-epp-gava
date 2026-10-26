@@ -10,6 +10,23 @@ import type {
   SsomaAuditEvent,
 } from "./ssomaTypes.js";
 
+export const SSOMA_PERMISSION_NAMES = [
+  "view", "manage", "sign", "invalidate", "close", "revise", "void", "export", "audit",
+] as const;
+
+export const SSOMA_ROUTE_PATHS = {
+  list: "ssoma",
+  create: "ssoma/new",
+  edit: "ssoma/:id/edit",
+  detail: "ssoma/:id",
+} as const;
+
+export type SsomaPermissionFlags = Record<(typeof SSOMA_PERMISSION_NAMES)[number], boolean>;
+
+export function ssomaPermissionFlags(hasPermission: (permission: string) => boolean): SsomaPermissionFlags {
+  return Object.fromEntries(SSOMA_PERMISSION_NAMES.map((name) => [name, hasPermission(`ssoma.${name}`)])) as SsomaPermissionFlags;
+}
+
 export const TALK_STATUSES: SsomaTalkStatus[] = [
   "draft",
   "inProgress",
@@ -100,13 +117,14 @@ export async function runExclusively<T>(
   }
 }
 
-export function safeSsomaErrorMessage(error: unknown, action: "availability" | "participants" | "signature" | "close") {
+export function safeSsomaErrorMessage(error: unknown, action: "availability" | "participants" | "signature" | "close" | "invalidate") {
   const status = typeof error === "object" && error !== null && "statusCode" in error
     ? Number((error as { statusCode: unknown }).statusCode)
     : 0;
   if (status === 413 && action === "signature") {
     return "La firma supera el límite de 1 MB. Limpia el trazo e intenta con una firma más sencilla.";
   }
+  if (status === 403) return "Tu rol no tiene permiso para realizar esta acción SSOMA.";
   if (status === 409 && action === "availability") {
     return "La disponibilidad cambió. Actualiza los resultados antes de agregar participantes.";
   }
@@ -118,6 +136,9 @@ export function safeSsomaErrorMessage(error: unknown, action: "availability" | "
   }
   if (status === 409 && action === "close") {
     return "El servidor no confirmó el cierre. Se actualizará el estado y podrás reintentar con la misma clave.";
+  }
+  if (status === 409 && action === "invalidate") {
+    return "La charla o la asistencia cambió y ya no permite invalidarla en este estado. Actualiza los datos antes de continuar.";
   }
   if (status === 413 && action === "close") {
     return "El servidor rechazó la solicitud de cierre por su tamaño. No se confirmó el cierre.";

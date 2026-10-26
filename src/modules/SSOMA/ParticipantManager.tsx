@@ -17,6 +17,8 @@ import type {
 interface ParticipantManagerProps {
   talk: SsomaTalk;
   canManage: boolean;
+  canSign: boolean;
+  canInvalidate: boolean;
   onChanged: () => Promise<unknown>;
   onCaptureSignature: (attendance: SsomaAttendance) => Promise<void>;
 }
@@ -51,6 +53,8 @@ function askReason(message: string): ReasonAnswer {
 export default function ParticipantManager({
   talk,
   canManage,
+  canSign,
+  canInvalidate,
   onChanged,
   onCaptureSignature,
 }: ParticipantManagerProps) {
@@ -156,7 +160,7 @@ export default function ParticipantManager({
     attendance: SsomaAttendance,
     action: "remove" | "invalidate",
   ) => {
-    if (saving) return;
+    if (saving || (action === "remove" && !canManage) || (action === "invalidate" && !canInvalidate)) return;
     const reason = askReason(
       action === "remove"
         ? `¿Retirar a ${attendance.worker.fullName} de esta charla?`
@@ -183,7 +187,7 @@ export default function ParticipantManager({
       await onChanged();
       setNotice(action === "remove" ? "Participante retirado." : "Asistencia invalidada.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo actualizar la asistencia.");
+      setError(safeSsomaErrorMessage(caught, action === "invalidate" ? "invalidate" : "participants"));
     } finally {
       setSaving(false);
     }
@@ -248,14 +252,14 @@ export default function ParticipantManager({
       {talk.attendances.length === 0 ? <p className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">Aún no hay participantes registrados.</p> : <ul className="mt-4 divide-y divide-slate-100">
         {talk.attendances.map((attendance) => {
           const canRemove = canEditRoster && attendance.status === "PENDING";
-          const canInvalidate = canManage && ["draft", "inProgress", "open"].includes(talk.status) && ["SIGNED", "DECLINED"].includes(attendance.status);
-          const canCapture = canManage && (talk.status === "inProgress" || talk.status === "open") && attendance.status === "PENDING";
+          const mayInvalidate = canInvalidate && ["draft", "inProgress", "open"].includes(talk.status) && ["SIGNED", "DECLINED"].includes(attendance.status);
+          const canCapture = canSign && (talk.status === "inProgress" || talk.status === "open") && attendance.status === "PENDING";
           return <li key={attendance.ssomaTalkAttendanceId} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0"><p className="truncate font-medium text-slate-900">{attendance.worker.fullName}</p><p className="mt-0.5 text-sm text-slate-600">{statusText[attendance.status]}</p></div>
             <div className="flex flex-wrap gap-2">
               {canCapture && <button type="button" disabled={saving} onClick={() => { void onCaptureSignature(attendance); }} className="min-h-10 rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white disabled:opacity-50">Registrar firma</button>}
               {canRemove && <button type="button" disabled={saving} onClick={() => { void handleReasonedAction(attendance, "remove"); }} className="min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 disabled:opacity-50">Retirar</button>}
-              {canInvalidate && <button type="button" disabled={saving} onClick={() => { void handleReasonedAction(attendance, "invalidate"); }} className="min-h-10 rounded-lg border border-amber-500 px-3 text-sm font-semibold text-amber-800 disabled:opacity-50">Invalidar</button>}
+              {mayInvalidate && <button type="button" disabled={saving} onClick={() => { void handleReasonedAction(attendance, "invalidate"); }} className="min-h-10 rounded-lg border border-amber-500 px-3 text-sm font-semibold text-amber-800 disabled:opacity-50">Invalidar</button>}
             </div>
           </li>;
         })}

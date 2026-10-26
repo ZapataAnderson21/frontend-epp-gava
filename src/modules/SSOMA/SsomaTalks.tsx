@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Search } from "lucide-react";
 import { useAccess } from "../../permissions/AccessProvider";
 import { listSsomaTalks } from "./ssomaApi";
-import { TALK_STATUSES, statusLabel } from "./ssomaRules";
+import { ssomaPermissionFlags, TALK_STATUSES, statusLabel } from "./ssomaRules";
 import type { SsomaTalkList, SsomaTalkStatus } from "./ssomaTypes";
 
 const pageSize = 10;
@@ -20,6 +20,7 @@ export default function SsomaTalks() {
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
   const { can } = useAccess();
+  const permissions = ssomaPermissionFlags(can);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,7 +56,7 @@ export default function SsomaTalks() {
           <h1 className="mt-1 text-2xl font-bold text-slate-900">Charlas SSOMA</h1>
           <p className="mt-1 text-sm text-slate-600">Gestiona charlas de cinco minutos y revisa su avance.</p>
         </div>
-        {can("ssoma.manage") && <Link to="/admin/ssoma/new" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+        {permissions.manage && <Link to="/admin/ssoma/new" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
           <Plus size={18} aria-hidden="true" /> Nueva charla
         </Link>}
       </header>

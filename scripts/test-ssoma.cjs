@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 
 let rules;
 test.before(async () => {
@@ -228,4 +229,63 @@ test("document error mappings cover authorization, absence, conflict, and server
   assert.match(rules.safeDocumentErrorMessage(error(409), "publish"), /publicación no quedó confirmada/i);
   assert.match(rules.safeDocumentErrorMessage(error(500), "publish"), /resultado puede requerir verificación/i);
   assert.doesNotMatch(rules.safeDocumentErrorMessage(error(500), "publish"), /sensitive server body/);
+});
+
+test("the nine backend SSOMA permissions map independently to visibility flags", () => {
+  const expected = ["view", "manage", "sign", "invalidate", "close", "revise", "void", "export", "audit"];
+  assert.deepEqual(rules.SSOMA_PERMISSION_NAMES, expected);
+  for (const selected of expected) {
+    const flags = rules.ssomaPermissionFlags((permission) => permission === `ssoma.${selected}`);
+    assert.deepEqual(Object.entries(flags).filter(([, enabled]) => enabled).map(([name]) => name), [selected]);
+  }
+  const app = readFileSync("src/App.tsx", "utf8");
+  const access = readFileSync("src/permissions/AccessProvider.tsx", "utf8");
+  const sidebar = readFileSync("src/sections/Sidebar.tsx", "utf8");
+  const talk = readFileSync("src/modules/SSOMA/SsomaTalk.tsx", "utf8");
+  const participants = readFileSync("src/modules/SSOMA/ParticipantManager.tsx", "utf8");
+  const documents = readFileSync("src/modules/SSOMA/DocumentCenter.tsx", "utf8");
+  const audit = readFileSync("src/modules/SSOMA/AuditTimeline.tsx", "utf8");
+  for (const route of ["list", "create", "edit", "detail"]) assert.match(app, new RegExp(`path=\\{SSOMA_ROUTE_PATHS\\.${route}\\}`));
+  assert.match(access, /ssoma:\s*"ssoma"/);
+  assert.match(sidebar, /permission="ssoma\.view"/);
+  for (const permission of ["sign", "invalidate", "close", "void"]) assert.match(talk, new RegExp(`ssomaPermissions\\.${permission}`));
+  assert.match(participants, /canManage/);
+  assert.match(participants, /canSign/);
+  assert.match(participants, /canInvalidate/);
+  assert.match(documents, /permissions\.export/);
+  assert.match(documents, /permissions\.revise/);
+  assert.match(documents, /permissions\.audit/);
+  assert.match(audit, /ssomaPermissionFlags\(can\)\.audit/);
+});
+
+test("talk route contracts and form validation are wired for create and edit", () => {
+  assert.deepEqual(rules.SSOMA_ROUTE_PATHS, {
+    list: "ssoma",
+    create: "ssoma/new",
+    edit: "ssoma/:id/edit",
+    detail: "ssoma/:id",
+  });
+  const routes = readFileSync("src/App.tsx", "utf8");
+  const form = readFileSync("src/modules/SSOMA/SsomaTalkForm.tsx", "utf8");
+  assert.match(routes, /path=\{SSOMA_ROUTE_PATHS\.create\} element=\{<SsomaTalkForm \/>\}/);
+  assert.match(routes, /path=\{SSOMA_ROUTE_PATHS\.edit\} element=\{<SsomaTalkForm \/>\}/);
+  assert.match(form, /validateTalkDraft/);
+});
+
+test("SSOMA surfaces retain mobile, keyboard, and accessible status affordances", () => {
+  const signature = readFileSync("src/modules/SSOMA/SignatureCapture.tsx", "utf8");
+  const list = readFileSync("src/modules/SSOMA/SsomaTalks.tsx", "utf8");
+  const detail = readFileSync("src/modules/SSOMA/SsomaTalk.tsx", "utf8");
+  const audit = readFileSync("src/modules/SSOMA/AuditTimeline.tsx", "utf8");
+  assert.match(signature, /touchAction:\s*"none"/);
+  assert.match(signature, /padRef\.current\?\.clear\(\)/);
+  assert.match(signature, /Limpiar firma/);
+  assert.match(signature, /aria-labelledby=/);
+  assert.match(list, /md:hidden|sm:grid-cols|lg:grid-cols/);
+  assert.match(list, /role="status"/);
+  assert.match(detail, /role="progressbar"/);
+  assert.match(detail, /aria-modal="true"/);
+  assert.match(audit, /role="alert"/);
+  assert.doesNotMatch([signature, list, detail, audit].join("\n"), /dangerouslySetInnerHTML/);
+  assert.doesNotMatch([signature, list, detail, audit].join("\n"), /localStorage|sessionStorage/);
 });

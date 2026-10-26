@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAccess } from "../../permissions/AccessProvider";
 import { listSsomaAudit } from "./ssomaApi";
-import { safeDocumentErrorMessage, sanitizeAuditEvent } from "./ssomaRules";
+import { safeDocumentErrorMessage, sanitizeAuditEvent, ssomaPermissionFlags } from "./ssomaRules";
 import type { SsomaAuditEvent, SsomaAuditList } from "./ssomaTypes";
 
 export default function AuditTimeline({ talkId }: { talkId: number }) {
   const { can } = useAccess();
-  const authorized = can("ssoma.audit");
+  const authorized = ssomaPermissionFlags(can).audit;
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<SsomaAuditList | null>(null);
   const [error, setError] = useState("");

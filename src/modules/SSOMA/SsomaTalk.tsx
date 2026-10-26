@@ -19,6 +19,7 @@ import {
   isConfirmedSignature,
   safeSsomaErrorMessage,
   safeDocumentErrorMessage,
+  ssomaPermissionFlags,
   statusLabel,
 } from "./ssomaRules";
 import type { SsomaAttendance, SsomaTalk as SsomaTalkType, SsomaWorker } from "./ssomaTypes";
@@ -37,7 +38,8 @@ export default function SsomaTalk() {
   const navigate = useNavigate();
   const canManage = useModuleAction("manage");
   const { can } = useAccess();
-  const canVoid = can("ssoma.void");
+  const ssomaPermissions = ssomaPermissionFlags(can);
+  const canVoid = ssomaPermissions.void;
   const [talk, setTalk] = useState<SsomaTalkType | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -88,7 +90,7 @@ export default function SsomaTalk() {
   };
 
   const openSignatureCapture = async (attendance: SsomaAttendance) => {
-    if (!talk || resolvingWorker || !canManage) return;
+    if (!talk || resolvingWorker || !ssomaPermissions.sign) return;
     setResolvingWorker(true);
     setError("");
     try {
@@ -149,7 +151,7 @@ export default function SsomaTalk() {
   };
 
   const confirmClose = async () => {
-    if (!talk || closing || !canCloseTalk(talk.status) || !canManage || closeLock.current) return;
+    if (!talk || closing || !canCloseTalk(talk.status) || !ssomaPermissions.close || closeLock.current) return;
     closeLock.current = true;
     setClosing(true);
     setError("");
@@ -211,11 +213,13 @@ export default function SsomaTalk() {
     <ParticipantManager
       talk={talk}
       canManage={canManage}
+      canSign={ssomaPermissions.sign}
+      canInvalidate={ssomaPermissions.invalidate}
       onChanged={refresh}
       onCaptureSignature={openSignatureCapture}
     />
 
-    {canManage && canCloseTalk(talk.status) && <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    {ssomaPermissions.close && canCloseTalk(talk.status) && <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <h2 className="text-lg font-bold text-slate-900">Cerrar y publicar</h2>
       <p className="mt-1 text-sm text-slate-600">El documento se publica de forma oficial. La charla solo se marcará cerrada cuando el servidor confirme la publicación y una nueva consulta verifique el estado.</p>
       {closeKey.current && <p className="mt-2 text-sm text-amber-800">Hay un intento de cierre sin confirmación completa. Reintentar conservará la misma clave de idempotencia.</p>}
