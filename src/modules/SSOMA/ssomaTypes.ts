@@ -29,6 +29,14 @@ export interface SsomaAttendance {
   worker: { workerId: number; fullName: string };
 }
 
+export interface SsomaAttendanceRecord {
+  ssomaTalkAttendanceId: number;
+  ssomaTalkId: number;
+  workerId: number;
+  attendanceDate: string;
+  status: SsomaAttendanceStatus;
+}
+
 export interface SsomaTalk {
   ssomaTalkId: number;
   projectId: number;
@@ -77,6 +85,36 @@ export interface SsomaPagination {
 export interface SsomaTalkList {
   items: SsomaTalk[];
   pagination: SsomaPagination;
+}
+
+export interface SsomaWorker {
+  workerId: number;
+  fullName: string;
+  dni: string;
+}
+
+export interface SsomaWorkerList {
+  items: SsomaWorker[];
+  pagination: SsomaPagination;
+}
+
+export interface SsomaWorkerAvailability {
+  workerId: number;
+  available: boolean;
+}
+
+export interface SsomaSignatureResult {
+  attendanceId: number;
+  status: "SIGNED";
+}
+
+export interface SsomaDocumentVersionSummary {
+  ssomaTalkDocumentVersionId: number;
+  versionNumber: number;
+  status: "CURRENT";
+  sha256: string;
+  byteSize: string;
+  publishedAt: string;
 }
 
 export interface SsomaEnvelope<T> {

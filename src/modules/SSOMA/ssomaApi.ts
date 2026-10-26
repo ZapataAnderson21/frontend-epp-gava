@@ -2,20 +2,45 @@ import getAuthHeaders from "../../hooks/getAuthHeaders";
 import formatApiErrorMessage from "../../utils/apiErrorMessage";
 import { redirectToLoginPreservingURL } from "../../auth-redirect";
 import { ssomaApi } from "../../data/apiUrl";
-import { buildTalkQuery } from "./ssomaRules";
+import {
+  buildAvailabilityQuery,
+  buildSignatureFormData,
+  buildTalkQuery,
+  buildWorkerQuery,
+} from "./ssomaRules";
 import type {
+  SsomaAttendanceRecord,
   SsomaEnvelope,
   SsomaTalk,
   SsomaTalkDraft,
   SsomaTalkList,
   SsomaTalkQuery,
   SsomaTalkUpdate,
+  SsomaWorkerAvailability,
+  SsomaWorkerList,
+  SsomaSignatureResult,
+  SsomaDocumentVersionSummary,
 } from "./ssomaTypes";
 
+export class SsomaApiError extends Error {
+  readonly statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "SsomaApiError";
+    this.statusCode = statusCode;
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(getAuthHeaders());
+  new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+  if (typeof FormData !== "undefined" && init.body instanceof FormData) {
+    headers.delete("content-type");
+  }
   const response = await fetch(`${ssomaApi}${path}`, {
     ...init,
-    headers: { ...getAuthHeaders(), ...init.headers },
+    headers,
     credentials: "include",
   });
   const body = (await response.json().catch(() => null)) as SsomaEnvelope<T> | null;
@@ -26,7 +51,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (status < 200 || status >= 300) {
     const message = formatApiErrorMessage(body?.message, response.statusText || "Error en la solicitud");
-    throw new Error(message);
+    throw new SsomaApiError(message, status);
   }
   if (!body || !("data" in body)) throw new Error("La respuesta del servidor no tiene el formato esperado.");
   return body.data;
@@ -54,4 +79,54 @@ export function transitionSsomaTalk(id: number, action: "start" | "open") {
 
 export function annulSsomaTalk(id: number, reason: string) {
   return request<SsomaTalk>(`talks/${id}/annul`, { method: "POST", body: JSON.stringify({ reason }) });
+}
+
+export function searchSsomaWorkers(search: string, page: number, pageSize = 25, signal?: AbortSignal) {
+  return request<SsomaWorkerList>(`workers?${buildWorkerQuery(search, page, pageSize)}`, { signal });
+}
+
+export function getSsomaWorkerAvailability(date: string, workerIds: number[], signal?: AbortSignal) {
+  return request<SsomaWorkerAvailability[]>(`availability?${buildAvailabilityQuery(date, workerIds)}`, { signal });
+}
+
+export function addSsomaParticipants(talkId: number, workerIds: number[]) {
+  return request<SsomaAttendanceRecord[]>(`talks/${talkId}/participants`, {
+    method: "POST",
+    body: JSON.stringify({ workerIds }),
+  });
+}
+
+export function removeSsomaParticipant(talkId: number, attendanceId: number, reason: string) {
+  return request<SsomaAttendanceRecord>(`talks/${talkId}/participants/${attendanceId}/remove`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export function invalidateSsomaAttendance(talkId: number, attendanceId: number, reason: string) {
+  return request<SsomaAttendanceRecord>(`talks/${talkId}/attendance/${attendanceId}/invalidate`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export function uploadSsomaSignature(talkId: number, attendanceId: number, workerId: number, signature: Blob) {
+  if (signature.type !== "image/png") {
+    throw new SsomaApiError("La firma debe enviarse como imagen PNG.", 400);
+  }
+  if (signature.size < 1 || signature.size > 1_000_000) {
+    throw new SsomaApiError("La firma debe medir entre 1 byte y 1 MB.", 413);
+  }
+  const form = buildSignatureFormData(workerId, signature);
+  return request<SsomaSignatureResult>(`talks/${talkId}/attendance/${attendanceId}/signature`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export function closeSsomaTalk(talkId: number, idempotencyKey: string) {
+  return request<SsomaDocumentVersionSummary>(`talks/${talkId}/close`, {
+    method: "POST",
+    body: JSON.stringify({ idempotencyKey }),
+  });
 }
