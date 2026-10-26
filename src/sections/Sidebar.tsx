@@ -16,6 +16,7 @@ import {
   Settings as IoMdSettings,
   PanelLeftClose,
   TriangleAlert as RiAlertFill,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -253,6 +254,17 @@ export default function Sidebar({
                 label="Vencimientos"
                 href="/admin/document-expirations"
                 index={12}
+                baseDelay={baseDelay}
+                perItemDelay={perItemDelay}
+                onClick={() => isMobile && setIsOpen?.(false)}
+              />
+            </Permission>
+            <Permission user={user} permission="ssoma.view">
+              <SidebarItem
+                icon={<ShieldCheck />}
+                label="Charlas SSOMA"
+                href="/admin/ssoma"
+                index={13}
                 baseDelay={baseDelay}
                 perItemDelay={perItemDelay}
                 onClick={() => isMobile && setIsOpen?.(false)}

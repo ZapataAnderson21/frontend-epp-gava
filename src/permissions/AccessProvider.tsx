@@ -131,6 +131,7 @@ export function moduleForPath(path: string): string | null {
         workers: "workers",
         payrolls: "payroll",
         "worker-monthly-evaluations": "evaluations",
+        ssoma: "ssoma",
         "document-expirations": "documents",
         emergencies: "emergencies",
         users: "users",
