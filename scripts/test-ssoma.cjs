@@ -131,3 +131,101 @@ test("closing requires a successful close request and a refreshed closed server 
     /close failed/,
   );
 });
+
+test("authorized PDF fetch uses cookie credentials and blob URLs are revoked after use", async () => {
+  const blob = new Blob(["pdf bytes"], { type: "application/pdf" });
+  let request;
+  const returned = await rules.fetchAuthorizedBlob("https://api.example/ssoma/talks/1/document", { Authorization: "Bearer test-token" }, async (url, init) => {
+    request = { url, init };
+    return { ok: true, blob: async () => blob };
+  });
+  assert.equal(returned, blob);
+  assert.equal(request.init.credentials, "include");
+  assert.equal(request.init.headers.Authorization, "Bearer test-token");
+  assert.doesNotMatch(request.url, /token|Authorization/i);
+  let revoked = "";
+  let revokeCount = 0;
+  const managedUrl = rules.createManagedObjectUrl(blob, {
+    createObjectURL: () => "blob:temporary",
+    revokeObjectURL: (url) => { revoked = url; revokeCount += 1; },
+  });
+  assert.equal(managedUrl.url, "blob:temporary");
+  managedUrl.revoke();
+  managedUrl.revoke();
+  assert.equal(revoked, "blob:temporary");
+  assert.equal(revokeCount, 1);
+});
+
+test("document versions distinguish current and superseded versions", () => {
+  assert.equal(rules.documentVersionLabel("CURRENT"), "Vigente");
+  assert.equal(rules.documentVersionLabel("SUPERSEDED"), "Reemplazado");
+  assert.equal(rules.documentVersionLabel("PENDING"), "Estado de publicación no confirmado");
+});
+
+test("closed attendance invalidation is accepted only in a valid closed-talk revision", () => {
+  const talk = { status: "closed" };
+  const current = [{ ssomaTalkDocumentVersionId: 7, status: "CURRENT" }];
+  const superseded = [{ ssomaTalkDocumentVersionId: 7, status: "SUPERSEDED" }];
+  assert.equal(rules.canStartSsomaRevision(talk, current), true);
+  assert.equal(rules.canStartSsomaRevision(talk, superseded), false);
+  const payload = rules.buildRevisionPayload({ reason: " Correct attendance ", attendanceIdsToVoid: [9], topic: "Updated topic" }, [9]);
+  assert.equal(payload.reason, "Correct attendance");
+  assert.deepEqual(payload.attendanceIdsToVoid, [9]);
+  assert.throws(() => rules.buildRevisionPayload({ reason: "x", attendanceIdsToVoid: [10] }, [9]), /cerradas seleccionadas/i);
+  assert.throws(() => rules.buildRevisionPayload({ reason: " ", attendanceIdsToVoid: [] }, []), /motivo/i);
+});
+
+test("revision publication single-flight gate prevents duplicate requests", async () => {
+  const lock = { current: false };
+  let release;
+  let calls = 0;
+  const first = rules.runExclusively(lock, () => new Promise((resolve) => { calls += 1; release = resolve; }));
+  const duplicate = await rules.runExclusively(lock, async () => { calls += 1; });
+  assert.deepEqual(duplicate, { started: false });
+  assert.equal(calls, 1);
+  release("published");
+  assert.deepEqual(await first, { started: true, value: "published" });
+});
+
+test("annulment requires a reason and is unavailable for closed or terminal states", () => {
+  assert.equal(rules.isValidAnnulReason(" reason "), true);
+  assert.equal(rules.isValidAnnulReason(" "), false);
+  assert.equal(rules.isValidAnnulReason("x".repeat(1001)), false);
+  assert.equal(rules.canAnnulTalk("draft"), true);
+  assert.equal(rules.canAnnulTalk("inProgress"), true);
+  assert.equal(rules.canAnnulTalk("open"), true);
+  assert.equal(rules.canAnnulTalk("closed"), false);
+  assert.equal(rules.canAnnulTalk("annulled"), false);
+});
+
+test("audit sanitization keeps approved fields and removes control secrets", () => {
+  const item = rules.sanitizeAuditEvent({
+    ssomaTalkAuditEventId: 1,
+    ssomaTalkId: 2,
+    attendanceTalkId: null,
+    ssomaTalkAttendanceId: null,
+    actorUserId: 3,
+    eventType: "revision_published",
+    previousState: "closed",
+    newState: "closed",
+    changedFields: { documentVersionId: 5, signatureBase64: "do-not-show", trace: "private" },
+    reason: "Approved Bearer secret-value token=private-trace signature=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+    serverAt: "2026-10-26T10:00:00.000Z",
+    actor: { userId: 3, name: "Ada", lastName: "Lovelace" },
+  });
+  assert.equal(item.action, "revision_published");
+  assert.equal(item.actor, "Ada Lovelace");
+  assert.deepEqual(item.documentReferences, ["documentVersionId: 5"]);
+  assert.doesNotMatch(JSON.stringify(item), /signatureBase64|do-not-show|secret-value|private-trace|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\+/);
+  assert.equal(rules.sanitizeAuditValue("event\u0000name"), "event name");
+});
+
+test("document error mappings cover authorization, absence, conflict, and server failure", () => {
+  const error = (statusCode) => Object.assign(new Error("sensitive server body"), { statusCode });
+  assert.match(rules.safeDocumentErrorMessage(error(403), "document"), /permiso/i);
+  assert.match(rules.safeDocumentErrorMessage(error(404), "document"), /no está disponible/i);
+  assert.match(rules.safeDocumentErrorMessage(error(409), "revision"), /impide iniciar/i);
+  assert.match(rules.safeDocumentErrorMessage(error(409), "publish"), /publicación no quedó confirmada/i);
+  assert.match(rules.safeDocumentErrorMessage(error(500), "publish"), /resultado puede requerir verificación/i);
+  assert.doesNotMatch(rules.safeDocumentErrorMessage(error(500), "publish"), /sensitive server body/);
+});

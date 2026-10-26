@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useModuleAction } from "../../permissions/AccessProvider";
+import { useAccess, useModuleAction } from "../../permissions/AccessProvider";
 import {
   annulSsomaTalk,
   closeSsomaTalk,
@@ -13,14 +13,19 @@ import {
   canCloseTalk,
   canSignAttendance,
   closeAndVerifyTalk,
+  canAnnulTalk,
+  isValidAnnulReason,
   getAttendanceProgress,
   isConfirmedSignature,
   safeSsomaErrorMessage,
+  safeDocumentErrorMessage,
   statusLabel,
 } from "./ssomaRules";
 import type { SsomaAttendance, SsomaTalk as SsomaTalkType, SsomaWorker } from "./ssomaTypes";
 import ParticipantManager from "./ParticipantManager";
 import SignatureCapture from "./SignatureCapture";
+import DocumentCenter from "./DocumentCenter";
+import AuditTimeline from "./AuditTimeline";
 
 function dateLabel(value: string) {
   return new Date(`${value.slice(0, 10)}T00:00:00`).toLocaleDateString("es-PE", { dateStyle: "long" });
@@ -31,6 +36,8 @@ export default function SsomaTalk() {
   const talkId = Number(id);
   const navigate = useNavigate();
   const canManage = useModuleAction("manage");
+  const { can } = useAccess();
+  const canVoid = can("ssoma.void");
   const [talk, setTalk] = useState<SsomaTalkType | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -62,12 +69,13 @@ export default function SsomaTalk() {
   const perform = async (action: "start" | "open" | "annul") => {
     if (!talk) return;
     if (action === "annul") {
+      if (!canVoid || !canAnnulTalk(talk.status)) return;
       if (!window.confirm("¿Confirmas que deseas anular esta charla? Esta acción quedará registrada.")) return;
       const reason = window.prompt("Indica el motivo de la anulación:")?.trim() || "";
-      if (!reason) { setError("El motivo de anulación es obligatorio."); return; }
+      if (!isValidAnnulReason(reason)) { setError("El motivo de anulación debe contener entre 1 y 1000 caracteres."); return; }
       setBusy(true); setError("");
       try { await annulSsomaTalk(talk.ssomaTalkId, reason); await refresh(); }
-      catch (caught) { setError(caught instanceof Error ? caught.message : "No se pudo anular la charla."); }
+      catch (caught) { setError(safeDocumentErrorMessage(caught, "annul")); }
       finally { setBusy(false); }
       return;
     }
@@ -246,6 +254,8 @@ export default function SsomaTalk() {
       </> : <p className="mt-2 text-sm text-slate-600">El seguimiento de participantes y firmas estará disponible al iniciar la charla.</p>}
     </section>
 
-    {canManage && talk.status !== "closed" && talk.status !== "annulled" && talk.status !== "voided" && <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-bold text-slate-900">Acciones</h2><p className="mt-1 text-sm text-slate-600">Cada cambio se confirma y se registra en el historial del servidor.</p><div className="mt-4 flex flex-col gap-2 sm:flex-row">{talk.status === "draft" && <button type="button" disabled={busy} onClick={() => perform("start")} className="min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disabled:opacity-60">{busy ? "Procesando…" : "Iniciar charla"}</button>}{talk.status === "inProgress" && <button type="button" disabled={busy} onClick={() => perform("open")} className="min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disabled:opacity-60">{busy ? "Procesando…" : "Abrir charla"}</button>}{talk.status === "open" && <button type="button" disabled={busy} onClick={() => perform("annul")} className="min-h-11 rounded-lg border border-red-500 px-4 font-semibold text-red-700 disabled:opacity-60">Anular charla</button>}</div></section>}
+    {(canManage || canVoid) && talk.status !== "closed" && talk.status !== "annulled" && talk.status !== "voided" && <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"><h2 className="text-lg font-bold text-slate-900">Acciones</h2><p className="mt-1 text-sm text-slate-600">Cada cambio se confirma y se registra en el historial del servidor.</p><div className="mt-4 flex flex-col gap-2 sm:flex-row">{canManage && talk.status === "draft" && <button type="button" disabled={busy} onClick={() => perform("start")} className="min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disabled:opacity-60">{busy ? "Procesando…" : "Iniciar charla"}</button>}{canManage && talk.status === "inProgress" && <button type="button" disabled={busy} onClick={() => perform("open")} className="min-h-11 rounded-lg bg-blue-700 px-4 font-semibold text-white disabled:opacity-60">{busy ? "Procesando…" : "Abrir charla"}</button>}{canVoid && canAnnulTalk(talk.status) && <button type="button" disabled={busy} onClick={() => perform("annul")} className="min-h-11 rounded-lg border border-red-500 px-4 font-semibold text-red-700 disabled:opacity-60">Anular charla</button>}</div></section>}
+    <DocumentCenter talk={talk} onRefresh={refresh} />
+    <AuditTimeline talkId={talk.ssomaTalkId} />
   </main>;
 }

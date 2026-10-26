@@ -111,10 +111,64 @@ export interface SsomaSignatureResult {
 export interface SsomaDocumentVersionSummary {
   ssomaTalkDocumentVersionId: number;
   versionNumber: number;
-  status: "CURRENT";
+  status: "CURRENT" | "SUPERSEDED";
   sha256: string;
   byteSize: string;
   publishedAt: string;
+  createdAt?: string;
+  replacesVersionId?: number | null;
+}
+
+export interface SsomaRevisionSummary {
+  ssomaTalkRevisionId: number;
+  revisionNumber: number;
+  authoredByUserId: number;
+  createdAt: string;
+  baseVersionId: number | null;
+}
+
+export type SsomaRevisionStartResult = Pick<SsomaRevisionSummary, "ssomaTalkRevisionId" | "revisionNumber" | "authoredByUserId" | "createdAt">;
+
+export interface SsomaRevisionDraft {
+  reason: string;
+  attendanceIdsToVoid: number[];
+  topic?: string;
+  trainer?: string | null;
+  location?: string | null;
+  targetAudience?: string | null;
+  scheduledTime?: string | null;
+  durationMinutes?: number | null;
+  observations?: string | null;
+  responsibleName?: string | null;
+  responsiblePosition?: string | null;
+}
+
+export interface SsomaPublicationReconciliation {
+  publicationId: number;
+  failureCode: string;
+  createdAt: string;
+  artifactVerified: boolean;
+  canRetry: boolean;
+}
+
+export interface SsomaAuditEvent {
+  ssomaTalkAuditEventId: number;
+  ssomaTalkId: number;
+  attendanceTalkId: number | null;
+  ssomaTalkAttendanceId: number | null;
+  actorUserId: number;
+  eventType: string;
+  previousState: string | null;
+  newState: string | null;
+  changedFields: unknown;
+  reason: string | null;
+  serverAt: string;
+  actor: { userId: number; name: string; lastName: string } | null;
+}
+
+export interface SsomaAuditList {
+  items: SsomaAuditEvent[];
+  pagination: SsomaPagination;
 }
 
 export interface SsomaEnvelope<T> {

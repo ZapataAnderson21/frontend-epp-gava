@@ -4,9 +4,11 @@ import { redirectToLoginPreservingURL } from "../../auth-redirect";
 import { ssomaApi } from "../../data/apiUrl";
 import {
   buildAvailabilityQuery,
+  buildAuditQuery,
   buildSignatureFormData,
   buildTalkQuery,
   buildWorkerQuery,
+  fetchAuthorizedBlob,
 } from "./ssomaRules";
 import type {
   SsomaAttendanceRecord,
@@ -20,6 +22,11 @@ import type {
   SsomaWorkerList,
   SsomaSignatureResult,
   SsomaDocumentVersionSummary,
+  SsomaRevisionDraft,
+  SsomaRevisionSummary,
+  SsomaRevisionStartResult,
+  SsomaPublicationReconciliation,
+  SsomaAuditList,
 } from "./ssomaTypes";
 
 export class SsomaApiError extends Error {
@@ -129,4 +136,41 @@ export function closeSsomaTalk(talkId: number, idempotencyKey: string) {
     method: "POST",
     body: JSON.stringify({ idempotencyKey }),
   });
+}
+
+export function listSsomaDocumentVersions(talkId: number) {
+  return request<SsomaDocumentVersionSummary[]>(`talks/${talkId}/versions`);
+}
+
+export function listSsomaRevisions(talkId: number) {
+  return request<SsomaRevisionSummary[]>(`talks/${talkId}/revisions`);
+}
+
+export function startSsomaRevision(talkId: number, draft: SsomaRevisionDraft) {
+  return request<SsomaRevisionStartResult>(`talks/${talkId}/revisions`, {
+    method: "POST",
+    body: JSON.stringify(draft),
+  });
+}
+
+export function publishSsomaRevision(talkId: number, revisionId: number, idempotencyKey: string) {
+  return request<SsomaDocumentVersionSummary>(`talks/${talkId}/revisions/${revisionId}/publish`, {
+    method: "POST",
+    body: JSON.stringify({ idempotencyKey }),
+  });
+}
+
+export function getSsomaPublicationReconciliation(talkId: number) {
+  return request<SsomaPublicationReconciliation[]>(`talks/${talkId}/publications/reconciliation`);
+}
+
+export function listSsomaAudit(talkId: number, page: number, pageSize = 20) {
+  return request<SsomaAuditList>(`talks/${talkId}/audit?${buildAuditQuery(page, pageSize)}`);
+}
+
+export function fetchSsomaDocument(path: string) {
+  if (!path.startsWith("talks/") || path.includes("?") || path.includes("#")) {
+    throw new Error("La ruta del documento no es válida.");
+  }
+  return fetchAuthorizedBlob(`${ssomaApi}${path}`, getAuthHeaders());
 }
