@@ -45,6 +45,26 @@ test("talk draft validation matches required backend fields and bounds", () => {
   assert.ok(rules.validateTalkDraft({ ...base, durationMinutes: 1441 }).includes("La duración debe estar entre 1 y 1440 minutos."));
 });
 
+test("revision form normalizes ISO scheduled times to HH:mm and preserves empty values", () => {
+  const inputValue = rules.normalizeScheduledTimeForInput("1970-01-01T08:45:00.000Z");
+  assert.equal(inputValue, "08:45");
+  const payload = rules.buildRevisionPayload({ reason: "Correction", attendanceIdsToVoid: [], scheduledTime: rules.scheduledTimeForPayload(inputValue) }, []);
+  assert.equal(payload.scheduledTime, "08:45");
+  assert.equal(rules.normalizeScheduledTimeForInput("08:45"), "08:45");
+  assert.equal(rules.normalizeScheduledTimeForInput(null), "");
+  assert.equal(rules.normalizeScheduledTimeForInput(""), "");
+  assert.equal(rules.scheduledTimeForPayload(""), null);
+  assert.equal(rules.scheduledTimeForPayload(null), null);
+});
+
+test("edit form load state releases fetch errors and non-draft states from loading", () => {
+  assert.equal(rules.talkFormLoadPhase({ talkId: 10, loadingTalk: true, projectsLoading: false, hydrated: false, loadError: "" }), "loading");
+  assert.equal(rules.talkFormLoadPhase({ talkId: 10, loadingTalk: false, projectsLoading: true, hydrated: true, loadError: "No se encontró la charla." }), "error");
+  assert.equal(rules.talkFormLoadPhase({ talkId: 10, loadingTalk: false, projectsLoading: false, hydrated: true, loadError: "Solo se pueden editar charlas en borrador." }), "error");
+  assert.equal(rules.talkFormLoadPhase({ talkId: 10, loadingTalk: false, projectsLoading: false, hydrated: true, loadError: "" }), "ready");
+  assert.equal(rules.talkFormLoadPhase({ talkId: null, loadingTalk: false, projectsLoading: false, hydrated: true, loadError: "" }), "ready");
+});
+
 test("signature progress excludes removed and voided attendances", () => {
   assert.deepEqual(rules.getAttendanceProgress(["SIGNED", "PENDING", "REMOVED", "VOIDED"]), {
     signed: 1,

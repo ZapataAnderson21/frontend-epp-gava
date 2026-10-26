@@ -14,8 +14,10 @@ import {
   createManagedObjectUrl,
   documentVersionLabel,
   isConfirmedRevisionPublication,
+  normalizeScheduledTimeForInput,
   runExclusively,
   safeDocumentErrorMessage,
+  scheduledTimeForPayload,
   ssomaPermissionFlags,
 } from "./ssomaRules";
 import type {
@@ -53,7 +55,7 @@ export default function DocumentCenter({ talk, onRefresh }: { talk: SsomaTalk; o
     trainer: talk.trainer ?? "",
     location: talk.location ?? "",
     targetAudience: talk.targetAudience ?? "",
-    scheduledTime: talk.scheduledTime ?? "",
+    scheduledTime: normalizeScheduledTimeForInput(talk.scheduledTime),
     durationMinutes: talk.durationMinutes?.toString() ?? "",
     observations: talk.observations ?? "",
     responsibleName: talk.responsibleName ?? "",
@@ -114,7 +116,7 @@ export default function DocumentCenter({ talk, onRefresh }: { talk: SsomaTalk; o
       trainer: fields.trainer.trim() || null,
       location: fields.location.trim() || null,
       targetAudience: fields.targetAudience.trim() || null,
-      scheduledTime: fields.scheduledTime || null,
+      scheduledTime: scheduledTimeForPayload(fields.scheduledTime),
       durationMinutes,
       observations: fields.observations.trim() || null,
       responsibleName: fields.responsibleName.trim() || null,

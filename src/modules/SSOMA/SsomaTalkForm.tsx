@@ -4,7 +4,7 @@ import { projectApi } from "../../data/apiUrl";
 import type { Project } from "../../data/types";
 import { useFetch } from "../../hooks";
 import { createSsomaTalk, getSsomaTalk, updateSsomaTalk } from "./ssomaApi";
-import { validateTalkDraft } from "./ssomaRules";
+import { talkFormLoadPhase, validateTalkDraft } from "./ssomaRules";
 import type { SsomaTalkDraft, SsomaTalkUpdate } from "./ssomaTypes";
 
 const today = () => {
@@ -21,6 +21,7 @@ export default function SsomaTalkForm() {
   const [draft, setDraft] = useState(blankDraft);
   const [hydrated, setHydrated] = useState(!talkId);
   const [loadingTalk, setLoadingTalk] = useState(Boolean(talkId));
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [validation, setValidation] = useState<string[]>([]);
@@ -28,11 +29,24 @@ export default function SsomaTalkForm() {
   useEffect(() => {
     if (!talkId) return;
     const controller = new AbortController();
+    setLoadingTalk(true);
+    setHydrated(false);
+    setLoadError("");
     getSsomaTalk(talkId, controller.signal).then((talk) => {
       if (talk.status !== "draft") throw new Error("Solo se pueden editar charlas en borrador.");
       setDraft({ projectId: talk.projectId, talkDate: talk.talkDate.slice(0, 10), topic: talk.topic, trainer: talk.trainer || "", location: talk.location || "", targetAudience: talk.targetAudience || "", scheduledTime: talk.scheduledTime ? talk.scheduledTime.slice(11, 16) : "", durationMinutes: talk.durationMinutes, observations: talk.observations || "", responsibleName: talk.responsibleName || "", responsiblePosition: talk.responsiblePosition || "" });
       setHydrated(true);
-    }).catch((caught: unknown) => { if (!controller.signal.aborted) setError(caught instanceof Error ? caught.message : "No se pudo cargar la charla."); }).finally(() => { if (!controller.signal.aborted) setLoadingTalk(false); });
+    }).catch((caught: unknown) => {
+      if (!controller.signal.aborted) {
+        setLoadError(caught instanceof Error ? caught.message : "No se pudo cargar la charla.");
+        setHydrated(true);
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) {
+        setLoadingTalk(false);
+        setHydrated(true);
+      }
+    });
     return () => controller.abort();
   }, [talkId]);
 
@@ -58,7 +72,13 @@ export default function SsomaTalkForm() {
     finally { setSaving(false); }
   };
 
-  if (loadingTalk || projectsLoading || !hydrated) return <div className="p-8 text-slate-600" role="status">Cargando información…</div>;
+  const loadPhase = talkFormLoadPhase({ talkId, loadingTalk, projectsLoading, hydrated, loadError });
+  if (loadPhase === "loading") return <div className="p-8 text-slate-600" role="status">Cargando información…</div>;
+  if (loadPhase === "error") return <main className="mx-auto w-full max-w-4xl p-4 sm:p-6">
+    <Link to={`/admin/ssoma/${talkId}`} className="text-sm font-semibold text-blue-700 underline">← Volver a la charla</Link>
+    <h1 className="mt-3 text-2xl font-bold text-slate-900">No se puede editar esta charla</h1>
+    <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{loadError}</div>
+  </main>;
 
   return <main className="mx-auto w-full max-w-4xl p-4 sm:p-6">
     <Link to={talkId ? `/admin/ssoma/${talkId}` : "/admin/ssoma"} className="text-sm font-semibold text-blue-700 underline">← Volver</Link>

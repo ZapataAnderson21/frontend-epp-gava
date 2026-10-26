@@ -69,6 +69,34 @@ export function validateTalkDraft(draft: SsomaTalkDraft): string[] {
   return errors;
 }
 
+export function normalizeScheduledTimeForInput(value: string | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "";
+  const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+  if (timePattern.test(value)) return value;
+  const isoTime = value.match(/^\d{4}-\d{2}-\d{2}T((?:[01]\d|2[0-3]):[0-5]\d)(?::[0-5]\d(?:\.\d{1,9})?)?(?:Z|[+-](?:0\d|1\d|2[0-3]):[0-5]\d)?$/);
+  return isoTime?.[1] ?? "";
+}
+
+export function scheduledTimeForPayload(value: string | null | undefined): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)) {
+    throw new Error("La hora de la revisión debe tener formato HH:mm.");
+  }
+  return value;
+}
+
+export function talkFormLoadPhase(input: {
+  talkId: number | null;
+  loadingTalk: boolean;
+  projectsLoading: boolean;
+  hydrated: boolean;
+  loadError: string;
+}): "loading" | "error" | "ready" {
+  if (input.talkId && !input.loadingTalk && input.loadError) return "error";
+  if (input.loadingTalk || input.projectsLoading || !input.hydrated) return "loading";
+  return "ready";
+}
+
 export function getAttendanceProgress(statuses: string[]) {
   const signed = statuses.filter((status) => status === "SIGNED").length;
   const participants = statuses.filter((status) => !["REMOVED", "VOIDED"].includes(status)).length;
