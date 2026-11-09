@@ -1,5 +1,6 @@
 import { SelectForm, InputForm } from "../../../../../../../common/form";
 import type { Supplier } from "../../../../../../../data/types";
+import { formatSupplierAccountDetails } from "../../../../../../../utils/supplierAccountDetails";
 
 interface Props {
   paymentConditions1: string;
@@ -89,7 +90,7 @@ export default function PaymentConditionsCard({...props}: Props) {
               name="bank"
               label="Cta cte."
               type="text"
-              value={`${supplier.bank} (${supplier.currency}) - ${supplier.accountNumber}`}
+              value={formatSupplierAccountDetails(supplier)}
               onChange={() => {}}
               disabled
             />

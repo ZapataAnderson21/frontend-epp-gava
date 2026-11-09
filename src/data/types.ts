@@ -587,7 +587,7 @@ export interface Supplier {
   documentType: "ruc" | "dni";
   ruc?: string | null;
   dni?: string | null;
-  accountNumber: string;
+  accountNumber: string | null;
   bank: string;
   currency: string;
   createdAt: string;

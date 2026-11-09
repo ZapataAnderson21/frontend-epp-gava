@@ -10,6 +10,7 @@ import { ErrorMessage } from "../../../../../../common/error";
 import { Button } from "../../../../../../components";
 import { purchaseOrderApi } from "../../../../../../data/apiUrl";
 import type { PurchaseOrder } from "../../../../../../data/types";
+import { formatSupplierAccountDetails } from "../../../../../../utils/supplierAccountDetails";
 import {
   useApiAction,
   useCurrentUser,
@@ -254,7 +255,7 @@ export default function PurchaseOrder() {
                   />
                   <InfoField
                     label="Cta. cte"
-                    value={`${purchaseOrder?.supplier?.bank} (${purchaseOrder?.supplier?.currency}) - ${purchaseOrder?.supplier?.accountNumber}`}
+                    value={formatSupplierAccountDetails(purchaseOrder?.supplier)}
                   />
                 </div>
               </div>

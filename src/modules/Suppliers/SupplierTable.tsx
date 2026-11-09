@@ -28,7 +28,11 @@ export default function SupplierTable() {
     { key: "abbreviation", label: "Abreviatura", width: "8rem" },
     { key: "phone", label: "Teléfono", width: "8rem" },
     { key: "email", label: "Email", width: "8rem" },
-    { key: "accountNumber", label: "N° Cuenta", width: "12rem" },
+    {
+      label: "N° Cuenta",
+      width: "12rem",
+      render: (row: Supplier) => row.accountNumber || "No registrada",
+    },
     {
       label: "Acciones",
       width: "8rem",
