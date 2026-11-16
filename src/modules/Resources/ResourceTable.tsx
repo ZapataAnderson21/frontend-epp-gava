@@ -1,27 +1,53 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EditButton } from "../../common/button";
+import { DeleteButton, EditButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
+import { DeleteConfirmDialog } from "../../components";
 import { resourceApi } from "../../data/apiUrl";
 import type { Resource } from "../../data/types";
-import { useDebouncedValue, usePaginatedFetch } from "../../hooks";
+import { useApiAction, useDebouncedValue, usePaginatedFetch } from "../../hooks";
+import toast from "react-hot-toast";
 
 export default function ResourceTable() {
   const [search, setSearch] = useState("");
+  const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const debouncedSearch = useDebouncedValue(search);
   const {
     items: resources,
     pagination,
     loading,
     error,
+    refetch,
     setPage,
     setPageSize,
   } = usePaginatedFetch<Resource>(`${resourceApi}paginated`, {
     params: { search: debouncedSearch },
   });
+  const { execute: deleteResource, loading: deleting } =
+    useApiAction<Resource>();
   const navigate = useNavigate();
+
+  const handleConfirmDelete = async () => {
+    if (!resourceToDelete) return;
+
+    await toast.promise(
+      deleteResource(`${resourceApi}${resourceToDelete.resourceId}`, "DELETE"),
+      {
+        loading: "Eliminando recurso...",
+        success: (result) => {
+          setResourceToDelete(null);
+          refetch();
+          return result.message || "Recurso eliminado exitosamente";
+        },
+        error: (error) =>
+          error instanceof Error
+            ? error.message
+            : "No se pudo eliminar el recurso",
+      },
+    );
+  };
 
   const processedResources = useMemo(
     () =>
@@ -43,7 +69,15 @@ export default function ResourceTable() {
       label: "Acciones",
       width: "8rem",
       render: (row: Resource) => (
-        <EditButton onClick={() => navigate(`/admin/resources/${row.resourceId}`)} />
+        <div className="flex items-center gap-2">
+          <EditButton
+            onClick={() => navigate(`/admin/resources/${row.resourceId}`)}
+          />
+          <DeleteButton
+            onClick={() => setResourceToDelete(row)}
+            disabled={deleting && resourceToDelete?.resourceId === row.resourceId}
+          />
+        </div>
       ),
     },
   ] as const;
@@ -81,6 +115,14 @@ export default function ResourceTable() {
           No hay recursos que coincidan con la búsqueda.
         </div>
       )}
+
+      <DeleteConfirmDialog
+        isOpen={Boolean(resourceToDelete)}
+        message={`¿Deseas eliminar el recurso ${resourceToDelete?.name ?? "seleccionado"}?`}
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setResourceToDelete(null)}
+      />
     </div>
   );
 }
