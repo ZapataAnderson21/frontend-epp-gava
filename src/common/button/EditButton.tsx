@@ -6,22 +6,24 @@ interface EditButtonProps {
   onClick: () => void;
   disabled?: boolean;
   permission?: string;
+  label?: string;
 }
 
 export default function EditButton({
   onClick,
   disabled,
   permission,
+  label = "Editar",
 }: EditButtonProps) {
   const allowed = useModuleAction("manage", permission);
   if (!allowed) return null;
   return (
     <ActionButton
       icon={<FaPencil />}
+      label={label}
       onClick={onClick}
       disabled={disabled}
-      bgColor="#fbbf24"
-      bgHoverColor="#f59e0b"
+      variant="ghost"
     />
   );
 }

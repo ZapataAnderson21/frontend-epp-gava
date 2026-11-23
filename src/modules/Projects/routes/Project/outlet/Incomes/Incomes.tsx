@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import Permission from "../../../../../../common/auth/Permission";
 import { ErrorMessage } from "../../../../../../common/error";
 import Table, { type Column } from "../../../../../../common/table/Table";
+import ActionButton from "../../../../../../components/ActionButton";
 import { serviceSaleApi } from "../../../../../../data/apiUrl";
 import type { Currency, ServiceSaleType } from "../../../../../../data/types";
 import {
@@ -161,24 +162,21 @@ export default function Incomes() {
       render: (income) => (
         <div className="flex justify-center gap-2">
           <Permission permission="incomes.manage">
-            <button
-              type="button"
+            <ActionButton
+              icon={<Pencil />}
+              label={`Editar ${income.serviceName}`}
+              variant="ghost"
               onClick={() => openEdit(income)}
-              className="rounded-md bg-blue-50 p-2 text-blue-700 hover:bg-blue-100"
-              aria-label={`Editar ${income.serviceName}`}
-            >
-              <Pencil size={17} />
-            </button>
+            />
           </Permission>
           <Permission permission="incomes.delete">
-            <button
-              type="button"
+            <ActionButton
+              icon={<Trash2 />}
+              label={`Eliminar ${income.serviceName}`}
+              variant="ghost"
+              tone="danger"
               onClick={() => void removeIncome(income)}
-              className="rounded-md bg-red-50 p-2 text-red-700 hover:bg-red-100"
-              aria-label={`Eliminar ${income.serviceName}`}
-            >
-              <Trash2 size={17} />
-            </button>
+            />
           </Permission>
         </div>
       ),
