@@ -238,7 +238,7 @@ export function useHandleForm() {
           quantityRequested: Number(elementRequest.quantityRequested || 0),
           unit: "unidad",
           elementId: elementRequest.elementId,
-          elementVariantId: null,
+          elementVariantId: elementRequest.elementVariantId ?? null,
           fallProtectionGroupId: elementRequest.fallProtectionGroupId ?? null,
           lineItemOrder: index + 1,
           notes: elementRequest.notes?.trim() || null,
@@ -257,7 +257,7 @@ export function useHandleForm() {
           quantityRequested: Number(elementRequest.quantityRequested || 0),
           unit: "unidad",
           elementId: elementRequest.elementId,
-          elementVariantId: null,
+          elementVariantId: elementRequest.elementVariantId ?? null,
           fallProtectionGroupId: elementRequest.fallProtectionGroupId ?? null,
           lineItemOrder: index + 1,
           notes: elementRequest.notes?.trim() || null,
@@ -276,7 +276,10 @@ export function useHandleForm() {
       ...(response.data as ElementRequestType),
       lineKey: selectedElementRequests[index].lineKey,
       element: response.data?.element ?? selectedElementRequests[index].element,
-      elementVariant: null,
+      elementVariant:
+        response.data?.elementVariant ??
+        selectedElementRequests[index].elementVariant ??
+        null,
       fallProtectionGroup:
         response.data?.fallProtectionGroup ??
         selectedElementRequests[index].fallProtectionGroup ??
@@ -322,6 +325,7 @@ export function useHandleForm() {
       deliveryDueDate,
       description,
       type,
+      ssomaRequestKind: options.data.ssomaRequestKind,
     };
 
     const response = await createRequest(`${requestApi}`, "POST", requestData);
@@ -432,6 +436,7 @@ export function useHandleForm() {
     selectedElementRequests: ElementRequestType[],
     deliveryDueDate: string,
     description: string,
+    ssomaRequestKind: "projectStart" | "duringExecution",
     selectedRequestWorkers: RequestWorker[] = [],
     existingRequestWorkers: RequestWorker[] = [],
     selectedElementRequestPlans: ElementPlanState = {},
@@ -467,6 +472,7 @@ export function useHandleForm() {
       description,
       deliveryDueDate,
       type: getTypeFromElements(selectedElements),
+      ssomaRequestKind,
     };
 
     const response = await updateRequest(
@@ -526,6 +532,7 @@ export function useHandleForm() {
     passwordCPanel: string,
     deliveryDueDate: string,
     description: string,
+    ssomaRequestKind: "projectStart" | "duringExecution",
     selectedRequestWorkers: RequestWorker[] = [],
     existingRequestWorkers: RequestWorker[] = [],
     selectedElementRequestPlans: ElementPlanState = {},
@@ -537,6 +544,7 @@ export function useHandleForm() {
       selectedElementRequests,
       deliveryDueDate,
       description,
+      ssomaRequestKind,
       selectedRequestWorkers,
       existingRequestWorkers,
       selectedElementRequestPlans,

@@ -137,20 +137,21 @@ export function shouldShowRequestLineNotes(
 }
 
 export function createElementRequestLine(
-  element: ElementType,
+  element: ElementType & { selectedVariant?: NonNullable<ElementType["variants"]>[number] },
   requestId = 0,
 ): ElementRequestType {
   return {
     lineKey: createRequestLineKey(),
     requestId,
     elementId: element.elementId,
-    elementVariantId: null,
+    elementVariantId: element.selectedVariant?.elementVariantId ?? null,
     fallProtectionGroupId: element.fallProtectionGroupId ?? null,
     lineItemOrder: 0,
     quantityRequested: 1,
     unit: "unidad",
     notes: "",
     element,
+    elementVariant: element.selectedVariant ?? null,
     fallProtectionGroup: element.fallProtectionGroup ?? null,
     epiPlans: [],
   };

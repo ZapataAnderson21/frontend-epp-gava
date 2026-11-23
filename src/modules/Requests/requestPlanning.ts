@@ -11,9 +11,11 @@ export function prunePlansByElementRequests(
   elementRequests: ElementRequestType[],
 ) {
   return Object.fromEntries(
-    Object.entries(plansState).filter(([elementId]) =>
+    Object.entries(plansState).filter(([planKey]) =>
       elementRequests.some(
-        (elementRequest) => String(elementRequest.elementId) === elementId,
+        (elementRequest) =>
+          elementRequest.lineKey === planKey ||
+          String(elementRequest.elementId) === planKey,
       ),
     ),
   ) as ElementPlanState;
@@ -40,9 +42,7 @@ export function buildRequestWorkersFromPlans(
       const existing = existingByWorkerId.get(workerId);
       nextWorkers.set(workerId, {
         requestWorkerId:
-          plan.requestWorker?.requestWorkerId ||
-          existing?.requestWorkerId ||
-          0,
+          plan.requestWorker?.requestWorkerId || existing?.requestWorkerId || 0,
         requestId: plan.requestWorker?.requestId || existing?.requestId || 0,
         workerId,
         shirtSize: existing?.shirtSize ?? null,

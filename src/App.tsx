@@ -13,13 +13,13 @@ import {
   NewElement,
   NewFallProtectionGroup,
 } from "./modules/Elements";
+import CatalogAreaPage from "./modules/Elements/CatalogAreaPage";
 import { Emergencies, Emergency, NewEmergency } from "./modules/Emergencies";
 import { Login, ResetPassword } from "./modules/Login";
 import { GeneralPayrolls, GeneralWeeklyPayroll } from "./modules/Payrolls";
 import { EditProject, NewProject, Project, Projects } from "./modules/Projects";
 import EmergenciesProject from "./modules/Projects/routes/Project/outlet/Emergencies.tsx";
 import { Incomes } from "./modules/Projects/routes/Project/outlet/Incomes";
-import ProjectInventory from "./modules/Projects/routes/Project/outlet/Inventory.tsx";
 import { PettyCashes } from "./modules/Projects/routes/Project/outlet/PettyCashes/index.ts";
 import { ProjectGantt } from "./modules/Projects/routes/Project/outlet/ProjectGantt";
 import ProjectPayrolls from "./modules/Projects/routes/Project/outlet/ProjectPayrolls.tsx";
@@ -36,6 +36,13 @@ import {
   Quotations,
 } from "./modules/Quotations";
 import { NewRequest, Request, Requests } from "./modules/Requests";
+import PurchaseOrders from "./modules/Purchases/PurchaseOrders";
+import {
+  StaffPayrollDetail,
+  StaffPayrollEditor,
+  StaffPayrolls,
+  StaffPeople,
+} from "./modules/StaffPayrolls";
 import RequestDraft from "./modules/Requests/RequestDraft.tsx";
 import { NewResource, Resource, Resources } from "./modules/Resources";
 import { NewSupplier, Supplier, Suppliers } from "./modules/Suppliers";
@@ -45,6 +52,7 @@ import Workers from "./modules/Workers/Workers.tsx";
 import { SsomaTalk, SsomaTalkForm, SsomaTalks } from "./modules/SSOMA";
 import { SSOMA_ROUTE_PATHS } from "./modules/SSOMA/ssomaRules";
 import RequireAuth from "./RequireAuth.tsx";
+import WorkClothing from "./modules/WorkClothing";
 
 export default function App() {
   return (
@@ -64,6 +72,7 @@ export default function App() {
             <Route path="" element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="permissions" element={<RolePermissions />} />
+            <Route path="purchase-orders" element={<PurchaseOrders />} />
             {/* Projects routes */}
             <Route path="projects" element={<Projects />} />
             <Route path="projects/new" element={<NewProject />} />
@@ -84,19 +93,50 @@ export default function App() {
               <Route path="petty-cash" element={<PettyCashes />} />
               <Route path="incomes" element={<Incomes />} />
               <Route path="requests" element={<RequestsProject />} />
-              <Route path="inventory" element={<ProjectInventory />} />
               <Route path="emergencies" element={<EmergenciesProject />} />
             </Route>
             {/* End projects routes */}
             {/* Inventory routes */}
-            <Route path="inventory" element={<Elements />} />
-            <Route path="inventory/:family" element={<Elements />} />
+            <Route
+              path="inventory"
+              element={<CatalogAreaPage area="inventory" />}
+            />
+            {[
+              "operative",
+              "epp",
+              "epi",
+              "uniform",
+              "officeMaterial",
+              "ssomaSupply",
+              "ese",
+              "harness",
+              "quality",
+            ].map((legacyFamily) => (
+              <Route
+                key={legacyFamily}
+                path={`inventory/${legacyFamily}`}
+                element={<Elements />}
+              />
+            ))}
+            <Route
+              path="inventory/:family"
+              element={<CatalogAreaPage area="inventory" />}
+            />
+            <Route
+              path="ssoma-resources"
+              element={<CatalogAreaPage area="ssoma" />}
+            />
+            <Route
+              path="ssoma-resources/:family"
+              element={<CatalogAreaPage area="ssoma" />}
+            />
             {/* End inventory routes */}
             {/* Requests routes */}
             <Route path="requests" element={<Requests />} />
             <Route path="requests/:id" element={<Request />} />
             <Route path="requests/new" element={<NewRequest />} />
             <Route path="requests/edit/:id" element={<RequestDraft />} />
+            <Route path="ssoma/work-clothing" element={<WorkClothing />} />
             {/* End requests routes */}
             {/* Elements routes */}
             <Route path="elements" element={<Elements />} />
@@ -156,6 +196,16 @@ export default function App() {
             <Route path={SSOMA_ROUTE_PATHS.create} element={<SsomaTalkForm />} />
             <Route path={SSOMA_ROUTE_PATHS.edit} element={<SsomaTalkForm />} />
             <Route path={SSOMA_ROUTE_PATHS.detail} element={<SsomaTalk />} />
+            <Route path="staff-payroll" element={<StaffPayrolls />} />
+            <Route path="staff-payroll/people" element={<StaffPeople />} />
+            <Route
+              path="staff-payroll/new"
+              element={<StaffPayrollEditor mode="new" />}
+            />
+            <Route
+              path="staff-payroll/:year/:month"
+              element={<StaffPayrollDetail />}
+            />
             {/* End workers routes */}
           </Route>
         </Routes>

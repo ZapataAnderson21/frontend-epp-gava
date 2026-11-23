@@ -4,6 +4,7 @@ import Select from "../../../components/Select";
 import { elementApi, inventoryApi } from "../../../data/apiUrl";
 import type {
   ElementType,
+  ElementVariantType,
   FallProtectionGroupType,
   OfficeInventoryEntry,
 } from "../../../data/types";
@@ -25,6 +26,7 @@ type PickerElement = ElementType & {
   requestTypeLabel?: string;
   availableCount?: number;
   availableCodes?: string[];
+  selectedVariant?: ElementVariantType;
 };
 
 type OfficeInventoryPayload =
@@ -39,14 +41,13 @@ const protectionFilters = [
   { value: "all", label: "Todos" },
   { value: "epp", label: "EPP" },
   { value: "epi", label: "EPI" },
-  { value: "uniform", label: "Uniforme" },
 ] as const;
 
 function isVisibleForFamily(element: ElementType, familyKey: InventoryFamilyTabKey) {
   const family = getInventoryFamilyFromSource(element);
 
   if (familyKey === "epp") {
-    return ["epp", "epi", "uniform"].includes(family);
+    return ["epp", "epi"].includes(family);
   }
 
   return family === familyKey;
@@ -364,6 +365,19 @@ export default function RequestItemPicker({
       return groupSafetyEquipmentByType(filteredElements, officeEntries);
     }
 
+    if (familyKey === "uniform") {
+      return filteredElements.flatMap((element) =>
+        (element.variants || [])
+          .filter((variant) =>
+            !normalizedSearch ||
+            `${element.name} ${element.code || ""} ${variant.label}`
+              .toLowerCase()
+              .includes(normalizedSearch),
+          )
+          .map((variant) => ({ ...element, selectedVariant: variant })),
+      );
+    }
+
     return filteredElements;
   }, [
     fallProtectionGroups,
@@ -435,7 +449,9 @@ export default function RequestItemPicker({
                     ? `epa-group-${element.fallProtectionGroupId}`
                     : familyKey === "ese"
                       ? element.requestTypeLabel
-                      : element.elementId
+                      : element.selectedVariant
+                        ? `${element.elementId}-${element.selectedVariant.elementVariantId}`
+                        : element.elementId
                 }
                 type="button"
                 onClick={() => onAddElement(element)}
@@ -444,6 +460,7 @@ export default function RequestItemPicker({
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-bold text-gray-900">
                     {element.name}
+                    {element.selectedVariant ? ` — Talla ${element.selectedVariant.label}` : ""}
                   </span>
                   <span className={`block truncate text-2xs font-semibold ${description.highlight}`}>
                     {description.meta}
