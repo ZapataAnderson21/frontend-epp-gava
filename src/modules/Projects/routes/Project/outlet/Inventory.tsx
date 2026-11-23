@@ -529,17 +529,11 @@ export default function ProjectInventory() {
             {canAssign ? (
               <ActionButton
                 icon={<FaUserPlus />}
-                bgColor={
+                label="Asignar a trabajador"
+                variant="ghost"
+                pressed={
                   selectedAssignEntry?.projectInventoryEntryId ===
                   row.projectInventoryEntryId
-                    ? "#374151"
-                    : "#059669"
-                }
-                bgHoverColor={
-                  selectedAssignEntry?.projectInventoryEntryId ===
-                  row.projectInventoryEntryId
-                    ? "#1f2937"
-                    : "#047857"
                 }
                 onClick={() => {
                   setSelectedEntry(null);
@@ -560,17 +554,11 @@ export default function ProjectInventory() {
             {canReturn ? (
               <ActionButton
                 icon={<FaArrowRotateLeft />}
-                bgColor={
+                label="Registrar devolución"
+                variant="ghost"
+                pressed={
                   selectedEntry?.projectInventoryEntryId ===
                   row.projectInventoryEntryId
-                    ? "#374151"
-                    : "#0047a3"
-                }
-                bgHoverColor={
-                  selectedEntry?.projectInventoryEntryId ===
-                  row.projectInventoryEntryId
-                    ? "#1f2937"
-                    : "#003d8f"
                 }
                 onClick={() => {
                   setSelectedAssignEntry(null);
@@ -1051,15 +1039,10 @@ function FallProtectionProjectCards({
                 {canAssign ? (
                   <ActionButton
                     icon={<FaUserPlus />}
-                    bgColor={
+                    label="Asignar a trabajador"
+                    variant="ghost"
+                    pressed={
                       selectedAssignEntryId === entry.projectInventoryEntryId
-                        ? "#374151"
-                        : "#059669"
-                    }
-                    bgHoverColor={
-                      selectedAssignEntryId === entry.projectInventoryEntryId
-                        ? "#1f2937"
-                        : "#047857"
                     }
                     onClick={() => onAssign(entry)}
                   />
@@ -1067,15 +1050,10 @@ function FallProtectionProjectCards({
                 {canReturn ? (
                   <ActionButton
                     icon={<FaArrowRotateLeft />}
-                    bgColor={
+                    label="Registrar devolución"
+                    variant="ghost"
+                    pressed={
                       selectedReturnEntryId === entry.projectInventoryEntryId
-                        ? "#374151"
-                        : "#0047a3"
-                    }
-                    bgHoverColor={
-                      selectedReturnEntryId === entry.projectInventoryEntryId
-                        ? "#1f2937"
-                        : "#003d8f"
                     }
                     onClick={() => onReturn(entry)}
                   />
@@ -1380,19 +1358,18 @@ function ProjectInventoryAssignmentModal({
                           {assignment.notes || "-"}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button
-                            type="button"
-                            className="inline-flex size-8 items-center justify-center rounded-md bg-red-600 text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                          <ActionButton
+                            icon={<FaTrash />}
+                            label={
+                              canDeleteAssignment
+                                ? "Eliminar asignación"
+                                : "No se puede eliminar una asignación con retornos"
+                            }
+                            variant="ghost"
+                            tone="danger"
                             onClick={() => onDeleteAssignment(assignment)}
                             disabled={!canDeleteAssignment}
-                            title={
-                              canDeleteAssignment
-                                ? "Eliminar asignacion"
-                                : "No se puede eliminar una asignacion con retornos"
-                            }
-                          >
-                            <FaTrash className="size-3.5" />
-                          </button>
+                          />
                         </td>
                       </tr>
                     );

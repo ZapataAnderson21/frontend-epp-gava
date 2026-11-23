@@ -10,7 +10,12 @@ export type InventoryFamilyKey =
   | "ssomaSupply"
   | "ese"
   | "harness"
-  | "quality";
+  | "quality"
+  | "electricalEquipment"
+  | "tools"
+  | "ladders"
+  | "materials"
+  | "electricalHarness";
 export type InventoryFamilyTabKey = Exclude<InventoryFamilyKey, "all">;
 
 export type InventoryControlType = "consumable" | "returnable" | "individual";
@@ -23,8 +28,14 @@ export type InventoryBackendFamily =
   | "ssomaSupply"
   | "ese"
   | "harness"
-  | "measurement";
-export type InventoryCatalogSection = "ssoma" | "office" | "quality" | "legacy";
+  | "measurement"
+  | "electricalEquipment"
+  | "tools"
+  | "ladders"
+  | "materials"
+  | "electricalHarness";
+export type InventoryCatalogSection =
+  "ssoma" | "inventory" | "office" | "quality" | "legacy";
 
 export interface InventorySourceLike {
   type?: string | null;
@@ -72,8 +83,8 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
   },
   {
     key: "uniform",
-    label: "Uniforme",
-    shortLabel: "Uniforme",
+    label: "Ropa de Trabajo",
+    shortLabel: "Ropa de Trabajo",
     description: "Uniformes y prendas no retornables a oficina",
     backendType: "epp",
     backendFamily: "uniform",
@@ -82,7 +93,7 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     returnsToOffice: false,
     unique: false,
     consumable: false,
-    supportsVariants: false,
+    supportsVariants: true,
     section: "ssoma",
   },
   {
@@ -175,7 +186,112 @@ export const inventoryFamilies: readonly InventoryFamilyConfig[] = [
     supportsVariants: false,
     section: "quality",
   },
+  {
+    key: "electricalEquipment",
+    label: "Equipos Eléctricos",
+    shortLabel: "Eq. Eléctricos",
+    description: "Equipos eléctricos con trazabilidad individual",
+    backendType: "operative",
+    backendFamily: "electricalEquipment",
+    backendControlType: "individual",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "inventory",
+  },
+  {
+    key: "tools",
+    label: "Herramientas",
+    shortLabel: "Herramientas",
+    description: "Herramientas con trazabilidad individual",
+    backendType: "operative",
+    backendFamily: "tools",
+    backendControlType: "individual",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "inventory",
+  },
+  {
+    key: "ladders",
+    label: "Escaleras",
+    shortLabel: "Escaleras",
+    description: "Escaleras identificadas individualmente",
+    backendType: "operative",
+    backendFamily: "ladders",
+    backendControlType: "individual",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "inventory",
+  },
+  {
+    key: "materials",
+    label: "Materiales",
+    shortLabel: "Materiales",
+    description: "Materiales controlados por cantidad",
+    backendType: "operative",
+    backendFamily: "materials",
+    backendControlType: "consumable",
+    requiresCode: false,
+    returnsToOffice: false,
+    unique: false,
+    consumable: true,
+    supportsVariants: false,
+    section: "inventory",
+  },
+  {
+    key: "electricalHarness",
+    label: "Arnés Eléctricos",
+    shortLabel: "Arnés Eléctricos",
+    description: "Arneses eléctricos con trazabilidad individual",
+    backendType: "operative",
+    backendFamily: "electricalHarness",
+    backendControlType: "individual",
+    requiresCode: true,
+    returnsToOffice: true,
+    unique: true,
+    consumable: false,
+    supportsVariants: false,
+    section: "inventory",
+  },
 ] as const;
+
+export const inventoryPrimaryFamilies = inventoryFamilies.filter(
+  (family) => family.section === "inventory",
+);
+
+export const ssomaPrimaryGroups = [
+  {
+    key: "workwear",
+    label: "Ropa de Trabajo",
+    description: "Uniformes y prendas de trabajo",
+    families: ["uniform"] as InventoryFamilyTabKey[],
+    defaultFamily: "uniform" as InventoryFamilyTabKey,
+  },
+  {
+    key: "ppe",
+    label: "EPP",
+    description: "Equipos de protección personal e individual",
+    families: ["epp", "epi"] as InventoryFamilyTabKey[],
+    defaultFamily: "epp" as InventoryFamilyTabKey,
+  },
+  {
+    key: "safety",
+    label: "Equipos de Seguridad",
+    description: "Equipos consumibles y no consumibles",
+    families: ["ese"] as InventoryFamilyTabKey[],
+    defaultFamily: "ese" as InventoryFamilyTabKey,
+  },
+] as const;
+
+export type SsomaPrimaryGroupKey = (typeof ssomaPrimaryGroups)[number]["key"];
 
 export const inventoryFamilyTabs = [
   { key: "all" as const, label: "Todos" },
@@ -322,7 +438,8 @@ export function usesInventoryStockFields(family: InventoryFamilyKey) {
     family === "epi" ||
     family === "uniform" ||
     family === "officeMaterial" ||
-    family === "ssomaSupply"
+    family === "ssomaSupply" ||
+    family === "materials"
   );
 }
 
@@ -355,7 +472,9 @@ export function getInventorySectionLabel(family: InventoryFamilyKey) {
 
   switch (config.section) {
     case "ssoma":
-      return "Inventario SSOMA";
+      return "Recursos SSOMA";
+    case "inventory":
+      return "Inventario";
     case "office":
       return "Materiales de Oficina";
     case "quality":
@@ -366,5 +485,7 @@ export function getInventorySectionLabel(family: InventoryFamilyKey) {
 }
 
 export function formatInventoryQuantity(value: number) {
-  return Number.isInteger(value) ? `${value}` : value.toFixed(2).replace(/\.00$/, "");
+  return Number.isInteger(value)
+    ? `${value}`
+    : value.toFixed(2).replace(/\.00$/, "");
 }

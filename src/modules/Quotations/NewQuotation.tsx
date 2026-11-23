@@ -12,10 +12,12 @@ import { ReturnButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonForm } from "../../common/loading";
 import { Button } from "../../components";
+import ActionButton from "../../components/ActionButton";
 import Select from "../../components/Select";
 import { clientApi, quotationApi } from "../../data/apiUrl";
-import type { Client, Quotation } from "../../data/types";
+import type { Client, Quotation, QuotationType } from "../../data/types";
 import { useApiAction, useFetch } from "../../hooks";
+import { QUOTATION_TYPE_OPTIONS } from "./quotationConfig";
 
 type DraftItem = {
   orderNumber: number;
@@ -37,6 +39,7 @@ export default function NewQuotation() {
   const { execute, loading: saving } = useApiAction<Quotation>();
 
   const [clientId, setClientId] = useState<number>(0);
+  const [type, setType] = useState<QuotationType | "">("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [commercialTerms, setCommercialTerms] = useState("");
   const [items, setItems] = useState<DraftItem[]>([
@@ -117,8 +120,9 @@ export default function NewQuotation() {
     const errors: string[] = [];
 
     if (clientId <= 0) errors.push("Debe seleccionar un cliente.");
+    if (!type) errors.push("Debe seleccionar un tipo de cotización.");
     if (!serviceDescription.trim())
-      errors.push("La descripción del servicio es obligatoria.");
+      errors.push("La descripción de la cotización es obligatoria.");
     if (items.length === 0) errors.push("Debe agregar al menos un item.");
 
     items.forEach((item, index) => {
@@ -161,6 +165,7 @@ export default function NewQuotation() {
 
     const payload = {
       clientId,
+      type,
       serviceDescription: serviceDescription.trim(),
       commercialTerms: normalizedTerms || undefined,
       items: items.map((item, index) => ({
@@ -240,6 +245,18 @@ export default function NewQuotation() {
                 />
               </div>
               <div className="flex flex-col gap-2">
+                <label className="font-bold">Tipo de cotización:</label>
+                <Select<QuotationType | "">
+                  name="quotationType"
+                  value={type}
+                  onChange={setType}
+                  options={[
+                    { value: "", label: "Selecciona un tipo" },
+                    ...QUOTATION_TYPE_OPTIONS,
+                  ]}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
                 <p>
                   <span className="font-bold">RUC:</span>{" "}
                   {selectedClient?.ruc ?? "-"}
@@ -253,13 +270,13 @@ export default function NewQuotation() {
 
             <div className="pt-1">
               <h3 className="text-lg font-bold mb-2">
-                Descripción del Servicio:
+                Descripción de la cotización:
               </h3>
               <textarea
                 className="w-full min-h-28 border border-gray-300 rounded p-3 focus:outline-[#0047a3]"
                 value={serviceDescription}
                 onChange={(e) => setServiceDescription(e.target.value)}
-                placeholder="Detalle del servicio cotizado"
+                placeholder="Detalle de la cotización"
               />
             </div>
 
@@ -331,20 +348,19 @@ export default function NewQuotation() {
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex justify-center gap-2">
-                            <button
-                              type="button"
-                              className="bg-red-500 text-white p-2 rounded"
+                            <ActionButton
+                              icon={<FaMinus />}
+                              label={`Eliminar ítem ${index + 1}`}
+                              variant="ghost"
+                              tone="danger"
                               onClick={() => removeItem(index)}
-                            >
-                              <FaMinus />
-                            </button>
-                            <button
-                              type="button"
-                              className="bg-slate-800 text-white p-2 rounded"
+                            />
+                            <ActionButton
+                              icon={<FaPlus />}
+                              label="Agregar ítem"
+                              variant="ghost"
                               onClick={addItem}
-                            >
-                              <FaPlus />
-                            </button>
+                            />
                           </div>
                         </td>
                       </tr>

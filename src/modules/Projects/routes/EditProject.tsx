@@ -9,14 +9,16 @@ import {
   ButtonContainer,
   Form,
   InputForm,
+  SelectForm,
   TextAreaForm,
 } from "../../../common/form";
 import LoadingSkeletonForm from "../../../common/loading/LoadingSkeletonForm";
 import { projectApi } from "../../../data/apiUrl";
-import type { Project } from "../../../data/types";
+import type { Project, ProjectType } from "../../../data/types";
 import { useCurrentUser } from "../../../hooks";
 import { useApiAction } from "../../../hooks/useApiAction";
 import { useFetch } from "../../../hooks/useFetch";
+import { PROJECT_TYPE_OPTIONS } from "../projectTypes";
 
 export default function EditProject() {
   const { user } = useCurrentUser();
@@ -39,6 +41,7 @@ export default function EditProject() {
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
+  const [type, setType] = useState<ProjectType | "">("");
 
   useEffect(() => {
     if (project) {
@@ -48,6 +51,7 @@ export default function EditProject() {
       setLocation(project.location ?? "");
       setStartDate(project.startDate ? project.startDate.split("T")[0] : "");
       setEndDate(project.endDate ? project.endDate.split("T")[0] : "");
+      setType(project.type);
 
       const normalizedStatus =
         project.status === "Activo"
@@ -84,12 +88,18 @@ export default function EditProject() {
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!type) {
+      toast.error("Selecciona un tipo de proyecto.");
+      return;
+    }
+
     toast.promise(
       updateProject(`${projectApi}${projectId}`, "PATCH", {
         name,
         description,
         code,
         status,
+        type,
         location,
         startDate: startDate
           ? new Date(startDate + "T00:00:00.000Z").toISOString()
@@ -151,6 +161,18 @@ export default function EditProject() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           optional={false}
+        />
+
+        <SelectForm<ProjectType | "">
+          label="Tipo de proyecto"
+          name="type"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: "", label: "Selecciona un tipo" },
+            ...PROJECT_TYPE_OPTIONS,
+          ]}
+          error={!type}
         />
 
         <InputForm

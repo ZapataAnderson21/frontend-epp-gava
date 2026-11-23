@@ -222,12 +222,15 @@ export interface UpdateEmergencyDto {
   status?: string;
 }
 
+export type ProjectType = "works" | "services" | "consulting";
+
 export interface Project {
   projectId: number;
   name: string;
   code: string;
   description: string;
   status: string;
+  type: ProjectType;
   location: string;
   startDate?: string;
   endDate?: string;
@@ -246,6 +249,7 @@ export interface CreateProjectDto {
   name: string;
   description: string;
   code: string;
+  type: ProjectType;
 }
 
 export interface UpdateProjectDto {
@@ -253,6 +257,7 @@ export interface UpdateProjectDto {
   description?: string;
   code?: string;
   status?: string;
+  type?: ProjectType;
 }
 
 export interface RequestType {
@@ -264,12 +269,148 @@ export interface RequestType {
   projectId: number;
   userId: number;
   type: string;
+  ssomaRequestKind?: "projectStart" | "duringExecution" | null;
   inventoryLoadedAt?: string | null;
   user?: User;
   project?: Project;
   elementRequests?: ElementRequestType[];
   requestWorkers?: RequestWorker[];
+  resourceAdditions?: RequestResourceAddition[];
+  emailSends?: RequestEmailSend[];
+  workClothingDispatches?: WorkClothingDispatch[];
   userName?: string;
+}
+
+export interface RequestResourceAdditionWorkerPlan {
+  requestResourceAdditionWorkerPlanId: number;
+  workerId: number;
+  plannedQuantity: number;
+  worker?: Worker;
+}
+
+export interface RequestResourceAddition {
+  requestResourceAdditionId: number;
+  elementId: number;
+  elementVariantId?: number | null;
+  quantity: number;
+  unit: string;
+  origin: "logistics" | "administration";
+  notes?: string | null;
+  createdAt: string;
+  element: ElementType;
+  elementVariant?: ElementVariantType | null;
+  addedByUser?: Pick<User, "userId" | "name" | "lastName">;
+  workerPlans?: RequestResourceAdditionWorkerPlan[];
+}
+
+export interface RequestEmailSend {
+  requestEmailSendId: number;
+  recipients: string[];
+  status: "accepted" | "failed";
+  providerMessageId?: string | null;
+  subject: string;
+  errorMessage?: string | null;
+  isUpdate: boolean;
+  createdAt: string;
+  sentByUser?: Pick<User, "userId" | "name" | "lastName">;
+}
+
+export type WorkClothingDispatchStatus =
+  "inTransit" | "received" | "discrepancy";
+export type WorkClothingDeliveryStatus = "registered" | "annulled";
+export type WorkClothingReturnStatus = "pending" | "confirmed" | "cancelled";
+
+export interface WorkClothingStockEntry {
+  officeInventoryEntryId: number;
+  elementId: number;
+  elementVariantId: number;
+  currentStock: number;
+  unit: string;
+  element: ElementType;
+  elementVariant: ElementVariantType;
+}
+
+export interface WorkClothingDispatchItem {
+  workClothingDispatchItemId: number;
+  elementNameSnapshot: string;
+  variantLabelSnapshot: string;
+  quantityDispatched: number;
+  quantityReceived?: number | null;
+}
+
+export interface WorkClothingDispatch {
+  workClothingDispatchId: number;
+  projectId: number;
+  custodianUserId: number;
+  requestId?: number | null;
+  dispatchedAt: string;
+  receivedAt?: string | null;
+  status: WorkClothingDispatchStatus;
+  observations?: string | null;
+  discrepancyNotes?: string | null;
+  project?: Project;
+  custodianUser?: User;
+  items: WorkClothingDispatchItem[];
+}
+
+export interface WorkClothingCustodyBalance {
+  workClothingCustodyBalanceId: number;
+  projectId: number;
+  custodianUserId: number;
+  elementId: number;
+  elementVariantId: number;
+  quantityReceived: number;
+  quantityDelivered: number;
+  quantityReturnInTransit: number;
+  quantityReturned: number;
+  quantityAvailable: number;
+  project: Project;
+  custodianUser: User;
+  element: ElementType;
+  elementVariant: ElementVariantType;
+}
+
+export interface WorkClothingDeliveryItem {
+  workClothingDeliveryItemId: number;
+  elementNameSnapshot: string;
+  variantLabelSnapshot: string;
+  quantity: number;
+}
+
+export interface WorkClothingDelivery {
+  workClothingDeliveryId: number;
+  projectId: number;
+  custodianUserId: number;
+  workerId: number;
+  deliveredAt: string;
+  status: WorkClothingDeliveryStatus;
+  observations?: string | null;
+  annulmentReason?: string | null;
+  project: Project;
+  worker: Worker;
+  custodianUser: User;
+  deliveredByUser?: User;
+  items: WorkClothingDeliveryItem[];
+}
+
+export interface WorkClothingReturnItem {
+  workClothingReturnItemId: number;
+  elementNameSnapshot: string;
+  variantLabelSnapshot: string;
+  quantity: number;
+}
+
+export interface WorkClothingReturn {
+  workClothingReturnId: number;
+  projectId: number;
+  custodianUserId: number;
+  returnedAt: string;
+  confirmedAt?: string | null;
+  status: WorkClothingReturnStatus;
+  observations?: string | null;
+  project: Project;
+  custodianUser: User;
+  items: WorkClothingReturnItem[];
 }
 
 export interface ProjectInventoryEntry {
@@ -606,7 +747,9 @@ export interface Client {
   updatedAt: string;
 }
 
-export type QuotationStatus = "draft" | "sent" | "approved" | "accepted";
+export type QuotationType = "works" | "services" | "consulting";
+
+export type QuotationStatus = "draft" | "sent" | "accepted" | "rejected";
 
 export interface QuotationItem {
   quotationItemId?: number;
@@ -626,6 +769,7 @@ export interface Quotation {
   code: string;
   serviceDescription: string;
   clientId: number;
+  type: QuotationType;
   status: QuotationStatus;
   commercialTerms?: string | null;
   costDirectAmount: number;
@@ -661,7 +805,7 @@ export interface PurchaseOrder {
   saleAmount: number;
   purchaseAmount: number;
   status: string;
-  statusCode?: PurchaseOrderDashboardStatus;
+  statusCode?: PurchaseOrderStatus;
   carePerson: string;
   dniCarePerson: string;
   observations?: string;
@@ -669,12 +813,17 @@ export interface PurchaseOrder {
   supplierId: number;
   quotation?: string;
   createdAt: string;
-  purchaseOrderType: string;
+  purchaseOrderType: PurchaseOrderType;
   supplier?: Supplier;
   supplierName?: string;
   project?: Project;
   resources?: ResourcePurchaseOrder[];
 }
+
+export type PurchaseOrderType = "materials" | "services";
+
+export type PurchaseOrderStatus =
+  "pending" | "authorized" | "delivered" | "cancelled";
 
 export interface PurchaseOrderUnitValue {
   resourcePurchaseOrderId: number;
@@ -690,11 +839,7 @@ export interface PurchaseOrderUnitValue {
 }
 
 export type PurchaseOrderDashboardCurrency = "PEN" | "USD" | "EUR";
-export type PurchaseOrderDashboardStatus =
-  | "pending"
-  | "authorized"
-  | "delivered"
-  | "cancelled";
+export type PurchaseOrderDashboardStatus = PurchaseOrderStatus;
 
 export interface PurchaseOrderDashboardOrder {
   purchaseOrderId: number;
@@ -793,10 +938,10 @@ export const WorkerType = {
   Engineer: ["engineer", "Ingeniero"],
   Administrator: ["administrator", "Administrador(a)"],
   Manager: ["manager", "Gerente"],
-  Unspecified: ["unspecified", "No Especificado"],
 } as const;
 
 export type WorkerType = (typeof WorkerType)[keyof typeof WorkerType];
+export type WorkerTypeValue = WorkerType[0];
 
 export interface Worker {
   workerId: number;
@@ -806,12 +951,102 @@ export interface Worker {
   address?: string;
   personalEmail?: string;
   birthDate?: string;
-  workerType: string;
+  workerType: WorkerTypeValue;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
   workerTypeName?: string;
   dailyWage?: number;
+}
+
+export interface StaffPayrollPerson {
+  workerId: number;
+  fullName: string;
+  dni: string;
+  workerType: WorkerTypeValue;
+  monthlyBaseRemuneration: string | null;
+  remunerationConfigured: boolean;
+}
+
+export interface StaffPayrollTotals {
+  totalBaseRemuneration: string;
+  totalAdditionalIncome: string;
+  totalDiscounts: string;
+  totalGrossAmount: string;
+  totalNetAmount: string;
+}
+
+export interface StaffPayrollPeriod extends StaffPayrollTotals {
+  staffPayrollId: number;
+  year: number;
+  month: number;
+  workerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffPayrollEntry {
+  staffPayrollEntryId: number;
+  staffPayrollId: number;
+  workerId: number;
+  workerNameSnapshot: string;
+  workerDniSnapshot: string;
+  workerTypeSnapshot: WorkerTypeValue;
+  baseRemuneration: string;
+  additionalIncome: string;
+  manualDiscounts: string;
+  grossAmount: string;
+  netAmount: string;
+  observations: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffPayrollDetail extends StaffPayrollPeriod {
+  entries: StaffPayrollEntry[];
+}
+
+export interface StaffPayrollPreparationRow {
+  staffPayrollEntryId?: number;
+  workerId: number;
+  workerNameSnapshot: string;
+  workerDniSnapshot: string;
+  workerTypeSnapshot: WorkerTypeValue;
+  baseRemuneration: string | null;
+  habitualBaseRemuneration: string | null;
+  additionalIncome: string;
+  manualDiscounts: string;
+  grossAmount: string | null;
+  netAmount: string | null;
+  observations: string | null;
+  persisted: boolean;
+  included: boolean;
+  profileEligible: boolean;
+}
+
+export interface StaffPayrollPreparation {
+  exists: boolean;
+  staffPayrollId: number | null;
+  year: number;
+  month: number;
+  rows: StaffPayrollPreparationRow[];
+}
+
+export interface SaveStaffPayrollRow {
+  workerId: number;
+  included: boolean;
+  baseRemuneration?: number;
+  additionalIncome: number;
+  manualDiscounts: number;
+  observations: string | null;
+  updateProfile: boolean;
+}
+
+export interface SaveStaffPayrollPayload {
+  year: number;
+  month: number;
+  expectExisting: boolean;
+  rows: SaveStaffPayrollRow[];
 }
 
 export interface RequestWorker {

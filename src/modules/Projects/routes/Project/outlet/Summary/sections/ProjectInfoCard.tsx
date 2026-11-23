@@ -8,6 +8,7 @@ import {
 
 import toast from "react-hot-toast";
 import type { Project } from "../../../../../../../data/types";
+import { getProjectTypeLabel } from "../../../../../projectTypes";
 
 interface ProjectInfoCardProps {
   project: Project | null;
@@ -49,6 +50,17 @@ export default function ProjectInfoCard({ project, loading, startDate, endDate }
               {loading ? <CgSpinner className="animate-spin" /> : project?.location || "—"}
             </span>
           </div>
+        </div>
+
+        <div className="col-span-1">
+          <h4 className="font-bold">Tipo</h4>
+          <span className="text-xs text-gray-500">
+            {loading ? (
+              <CgSpinner className="size-4 animate-spin" />
+            ) : (
+              getProjectTypeLabel(project?.type)
+            )}
+          </span>
         </div>
 
         

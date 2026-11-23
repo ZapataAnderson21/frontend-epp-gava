@@ -667,7 +667,6 @@ function normalizeWorkerTypeLabel(type?: string) {
     engineer: "Ingeniero",
     administrator: "Administrador(a)",
     manager: "Gerente",
-    unspecified: "No Especificado",
     Obrero: "Obrero",
     "TÃ©cnico": "Técnico",
     Técnico: "Técnico",
@@ -676,5 +675,5 @@ function normalizeWorkerTypeLabel(type?: string) {
     Gerente: "Gerente",
   };
 
-  return labels[type ?? ""] ?? type ?? "No Especificado";
+  return labels[type ?? ""] ?? type ?? "Tipo no disponible";
 }

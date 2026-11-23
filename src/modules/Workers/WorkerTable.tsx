@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { DeleteButton, EditButton, SeeButton } from "../../common/button";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
@@ -61,15 +61,6 @@ export default function WorkerTable({
     refetch();
   }, [reFetch, refetch]);
 
-  const normalizedWorkers = useMemo(
-    () =>
-      workers.map((worker) => ({
-        ...worker,
-        workerType: normalizeWorkerTypeLabel(worker.workerType),
-      })),
-    [workers],
-  );
-
   const workerTypeCounts =
     (data as WorkerPageData | null)?.workerTypeCounts ?? {};
   const allWorkerCount = Object.values(workerTypeCounts).reduce(
@@ -88,7 +79,12 @@ export default function WorkerTable({
     },
     { key: "phone", label: "Teléfono", width: "10rem" },
     { key: "personalEmail", label: "Correo Electrónico", width: "18rem" },
-    { key: "workerType", label: "Tipo", width: "11rem" },
+    {
+      key: "workerType",
+      label: "Tipo",
+      width: "11rem",
+      render: (row: Worker) => normalizeWorkerTypeLabel(row.workerType),
+    },
     ...(isAdmin || can("workers.delete")
       ? [
           {
@@ -177,9 +173,9 @@ export default function WorkerTable({
         />
       </div>
 
-      {normalizedWorkers.length ? (
+      {workers.length ? (
         <Table<Worker>
-          data={normalizedWorkers}
+          data={workers}
           columns={columns}
           pagination={pagination}
           onPageChange={setPage}
@@ -203,7 +199,6 @@ function normalizeWorkerTypeLabel(type?: string) {
     engineer: "Ingeniero",
     administrator: "Administrador(a)",
     manager: "Gerente",
-    unspecified: "No Especificado",
     Obrero: "Obrero",
     "TÃ©cnico": "Técnico",
     Técnico: "Técnico",
@@ -212,5 +207,5 @@ function normalizeWorkerTypeLabel(type?: string) {
     Gerente: "Gerente",
   };
 
-  return labels[type ?? ""] ?? type ?? "No Especificado";
+  return labels[type ?? ""] ?? type ?? "Tipo no disponible";
 }

@@ -1,33 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { QuotationStatus } from "../../../data/types";
+import {
+  QUOTATION_STATUS_COLORS,
+  QUOTATION_STATUS_LABELS,
+  QUOTATION_STATUS_OPTIONS,
+} from "../quotationConfig";
 
 interface StatusTagProps {
   status: QuotationStatus;
   onStatusChange?: (newStatus: QuotationStatus) => void;
   editable?: boolean;
 }
-
-const statusLabel: Record<QuotationStatus, string> = {
-  draft: "Borrador",
-  sent: "Enviada",
-  approved: "Aprobada",
-  accepted: "Aceptada",
-};
-
-const statusColor: Record<QuotationStatus, string> = {
-  draft: "#6b7280",
-  sent: "#2563eb",
-  approved: "#d97706",
-  accepted: "#059669",
-};
-
-export const statusOptions: { value: QuotationStatus; label: string }[] = [
-  { value: "draft", label: "Borrador" },
-  { value: "sent", label: "Enviada" },
-  { value: "approved", label: "Aprobada" },
-  { value: "accepted", label: "Aceptada" },
-];
 
 export default function StatusTag({ status, onStatusChange, editable = false }: StatusTagProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -79,9 +63,9 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
     return (
       <span
         className="px-2 py-1 rounded-full text-white font-semibold text-xs"
-        style={{ backgroundColor: statusColor[status] }}
+        style={{ backgroundColor: QUOTATION_STATUS_COLORS[status] }}
       >
-        {statusLabel[status].toUpperCase()}
+        {QUOTATION_STATUS_LABELS[status].toUpperCase()}
       </span>
     );
   }
@@ -91,10 +75,10 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
       <span
         ref={tagRef}
         className="px-2 py-1 rounded-full text-white font-semibold text-xs cursor-pointer hover:opacity-80 transition-opacity"
-        style={{ backgroundColor: statusColor[status] }}
+        style={{ backgroundColor: QUOTATION_STATUS_COLORS[status] }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        {statusLabel[status].toUpperCase()} ▾
+        {QUOTATION_STATUS_LABELS[status].toUpperCase()} ▾
       </span>
 
       {isOpen &&
@@ -107,13 +91,18 @@ export default function StatusTag({ status, onStatusChange, editable = false }: 
               left: dropdownPosition.left,
             }}
           >
-            {statusOptions.map((option) => (
+            {QUOTATION_STATUS_OPTIONS.map((option) => (
               <div
                 key={option.value}
                 className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2 transition-colors"
                 onClick={() => handleStatusClick(option.value)}
               >
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColor[option.value] }} />
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor: QUOTATION_STATUS_COLORS[option.value],
+                  }}
+                />
                 <span className="text-xs text-gray-700">{option.label}</span>
               </div>
             ))}
