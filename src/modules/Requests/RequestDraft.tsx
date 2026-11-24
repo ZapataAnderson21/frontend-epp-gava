@@ -84,6 +84,9 @@ function RequestDraftForm({ userId }: { userId: number }) {
   const [projectId, setProjectId] = useState<number>(0);
   const [description, setDescription] = useState<string>("");
   const [deliveryDueDate, setDeliveryDueDate] = useState<string>("");
+  const [ssomaRequestKind, setSsomaRequestKind] = useState<
+    "projectStart" | "duringExecution" | ""
+  >("");
   const [activeFamily, setActiveFamily] =
     useState<InventoryFamilyTabKey>("epp");
   const [elementRequests, setElementRequests] = useState<ElementRequestType[]>(
@@ -117,6 +120,7 @@ function RequestDraftForm({ userId }: { userId: number }) {
 
     setProjectId(request.projectId);
     setDescription(request.description || "");
+    setSsomaRequestKind(request.ssomaRequestKind || "");
     setDeliveryDueDate(
       request.deliveryDueDate
         ? toDatetimeLocalValue(request.deliveryDueDate)
@@ -143,6 +147,7 @@ function RequestDraftForm({ userId }: { userId: number }) {
       projectId,
       deliveryDueDate,
       description,
+      ssomaRequestKind,
       activeFamily,
       elementRequests,
       requestWorkers,
@@ -153,6 +158,7 @@ function RequestDraftForm({ userId }: { userId: number }) {
       setProjectId(data.projectId);
       setDeliveryDueDate(data.deliveryDueDate);
       setDescription(data.description);
+      setSsomaRequestKind(data.ssomaRequestKind || "");
       setActiveFamily(data.activeFamily);
       setElementRequests(data.elementRequests);
       setRequestWorkers(data.requestWorkers);
@@ -333,6 +339,10 @@ function RequestDraftForm({ userId }: { userId: number }) {
       );
       return;
     }
+    if (!ssomaRequestKind) {
+      toast.error("Selecciona el tipo de requerimiento.");
+      return;
+    }
     if (send && !passwordCPanel) {
       toast.error("Ingresa la contraseña del correo.");
       return;
@@ -349,6 +359,7 @@ function RequestDraftForm({ userId }: { userId: number }) {
             elementRequests,
             deliveryDueDate,
             description,
+            ssomaRequestKind,
             requestWorkers,
             request?.requestWorkers || [],
             elementPlans,
@@ -467,6 +478,22 @@ function RequestDraftForm({ userId }: { userId: number }) {
                     })),
                   ]}
                   disabled={Boolean(projectIdParam)}
+                />
+
+                <SelectForm
+                  label="Tipo de requerimiento"
+                  name="ssomaRequestKind"
+                  value={ssomaRequestKind}
+                  onChange={(value) =>
+                    setSsomaRequestKind(
+                      value as "projectStart" | "duringExecution" | "",
+                    )
+                  }
+                  options={[
+                    { value: "", label: "Seleccionar" },
+                    { value: "projectStart", label: "Inicio de Obra" },
+                    { value: "duringExecution", label: "Durante la Ejecución" },
+                  ]}
                 />
 
                 <InputForm

@@ -14,6 +14,7 @@ import type {
 } from "../../../../../../../data/types";
 import { useApiAction, useFetch } from "../../../../../../../hooks";
 import Select from "../../../../../../../components/Select";
+import ActionButton from "../../../../../../../components/ActionButton";
 
 interface SectionProps {
   title: string;
@@ -192,22 +193,19 @@ function ConditionsSection({
                 {isSaved(val) ? <FaCheck /> : <FaBookmark />}
                 {savingIndex === idx ? "Guardando..." : isSaved(val) ? "Guardada" : "Guardar"}
               </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-md bg-red-500 p-2 text-white hover:bg-red-600"
+              <ActionButton
+                icon={<FaMinus />}
+                label={`Eliminar ${placeholderBase.toLowerCase()} ${idx + 1}`}
+                variant="ghost"
+                tone="danger"
                 onClick={() => onRemove(idx)}
-                aria-label={`Eliminar ${placeholderBase.toLowerCase()} ${idx + 1}`}
-              >
-                <FaMinus />
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer rounded-md bg-black p-2 text-white hover:bg-gray-800"
+              />
+              <ActionButton
+                icon={<FaPlus />}
+                label={`Agregar ${placeholderBase.toLowerCase()}`}
+                variant="ghost"
                 onClick={() => onAdd()}
-                aria-label={`Agregar ${placeholderBase.toLowerCase()}`}
-              >
-                <FaPlus />
-              </button>
+              />
             </div>
           </div>
         ))}

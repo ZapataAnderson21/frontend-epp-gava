@@ -1,10 +1,12 @@
 import type { FormEvent } from "react";
 import { useMemo, useState } from "react";
+import { Archive, History, Pencil, RotateCcw } from "lucide-react";
 import Permission from "../../common/auth/Permission";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import { Panel } from "../../common/panel";
 import Select from "../../components/Select";
+import IconActionButton from "../../components/ActionButton";
 import { expiringDocumentsApi } from "../../data/apiUrl";
 import type {
   ExpiringDocument,
@@ -992,24 +994,36 @@ function ActionButton({
   danger?: boolean;
   disabled?: boolean;
 }) {
+  const label = String(children);
+  const icon =
+    label === "Editar" ? (
+      <Pencil />
+    ) : label === "Restaurar" ? (
+      <RotateCcw />
+    ) : label === "Historial" ? (
+      <History />
+    ) : (
+      <Archive />
+    );
+
   return (
     <Permission
       permission={
-        children === "Historial"
+        label === "Historial"
           ? "documents.view"
           : danger
             ? "documents.delete"
             : "documents.manage"
       }
     >
-      <button
-        type="button"
+      <IconActionButton
+        icon={icon}
+        label={label === "Historial" ? "Ver historial" : label}
+        variant="ghost"
+        tone={danger ? "danger" : "primary"}
         disabled={disabled}
         onClick={onClick}
-        className={`rounded px-2 py-1 text-2xs font-bold disabled:cursor-not-allowed disabled:opacity-40 ${danger ? "bg-red-50 text-red-700" : "bg-blue-50 text-[#0047a3]"}`}
-      >
-        {children}
-      </button>
+      />
     </Permission>
   );
 }

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import {
   FireExtinguisher as FaFireExtinguisher,
   HardHat as FaHelmetSafety,
-  Link as FaLink,
   PackageOpen as FaBoxOpen,
 } from "lucide-react";
 
@@ -17,33 +16,21 @@ export const requestFamilyTabs: {
 }[] = [
   {
     key: "epp",
-    label: "Elem. de Proteccion",
-    title: "Elementos de proteccion personal, individual y uniforme",
+    label: "EPP",
+    title: "Elementos de protección personal e individual",
     icon: <FaHelmetSafety className="size-12" />,
+  },
+  {
+    key: "uniform",
+    label: "Ropa de Trabajo",
+    title: "Prendas configuradas por artículo y talla",
+    icon: <FaBoxOpen className="size-12" />,
   },
   {
     key: "ese",
     label: "Eq. Seg. y Emerg.",
     title: "Equipos de seguridad y/o emergencia",
     icon: <FaFireExtinguisher className="size-12" />,
-  },
-  {
-    key: "ssomaSupply",
-    label: "Insumos SSOMA",
-    title: "Insumos SSOMA controlados por cantidad",
-    icon: <FaBoxOpen className="size-12" />,
-  },
-  {
-    key: "harness",
-    label: "Eq. Protecc. Anticaida",
-    title: "Equipos de proteccion anticaida agrupados",
-    icon: <FaLink className="size-12" />,
-  },
-  {
-    key: "officeMaterial",
-    label: "Mat. Oficina",
-    title: "Materiales de oficina",
-    icon: <FaBoxOpen className="size-12" />,
   },
 ];
 

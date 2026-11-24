@@ -9,18 +9,21 @@ import {
   Banknote as FaMoneyBillWave,
   Network as FaProjectDiagram,
   Truck as FaTruck,
+  ShoppingCart as FaShoppingCart,
   UsersRound as FaUserGroup,
   UserRoundCog as FaUserTie,
   Users as FaUsers,
   LogOut as IoLogOut,
   Settings as IoMdSettings,
   PanelLeftClose,
-  TriangleAlert as RiAlertFill,
   ShieldCheck,
+  FolderOpen as FaFolderOpen,
+  BriefcaseBusiness as FaBriefcase,
+  KeyRound as FaKeyRound,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import SidebarItem from "./SidebarItem";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -31,6 +34,7 @@ import { useCurrentUser } from "../hooks";
 import { useApiAction } from "../hooks/useApiAction";
 
 import UserSettingsModal from "./UserSettingsModal";
+import { useAccess } from "../permissions/AccessProvider";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,6 +53,70 @@ export default function Sidebar({
   const [currentUser, setCurrentUser] = useState(user);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
+  const { can } = useAccess();
+  const { pathname } = useLocation();
+
+  const accessesRouteActive =
+    pathname.startsWith("/admin/users") ||
+    pathname.startsWith("/admin/permissions");
+
+  const [isAccessesOpen, setIsAccessesOpen] = useState(accessesRouteActive);
+
+  const canViewAccesses = can("users.view") || can("roles.view");
+
+  const commercialRouteActive =
+    pathname.startsWith("/admin/quotations") ||
+    pathname.startsWith("/admin/clients");
+
+  const [isCommercialOpen, setIsCommercialOpen] = useState(commercialRouteActive);
+
+  const canViewCommercial = can("quotations.view") || can("clients.view");
+
+  const ssomaDocumentsRouteActive =
+    pathname === "/admin/ssoma" ||
+    pathname.startsWith("/admin/ssoma/");
+
+  const ssomaRouteActive =
+    pathname === "/admin/ssoma-resources" ||
+    pathname.startsWith("/admin/ssoma-resources/") ||
+    pathname.startsWith("/admin/requests") ||
+    ssomaDocumentsRouteActive ||
+    pathname.startsWith("/admin/worker-monthly-evaluations");
+
+  const [isSsomaOpen, setIsSsomaOpen] =
+    useState(ssomaRouteActive);
+
+  const [isSsomaDocumentsOpen, setIsSsomaDocumentsOpen] =
+    useState(ssomaDocumentsRouteActive);
+
+  const canViewSsomaResources = can("inventory.view");
+  const canViewSsomaRequests = can("requests.view");
+  const canViewWorkClothing = can("workClothing.view");
+  const canViewSsomaDocuments = can("ssoma.view") || canViewWorkClothing;
+  const canViewSsomaEvaluations = can("evaluations.view");
+
+  const canViewSsoma =
+    canViewSsomaResources ||
+    canViewSsomaRequests ||
+    canViewSsomaDocuments ||
+    canViewWorkClothing ||
+    canViewSsomaEvaluations;
+
+  const purchasesRouteActive =
+    pathname.startsWith("/admin/purchase-orders") ||
+    pathname.startsWith("/admin/suppliers") ||
+    pathname.startsWith("/admin/resources") ||
+    /\/admin\/projects\/[^/]+\/purchase-orders/.test(pathname);
+  const [isPurchasesOpen, setIsPurchasesOpen] = useState(purchasesRouteActive);
+  const canViewPurchases =
+    can("suppliers.view") || can("resources.view") || can("orders.view");
+  const payrollRouteActive =
+    pathname.startsWith("/admin/payrolls") ||
+    pathname.startsWith("/admin/staff-payroll") ||
+    /\/admin\/projects\/[^/]+\/payrolls/.test(pathname);
+  const [isPayrollOpen, setIsPayrollOpen] = useState(payrollRouteActive);
+  const canViewStaffPayroll = can("staffPayroll.view") && can("finance.view");
+  const canViewPayrolls = can("payroll.view") || canViewStaffPayroll;
   const navigate = useNavigate();
 
   const { execute: logoutAction, loading: loggingOut } = useApiAction<null>();
@@ -63,6 +131,38 @@ export default function Sidebar({
   useEffect(() => {
     setCurrentUser(user);
   }, [user]);
+
+  useEffect(() => {
+    if (purchasesRouteActive) setIsPurchasesOpen(true);
+  }, [purchasesRouteActive]);
+
+  useEffect(() => {
+   if (commercialRouteActive) {
+      setIsCommercialOpen(true);
+   }
+  }, [commercialRouteActive]);
+
+  useEffect(() => {
+    if (ssomaRouteActive) {
+      setIsSsomaOpen(true);
+    }
+  }, [ssomaRouteActive]);
+
+  useEffect(() => {
+    if (ssomaDocumentsRouteActive) {
+      setIsSsomaDocumentsOpen(true);
+    }
+  }, [ssomaDocumentsRouteActive]);
+
+  useEffect(() => {
+    if (accessesRouteActive) {
+     setIsAccessesOpen(true);
+    }
+  }, [accessesRouteActive]);
+
+  useEffect(() => {
+    if (payrollRouteActive) setIsPayrollOpen(true);
+  }, [payrollRouteActive]);
 
   const baseDelay = 0.1;
   const perItemDelay = 0.075;
@@ -126,60 +226,132 @@ export default function Sidebar({
               perItemDelay={perItemDelay}
               onClick={() => isMobile && setIsOpen?.(false)}
             />
-            <Permission user={user} permission="suppliers.view">
-              <SidebarItem
-                icon={<FaTruck />}
-                label="Proveedores"
-                href="/admin/suppliers"
-                index={3}
-                baseDelay={baseDelay}
-                perItemDelay={perItemDelay}
-                onClick={() => isMobile && setIsOpen?.(false)}
-              />
-            </Permission>
-            <SidebarItem
-              icon={<FaFileLines />}
-              label="Requerimientos"
-              href="/admin/requests"
-              index={4}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
-            <SidebarItem
-              icon={<FaFileInvoiceDollar />}
-              label="Cotizaciones"
-              href="/admin/quotations"
-              index={5}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
-            <SidebarItem
-              icon={<FaUserGroup />}
-              label="Clientes"
-              href="/admin/clients"
-              index={6}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
-            <SidebarItem
-              icon={<FaCubes />}
-              label="Inventario"
-              href="/admin/inventory"
-              activePaths={["/admin/elements"]}
-              index={7}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
+            {canViewPurchases && (
+              <div>
+                <SidebarItem
+                  icon={<FaShoppingCart />}
+                  label="Compras"
+                  isRoot
+                  isOpen={isPurchasesOpen}
+                  activePaths={[
+                    "/admin/purchase-orders",
+                    "/admin/suppliers",
+                    "/admin/resources",
+                    ...(/\/admin\/projects\/[^/]+\/purchase-orders/.test(
+                      pathname,
+                    )
+                      ? [pathname]
+                      : []),
+                  ]}
+                  ariaExpanded={isPurchasesOpen}
+                  ariaControls="purchases-sidebar-menu"
+                  index={3}
+                  baseDelay={baseDelay}
+                  perItemDelay={perItemDelay}
+                  onClick={() => setIsPurchasesOpen((open) => !open)}
+                />
+                <AnimatePresence initial={false}>
+                  {isPurchasesOpen && (
+                    <motion.div
+                      id="purchases-sidebar-menu"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-4 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      <SidebarItem
+                        icon={<FaTruck />}
+                        label="Proveedores"
+                        href="/admin/suppliers"
+                        onClick={() => isMobile && setIsOpen?.(false)}
+                      />
+                      <SidebarItem
+                        icon={<FaBoxOpen />}
+                        label="Recursos de OC"
+                        href="/admin/resources"
+                        onClick={() => isMobile && setIsOpen?.(false)}
+                      />
+                      <SidebarItem
+                        icon={<FaFileLines />}
+                        label="Órdenes de compra"
+                        href="/admin/purchase-orders"
+                        activePaths={
+                          /\/admin\/projects\/[^/]+\/purchase-orders/.test(
+                            pathname,
+                          )
+                            ? [pathname]
+                            : []
+                        }
+                        onClick={() => isMobile && setIsOpen?.(false)}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
-            <Permission user={user} permission="resources.view">
+            {canViewCommercial && (
+              <div>
+                <SidebarItem
+                  icon={<FaBriefcase />}
+                  label="Negocios"
+                  isRoot
+                  isOpen={isCommercialOpen}
+                  activePaths={[
+                    "/admin/quotations",
+                    "/admin/clients",
+                  ]}
+                  ariaExpanded={isCommercialOpen}
+                  ariaControls="commercial-sidebar-menu"
+                  index={5}
+                  baseDelay={baseDelay}
+                  perItemDelay={perItemDelay}
+                  onClick={() =>
+                    setIsCommercialOpen((open) => !open)
+                  }
+                />
+
+                <AnimatePresence initial={false}>
+                  {isCommercialOpen && (
+                    <motion.div
+                      id="commercial-sidebar-menu"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-4 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      {can("quotations.view") && (
+                        <SidebarItem
+                          icon={<FaFileInvoiceDollar />}
+                          label="Cotizaciones"
+                          href="/admin/quotations"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+
+                      {can("clients.view") && (
+                        <SidebarItem
+                          icon={<FaUserGroup />}
+                          label="Clientes"
+                          href="/admin/clients"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            <Permission permission="inventory.view">
               <SidebarItem
-                icon={<FaBoxOpen />}
-                label="Recursos Ord. Compra"
-                href="/admin/resources"
+                icon={<FaCubes />}
+                label="Inventario"
+                href="/admin/inventory"
                 index={7}
                 baseDelay={baseDelay}
                 perItemDelay={perItemDelay}
@@ -187,33 +359,153 @@ export default function Sidebar({
               />
             </Permission>
 
-            <SidebarItem
-              icon={<FaUserTie />}
-              label="Usuarios"
-              href="/admin/users"
-              index={8}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
-            <SidebarItem
-              icon={<IoMdSettings />}
-              label="Roles y permisos"
-              href="/admin/permissions"
-              index={8}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
-            <SidebarItem
-              icon={<RiAlertFill />}
-              label="Emergencias"
-              href="/admin/emergencies"
-              index={9}
-              baseDelay={baseDelay}
-              perItemDelay={perItemDelay}
-              onClick={() => isMobile && setIsOpen?.(false)}
-            />
+            {/* Módulo SSOMA */}
+            {canViewSsoma && (
+              <div>
+                <SidebarItem
+                  icon={<ShieldCheck />}
+                  label="SSOMA"
+                  isRoot
+                  isOpen={isSsomaOpen}
+                  activePaths={[
+                    "/admin/ssoma-resources",
+                    "/admin/requests",
+                    "/admin/ssoma",
+                    "/admin/ssoma/work-clothing",
+                    "/admin/worker-monthly-evaluations",
+                  ]}
+                  ariaExpanded={isSsomaOpen}
+                  ariaControls="ssoma-sidebar-menu"
+                  index={8}
+                  baseDelay={baseDelay}
+                  perItemDelay={perItemDelay}
+                  onClick={() => setIsSsomaOpen((open) => !open)}
+                />
+
+                <AnimatePresence initial={false}>
+                  {isSsomaOpen && (
+                    <motion.div
+                      id="ssoma-sidebar-menu"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-4 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      {/* Recursos SSOMA */}
+                      {canViewSsomaResources && (
+                        <SidebarItem
+                          icon={<FaBoxOpen />}
+                          label="Recursos SSOMA"
+                          href="/admin/ssoma-resources"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+
+                      {/* Requerimientos */}
+                      {canViewSsomaRequests && (
+                        <SidebarItem
+                          icon={<FaFileLines />}
+                          label="Requerimientos"
+                          href="/admin/requests"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+
+                      {/* Documentos */}
+                      {canViewSsomaDocuments && (
+                        <div>
+                          <SidebarItem
+                            icon={<FaFolderOpen />}
+                            label="Documentos"
+                            isRoot
+                            isOpen={isSsomaDocumentsOpen}
+                            ariaExpanded={isSsomaDocumentsOpen}
+                            ariaControls="ssoma-documents-menu"
+                            onClick={() =>
+                              setIsSsomaDocumentsOpen(
+                                (open) => !open
+                              )
+                            }
+                          />
+
+                          <AnimatePresence initial={false}>
+                            {isSsomaDocumentsOpen && (
+                              <motion.div
+                                id="ssoma-documents-menu"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{
+                                  opacity: 1,
+                                  height: "auto",
+                                }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="ml-3 overflow-hidden border-l border-gray-200 pl-2"
+                              >
+                                {/* Funcionalidades pendientes */}
+                                <div
+                                  className="flex items-center gap-2 rounded-lg px-2 py-2.5 text-xs text-gray-400"
+                                  aria-label="ATS, próximamente"
+                                >
+                                  <FaFileLines className="size-4 shrink-0" />
+                                  <span>ATS</span>
+                                  <span className="ml-auto text-[10px]">
+                                    Próx.
+                                  </span>
+                                </div>
+
+                                {canViewWorkClothing && (
+                                  <SidebarItem
+                                    icon={<FaFileLines />}
+                                    label="Entrega de Ropa de Trabajo"
+                                    href="/admin/ssoma/work-clothing"
+                                    onClick={() =>
+                                      isMobile && setIsOpen?.(false)
+                                    }
+                                  />
+                                )}
+
+                                {/* Charlas existentes */}
+                                <Permission
+                                  user={user}
+                                  permission="ssoma.view"
+                                >
+                                  <SidebarItem
+                                    icon={<FaClipboardCheck />}
+                                    label="Charlas"
+                                    href="/admin/ssoma"
+                                    onClick={() =>
+                                      isMobile && setIsOpen?.(false)
+                                    }
+                                  />
+                                </Permission>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      {/* Evaluaciones mensuales */}
+                      {canViewSsomaEvaluations && (
+                        <SidebarItem
+                          icon={<FaClipboardCheck />}
+                          label="Evaluaciones Mensuales"
+                          href="/admin/worker-monthly-evaluations"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            {/* Fin módulo SSOMA */}
+
+
             <SidebarItem
               icon={<FaUsers />}
               label="Trabajadores"
@@ -224,29 +516,62 @@ export default function Sidebar({
               onClick={() => isMobile && setIsOpen?.(false)}
             />
 
-            <Permission user={user} permission="payroll.view">
-              <SidebarItem
-                icon={<FaMoneyBillWave />}
-                label="Planillas"
-                href="/admin/payrolls"
-                index={11}
-                baseDelay={baseDelay}
-                perItemDelay={perItemDelay}
-                onClick={() => isMobile && setIsOpen?.(false)}
-              />
-            </Permission>
-
-            <Permission user={user} permission="evaluations.view">
-              <SidebarItem
-                icon={<FaClipboardCheck />}
-                label="Eval. mensuales"
-                href="/admin/worker-monthly-evaluations"
-                index={11}
-                baseDelay={baseDelay}
-                perItemDelay={perItemDelay}
-                onClick={() => isMobile && setIsOpen?.(false)}
-              />
-            </Permission>
+            {canViewPayrolls && (
+              <div>
+                <SidebarItem
+                  icon={<FaMoneyBillWave />}
+                  label="Planillas"
+                  isRoot
+                  isOpen={isPayrollOpen}
+                  activePaths={[
+                    "/admin/payrolls",
+                    "/admin/staff-payroll",
+                    ...(/\/admin\/projects\/[^/]+\/payrolls/.test(pathname)
+                      ? [pathname]
+                      : []),
+                  ]}
+                  ariaExpanded={isPayrollOpen}
+                  ariaControls="payroll-sidebar-menu"
+                  index={11}
+                  baseDelay={baseDelay}
+                  perItemDelay={perItemDelay}
+                  onClick={() => setIsPayrollOpen((open) => !open)}
+                />
+                <AnimatePresence initial={false}>
+                  {isPayrollOpen && (
+                    <motion.div
+                      id="payroll-sidebar-menu"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-4 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      {can("payroll.view") && (
+                        <SidebarItem
+                          icon={<FaCalendarCheck />}
+                          label="Semanales — Técnicos y Obreros"
+                          href="/admin/payrolls"
+                          activePaths={
+                            /\/admin\/projects\/[^/]+\/payrolls/.test(pathname)
+                              ? [pathname]
+                              : []
+                          }
+                          onClick={() => isMobile && setIsOpen?.(false)}
+                        />
+                      )}
+                      {canViewStaffPayroll && (
+                        <SidebarItem
+                          icon={<FaUserTie />}
+                          label="Mensuales — STAFF"
+                          href="/admin/staff-payroll"
+                          onClick={() => isMobile && setIsOpen?.(false)}
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             <Permission user={user} permission="documents.view">
               <SidebarItem
@@ -259,17 +584,64 @@ export default function Sidebar({
                 onClick={() => isMobile && setIsOpen?.(false)}
               />
             </Permission>
-            <Permission user={user} permission="ssoma.view">
-              <SidebarItem
-                icon={<ShieldCheck />}
-                label="Charlas SSOMA"
-                href="/admin/ssoma"
-                index={13}
-                baseDelay={baseDelay}
-                perItemDelay={perItemDelay}
-                onClick={() => isMobile && setIsOpen?.(false)}
-              />
-            </Permission>
+            {/* Módulo Accesos */}
+            {canViewAccesses && (
+              <div>
+                <SidebarItem
+                  icon={<FaKeyRound />}
+                  label="Accesos"
+                  isRoot
+                  isOpen={isAccessesOpen}
+                  activePaths={[
+                    "/admin/users",
+                    "/admin/permissions",
+                  ]}
+                  ariaExpanded={isAccessesOpen}
+                  ariaControls="accesses-sidebar-menu"
+                  index={8}
+                  baseDelay={baseDelay}
+                  perItemDelay={perItemDelay}
+                  onClick={() =>
+                    setIsAccessesOpen((open) => !open)
+                  }
+                />
+
+                <AnimatePresence initial={false}>
+                  {isAccessesOpen && (
+                    <motion.div
+                      id="accesses-sidebar-menu"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="ml-4 overflow-hidden border-l border-gray-200 pl-2"
+                    >
+                      {can("users.view") && (
+                        <SidebarItem
+                          icon={<FaUsers />}
+                          label="Usuarios"
+                          href="/admin/users"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+
+                      {can("roles.view") && (
+                        <SidebarItem
+                          icon={<IoMdSettings />}
+                          label="Roles y permisos"
+                          href="/admin/permissions"
+                          onClick={() =>
+                            isMobile && setIsOpen?.(false)
+                          }
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            {/* Fin módulo Accesos */}
           </div>
 
           <div className="flex flex-col border-t border-gray-300 py-4 px-4">

@@ -8,10 +8,12 @@ import type { ElementPlanState } from "../modules/Requests/requestPlanning";
 
 export interface RequestFormDraftData {
   schemaVersion: 1;
+  clientRequestId?: string;
   createdRequestId: number | null;
   projectId: number;
   deliveryDueDate: string;
   description: string;
+  ssomaRequestKind: "projectStart" | "duringExecution" | "";
   activeFamily: InventoryFamilyTabKey;
   elementRequests: ElementRequestType[];
   requestWorkers: RequestWorker[];
@@ -37,12 +39,18 @@ export function isRequestFormDraft(v: unknown): v is RequestFormDraftData {
   return (
     record(v) &&
     v.schemaVersion === 1 &&
+    (v.clientRequestId === undefined ||
+      typeof v.clientRequestId === "string") &&
     number(v.projectId) &&
     Number(v.projectId) >= 0 &&
     (v.createdRequestId === null ||
       (Number.isInteger(v.createdRequestId) &&
         Number(v.createdRequestId) > 0)) &&
     typeof v.description === "string" &&
+    (v.ssomaRequestKind === undefined ||
+      ["", "projectStart", "duringExecution"].includes(
+        String(v.ssomaRequestKind),
+      )) &&
     typeof v.deliveryDueDate === "string" &&
     [
       "operative",

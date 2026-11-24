@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { EditButton } from "../../common/button";
@@ -8,7 +7,7 @@ import { LoadingSkeletonTable } from "../../common/loading";
 import { Table } from "../../common/table";
 import { requestApi } from "../../data/apiUrl";
 import type { RequestType } from "../../data/types";
-import { useFetch } from "../../hooks";
+import usePaginatedFetch from "../../hooks/usePaginatedFetch";
 import { useApiAction } from "../../hooks/useApiAction";
 import { useAccess } from "../../permissions/AccessProvider";
 import StatusTag, { type RequestStatusValue } from "./components/StatusTag";
@@ -16,26 +15,29 @@ import StatusTag, { type RequestStatusValue } from "./components/StatusTag";
 interface RequestTableProps {
   filter: string;
   projectId?: number;
+  requestKind?: string;
+  search?: string;
 }
 
-export default function RequestTable({ filter, projectId }: RequestTableProps) {
-  const urlFetch = useMemo(() => {
-    const params = new URLSearchParams();
-
-    if (filter && filter !== "all") params.set("status", filter);
-    if (projectId) params.set("projectId", String(projectId));
-
-    const qs = params.toString();
-    return qs ? `${requestApi}?${qs}` : requestApi;
-    // 👇 DEPENDENCIAS REALES USADAS ADENTRO
-  }, [filter, projectId]);
-
+export default function RequestTable({ filter, projectId, requestKind, search }: RequestTableProps) {
   const {
-    data: requests,
+    items: requests,
+    pagination,
+    setPage,
+    setPageSize,
     loading,
     error,
     refetch,
-  } = useFetch<RequestType[]>(urlFetch, [urlFetch]);
+  } = usePaginatedFetch<RequestType>(`${requestApi}paginated`, {
+    params: {
+      status: filter !== "all" ? filter : undefined,
+      projectId,
+      ssomaRequestKind: requestKind || undefined,
+      search: search?.trim() || undefined,
+      order: "desc",
+    },
+    extraDeps: [filter, projectId, requestKind, search],
+  });
 
   const { execute: updateRequestStatus } = useApiAction<unknown>();
 
@@ -94,6 +96,16 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
         row.user?.name + " " + row.user?.lastName || "Desconocido",
     },
     { key: "deliveryDueDate", label: "F y H de Entrega", width: "8rem" },
+    {
+      label: "Tipo",
+      width: "10rem",
+      render: (row: RequestType) =>
+        row.ssomaRequestKind === "projectStart"
+          ? "Inicio de Obra"
+          : row.ssomaRequestKind === "duringExecution"
+            ? "Durante la Ejecución"
+            : "Histórico",
+    },
     {
       label: "Estado",
       width: "8rem",
@@ -155,7 +167,13 @@ export default function RequestTable({ filter, projectId }: RequestTableProps) {
 
   return (
     <>
-      <Table<RequestType> data={processedRequests} columns={columns} />
+      <Table<RequestType>
+        data={processedRequests}
+        columns={columns}
+        pagination={pagination}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
       <Toaster position="top-center" />
     </>
   );

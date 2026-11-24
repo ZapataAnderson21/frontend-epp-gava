@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { Resource } from "../../../../../../../data/types";
 import { Select } from "../../../../../../../components";
+import ActionButton from "../../../../../../../components/ActionButton";
 import {
   formatNumberWithSpaceGroups,
   lineAmount,
@@ -223,40 +224,33 @@ export default function ItemsTable({
                 {/* ACCIONES */}
                 <td className="p-2 border-1 border-gray-400 text-nowrap align-top">
                   <div className="grid grid-cols-2 justify-center gap-1">
-                    <button
-                      type="button"
-                      className="bg-[#14519d] text-white p-2 rounded-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                    <ActionButton
+                      icon={<FaArrowUp />}
+                      label={`Subir ítem ${index + 1}`}
+                      variant="ghost"
                       onClick={() => onMoveRow(index, -1)}
                       disabled={index === 0}
-                      title="Subir ítem"
-                      aria-label={`Subir ítem ${index + 1}`}
-                    >
-                      <FaArrowUp />
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-[#14519d] text-white p-2 rounded-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-30"
+                    />
+                    <ActionButton
+                      icon={<FaArrowDown />}
+                      label={`Bajar ítem ${index + 1}`}
+                      variant="ghost"
                       onClick={() => onMoveRow(index, 1)}
                       disabled={index === items.length - 1}
-                      title="Bajar ítem"
-                      aria-label={`Bajar ítem ${index + 1}`}
-                    >
-                      <FaArrowDown />
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-red-500 text-white p-2 rounded-md cursor-pointer"
+                    />
+                    <ActionButton
+                      icon={<FaMinus />}
+                      label={`Eliminar ítem ${index + 1}`}
+                      variant="ghost"
+                      tone="danger"
                       onClick={() => onRemoveRow(index)}
-                    >
-                      <FaMinus />
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-black text-white p-2 rounded-md cursor-pointer"
+                    />
+                    <ActionButton
+                      icon={<FaPlus />}
+                      label={`Agregar ítem después de ${index + 1}`}
+                      variant="ghost"
                       onClick={() => onAddRow(index)}
-                    >
-                      <FaPlus />
-                    </button>
+                    />
                   </div>
                 </td>
               </tr>

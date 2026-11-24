@@ -32,9 +32,7 @@ export default function EditWorker({
   const [personalEmail, setPersonalEmail] = useState("");
   const [address, setAddress] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [workerType, setWorkerType] = useState<WorkerType>(
-    WorkerType.Unspecified,
-  );
+  const [workerType, setWorkerType] = useState<WorkerType | null>(null);
 
   const [errorDni, setErrorDni] = useState("");
   const [errorPhone, setErrorPhone] = useState("");
@@ -58,6 +56,7 @@ export default function EditWorker({
     // Validación
     const errors: string[] = [];
     if (!fullName.trim()) errors.push("El nombre completo es requerido");
+    if (!workerType) errors.push("El tipo de trabajador es requerido");
     if (dni.length !== 8 || !/^\d{8}$/.test(dni)) {
       errors.push("El DNI debe tener 8 dígitos y contener solo números");
       setErrorDni("El DNI debe tener 8 dígitos y contener solo números");
@@ -90,7 +89,7 @@ export default function EditWorker({
       dni,
       phone,
       address,
-      workerType: workerType[0],
+      workerType: workerType![0],
       personalEmail,
       birthDate: birthDate || undefined,
     };
@@ -119,7 +118,7 @@ export default function EditWorker({
       setWorkerType(
         Object.values(WorkerType).find(
           (type) => type[0] === worker.workerType,
-        ) || WorkerType.Unspecified,
+        ) ?? null,
       );
     }
   }, [worker]);
@@ -150,11 +149,14 @@ export default function EditWorker({
           <SelectForm
             label="Tipo de trabajador"
             name="workerType"
-            value={Object.values(WorkerType).indexOf(workerType)}
+            value={
+              workerType ? Object.values(WorkerType).indexOf(workerType) : -1
+            }
             options={workerTypeOptions}
             onChange={(value) =>
-              setWorkerType(Object.values(WorkerType)[value as number])
+              setWorkerType(Object.values(WorkerType)[value as number] ?? null)
             }
+            error={!workerType}
           />
 
           <div className="flex gap-4">

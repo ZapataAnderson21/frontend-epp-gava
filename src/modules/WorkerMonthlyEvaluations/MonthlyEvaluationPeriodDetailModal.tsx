@@ -1,10 +1,11 @@
-import { CircleX as IoCloseCircle, Trophy } from "lucide-react";
+import { CircleX as IoCloseCircle, Eye, Pencil, Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { ErrorMessage } from "../../common/error";
 import { Loading } from "../../common/loading";
 import { Table } from "../../common/table";
 import DeleteConfirmDialog from "../../components/DeleteConfirmDialog";
+import ActionButton from "../../components/ActionButton";
 import Select from "../../components/Select";
 import type {
   WorkerMonthlyEvaluationPeriodStatusPayload,
@@ -213,20 +214,26 @@ export default function MonthlyEvaluationPeriodDetailModal({
       render: (row: WorkerMonthlyEvaluationPeriodWorker) => {
         if (row.workerMonthlyEvaluationId) {
           return (
-            <button
-              type="button"
-              className="px-3 py-1 rounded-md bg-[#0047a3] hover:bg-[#003366] text-white text-xs font-semibold"
+            <ActionButton
+              icon={<Eye />}
+              label="Ver o evaluar"
+              variant="ghost"
               onClick={() => onEditEvaluation(row.workerMonthlyEvaluationId!)}
-            >
-              Ver / Evaluar
-            </button>
+            />
           );
         }
 
         return (
-          <button
-            type="button"
-            className="px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+          <ActionButton
+            icon={<Pencil />}
+            label={
+              isPeriodClosed
+                ? "Período cerrado"
+                : !periodTemplateId
+                  ? "Define una plantilla"
+                  : "Evaluar trabajador"
+            }
+            variant="ghost"
             onClick={() =>
               onCreateEvaluation({
                 workerId: row.workerId,
@@ -239,13 +246,7 @@ export default function MonthlyEvaluationPeriodDetailModal({
             disabled={
               !can("evaluations.manage") || isPeriodClosed || !periodTemplateId
             }
-          >
-            {isPeriodClosed
-              ? "Periodo cerrado"
-              : !periodTemplateId
-                ? "Define plantilla"
-                : "Evaluar"}
-          </button>
+          />
         );
       },
     },

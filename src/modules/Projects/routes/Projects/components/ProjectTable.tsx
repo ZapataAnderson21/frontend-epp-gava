@@ -10,9 +10,11 @@ import Permission from "../../../../../common/auth/Permission";
 import { projectApi } from "../../../../../data/apiUrl";
 import { type Project } from "../../../../../data/types";
 import StatusTag from "./StatusTag";
+import { getProjectTypeLabel } from "../../../projectTypes";
 
 interface ProjectTableProps {
-  filter: string;
+  statusFilter: string;
+  typeFilter: string;
 }
 
 export const statusColor = {
@@ -20,7 +22,10 @@ export const statusColor = {
   Inactivo: "#c53030",
 };
 
-export default function ProjectTable({ filter }: ProjectTableProps) {
+export default function ProjectTable({
+  statusFilter,
+  typeFilter,
+}: ProjectTableProps) {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
 
@@ -33,7 +38,8 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
     setPageSize,
   } = usePaginatedFetch<Project>(`${projectApi}paginated`, {
     params: {
-      status: filter !== "all" ? filter : undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      type: typeFilter !== "all" ? typeFilter : undefined,
       order: "desc",
     },
   });
@@ -41,6 +47,11 @@ export default function ProjectTable({ filter }: ProjectTableProps) {
   const columns = [
     { key: "name", label: "Nombre", width: "12rem" },
     { key: "code", label: "Código", width: "12rem" },
+    {
+      label: "Tipo",
+      width: "8rem",
+      render: (row: Project) => getProjectTypeLabel(row.type),
+    },
     {
       label: "Estado",
       width: "8rem",

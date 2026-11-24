@@ -14,7 +14,6 @@ export default function RequireAuth({
   useEffect(() => {
     let cancelled = false;
 
-    setAllowed(null);
     fetch(`${userApi}me`, {
       credentials: "include",
     })

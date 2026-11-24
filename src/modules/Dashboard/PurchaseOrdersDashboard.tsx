@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../common/error";
 import { LoadingSkeletonTable } from "../../common/loading";
 import Select from "../../components/Select";
+import ActionButton from "../../components/ActionButton";
 import { purchaseOrderApi } from "../../data/apiUrl";
 import type {
   PurchaseOrderDashboardCurrency,
@@ -613,13 +615,12 @@ function LatestOrdersTable({
                   <StatusBadge status={purchaseOrder.status} />
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <button
-                    type="button"
+                  <ActionButton
+                    icon={<Eye />}
+                    label="Visualizar orden"
+                    variant="ghost"
                     onClick={() => onOpen(purchaseOrder)}
-                    className="rounded-md bg-[#0047a3] px-3 py-2 text-2xs font-extrabold text-white transition hover:bg-[#00357a]"
-                  >
-                    Ver orden
-                  </button>
+                  />
                 </td>
               </tr>
             ))}

@@ -10,6 +10,7 @@ import {
   Trash2 as TbTrash,
   User as TbUser,
 } from "lucide-react";
+import ActionButton from "../../../../../../components/ActionButton";
 import type { Task } from "./types";
 import {
   STATUS_COLORS,
@@ -295,27 +296,25 @@ export default function TaskTable({
 
                   {/* Acciones */}
                   <div className="col-span-2 px-2 py-3 flex items-center justify-end gap-1">
-                    <button
+                    <ActionButton
+                      icon={<TbSubtask />}
+                      label="Agregar subtarea"
+                      variant="ghost"
                       onClick={() => onAddSubtask(task)}
-                      className="p-2 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                      title="Agregar subtarea"
-                    >
-                      <TbSubtask />
-                    </button>
-                    <button
+                    />
+                    <ActionButton
+                      icon={<TbEdit />}
+                      label="Editar tarea"
+                      variant="ghost"
                       onClick={() => onEdit(task)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Editar"
-                    >
-                      <TbEdit />
-                    </button>
-                    <button
+                    />
+                    <ActionButton
+                      icon={<TbTrash />}
+                      label="Eliminar tarea"
+                      variant="ghost"
+                      tone="danger"
                       onClick={() => onDelete(task)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Eliminar"
-                    >
-                      <TbTrash />
-                    </button>
+                    />
                   </div>
                 </motion.div>
               ))

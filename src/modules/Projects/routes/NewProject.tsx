@@ -4,19 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Permission from "../../../common/auth/Permission";
 import { ReturnButton, SaveButton } from "../../../common/button";
 import { ErrorMessage } from "../../../common/error";
-import { Form } from "../../../common/form";
+import { Form, SelectForm } from "../../../common/form";
 import ButtonContainer from "../../../common/form/ButtonContainer";
 import InputForm from "../../../common/form/InputForm";
 import TextAreaForm from "../../../common/form/TextAreaForm";
 import { projectApi } from "../../../data/apiUrl";
+import type { Project, ProjectType } from "../../../data/types";
 import { useApiAction, useCurrentUser } from "../../../hooks/";
-
-interface Project {
-  project_id: number;
-  name: string;
-  code: string;
-  description?: string;
-}
+import { PROJECT_TYPE_OPTIONS } from "../projectTypes";
 
 export default function NewProject() {
   const { user } = useCurrentUser();
@@ -27,6 +22,7 @@ export default function NewProject() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
+  const [type, setType] = useState<ProjectType | "">("");
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<Project>();
@@ -38,6 +34,11 @@ export default function NewProject() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!type) {
+      toast.error("Selecciona un tipo de proyecto.");
+      return;
+    }
+
     const toIso = (d: string) =>
       d ? new Date(d + "T00:00:00.000Z").toISOString() : undefined;
 
@@ -46,6 +47,7 @@ export default function NewProject() {
         name,
         code,
         description,
+        type,
         location,
         startDate: toIso(startDate),
         endDate: toIso(endDate),
@@ -95,6 +97,18 @@ export default function NewProject() {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
           optional={false}
+        />
+
+        <SelectForm<ProjectType | "">
+          label="Tipo de proyecto"
+          name="type"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: "", label: "Selecciona un tipo" },
+            ...PROJECT_TYPE_OPTIONS,
+          ]}
+          error={!type}
         />
 
         <InputForm

@@ -6,8 +6,9 @@ import { SelectForm } from "../../../../common/form";
 import { HeaderPanel, Panel } from "../../../../common/panel";
 import { useCurrentUser } from "../../../../hooks";
 import ProjectTable from "./components/ProjectTable";
+import { PROJECT_TYPE_FILTER_OPTIONS } from "../../projectTypes";
 
-const options = [
+const statusOptions = [
   { value: "all", label: "Todos" },
   { value: "active", label: "Activos" },
   { value: "inactive", label: "Inactivos" },
@@ -15,7 +16,8 @@ const options = [
 
 export default function Projects() {
   const { user } = useCurrentUser();
-  const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const navigate = useNavigate();
 
@@ -26,15 +28,25 @@ export default function Projects() {
           <div className="w-fit">
             <SelectForm
               label="Filtrar por"
-              name="filter"
-              value={filter}
+              name="statusFilter"
+              value={statusFilter}
               onChange={(value) => {
-                const option = options.find((opt) => opt.value === value);
+                const option = statusOptions.find((opt) => opt.value === value);
                 if (option) {
-                  setFilter(option.value);
+                  setStatusFilter(option.value);
                 }
               }}
-              options={options}
+              options={statusOptions}
+              directionRow={true}
+            />
+          </div>
+          <div className="w-fit">
+            <SelectForm
+              label="Tipo"
+              name="typeFilter"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={PROJECT_TYPE_FILTER_OPTIONS}
               directionRow={true}
             />
           </div>
@@ -48,7 +60,7 @@ export default function Projects() {
         </div>
       </HeaderPanel>
 
-      <ProjectTable filter={filter} />
+      <ProjectTable statusFilter={statusFilter} typeFilter={typeFilter} />
     </Panel>
   );
 }

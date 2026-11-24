@@ -17,6 +17,8 @@ import { Button } from "../../components";
 import { quotationApi } from "../../data/apiUrl";
 import type { Quotation } from "../../data/types";
 import { useFetch } from "../../hooks";
+import StatusTag from "./components/StatusTag";
+import { getQuotationTypeLabel } from "./quotationConfig";
 
 export default function Quotation() {
   const { id } = useParams<{ id: string }>();
@@ -99,6 +101,7 @@ export default function Quotation() {
               onClick={handleDownloadPDF}
             />
             <Button
+              permission="quotations.manage"
               icon={<FaPencil />}
               onClick={redirectUpdate}
               disabled={false}
@@ -157,9 +160,17 @@ export default function Quotation() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xl px-1">
               <p>
-                <span className="font-bold">Servicio:</span>{" "}
+                <span className="font-bold">Descripción:</span>{" "}
                 {quotation.serviceDescription ?? "-"}
               </p>
+              <p>
+                <span className="font-bold">Tipo:</span>{" "}
+                {getQuotationTypeLabel(quotation.type)}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">Estado:</span>
+                <StatusTag status={quotation.status} />
+              </div>
               <p>
                 <span className="font-bold">RUC:</span>{" "}
                 {quotation.client?.ruc ?? "-"}

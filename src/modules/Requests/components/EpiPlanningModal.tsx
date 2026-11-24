@@ -9,7 +9,6 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { ButtonContainer } from "../../../common/form";
 import { LoadingSkeletonTable } from "../../../common/loading";
 import Button from "../../../components/Button";
-import Select from "../../../components/Select";
 import { workerApi } from "../../../data/apiUrl";
 import type {
   ElementRequestType,
@@ -19,6 +18,7 @@ import type {
 } from "../../../data/types";
 import { useFetch } from "../../../hooks";
 import { formatInventoryQuantity } from "../../Elements/inventoryCatalog";
+import WorkerClothingHistoryModal from "./WorkerClothingHistoryModal";
 
 interface EpiPlanningModalProps {
   open: boolean;
@@ -63,7 +63,8 @@ export default function EpiPlanningModal({
   const [activeWorkerFilter, setActiveWorkerFilter] =
     useState<WorkerFilterKey>("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedWorkerId, setSelectedWorkerId] = useState("");
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
+  const [historyWorker, setHistoryWorker] = useState<Worker | null>(null);
 
   const {
     data: workers,
@@ -111,7 +112,7 @@ export default function EpiPlanningModal({
     setDraftPlans(mappedPlans);
     setActiveWorkerFilter("all");
     setSearchTerm("");
-    setSelectedWorkerId("");
+    setSelectedWorkerIds([]);
   }, [open, elementRequest, plans, requestWorkers]);
 
   const plannedTotal = useMemo(
@@ -126,7 +127,7 @@ export default function EpiPlanningModal({
   const requestedTotal = Number(elementRequest?.quantityRequested || 0);
   const remainingTotal = requestedTotal - plannedTotal;
 
-  const selectedWorkerIds = useMemo(
+  const plannedWorkerIds = useMemo(
     () =>
       new Set(
         draftPlans
@@ -149,13 +150,13 @@ export default function EpiPlanningModal({
         !normalizedSearch ||
         worker.fullName.toLowerCase().includes(normalizedSearch) ||
         worker.dni?.toLowerCase().includes(normalizedSearch);
-      const alreadySelected = selectedWorkerIds.has(worker.workerId);
+      const alreadySelected = plannedWorkerIds.has(worker.workerId);
 
       return (
         matchesType && matchesSearch && !alreadySelected && !worker.deletedAt
       );
     });
-  }, [activeWorkerFilter, searchTerm, selectedWorkerIds, workers]);
+  }, [activeWorkerFilter, searchTerm, plannedWorkerIds, workers]);
 
   const selectedCounts = useMemo(() => {
     return draftPlans.reduce<Record<string, number>>(
@@ -170,37 +171,38 @@ export default function EpiPlanningModal({
   }, [draftPlans]);
 
   const handleAddWorker = () => {
-    const workerId = Number(selectedWorkerId || 0);
-    if (!workerId) return;
-
-    const worker = (workers || []).find((item) => item.workerId === workerId);
-    if (!worker) return;
-
-    const existingRequestWorker = requestWorkers.find(
-      (requestWorker) => requestWorker.workerId === workerId,
+    const selected = new Set(selectedWorkerIds.map(Number));
+    const selectedWorkers = (workers || []).filter((worker) =>
+      selected.has(worker.workerId),
     );
+    if (!selectedWorkers.length) return;
 
     updateDraftPlans((current) => [
       ...current,
-      {
-        elementRequestId: elementRequest?.elementRequestId ?? 0,
-        requestWorkerId:
-          existingRequestWorker?.requestWorkerId || worker.workerId,
-        plannedQuantity: 0,
-        size: "",
-        notes: "",
-        requestWorker: existingRequestWorker || {
-          requestWorkerId: 0,
-          requestId: 0,
-          workerId: worker.workerId,
-          shirtSize: null,
-          pantsSize: null,
-          shoeSize: null,
-          worker,
-        },
-      },
+      ...selectedWorkers.map((worker) => {
+        const existingRequestWorker = requestWorkers.find(
+          (requestWorker) => requestWorker.workerId === worker.workerId,
+        );
+        return {
+          elementRequestId: elementRequest?.elementRequestId ?? 0,
+          requestWorkerId:
+            existingRequestWorker?.requestWorkerId || worker.workerId,
+          plannedQuantity: 1,
+          size: elementRequest?.elementVariant?.label || "",
+          notes: "",
+          requestWorker: existingRequestWorker || {
+            requestWorkerId: 0,
+            requestId: 0,
+            workerId: worker.workerId,
+            shirtSize: null,
+            pantsSize: null,
+            shoeSize: null,
+            worker,
+          },
+        };
+      }),
     ]);
-    setSelectedWorkerId("");
+    setSelectedWorkerIds([]);
   };
 
   if (!open || !elementRequest) return null;
@@ -214,8 +216,8 @@ export default function EpiPlanningModal({
               Detalles de {elementRequest.element?.name}
             </h2>
             <p className="text-xs text-gray-500">
-              Aqui defines la planificacion previa de reparto para este EPI. La
-              entrega real al trabajador se registrara despues de forma manual.
+              Define los destinatarios previstos para esta prenda. La entrega
+              real se registrará después en Ropa de Trabajo.
             </p>
           </div>
 
@@ -279,24 +281,32 @@ export default function EpiPlanningModal({
               onChange={(event) => setSearchTerm(event.target.value)}
             />
 
-            <Select
-              name="epiWorker"
-              value={selectedWorkerId}
-              onChange={setSelectedWorkerId}
-              options={[
-                { value: "", label: "Seleccionar trabajador" },
-                ...availableWorkers.map((worker) => ({
-                  value: String(worker.workerId),
-                  label: `${worker.fullName} - ${getWorkerTypeLabel(worker.workerType)}`,
-                })),
-              ]}
-            />
+            <select
+              multiple
+              aria-label="Seleccionar trabajadores"
+              className="min-h-24 rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
+              value={selectedWorkerIds}
+              onChange={(event) =>
+                setSelectedWorkerIds(
+                  Array.from(
+                    event.currentTarget.selectedOptions,
+                    (option) => option.value,
+                  ),
+                )
+              }
+            >
+              {availableWorkers.map((worker) => (
+                <option key={worker.workerId} value={String(worker.workerId)}>
+                  {worker.fullName} - {getWorkerTypeLabel(worker.workerType)}
+                </option>
+              ))}
+            </select>
 
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 rounded-md border border-[#0047a3] px-4 py-2 font-semibold text-[#0047a3] hover:bg-[#eff6ff]"
               onClick={handleAddWorker}
-              disabled={!selectedWorkerId}
+              disabled={!selectedWorkerIds.length}
             >
               <FaPlus />
               Agregar trabajador
@@ -335,12 +345,23 @@ export default function EpiPlanningModal({
                           plan.requestWorker?.worker?.workerType,
                         )}
                       </span>
+                      {plan.requestWorker?.worker ? (
+                        <button
+                          type="button"
+                          className="mt-1 w-fit text-xs font-semibold text-[#0047a3] hover:underline"
+                          onClick={() =>
+                            setHistoryWorker(plan.requestWorker?.worker || null)
+                          }
+                        >
+                          Ver historial
+                        </button>
+                      ) : null}
                     </div>
 
                     <input
                       type="number"
-                      min="0"
-                      step="0.01"
+                      min="1"
+                      step="1"
                       className="rounded-md border border-gray-300 px-3 py-2 focus:outline-[#0047a3]"
                       value={plan.plannedQuantity}
                       onChange={(event) =>
@@ -419,7 +440,7 @@ export default function EpiPlanningModal({
                 ))
               ) : (
                 <div className="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-8 text-center text-xs text-gray-500">
-                  Aun no hay trabajadores agregados para este detalle EPI.
+                  Aún no hay trabajadores previstos para esta prenda.
                 </div>
               )}
             </div>
@@ -438,6 +459,7 @@ export default function EpiPlanningModal({
               permission="requests.manage"
               type="button"
               label="Guardar detalles"
+              disabled={remainingTotal < 0}
               onClick={() =>
                 onSave(
                   draftPlans.filter(
@@ -453,6 +475,10 @@ export default function EpiPlanningModal({
             />
           </ButtonContainer>
         </div>
+        <WorkerClothingHistoryModal
+          worker={historyWorker}
+          onClose={() => setHistoryWorker(null)}
+        />
       </div>
     </div>
   );

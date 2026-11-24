@@ -47,10 +47,12 @@ export default function NewEpp() {
 
 function NewInventoryElement() {
   const searchParams = new URLSearchParams(window.location.search);
-  const familyRoot = resolveInventoryRouteFamily(searchParams.get("family") || searchParams.get("type"));
-  const initialFamily: InventoryFamilyKey = familyRoot === "all" || familyRoot === "operative"
-    ? "epp"
-    : familyRoot;
+  const requestedArea = searchParams.get("area");
+  const familyRoot = resolveInventoryRouteFamily(
+    searchParams.get("family") || searchParams.get("type"),
+  );
+  const initialFamily: InventoryFamilyKey =
+    familyRoot === "all" || familyRoot === "operative" ? "epp" : familyRoot;
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -69,22 +71,39 @@ function NewInventoryElement() {
   const [description, setDescription] = useState("");
   const [family, setFamily] = useState<InventoryFamilyKey>(initialFamily);
   const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
+  const [safetyControlType, setSafetyControlType] = useState<
+    "consumable" | "returnable"
+  >("returnable");
 
   const navigate = useNavigate();
   const { execute, loading } = useApiAction<ElementResponse>();
   const { execute: registerOfficeEntry } = useApiAction<unknown>();
   const { user } = useCurrentUser();
-  const { data: existingElements } = useFetch<ElementResponse[]>(elementApi, []);
+  const { data: existingElements } = useFetch<ElementResponse[]>(
+    elementApi,
+    [],
+  );
 
   const familyConfig = getInventoryFamilyConfig(family);
   const usesStockFields = usesInventoryStockFields(family);
   const isSafetyEquipment = family === "ese";
-  const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
+  const isProtectionElement =
+    family === "epp" || family === "epi" || family === "uniform";
   const isOfficeMaterial = family === "officeMaterial";
   const isSsomaSupply = family === "ssomaSupply";
-  const isStockCatalogElement = isProtectionElement || isOfficeMaterial || isSsomaSupply;
+  const isInventoryMaterial = family === "materials";
+  const isTrackedInventoryAsset =
+    familyConfig?.section === "inventory" && familyConfig.unique;
+  const isInventoryFamily = familyConfig?.section === "inventory";
+  const isStockCatalogElement =
+    isProtectionElement ||
+    isOfficeMaterial ||
+    isSsomaSupply ||
+    isInventoryMaterial;
   const isFallProtection = family === "harness";
   const supportsStockMinimum = usesStockFields && !isSsomaSupply;
+  const isSafetyConsumable =
+    isSafetyEquipment && safetyControlType === "consumable";
   const existingSafetyTypes = useMemo(
     () =>
       Array.from(
@@ -98,7 +117,19 @@ function NewInventoryElement() {
     [existingElements],
   );
   const navigateToElements = () => {
-    navigate(`/admin/inventory/${family}`);
+    const area =
+      requestedArea === "ssoma" || familyConfig?.section === "ssoma"
+        ? "ssoma-resources"
+        : familyConfig?.section === "inventory"
+          ? "inventory"
+          : "elements";
+    navigate(
+      area === "ssoma-resources"
+        ? `/admin/${area}/${family === "uniform" ? "workwear" : family === "ese" ? "safety" : "ppe"}`
+        : area === "inventory"
+          ? `/admin/${area}/${family}`
+          : "/admin/elements",
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -110,14 +141,17 @@ function NewInventoryElement() {
     }
 
     if (familyConfig?.requiresCode && !code.trim()) {
-      toast.error(`El codigo es obligatorio para ${getInventoryFamilyLabel(family)}.`);
+      toast.error(
+        `El codigo es obligatorio para ${getInventoryFamilyLabel(family)}.`,
+      );
       return;
     }
 
     const backendPayload = getInventoryBackendPayload(family);
-    const selectedSafetyType = safetyTypeSelection === NEW_SAFETY_TYPE_VALUE
-      ? name.trim()
-      : safetyTypeSelection;
+    const selectedSafetyType =
+      safetyTypeSelection === NEW_SAFETY_TYPE_VALUE
+        ? name.trim()
+        : safetyTypeSelection;
     const normalizedFallProtectionCategory = categoryName.trim();
     const normalizedName = isSafetyEquipment
       ? selectedSafetyType
@@ -140,24 +174,35 @@ function NewInventoryElement() {
       type: backendPayload.type,
       family: backendPayload.family,
       description,
-      code: isSafetyEquipment ? serialNumber.trim() || null : code.trim() || null,
+      code:
+        isSafetyEquipment && !isSafetyConsumable
+          ? serialNumber.trim() || null
+          : code.trim() || null,
       categoryName: isSafetyEquipment
         ? normalizedName
-        : isProtectionElement || isSsomaSupply
+        : isProtectionElement || isSsomaSupply || isInventoryMaterial
           ? categoryName.trim() || null
           : null,
       stockMinimum: supportsStockMinimum ? stockMinimum : 0,
-      controlType: backendPayload.controlType,
+      controlType: isSafetyEquipment
+        ? safetyControlType
+        : backendPayload.controlType,
       brand: brand.trim() || null,
       model: model.trim() || null,
       size: isProtectionElement ? size.trim() || null : null,
-      serialNumber: isSafetyEquipment
-        ? serialNumber.trim() || null
-        : isFallProtection
+      serialNumber:
+        isSafetyEquipment && !isSafetyConsumable
           ? serialNumber.trim() || null
-          : null,
+          : isFallProtection || isTrackedInventoryAsset
+            ? serialNumber.trim() || null
+            : null,
       technicalSheetLink: technicalSheetLink.trim() || null,
-      operationalStatus: isSafetyEquipment || isFallProtection ? operationalStatus : null,
+      operationalStatus:
+        (isSafetyEquipment && !isSafetyConsumable) ||
+        isFallProtection ||
+        isTrackedInventoryAsset
+          ? operationalStatus
+          : null,
       manufactureDate: manufactureDate || null,
       expirationDate: expirationDate || null,
     };
@@ -165,17 +210,25 @@ function NewInventoryElement() {
     const createWithInitialStock = async () => {
       const result = await execute(elementApi, "POST", elementData);
       const shouldCreateOfficeEntry =
-        (usesStockFields && initialQuantity > 0) || isSafetyEquipment;
+        (usesStockFields && initialQuantity > 0) ||
+        (isSafetyEquipment && (!isSafetyConsumable || initialQuantity > 0)) ||
+        isTrackedInventoryAsset;
 
       if (shouldCreateOfficeEntry && result.data?.elementId && user?.userId) {
         await registerOfficeEntry(`${inventoryApi}office/entry`, "POST", {
           elementId: result.data.elementId,
           unit,
-          quantity: isSafetyEquipment ? 1 : initialQuantity,
+          quantity:
+            isSafetyEquipment && !isSafetyConsumable
+              ? 1
+              : isTrackedInventoryAsset
+                ? 1
+                : initialQuantity,
           performedByUserId: user.userId,
-          notes: isSafetyEquipment
-            ? "Ubicacion inicial registrada desde catalogo."
-            : "Stock inicial registrado desde catalogo.",
+          notes:
+            isSafetyEquipment || isTrackedInventoryAsset
+              ? "Ubicacion inicial registrada desde catalogo."
+              : "Stock inicial registrado desde catalogo.",
         });
       }
       return result;
@@ -195,9 +248,29 @@ function NewInventoryElement() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <Form
-        name={isFallProtection ? "REGISTRAR COMPONENTE EPA" : "REGISTRAR ITEM DE INVENTARIO"}
+        name={
+          isFallProtection
+            ? "REGISTRAR COMPONENTE EPA"
+            : "REGISTRAR ITEM DE INVENTARIO"
+        }
         handleSubmit={handleSubmit}
       >
+        {isInventoryFamily ? (
+          <SelectForm
+            label="Categoría de Inventario"
+            name="inventoryFamily"
+            value={family}
+            onChange={(value) => setFamily(value as InventoryFamilyKey)}
+            options={[
+              { value: "electricalEquipment", label: "Equipos Eléctricos" },
+              { value: "tools", label: "Herramientas" },
+              { value: "ladders", label: "Escaleras" },
+              { value: "materials", label: "Materiales" },
+              { value: "electricalHarness", label: "Arnés Eléctricos" },
+            ]}
+          />
+        ) : null}
+
         {isStockCatalogElement ? (
           <div className="flex flex-col gap-2">
             <InputForm
@@ -208,6 +281,17 @@ function NewInventoryElement() {
               onChange={(e) => setName(e.target.value)}
               optional={false}
             />
+
+            {isInventoryMaterial ? (
+              <InputForm
+                label="Subcategoría"
+                name="categoryName"
+                type="text"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                optional={true}
+              />
+            ) : null}
 
             <div className="grid gap-4 md:grid-cols-2">
               <InputForm
@@ -243,7 +327,9 @@ function NewInventoryElement() {
                   name="stockMinimum"
                   type="number"
                   value={stockMinimum}
-                  onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
+                  onChange={(e) =>
+                    setStockMinimum(parseOptionalNumber(e.target.value))
+                  }
                   optional={true}
                 />
               ) : null}
@@ -283,7 +369,7 @@ function NewInventoryElement() {
                   options={[
                     { value: "epp", label: "EPP" },
                     { value: "epi", label: "EPI" },
-                    { value: "uniform", label: "Uniforme" },
+                    { value: "uniform", label: "Ropa de Trabajo" },
                   ]}
                 />
 
@@ -293,11 +379,19 @@ function NewInventoryElement() {
                   </span>
                   <div className="flex gap-6 text-xs font-semibold text-gray-700">
                     <label className="flex items-center gap-2">
-                      <input type="radio" checked={family !== "uniform"} readOnly />
+                      <input
+                        type="radio"
+                        checked={family !== "uniform"}
+                        readOnly
+                      />
                       Si
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="radio" checked={family === "uniform"} readOnly />
+                      <input
+                        type="radio"
+                        checked={family === "uniform"}
+                        readOnly
+                      />
                       No
                     </label>
                   </div>
@@ -309,45 +403,161 @@ function NewInventoryElement() {
               </div>
             ) : (
               <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
-                Retorno opcional. Este material puede volver a oficina, pero no bloquea el cierre del proyecto.
+                Retorno opcional. Este material puede volver a oficina, pero no
+                bloquea el cierre del proyecto.
               </div>
             )}
           </div>
         ) : isSafetyEquipment ? (
           <div className="flex flex-col gap-2">
-          <div className="flex w-full flex-col gap-2">
-            <label htmlFor="safetyType" className="font-semibold text-nowrap">
-              Tipo de Equipo
-            </label>
-            <Select
-              id="safetyType"
-              name="safetyType"
-              value={safetyTypeSelection}
-              onChange={(value) => {
-                setSafetyTypeSelection(value);
-                setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
-              }}
-              required
+            <SelectForm
+              label="Control del equipo"
+              name="safetyControlType"
+              value={safetyControlType}
+              onChange={(value) =>
+                setSafetyControlType(value as "consumable" | "returnable")
+              }
               options={[
-                { value: "", label: "Seleccionar..." },
-                ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
-                { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+                { value: "returnable", label: "No consumible" },
+                { value: "consumable", label: "Consumible" },
               ]}
             />
+            <div className="flex w-full flex-col gap-2">
+              <label htmlFor="safetyType" className="font-semibold text-nowrap">
+                Tipo de Equipo
+              </label>
+              <Select
+                id="safetyType"
+                name="safetyType"
+                value={safetyTypeSelection}
+                onChange={(value) => {
+                  setSafetyTypeSelection(value);
+                  setName(value === NEW_SAFETY_TYPE_VALUE ? "" : value);
+                }}
+                required
+                options={[
+                  { value: "", label: "Seleccionar..." },
+                  ...existingSafetyTypes.map((typeName) => ({
+                    value: typeName,
+                    label: typeName,
+                  })),
+                  {
+                    value: NEW_SAFETY_TYPE_VALUE,
+                    label: "Registrar nuevo tipo",
+                  },
+                ]}
+              />
 
-            {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
-              <input
-                id="name"
+              {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ej: Extintor"
+                  required
+                />
+              ) : null}
+            </div>
+            {isSafetyConsumable ? (
+              <InputForm
+                label="Cantidad Inicial"
+                name="initialQuantity"
+                type="number"
+                value={initialQuantity}
+                onChange={(e) => setInitialQuantity(Number(e.target.value))}
+                optional={true}
+              />
+            ) : (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InputForm
+                    label="Marca"
+                    name="brand"
+                    type="text"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    optional={true}
+                  />
+                  <InputForm
+                    label="Modelo"
+                    name="model"
+                    type="text"
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    optional={true}
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <InputForm
+                    label="Serie"
+                    name="serialNumber"
+                    type="text"
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    optional={true}
+                  />
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-gray-700">
+                      Estado de Operat.
+                    </span>
+                    <div className="flex gap-6 text-xs font-semibold text-gray-700">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="operationalStatus"
+                          checked={operationalStatus === "operativo"}
+                          onChange={() => setOperationalStatus("operativo")}
+                        />
+                        Operativo
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="operationalStatus"
+                          checked={operationalStatus === "inoperativo"}
+                          onChange={() => setOperationalStatus("inoperativo")}
+                        />
+                        Inoperativo
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <InputForm
+              label="Link de ficha tecnica"
+              name="technicalSheetLink"
+              type="text"
+              value={technicalSheetLink}
+              onChange={(e) => setTechnicalSheetLink(e.target.value)}
+              optional={true}
+            />
+          </div>
+        ) : isTrackedInventoryAsset ? (
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <InputForm
+                label="Nombre"
                 name="name"
                 type="text"
-                className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej: Extintor"
-                required
+                optional={false}
               />
-            ) : null}
-          </div>
+              <InputForm
+                label="Código del activo"
+                name="code"
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                optional={false}
+              />
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <InputForm
                 label="Marca"
@@ -366,7 +576,6 @@ function NewInventoryElement() {
                 optional={true}
               />
             </div>
-
             <div className="grid gap-4 md:grid-cols-2">
               <InputForm
                 label="Serie"
@@ -376,41 +585,15 @@ function NewInventoryElement() {
                 onChange={(e) => setSerialNumber(e.target.value)}
                 optional={true}
               />
-              <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-700">
-                  Estado de Operat.
-                </span>
-                <div className="flex gap-6 text-xs font-semibold text-gray-700">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="operationalStatus"
-                      checked={operationalStatus === "operativo"}
-                      onChange={() => setOperationalStatus("operativo")}
-                    />
-                    Operativo
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="operationalStatus"
-                      checked={operationalStatus === "inoperativo"}
-                      onChange={() => setOperationalStatus("inoperativo")}
-                    />
-                    Inoperativo
-                  </label>
-                </div>
-              </div>
+              <InputForm
+                label="Link de ficha técnica"
+                name="technicalSheetLink"
+                type="text"
+                value={technicalSheetLink}
+                onChange={(e) => setTechnicalSheetLink(e.target.value)}
+                optional={true}
+              />
             </div>
-
-            <InputForm
-              label="Link de ficha tecnica"
-              name="technicalSheetLink"
-              type="text"
-              value={technicalSheetLink}
-              onChange={(e) => setTechnicalSheetLink(e.target.value)}
-              optional={true}
-            />
           </div>
         ) : isFallProtection ? (
           <>
@@ -432,7 +615,10 @@ function NewInventoryElement() {
                   { value: "Arnés", label: "Arnés" },
                   { value: "Banda de anclaje", label: "Banda de anclaje" },
                   { value: "Línea de vida", label: "Línea de vida" },
-                  { value: "Eslinga de posicionamiento", label: "Eslinga de posicionamiento" },
+                  {
+                    value: "Eslinga de posicionamiento",
+                    label: "Eslinga de posicionamiento",
+                  },
                 ]}
               />
             </div>
@@ -521,7 +707,10 @@ function NewInventoryElement() {
           optional={true}
         />
 
-        {!isStockCatalogElement && !isSafetyEquipment && !isFallProtection ? (
+        {!isStockCatalogElement &&
+        !isSafetyEquipment &&
+        !isFallProtection &&
+        !isTrackedInventoryAsset ? (
           <SelectForm
             label="Familia"
             name="family"
@@ -535,25 +724,25 @@ function NewInventoryElement() {
         ) : null}
 
         <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
-          <p className="font-semibold">
-            {getInventoryFamilyLabel(family)}
-          </p>
+          <p className="font-semibold">{getInventoryFamilyLabel(family)}</p>
           <p>
             Codigo {getInventoryCodeRequirementLabel(family).toLowerCase()}.
           </p>
           {isSafetyEquipment ? (
             <p className="mt-1">
-              El tipo de equipo se reutiliza en requerimientos. Puedes seleccionar uno existente o registrar un tipo nuevo.
+              El tipo de equipo se reutiliza en requerimientos. Puedes
+              seleccionar uno existente o registrar un tipo nuevo.
             </p>
           ) : familyConfig?.unique ? (
             <p className="mt-1">
-              Esta familia se usa como catalogo base para activos unicos; las unidades fisicas se registraran despues.
+              Esta familia se usa como catalogo base para activos unicos; las
+              unidades fisicas se registraran despues.
             </p>
           ) : null}
         </div>
 
         <ButtonContainer>
-          <ReturnButton onClick={() => navigate("/admin/inventory")} />
+          <ReturnButton onClick={navigateToElements} />
           <SaveButton loading={loading} />
         </ButtonContainer>
       </Form>

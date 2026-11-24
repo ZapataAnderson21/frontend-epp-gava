@@ -12,6 +12,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Pagination } from "../../common/table";
 import Select from "../../components/Select";
+import ActionButton from "../../components/ActionButton";
 import { generalPayrollApi } from "../../data/apiUrl";
 import { useFetch } from "../../hooks";
 import getAuthHeaders from "../../hooks/getAuthHeaders";
@@ -326,32 +327,29 @@ export default function GeneralPayrolls() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={!canExport || exportingWeekId !== null}
-                    title={
+                  <ActionButton
+                    icon={
+                      isExporting ? (
+                        <LoaderCircle className="animate-spin" />
+                      ) : (
+                        <FileSpreadsheet />
+                      )
+                    }
+                    label={
                       canExport
                         ? "Exportar planilla semanal a Excel"
                         : "Configura ubicaciones en la semana antes de exportar"
                     }
+                    variant="ghost"
+                    disabled={!canExport || exportingWeekId !== null}
                     onClick={() => void handleExport(week)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    {isExporting ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : (
-                      <FileSpreadsheet className="size-4" />
-                    )}
-                    {isExporting ? "Generando..." : "Excel"}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Abrir planilla de la semana del ${dateFormatter.format(new Date(week.startDate))}`}
+                  />
+                  <ActionButton
+                    icon={<ArrowRight />}
+                    label={`Abrir planilla de la semana del ${dateFormatter.format(new Date(week.startDate))}`}
+                    variant="ghost"
                     onClick={() => navigate(`/admin/payrolls/${week.weekId}`)}
-                    className="cursor-pointer rounded-lg p-2 text-[#0047a3] transition hover:bg-[#eff5ff]"
-                  >
-                    <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
-                  </button>
+                  />
                 </div>
               </div>
             </article>

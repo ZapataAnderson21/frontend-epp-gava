@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type {
   ElementInventoryDetail,
+  ElementVariantType,
   ElementType,
   InventoryMovement,
   OfficeInventoryEntry,
@@ -13,6 +14,7 @@ import { useApiAction } from "../../hooks/useApiAction";
 import { useCurrentUser } from "../../hooks";
 import { elementApi, inventoryApi } from "../../data/apiUrl";
 import { DeleteConfirmDialog } from "../../components";
+import ActionButton from "../../components/ActionButton";
 import Select from "../../components/Select";
 import {
   ButtonContainer,
@@ -21,7 +23,12 @@ import {
   SelectForm,
   TextAreaForm,
 } from "../../common/form";
-import { DeleteButton, ReturnButton, SaveButton, SeeButton } from "../../common/button";
+import {
+  DeleteButton,
+  ReturnButton,
+  SaveButton,
+  SeeButton,
+} from "../../common/button";
 import { Table } from "../../common/table";
 import toast, { Toaster } from "react-hot-toast";
 import { FileText as FaFileLines } from "lucide-react";
@@ -68,14 +75,21 @@ export default function Element() {
   const [stockMinimum, setStockMinimum] = useState(0);
   const [description, setDescription] = useState("");
   const [safetyTypeSelection, setSafetyTypeSelection] = useState("");
-  const [movementModal, setMovementModal] = useState<MovementModalMode | null>(null);
-  const [selectedMovement, setSelectedMovement] = useState<InventoryMovement | null>(null);
+  const [safetyControlType, setSafetyControlType] = useState<
+    "consumable" | "returnable"
+  >("returnable");
+  const [movementModal, setMovementModal] = useState<MovementModalMode | null>(
+    null,
+  );
+  const [selectedMovement, setSelectedMovement] =
+    useState<InventoryMovement | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const {
     data: element,
     loading,
     error: fetchError,
+    refetch: refetchElement,
   } = useFetch<ElementType>(`${elementApi}${elementId}`, [elementId]);
   const { data: existingElements } = useFetch<ElementType[]>(elementApi, []);
   const {
@@ -83,11 +97,16 @@ export default function Element() {
     loading: loadingInventory,
     error: inventoryError,
     refetch: refetchInventoryDetail,
-  } = useFetch<ElementInventoryDetail>(`${inventoryApi}element/${elementId}`, [elementId]);
+  } = useFetch<ElementInventoryDetail>(`${inventoryApi}element/${elementId}`, [
+    elementId,
+  ]);
 
-  const { execute: updateElement, loading: updating } = useApiAction<ElementType>();
-  const { execute: deleteElement, loading: deleting } = useApiAction<ElementType>();
-  const { execute: executeMovement, loading: registeringMovement } = useApiAction<unknown>();
+  const { execute: updateElement, loading: updating } =
+    useApiAction<ElementType>();
+  const { execute: deleteElement, loading: deleting } =
+    useApiAction<ElementType>();
+  const { execute: executeMovement, loading: registeringMovement } =
+    useApiAction<unknown>();
   const { user } = useCurrentUser();
 
   useEffect(() => {
@@ -110,20 +129,40 @@ export default function Element() {
         ? element.categoryName || element.name
         : "",
     );
+    setSafetyControlType(
+      element.controlType === "consumable" ? "consumable" : "returnable",
+    );
     setStockMinimum(element.stockMinimum || 0);
     setDescription(element.description);
   }, [element]);
 
-  const familyConfig = useMemo(() => getInventoryFamilyConfig(family), [family]);
-  const usesStockFields = useMemo(() => usesInventoryStockFields(family), [family]);
+  const familyConfig = useMemo(
+    () => getInventoryFamilyConfig(family),
+    [family],
+  );
+  const usesStockFields = useMemo(
+    () => usesInventoryStockFields(family),
+    [family],
+  );
   const isSafetyEquipment = family === "ese";
-  const isProtectionElement = family === "epp" || family === "epi" || family === "uniform";
+  const isProtectionElement =
+    family === "epp" || family === "epi" || family === "uniform";
   const isOfficeMaterial = family === "officeMaterial";
   const isSsomaSupply = family === "ssomaSupply";
-  const isStockCatalogElement = isProtectionElement || isOfficeMaterial || isSsomaSupply;
+  const isInventoryMaterial = family === "materials";
+  const isTrackedInventoryAsset =
+    familyConfig?.section === "inventory" && familyConfig.unique;
+  const isStockCatalogElement =
+    isProtectionElement ||
+    isOfficeMaterial ||
+    isSsomaSupply ||
+    isInventoryMaterial;
   const supportsStockMinimum = usesStockFields && !isSsomaSupply;
   const isFallProtection = family === "harness";
-  const canRegisterStockMovements = !familyConfig?.unique && !isSafetyEquipment;
+  const isSafetyConsumable =
+    isSafetyEquipment && safetyControlType === "consumable";
+  const canRegisterStockMovements =
+    !familyConfig?.unique && (!isSafetyEquipment || isSafetyConsumable);
   const isLegacyOperative = isLegacyOperativeSource(element);
   const existingSafetyTypes = useMemo(
     () =>
@@ -139,7 +178,25 @@ export default function Element() {
   );
 
   const navigateToInventory = (targetFamily: InventoryFamilyKey = family) => {
-    navigate(`/admin/inventory/${targetFamily}`);
+    const targetConfig = getInventoryFamilyConfig(targetFamily);
+    if (targetConfig?.section === "inventory") {
+      navigate(`/admin/inventory/${targetFamily}`);
+      return;
+    }
+    if (
+      targetConfig?.section === "ssoma" &&
+      ["epp", "epi", "uniform", "ese"].includes(targetFamily)
+    ) {
+      const group =
+        targetFamily === "uniform"
+          ? "workwear"
+          : targetFamily === "ese"
+            ? "safety"
+            : "ppe";
+      navigate(`/admin/ssoma-resources/${group}`);
+      return;
+    }
+    navigate(`/admin/elements`);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -153,9 +210,10 @@ export default function Element() {
     }
 
     const backendPayload = getInventoryBackendPayload(family);
-    const selectedSafetyType = safetyTypeSelection === NEW_SAFETY_TYPE_VALUE
-      ? name.trim()
-      : safetyTypeSelection;
+    const selectedSafetyType =
+      safetyTypeSelection === NEW_SAFETY_TYPE_VALUE
+        ? name.trim()
+        : safetyTypeSelection;
 
     if (isSafetyEquipment && !selectedSafetyType) {
       toast.error("Selecciona un tipo de equipo o registra uno nuevo.");
@@ -164,7 +222,10 @@ export default function Element() {
 
     const normalizedFallProtectionCategory = categoryName.trim();
 
-    if (isFallProtection && (!code.trim() || !normalizedFallProtectionCategory)) {
+    if (
+      isFallProtection &&
+      (!code.trim() || !normalizedFallProtectionCategory)
+    ) {
       toast.error("Indica el codigo del elemento y la categoria EPA.");
       return;
     }
@@ -176,36 +237,51 @@ export default function Element() {
           ? normalizedFallProtectionCategory || code.trim()
           : name,
       description,
-      code: isSafetyEquipment ? serialNumber.trim() || null : code.trim() || null,
+      code: isSafetyEquipment
+        ? serialNumber.trim() || null
+        : code.trim() || null,
       family: backendPayload.family,
       categoryName: isSafetyEquipment
         ? selectedSafetyType
-        : isProtectionElement || isSsomaSupply
+        : isProtectionElement || isSsomaSupply || isInventoryMaterial
           ? categoryName.trim() || null
           : null,
       stockMinimum: supportsStockMinimum ? stockMinimum : 0,
       type: backendPayload.type,
-      controlType: backendPayload.controlType,
+      controlType: isSafetyEquipment
+        ? safetyControlType
+        : backendPayload.controlType,
       brand: brand.trim() || null,
       model: model.trim() || null,
       size: isProtectionElement ? size.trim() || null : null,
-      serialNumber: isSafetyEquipment || isFallProtection
-        ? serialNumber.trim() || null
-        : null,
+      serialNumber:
+        (isSafetyEquipment && !isSafetyConsumable) ||
+        isFallProtection ||
+        isTrackedInventoryAsset
+          ? serialNumber.trim() || null
+          : null,
       technicalSheetLink: technicalSheetLink.trim() || null,
-      operationalStatus: isSafetyEquipment || isFallProtection ? operationalStatus : null,
+      operationalStatus:
+        (isSafetyEquipment && !isSafetyConsumable) ||
+        isFallProtection ||
+        isTrackedInventoryAsset
+          ? operationalStatus
+          : null,
       manufactureDate: manufactureDate || null,
       expirationDate: expirationDate || null,
     };
 
-    toast.promise(updateElement(`${elementApi}${elementId}`, "PATCH", updatedData), {
-      loading: "Actualizando item de inventario...",
-      success: (result) => {
-        setTimeout(() => navigateToInventory(family), 1200);
-        return result.message || "Item actualizado con exito";
+    toast.promise(
+      updateElement(`${elementApi}${elementId}`, "PATCH", updatedData),
+      {
+        loading: "Actualizando item de inventario...",
+        success: (result) => {
+          setTimeout(() => navigateToInventory(family), 1200);
+          return result.message || "Item actualizado con exito";
+        },
+        error: (err) => err.message || "Error al actualizar el item",
       },
-      error: (err) => err.message || "Error al actualizar el item",
-    });
+    );
   };
 
   const handleConfirmDelete = async () => {
@@ -213,7 +289,10 @@ export default function Element() {
       loading: "Eliminando item de inventario...",
       success: (result) => {
         setIsDeleteDialogOpen(false);
-        setTimeout(() => navigateToInventory(isLegacyOperative ? "operative" : family), 1000);
+        setTimeout(
+          () => navigateToInventory(isLegacyOperative ? "operative" : family),
+          1000,
+        );
         return result.message || "Item eliminado correctamente";
       },
       error: (err) => err.message || "Error al eliminar el item",
@@ -237,14 +316,19 @@ export default function Element() {
           label: "Actual",
           width: "6rem",
           align: "center",
-          render: (row: CurrentInventoryLocationRow) => formatInventoryQuantity(row.quantity),
+          render: (row: CurrentInventoryLocationRow) =>
+            formatInventoryQuantity(row.quantity),
         },
         {
           label: "Ver",
           width: "6rem",
           render: (row: CurrentInventoryLocationRow) =>
             row.locationType === "project" && row.projectId ? (
-              <SeeButton onClick={() => navigate(`/admin/projects/${row.projectId}/inventory`)} />
+              <SeeButton
+                onClick={() =>
+                  navigate(`/admin/projects/${row.projectId}/inventory`)
+                }
+              />
             ) : (
               <span className="text-gray-400">-</span>
             ),
@@ -313,22 +397,29 @@ export default function Element() {
   const codeRequirementLabel = getInventoryCodeRequirementLabel(family);
   const assetSummary = element?.assetSummary;
   const availableOfficeEntries =
-    inventoryDetail?.officeEntries?.filter((entry) => entry.status !== "disposed") ?? [];
+    inventoryDetail?.officeEntries?.filter(
+      (entry) => entry.status !== "disposed",
+    ) ?? [];
 
   const handleMovementSubmit = async (payload: {
     officeInventoryEntryId?: number;
+    elementVariantId?: number;
     quantity?: number;
     newQuantity?: number;
     reason?: string;
     notes?: string;
   }) => {
     if (!canRegisterStockMovements) {
-      toast.error("Este item es unico; no permite ingresos, salidas ni ajustes manuales de stock.");
+      toast.error(
+        "Este item es unico; no permite ingresos, salidas ni ajustes manuales de stock.",
+      );
       return;
     }
 
     if (!movementModal || !user?.userId) {
-      toast.error("No se pudo identificar al usuario que registra el movimiento.");
+      toast.error(
+        "No se pudo identificar al usuario que registra el movimiento.",
+      );
       return;
     }
 
@@ -344,6 +435,7 @@ export default function Element() {
       body = {
         ...body,
         elementId,
+        elementVariantId: payload.elementVariantId,
         quantity: payload.quantity,
         unit: "unidad",
       };
@@ -354,7 +446,10 @@ export default function Element() {
         quantity: payload.quantity,
         reason: payload.reason,
       };
-    } else if (movementModal === "adjustment" && payload.officeInventoryEntryId) {
+    } else if (
+      movementModal === "adjustment" &&
+      payload.officeInventoryEntryId
+    ) {
       endpoint = `${inventoryApi}office/${payload.officeInventoryEntryId}/adjust`;
       body = {
         ...body,
@@ -378,11 +473,11 @@ export default function Element() {
   };
 
   const totalOfficeStock = inventoryDetail
-    ? inventoryDetail.summary.totalOfficeStock
-      ?? inventoryDetail.officeEntries.reduce(
+    ? (inventoryDetail.summary.totalOfficeStock ??
+      inventoryDetail.officeEntries.reduce(
         (total, entry) => total + entry.currentStock,
         0,
-      )
+      ))
     : 0;
   const totalProjectStock = inventoryDetail?.summary.totalPending ?? 0;
   const totalInventoryStock = totalOfficeStock + totalProjectStock;
@@ -406,7 +501,10 @@ export default function Element() {
       <>
         <Toaster position="top-center" reverseOrder={false} />
         <div className="grid gap-10 p-10 xl:grid-cols-[minmax(24rem,35rem)_1fr]">
-          <form className="flex max-w-xl flex-col gap-4" onSubmit={handleUpdate}>
+          <form
+            className="flex max-w-xl flex-col gap-4"
+            onSubmit={handleUpdate}
+          >
             <h1 className="mb-2 text-xl font-bold text-gray-900">
               ITEM DE INVENTARIO {elementId}
             </h1>
@@ -440,27 +538,31 @@ export default function Element() {
             </div>
 
             {supportsStockMinimum || isProtectionElement ? (
-              <div className={`grid gap-4 ${isProtectionElement ? "md:grid-cols-2" : ""}`}>
+              <div
+                className={`grid gap-4 ${isProtectionElement ? "md:grid-cols-2" : ""}`}
+              >
                 {supportsStockMinimum ? (
                   <InputForm
                     label="Stock Minimo"
                     name="stockMinimum"
                     type="number"
                     value={stockMinimum}
-                    onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))}
+                    onChange={(e) =>
+                      setStockMinimum(parseOptionalNumber(e.target.value))
+                    }
                     optional={true}
                   />
                 ) : null}
-              {isProtectionElement ? (
-                <InputForm
-                  label="Talla"
-                  name="size"
-                  type="text"
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  optional={true}
-                />
-              ) : null}
+                {isProtectionElement ? (
+                  <InputForm
+                    label="Talla"
+                    name="size"
+                    type="text"
+                    value={size}
+                    onChange={(e) => setSize(e.target.value)}
+                    optional={true}
+                  />
+                ) : null}
               </div>
             ) : null}
 
@@ -471,23 +573,53 @@ export default function Element() {
                 value={family}
                 onChange={(value) => setFamily(value as InventoryFamilyKey)}
                 options={[
-                  { value: "epp", label: "EPP - Elementos de proteccion personal" },
-                  { value: "epi", label: "EPI - Elementos de proteccion individual" },
-                  { value: "uniform", label: "Uniforme - No retorna a oficina" },
+                  {
+                    value: "epp",
+                    label: "EPP - Elementos de proteccion personal",
+                  },
+                  {
+                    value: "epi",
+                    label: "EPI - Elementos de proteccion individual",
+                  },
+                  {
+                    value: "uniform",
+                    label: "Uniforme - No retorna a oficina",
+                  },
                 ]}
+              />
+            ) : null}
+
+            {isInventoryMaterial ? (
+              <InputForm
+                label="Categoría"
+                name="categoryName"
+                type="text"
+                value={categoryName}
+                onChange={(event) => setCategoryName(event.target.value)}
+                optional={true}
               />
             ) : null}
 
             {isProtectionElement ? (
               <div className="flex flex-col gap-2">
-                <span className="font-semibold text-gray-700">Retorno obligatorio</span>
+                <span className="font-semibold text-gray-700">
+                  Retorno obligatorio
+                </span>
                 <div className="flex gap-6 text-xs font-semibold text-gray-700">
                   <label className="flex items-center gap-2">
-                    <input type="radio" checked={family !== "uniform"} readOnly />
+                    <input
+                      type="radio"
+                      checked={family !== "uniform"}
+                      readOnly
+                    />
                     Si
                   </label>
                   <label className="flex items-center gap-2">
-                    <input type="radio" checked={family === "uniform"} readOnly />
+                    <input
+                      type="radio"
+                      checked={family === "uniform"}
+                      readOnly
+                    />
                     No
                   </label>
                 </div>
@@ -504,20 +636,28 @@ export default function Element() {
 
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
               <p className="font-semibold">{selectedFamilyLabel}</p>
-              {isOfficeMaterial ? (
+              {isInventoryMaterial ? (
                 <p>
-                  Retorno opcional, unidad fija: unidad. Puede pedirse por requerimiento,
-                  cargarse a obra y retornar sin bloquear la finalizacion del proyecto.
+                  Control por cantidad, sin retorno obligatorio. Los movimientos
+                  históricos permanecen asociados a este elemento.
+                </p>
+              ) : isOfficeMaterial ? (
+                <p>
+                  Retorno opcional, unidad fija: unidad. Puede pedirse por
+                  requerimiento, cargarse a obra y retornar sin bloquear la
+                  finalizacion del proyecto.
                 </p>
               ) : isSsomaSupply ? (
                 <p>
-                  Control por cantidad, unidad fija: unidad. Puede cargarse a obra y
-                  descontarse mediante ingresos, salidas y ajustes de inventario.
+                  Control por cantidad, unidad fija: unidad. Puede cargarse a
+                  obra y descontarse mediante ingresos, salidas y ajustes de
+                  inventario.
                 </p>
               ) : (
                 <p>
-                  Codigo {codeRequirementLabel.toLowerCase()}, registros historicos conservados y
-                  movimientos visibles desde esta ficha.
+                  Codigo {codeRequirementLabel.toLowerCase()}, registros
+                  historicos conservados y movimientos visibles desde esta
+                  ficha.
                 </p>
               )}
             </div>
@@ -534,9 +674,12 @@ export default function Element() {
 
           <section className="flex flex-col gap-6 max-w-xl xl:max-w-full">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Trazabilidad de inventario
+              </h2>
               <p className="mt-2 text-xs text-gray-500">
-                Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
+                Aqui puedes ver donde esta actualmente el item y el historial de
+                sus movimientos.
               </p>
             </div>
 
@@ -591,10 +734,13 @@ export default function Element() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Ubicaciones actuales
+                  </h3>
                   {!currentLocationRows.length ? (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
-                      No hay unidades activas de este item en oficina ni en obra.
+                      No hay unidades activas de este item en oficina ni en
+                      obra.
                     </div>
                   ) : (
                     <Table<CurrentInventoryLocationRow>
@@ -609,7 +755,9 @@ export default function Element() {
           </section>
 
           <section className="xl:col-span-2 max-w-xl xl:max-w-full">
-            <h3 className="mb-4 text-lg font-bold text-gray-900">Historial de movimientos</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900">
+              Historial de movimientos
+            </h3>
             {loadingInventory ? (
               <LoadingSkeletonForm numberRows={1} />
             ) : !inventoryDetail?.movementHistory.length ? (
@@ -631,6 +779,8 @@ export default function Element() {
             mode={movementModal}
             elementName={element?.name || "Elemento"}
             officeEntries={availableOfficeEntries}
+            elementVariants={element?.variants ?? []}
+            requiresVariant={familyConfig?.supportsVariants ?? false}
             loading={registeringMovement}
             onClose={() => setMovementModal(null)}
             onSubmit={handleMovementSubmit}
@@ -652,7 +802,10 @@ export default function Element() {
       <>
         <Toaster position="top-center" reverseOrder={false} />
         <div className="grid gap-10 p-10 xl:grid-cols-[minmax(24rem,35rem)_1fr]">
-          <form className="flex max-w-xl flex-col gap-4" onSubmit={handleUpdate}>
+          <form
+            className="flex max-w-xl flex-col gap-4"
+            onSubmit={handleUpdate}
+          >
             <h1 className="mb-2 text-xl font-bold text-gray-900">
               ITEM DE INVENTARIO {elementId}
             </h1>
@@ -672,8 +825,14 @@ export default function Element() {
                 required
                 options={[
                   { value: "", label: "Seleccionar..." },
-                  ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
-                  { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+                  ...existingSafetyTypes.map((typeName) => ({
+                    value: typeName,
+                    label: typeName,
+                  })),
+                  {
+                    value: NEW_SAFETY_TYPE_VALUE,
+                    label: "Registrar nuevo tipo",
+                  },
                 ]}
               />
               {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
@@ -709,21 +868,38 @@ export default function Element() {
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <InputForm
-                label="Serie"
-                name="serialNumber"
-                type="text"
-                value={serialNumber}
-                onChange={(e) => setSerialNumber(e.target.value)}
-                optional={true}
-              />
-              <StatusRadio
-                value={operationalStatus}
-                onChange={setOperationalStatus}
-                label="Estado de Operat."
-              />
-            </div>
+            <SelectForm
+              label="Control del equipo"
+              name="safetyControlType"
+              value={safetyControlType}
+              onChange={(value) =>
+                setSafetyControlType(
+                  value === "consumable" ? "consumable" : "returnable",
+                )
+              }
+              options={[
+                { value: "consumable", label: "Consumible" },
+                { value: "returnable", label: "No consumible (retornable)" },
+              ]}
+            />
+
+            {!isSafetyConsumable ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <InputForm
+                  label="Serie"
+                  name="serialNumber"
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  optional={true}
+                />
+                <StatusRadio
+                  value={operationalStatus}
+                  onChange={setOperationalStatus}
+                  label="Estado de Operat."
+                />
+              </div>
+            ) : null}
 
             <div className="flex items-end gap-3">
               <InputForm
@@ -748,8 +924,9 @@ export default function Element() {
             <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
               <p className="font-semibold">{selectedFamilyLabel}</p>
               <p>
-                Familia fija para equipos de seguridad y emergencia. El tipo registrado
-                se reutiliza en los requerimientos.
+                {isSafetyConsumable
+                  ? "Equipo consumible controlado por cantidad."
+                  : "Equipo no consumible con devolución y trazabilidad individual."}
               </p>
             </div>
 
@@ -765,9 +942,12 @@ export default function Element() {
 
           <section className="flex max-w-xl flex-col gap-6 xl:max-w-full">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Trazabilidad de inventario
+              </h2>
               <p className="mt-2 text-xs text-gray-500">
-                Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
+                Aqui puedes ver donde esta actualmente el item y el historial de
+                sus movimientos.
               </p>
             </div>
 
@@ -798,15 +978,18 @@ export default function Element() {
                 </div>
 
                 <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
-                  Este equipo es un item fisico unico. Su movimiento se registra al enviarlo por
-                  requerimiento y al retornarlo desde la obra.
+                  Este equipo es un item fisico unico. Su movimiento se registra
+                  al enviarlo por requerimiento y al retornarlo desde la obra.
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Ubicaciones actuales
+                  </h3>
                   {!currentLocationRows.length ? (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
-                      No hay unidades activas de este item en oficina ni en obra.
+                      No hay unidades activas de este item en oficina ni en
+                      obra.
                     </div>
                   ) : (
                     <Table<CurrentInventoryLocationRow>
@@ -821,7 +1004,9 @@ export default function Element() {
           </section>
 
           <section className="max-w-xl xl:col-span-2 xl:max-w-full">
-            <h3 className="mb-4 text-lg font-bold text-gray-900">Historial de movimientos</h3>
+            <h3 className="mb-4 text-lg font-bold text-gray-900">
+              Historial de movimientos
+            </h3>
             {loadingInventory ? (
               <LoadingSkeletonForm numberRows={1} />
             ) : !inventoryDetail?.movementHistory.length ? (
@@ -843,6 +1028,8 @@ export default function Element() {
             mode={movementModal}
             elementName={element?.name || "Elemento"}
             officeEntries={availableOfficeEntries}
+            elementVariants={element?.variants ?? []}
+            requiresVariant={familyConfig?.supportsVariants ?? false}
             loading={registeringMovement}
             onClose={() => setMovementModal(null)}
             onSubmit={handleMovementSubmit}
@@ -863,11 +1050,16 @@ export default function Element() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <div className="flex flex-col gap-8">
-        <Form name={`ITEM DE INVENTARIO ${elementId}`} handleSubmit={handleUpdate}>
+        <Form
+          name={`ITEM DE INVENTARIO ${elementId}`}
+          handleSubmit={handleUpdate}
+        >
           {isLegacyOperative ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-              Este item pertenece al grupo <span className="font-semibold">Operative legado</span>.
-              Selecciona su familia correcta y guarda para migrarlo sin perder historial.
+              Este item pertenece al grupo{" "}
+              <span className="font-semibold">Operative legado</span>.
+              Selecciona su familia correcta y guarda para migrarlo sin perder
+              historial.
             </div>
           ) : null}
 
@@ -882,12 +1074,42 @@ export default function Element() {
                 optional={false}
               />
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Marca" name="brand" type="text" value={brand} onChange={(e) => setBrand(e.target.value)} optional={true} />
-                <InputForm label="Modelo" name="model" type="text" value={model} onChange={(e) => setModel(e.target.value)} optional={true} />
+                <InputForm
+                  label="Marca"
+                  name="brand"
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  optional={true}
+                />
+                <InputForm
+                  label="Modelo"
+                  name="model"
+                  type="text"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  optional={true}
+                />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Stock Minimo" name="stockMinimum" type="number" value={stockMinimum} onChange={(e) => setStockMinimum(parseOptionalNumber(e.target.value))} optional={true} />
-                <InputForm label="Talla" name="size" type="text" value={size} onChange={(e) => setSize(e.target.value)} optional={true} />
+                <InputForm
+                  label="Stock Minimo"
+                  name="stockMinimum"
+                  type="number"
+                  value={stockMinimum}
+                  onChange={(e) =>
+                    setStockMinimum(parseOptionalNumber(e.target.value))
+                  }
+                  optional={true}
+                />
+                <InputForm
+                  label="Talla"
+                  name="size"
+                  type="text"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  optional={true}
+                />
               </div>
               <SelectForm
                 label="Categoria"
@@ -901,17 +1123,38 @@ export default function Element() {
                 ]}
               />
               <div className="flex flex-col gap-2">
-                <span className="font-semibold text-gray-700">Retorno obligatorio</span>
+                <span className="font-semibold text-gray-700">
+                  Retorno obligatorio
+                </span>
                 <div className="flex gap-6 text-xs font-semibold text-gray-700">
-                  <label className="flex items-center gap-2"><input type="radio" checked={family !== "uniform"} readOnly />Si</label>
-                  <label className="flex items-center gap-2"><input type="radio" checked={family === "uniform"} readOnly />No</label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={family !== "uniform"}
+                      readOnly
+                    />
+                    Si
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={family === "uniform"}
+                      readOnly
+                    />
+                    No
+                  </label>
                 </div>
               </div>
             </div>
           ) : isSafetyEquipment ? (
             <div className="flex flex-col gap-2">
               <div className="flex w-full flex-col gap-2">
-                <label htmlFor="safetyType" className="font-semibold text-nowrap">Tipo de Equipo</label>
+                <label
+                  htmlFor="safetyType"
+                  className="font-semibold text-nowrap"
+                >
+                  Tipo de Equipo
+                </label>
                 <Select
                   id="safetyType"
                   name="safetyType"
@@ -923,28 +1166,82 @@ export default function Element() {
                   required
                   options={[
                     { value: "", label: "Seleccionar..." },
-                    ...existingSafetyTypes.map((typeName) => ({ value: typeName, label: typeName })),
-                    { value: NEW_SAFETY_TYPE_VALUE, label: "Registrar nuevo tipo" },
+                    ...existingSafetyTypes.map((typeName) => ({
+                      value: typeName,
+                      label: typeName,
+                    })),
+                    {
+                      value: NEW_SAFETY_TYPE_VALUE,
+                      label: "Registrar nuevo tipo",
+                    },
                   ]}
                 />
                 {safetyTypeSelection === NEW_SAFETY_TYPE_VALUE ? (
-                  <input id="name" name="name" type="text" className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Extintor" required />
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    className="w-full rounded-sm border border-gray-400 p-2 focus:outline-[#0047a3]"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ej: Extintor"
+                    required
+                  />
                 ) : null}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Marca" name="brand" type="text" value={brand} onChange={(e) => setBrand(e.target.value)} optional={true} />
-                <InputForm label="Modelo" name="model" type="text" value={model} onChange={(e) => setModel(e.target.value)} optional={true} />
+                <InputForm
+                  label="Marca"
+                  name="brand"
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  optional={true}
+                />
+                <InputForm
+                  label="Modelo"
+                  name="model"
+                  type="text"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  optional={true}
+                />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Serie" name="serialNumber" type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} optional={true} />
-                <StatusRadio value={operationalStatus} onChange={setOperationalStatus} label="Estado de Operat." />
+                <InputForm
+                  label="Serie"
+                  name="serialNumber"
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  optional={true}
+                />
+                <StatusRadio
+                  value={operationalStatus}
+                  onChange={setOperationalStatus}
+                  label="Estado de Operat."
+                />
               </div>
-              <InputForm label="Link de ficha tecnica" name="technicalSheetLink" type="text" value={technicalSheetLink} onChange={(e) => setTechnicalSheetLink(e.target.value)} optional={true} />
+              <InputForm
+                label="Link de ficha tecnica"
+                name="technicalSheetLink"
+                type="text"
+                value={technicalSheetLink}
+                onChange={(e) => setTechnicalSheetLink(e.target.value)}
+                optional={true}
+              />
             </div>
           ) : isFallProtection ? (
             <>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Codigo del Elemento" name="code" type="text" value={code} onChange={(e) => setCode(e.target.value)} optional={false} />
+                <InputForm
+                  label="Codigo del Elemento"
+                  name="code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  optional={false}
+                />
                 <SelectForm
                   label="Categoria"
                   name="categoryName"
@@ -954,21 +1251,127 @@ export default function Element() {
                     { value: "Arnes", label: "Arnes" },
                     { value: "Banda de Anclaje", label: "Banda de Anclaje" },
                     { value: "Linea de Vida", label: "Linea de Vida" },
-                    { value: "Eslinga de posicionamiento", label: "Eslinga de posicionamiento" },
+                    {
+                      value: "Eslinga de posicionamiento",
+                      label: "Eslinga de posicionamiento",
+                    },
                   ]}
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Serie" name="serialNumber" type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} optional={true} />
-                <InputForm label="Marca" name="brand" type="text" value={brand} onChange={(e) => setBrand(e.target.value)} optional={true} />
+                <InputForm
+                  label="Serie"
+                  name="serialNumber"
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  optional={true}
+                />
+                <InputForm
+                  label="Marca"
+                  name="brand"
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  optional={true}
+                />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <StatusRadio value={operationalStatus} onChange={setOperationalStatus} label="Estado de Operatividad" />
-                <InputForm label="Link de ficha tecnica" name="technicalSheetLink" type="text" value={technicalSheetLink} onChange={(e) => setTechnicalSheetLink(e.target.value)} optional={true} />
+                <StatusRadio
+                  value={operationalStatus}
+                  onChange={setOperationalStatus}
+                  label="Estado de Operatividad"
+                />
+                <InputForm
+                  label="Link de ficha tecnica"
+                  name="technicalSheetLink"
+                  type="text"
+                  value={technicalSheetLink}
+                  onChange={(e) => setTechnicalSheetLink(e.target.value)}
+                  optional={true}
+                />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <InputForm label="Fecha de fabricacion" name="manufactureDate" type="date" value={manufactureDate} onChange={(e) => setManufactureDate(e.target.value)} optional={true} />
-                <InputForm label="Fecha de vencimiento" name="expirationDate" type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} optional={true} />
+                <InputForm
+                  label="Fecha de fabricacion"
+                  name="manufactureDate"
+                  type="date"
+                  value={manufactureDate}
+                  onChange={(e) => setManufactureDate(e.target.value)}
+                  optional={true}
+                />
+                <InputForm
+                  label="Fecha de vencimiento"
+                  name="expirationDate"
+                  type="date"
+                  value={expirationDate}
+                  onChange={(e) => setExpirationDate(e.target.value)}
+                  optional={true}
+                />
+              </div>
+            </>
+          ) : isTrackedInventoryAsset ? (
+            <>
+              <InputForm
+                label="Nombre"
+                name="name"
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                optional={false}
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <InputForm
+                  label="Código"
+                  name="code"
+                  type="text"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  optional={false}
+                />
+                <InputForm
+                  label="Serie"
+                  name="serialNumber"
+                  type="text"
+                  value={serialNumber}
+                  onChange={(event) => setSerialNumber(event.target.value)}
+                  optional={true}
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <InputForm
+                  label="Marca"
+                  name="brand"
+                  type="text"
+                  value={brand}
+                  onChange={(event) => setBrand(event.target.value)}
+                  optional={true}
+                />
+                <InputForm
+                  label="Modelo"
+                  name="model"
+                  type="text"
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                  optional={true}
+                />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <StatusRadio
+                  value={operationalStatus}
+                  onChange={setOperationalStatus}
+                  label="Estado de operatividad"
+                />
+                <InputForm
+                  label="Ficha técnica"
+                  name="technicalSheetLink"
+                  type="text"
+                  value={technicalSheetLink}
+                  onChange={(event) =>
+                    setTechnicalSheetLink(event.target.value)
+                  }
+                  optional={true}
+                />
               </div>
             </>
           ) : null}
@@ -988,33 +1391,48 @@ export default function Element() {
             onChange={(value) => setFamily(value as InventoryFamilyKey)}
             options={[
               { value: "epp", label: "EPP - Elementos de proteccion personal" },
-              { value: "epi", label: "EPI - Elementos de proteccion individual" },
+              {
+                value: "epi",
+                label: "EPI - Elementos de proteccion individual",
+              },
               { value: "uniform", label: "Uniforme - No retorna a oficina" },
-              { value: "officeMaterial", label: "Materiales de Oficina - Retorno opcional" },
-              { value: "ese", label: "ESE - Equipos de seguridad y/o emergencia" },
+              {
+                value: "officeMaterial",
+                label: "Materiales de Oficina - Retorno opcional",
+              },
+              {
+                value: "ese",
+                label: "ESE - Equipos de seguridad y/o emergencia",
+              },
               { value: "harness", label: "EPA - Proteccion anticaida" },
               { value: "quality", label: "Calidad - Activo unico" },
+              { value: "electricalEquipment", label: "Equipos Eléctricos" },
+              { value: "tools", label: "Herramientas" },
+              { value: "ladders", label: "Escaleras" },
+              { value: "materials", label: "Materiales" },
+              { value: "electricalHarness", label: "Arnés Eléctricos" },
             ]}
           />
 
           <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
-            <p className="font-semibold">
-              {selectedFamilyLabel}
-            </p>
+            <p className="font-semibold">{selectedFamilyLabel}</p>
             <p>
-              Codigo {codeRequirementLabel.toLowerCase()}, registros historicos conservados y
-              movimientos visibles desde esta ficha.
+              Codigo {codeRequirementLabel.toLowerCase()}, registros historicos
+              conservados y movimientos visibles desde esta ficha.
             </p>
             {familyConfig?.unique ? (
               <p className="mt-1">
-                Esta familia se maneja como activo unico. Las unidades fisicas usaran este item como base maestra.
+                Esta familia se maneja como activo unico. Las unidades fisicas
+                usaran este item como base maestra.
               </p>
             ) : null}
           </div>
 
           <ButtonContainer>
             <ReturnButton
-              onClick={() => navigateToInventory(isLegacyOperative ? "operative" : family)}
+              onClick={() =>
+                navigateToInventory(isLegacyOperative ? "operative" : family)
+              }
             />
             <DeleteButton
               onClick={() => setIsDeleteDialogOpen(true)}
@@ -1027,19 +1445,25 @@ export default function Element() {
         <section className="flex flex-col gap-6 p-10">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Modelo de catalogo</p>
+              <p className="text-xs font-semibold text-gray-500">
+                Modelo de catalogo
+              </p>
               <p className="text-lg font-extrabold text-gray-800">
                 {familyConfig?.unique ? "Activo unico" : "Stock base"}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Activos registrados</p>
+              <p className="text-xs font-semibold text-gray-500">
+                Activos registrados
+              </p>
               <p className="text-2xl font-extrabold text-gray-800">
                 {assetSummary?.totalAssets || 0}
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-gray-500">Activos disponibles</p>
+              <p className="text-xs font-semibold text-gray-500">
+                Activos disponibles
+              </p>
               <p className="text-2xl font-extrabold text-[#166534]">
                 {assetSummary?.availableAssets || 0}
               </p>
@@ -1048,9 +1472,12 @@ export default function Element() {
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex flex-col gap-2">
-              <h2 className="text-xl font-bold text-gray-900">Trazabilidad de inventario</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                Trazabilidad de inventario
+              </h2>
               <p className="text-xs text-gray-500">
-                Aqui puedes ver donde esta actualmente el item y el historial de sus movimientos.
+                Aqui puedes ver donde esta actualmente el item y el historial de
+                sus movimientos.
               </p>
             </div>
             {canRegisterStockMovements ? (
@@ -1082,8 +1509,9 @@ export default function Element() {
 
           {familyConfig?.unique ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
-              Esta ficha ya esta preparada para activos unicos. En la siguiente fase se registraran
-              las unidades fisicas y su trazabilidad por codigo, serie, partes o calibracion.
+              Esta ficha ya esta preparada para activos unicos. En la siguiente
+              fase se registraran las unidades fisicas y su trazabilidad por
+              codigo, serie, partes o calibracion.
             </div>
           ) : null}
 
@@ -1097,27 +1525,41 @@ export default function Element() {
             <>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500">Total recibido</p>
+                  <p className="text-xs font-semibold text-gray-500">
+                    Total recibido
+                  </p>
                   <p className="text-2xl font-extrabold text-gray-800">
-                    {formatInventoryQuantity(inventoryDetail.summary.totalReceived)}
+                    {formatInventoryQuantity(
+                      inventoryDetail.summary.totalReceived,
+                    )}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500">Total retornado</p>
+                  <p className="text-xs font-semibold text-gray-500">
+                    Total retornado
+                  </p>
                   <p className="text-2xl font-extrabold text-[#166534]">
-                    {formatInventoryQuantity(inventoryDetail.summary.totalReturned)}
+                    {formatInventoryQuantity(
+                      inventoryDetail.summary.totalReturned,
+                    )}
                   </p>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold text-gray-500">Ubicacion actual</p>
+                  <p className="text-xs font-semibold text-gray-500">
+                    Ubicacion actual
+                  </p>
                   <p className="text-2xl font-extrabold text-[#b45309]">
-                    {formatInventoryQuantity(inventoryDetail.summary.totalPending)}
+                    {formatInventoryQuantity(
+                      inventoryDetail.summary.totalPending,
+                    )}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-gray-900">Ubicaciones actuales</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Ubicaciones actuales
+                </h3>
                 {!currentLocationRows.length ? (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                     No hay unidades activas de este item en oficina ni en obra.
@@ -1132,7 +1574,9 @@ export default function Element() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-gray-900">Historial de movimientos</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Historial de movimientos
+                </h3>
                 {!inventoryDetail.movementHistory.length ? (
                   <div className="rounded-lg border border-dashed border-gray-300 bg-white p-6 text-gray-500">
                     Todavia no hay movimientos registrados para este item.
@@ -1141,7 +1585,9 @@ export default function Element() {
                   <Table<InventoryMovement>
                     data={inventoryDetail.movementHistory}
                     columns={movementColumns}
-                    enablePagination={inventoryDetail.movementHistory.length > 10}
+                    enablePagination={
+                      inventoryDetail.movementHistory.length > 10
+                    }
                   />
                 )}
               </div>
@@ -1153,9 +1599,13 @@ export default function Element() {
         <InventoryMovementModal
           mode={movementModal}
           elementName={element?.name || "Elemento"}
+          elementId={Number(elementId)}
           officeEntries={availableOfficeEntries}
+          elementVariants={element?.variants ?? []}
+          requiresVariant={familyConfig?.supportsVariants ?? false}
           loading={registeringMovement}
           onClose={() => setMovementModal(null)}
+          onVariantCreated={refetchElement}
           onSubmit={handleMovementSubmit}
         />
       ) : null}
@@ -1200,19 +1650,16 @@ function TechnicalSheetButton({ url }: { url?: string | null }) {
   const disabled = !normalizedUrl;
 
   return (
-    <button
-      type="button"
-      aria-label="Abrir ficha tecnica"
-      title="Abrir ficha tecnica"
+    <ActionButton
+      icon={<FaFileLines />}
+      label={disabled ? "Ficha técnica no disponible" : "Abrir ficha técnica"}
+      variant="ghost"
       disabled={disabled}
       onClick={() => {
         if (!normalizedUrl) return;
         window.open(normalizedUrl, "_blank", "noopener,noreferrer");
       }}
-      className="mb-[1px] inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-[#0047a3] text-white transition-colors hover:bg-[#003366] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
-    >
-      <FaFileLines className="size-4" />
-    </button>
+    />
   );
 }
 
@@ -1220,27 +1667,31 @@ function normalizeTechnicalSheetUrl(url?: string | null) {
   const trimmedUrl = url?.trim();
   if (!trimmedUrl) return "";
 
-  return /^https?:\/\//i.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`;
+  return /^https?:\/\//i.test(trimmedUrl)
+    ? trimmedUrl
+    : `https://${trimmedUrl}`;
 }
 
 function buildCurrentLocationRows(
   inventoryDetail: ElementInventoryDetail,
   totalOfficeStock: number,
 ): CurrentInventoryLocationRow[] {
-  const officeUnit = inventoryDetail.officeEntries.find((entry) => entry.currentStock > 0)
-    ?.unit ?? "unidad";
-  const officeRow: CurrentInventoryLocationRow[] = totalOfficeStock > 0
-    ? [
-        {
-          id: "office",
-          locationType: "office",
-          locationName: "Oficina",
-          responsibleName: "Inventario de oficina",
-          unit: officeUnit,
-          quantity: totalOfficeStock,
-        },
-      ]
-    : [];
+  const officeUnit =
+    inventoryDetail.officeEntries.find((entry) => entry.currentStock > 0)
+      ?.unit ?? "unidad";
+  const officeRow: CurrentInventoryLocationRow[] =
+    totalOfficeStock > 0
+      ? [
+          {
+            id: "office",
+            locationType: "office",
+            locationName: "Oficina",
+            responsibleName: "Inventario de oficina",
+            unit: officeUnit,
+            quantity: totalOfficeStock,
+          },
+        ]
+      : [];
 
   const projectRows = inventoryDetail.currentLocations
     .filter((entry) => entry.quantityPending > 0)
@@ -1325,7 +1776,8 @@ function MovementTypeBadge({
     maintenance_out: "bg-red-600 hover:bg-red-700",
     maintenance_return: "bg-emerald-600 hover:bg-emerald-700",
   };
-  const colorClass = toneByMovement[movementType] || "bg-gray-700 hover:bg-gray-800";
+  const colorClass =
+    toneByMovement[movementType] || "bg-gray-700 hover:bg-gray-800";
 
   return (
     <button
@@ -1371,7 +1823,10 @@ function MovementDetailModal({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <MovementDetailRow label="Fecha" value={formatMovementDate(movement.createdAt)} />
+          <MovementDetailRow
+            label="Fecha"
+            value={formatMovementDate(movement.createdAt)}
+          />
           <MovementDetailRow
             label="Cantidad"
             value={formatInventoryQuantity(movement.quantity)}
@@ -1384,7 +1839,10 @@ function MovementDetailModal({
             label="Hacia"
             value={translateInventoryLocation(movement.toLocation)}
           />
-          <MovementDetailRow label="Proyecto" value={movement.projectName || "-"} />
+          <MovementDetailRow
+            label="Proyecto"
+            value={movement.projectName || "-"}
+          />
           <MovementDetailRow
             label="Responsable"
             value={movement.responsibleUserName || "-"}
@@ -1393,7 +1851,10 @@ function MovementDetailModal({
             label="Registrado por"
             value={movement.performedByUserName || "-"}
           />
-          <MovementDetailRow label="Solicitud" value={movement.requestId || "-"} />
+          <MovementDetailRow
+            label="Solicitud"
+            value={movement.requestId || "-"}
+          />
         </div>
 
         <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
@@ -1435,18 +1896,27 @@ function MovementDetailRow({
 function InventoryMovementModal({
   mode,
   elementName,
+  elementId,
   officeEntries,
+  elementVariants,
+  requiresVariant,
   loading,
   onClose,
+  onVariantCreated,
   onSubmit,
 }: {
   mode: MovementModalMode;
   elementName: string;
+  elementId?: number;
   officeEntries: OfficeInventoryEntry[];
+  elementVariants: ElementVariantType[];
+  requiresVariant: boolean;
   loading: boolean;
   onClose: () => void;
+  onVariantCreated?: () => void;
   onSubmit: (payload: {
     officeInventoryEntryId?: number;
+    elementVariantId?: number;
     quantity?: number;
     newQuantity?: number;
     reason?: string;
@@ -1454,12 +1924,34 @@ function InventoryMovementModal({
   }) => void;
 }) {
   const [officeInventoryEntryId, setOfficeInventoryEntryId] = useState(
-    officeEntries[0]?.officeInventoryEntryId ? String(officeEntries[0].officeInventoryEntryId) : "",
+    officeEntries[0]?.officeInventoryEntryId
+      ? String(officeEntries[0].officeInventoryEntryId)
+      : "",
   );
   const [quantity, setQuantity] = useState(1);
+  const [elementVariantId, setElementVariantId] = useState("");
   const [newQuantity, setNewQuantity] = useState(0);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
+  const [newVariantLabel, setNewVariantLabel] = useState("");
+  const { execute: createVariant, loading: creatingVariant } =
+    useApiAction<ElementVariantType>();
+
+  const handleCreateVariant = async () => {
+    if (!elementId || !newVariantLabel.trim()) return;
+    await toast.promise(
+      createVariant(`${elementApi}${elementId}/variants`, "POST", {
+        label: newVariantLabel.trim(),
+      }),
+      {
+        loading: "Creando talla…",
+        success: "Talla creada con stock cero.",
+        error: (caught) => caught.message,
+      },
+    );
+    setNewVariantLabel("");
+    onVariantCreated?.();
+  };
 
   const titleByMode: Record<MovementModalMode, string> = {
     entry: "Registrar ingreso",
@@ -1485,6 +1977,11 @@ function InventoryMovementModal({
       return;
     }
 
+    if (mode === "entry" && requiresVariant && !elementVariantId) {
+      toast.error("Selecciona la talla de la prenda.");
+      return;
+    }
+
     if (mode === "disposal" && quantity <= 0) {
       toast.error("La cantidad de salida debe ser mayor a cero.");
       return;
@@ -1499,6 +1996,7 @@ function InventoryMovementModal({
       officeInventoryEntryId: officeInventoryEntryId
         ? Number(officeInventoryEntryId)
         : undefined,
+      elementVariantId: elementVariantId ? Number(elementVariantId) : undefined,
       quantity,
       newQuantity,
       reason: reason.trim(),
@@ -1529,6 +2027,48 @@ function InventoryMovementModal({
         </div>
 
         <div className="flex flex-col gap-4">
+          {mode === "entry" && requiresVariant ? (
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-gray-700">Talla</label>
+              <Select
+                name="elementVariantId"
+                value={elementVariantId}
+                onChange={setElementVariantId}
+                required
+                options={[
+                  { value: "", label: "Seleccionar talla..." },
+                  ...elementVariants.map((variant) => ({
+                    value: String(variant.elementVariantId),
+                    label: variant.label,
+                  })),
+                ]}
+              />
+              {!elementVariants.length ? (
+                <p className="text-xs text-red-600">
+                  Configura al menos una talla antes de registrar existencias.
+                </p>
+              ) : null}
+              {elementId ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2"
+                    placeholder="Nueva talla (ej. 36)"
+                    value={newVariantLabel}
+                    onChange={(event) => setNewVariantLabel(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="rounded-md border border-[#0047a3] px-3 py-2 text-sm font-semibold text-[#0047a3] hover:bg-blue-50 disabled:opacity-50"
+                    disabled={creatingVariant || !newVariantLabel.trim()}
+                    onClick={() => void handleCreateVariant()}
+                  >
+                    Crear talla
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {requiresOfficeEntry ? (
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-gray-700">
@@ -1553,7 +2093,9 @@ function InventoryMovementModal({
                 </p>
               ) : selectedEntry ? (
                 <p className="text-2xs font-semibold text-gray-500">
-                  Stock actual: {formatInventoryQuantity(selectedEntry.currentStock)} {selectedEntry.unit}
+                  Stock actual:{" "}
+                  {formatInventoryQuantity(selectedEntry.currentStock)}{" "}
+                  {selectedEntry.unit}
                 </p>
               ) : null}
             </div>
@@ -1561,7 +2103,9 @@ function InventoryMovementModal({
 
           {mode === "adjustment" ? (
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-gray-700">Nueva cantidad</label>
+              <label className="text-xs font-bold text-gray-700">
+                Nueva cantidad
+              </label>
               <input
                 type="number"
                 min="0"
@@ -1574,7 +2118,9 @@ function InventoryMovementModal({
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-bold text-gray-700">Cantidad</label>
+              <label className="text-xs font-bold text-gray-700">
+                Cantidad
+              </label>
               <input
                 type="number"
                 min="0.0001"
@@ -1601,7 +2147,9 @@ function InventoryMovementModal({
           ) : null}
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-gray-700">Descripcion</label>
+            <label className="text-xs font-bold text-gray-700">
+              Descripcion
+            </label>
             <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}

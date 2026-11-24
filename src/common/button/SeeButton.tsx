@@ -4,16 +4,24 @@ import ActionButton from "../../components/ActionButton";
 interface SeeButtonProps {
   onClick: () => void;
   disabled?: boolean;
+  label?: string;
+  permission?: string;
 }
 
-export default function SeeButton({ onClick, disabled }: SeeButtonProps) {
+export default function SeeButton({
+  onClick,
+  disabled,
+  label = "Visualizar",
+  permission,
+}: SeeButtonProps) {
   return (
     <ActionButton
       icon={<FaEye />}
+      label={label}
       onClick={onClick}
       disabled={disabled}
-      bgColor="#252525ff"
-      bgHoverColor="#000000"
+      permission={permission}
+      variant="ghost"
     />
-  )
+  );
 }

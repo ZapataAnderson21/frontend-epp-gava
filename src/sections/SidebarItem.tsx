@@ -13,6 +13,8 @@ interface SidebarItemProps {
   exactActivePaths?: string[];
   isRoot?: boolean;
   isOpen?: boolean;
+  ariaExpanded?: boolean;
+  ariaControls?: string;
   onClick?: () => void;
 
   // 👇 animación
@@ -38,6 +40,8 @@ export default function SidebarItem({
   exactActivePaths = [],
   isRoot,
   isOpen,
+  ariaExpanded,
+  ariaControls,
   onClick,
   index = 0,
   baseDelay = 0,
@@ -49,7 +53,6 @@ export default function SidebarItem({
   const delay = baseDelay + index * perItemDelay;
   const sectionPaths = href ? [href, ...activePaths] : activePaths;
   const isActive =
-    Boolean(href) &&
     (sectionPaths.some(
       (path) => pathname === path || pathname.startsWith(`${path}/`),
     ) ||
@@ -96,6 +99,8 @@ export default function SidebarItem({
     <motion.button
       type="button"
       onClick={onClick}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
       className="w-full text-left"
       custom={delay}
       variants={rowVariants}

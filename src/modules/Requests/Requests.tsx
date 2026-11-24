@@ -18,6 +18,8 @@ export const options = [
 
 export default function Requests() {
   const [ filter, setFilter ] = useState(options[0]);
+  const [requestKind, setRequestKind] = useState("");
+  const [search, setSearch] = useState("");
 
   const handleSelect = (option: { value: string; label: string }) => {
     setFilter(option);
@@ -42,6 +44,14 @@ export default function Requests() {
 
     <Panel>
       <HeaderPanel name={`REQUERIMIENTOS`}>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar por proyecto, solicitante o descripción"
+          className="min-w-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-[#0047a3]"
+          aria-label="Buscar requerimientos"
+        />
         <div className="w-fit">
           <SelectForm
             label="Filtrar por"
@@ -57,11 +67,30 @@ export default function Requests() {
             directionRow={true}
           />
         </div>
+        <div className="w-fit">
+          <SelectForm
+            label="Tipo"
+            name="requestKind"
+            value={requestKind}
+            onChange={setRequestKind}
+            options={[
+              { value: "", label: "Todos" },
+              { value: "projectStart", label: "Inicio de Obra" },
+              { value: "duringExecution", label: "Durante la Ejecución" },
+            ]}
+            directionRow={true}
+          />
+        </div>
         <AddButton onClick={navigateToNewRequest} />
         { projectId &&  <div className="items-start"><ReturnButton onClick={navigateToProject} /></div> }
       </HeaderPanel>
 
-      <RequestTable filter={filter.value} />
+      <RequestTable
+        filter={filter.value}
+        projectId={projectId ? Number(projectId) : undefined}
+        requestKind={requestKind}
+        search={search}
+      />
 
     </Panel>
   );

@@ -42,7 +42,11 @@ export default function RowElementRequest({
       ? `${elementRequest.element.name} - ${elementRequest.element.code}`
       : elementRequest.element?.name);
   const helperText =
-    family === "harness" ? groupParts : planningSummary;
+    family === "uniform" && elementRequest.elementVariant
+      ? `Talla: ${elementRequest.elementVariant.label}`
+      : family === "harness"
+        ? groupParts
+        : planningSummary;
   const gridClass = getRowGridClass(showQuantityField);
 
   return (

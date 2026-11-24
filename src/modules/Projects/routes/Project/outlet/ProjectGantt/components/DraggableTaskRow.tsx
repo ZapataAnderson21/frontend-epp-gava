@@ -9,6 +9,7 @@ import {
   Trash2 as TbTrash,
   User as TbUser,
 } from "lucide-react";
+import ActionButton from "../../../../../../../components/ActionButton";
 import type { Task } from "../types";
 import { PRIORITY_COLORS, PRIORITY_LABELS } from "../types";
 
@@ -113,27 +114,25 @@ export default function DraggableTaskRow({
       )}
 
       <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100">
-        <button
+        <ActionButton
+          icon={<TbSubtask />}
+          label="Agregar subtarea"
+          variant="ghost"
           onClick={() => onAddSubtask(task)}
-          className="p-1 text-gray-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-          title="Agregar subtarea"
-        >
-          <TbSubtask className="text-xs" />
-        </button>
-        <button
+        />
+        <ActionButton
+          icon={<TbEdit />}
+          label="Editar tarea"
+          variant="ghost"
           onClick={() => onEdit(task)}
-          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-          title="Editar"
-        >
-          <TbEdit className="text-xs" />
-        </button>
-        <button
+        />
+        <ActionButton
+          icon={<TbTrash />}
+          label="Eliminar tarea"
+          variant="ghost"
+          tone="danger"
           onClick={() => onDelete(task)}
-          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-          title="Eliminar"
-        >
-          <TbTrash className="text-xs" />
-        </button>
+        />
       </div>
     </div>
   );

@@ -52,7 +52,6 @@ export function AccessProvider({ children }: { children: ReactNode }) {
     }
     if (verifiedPath.current !== pathname) {
       setLoading(true);
-      setPermissions([]);
     }
     fetch(`${permissionsApi}me`, {
       credentials: "include",
@@ -102,6 +101,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
 export const useAccess = () => useContext(AccessContext);
 
 export function moduleForPath(path: string): string | null {
+  if (path.startsWith("/admin/ssoma/work-clothing")) return "workClothing";
   if (/\/projects\/[^/]+\/purchase-orders/.test(path)) return "orders";
   const projectTabs: Record<string, string> = {
     "petty-cash": "cash",
@@ -121,17 +121,20 @@ export function moduleForPath(path: string): string | null {
         "": "dashboard",
         dashboard: "dashboard",
         projects: "projects",
+        "purchase-orders": "orders",
         suppliers: "suppliers",
         clients: "clients",
         resources: "resources",
         quotations: "quotations",
         requests: "requests",
         inventory: "inventory",
+        "ssoma-resources": "inventory",
+        ssoma: "ssoma",
         elements: "inventory",
         workers: "workers",
         payrolls: "payroll",
+        "staff-payroll": "staffPayroll",
         "worker-monthly-evaluations": "evaluations",
-        ssoma: "ssoma",
         "document-expirations": "documents",
         emergencies: "emergencies",
         users: "users",
@@ -152,7 +155,9 @@ export function RouteAccess({ children }: { children: ReactNode }) {
         Verificando permisos…
       </div>
     );
-  if (!module || !can(`${module}.${action}`))
+  const missingFinancialAccess =
+    module === "staffPayroll" && !can("finance.view");
+  if (!module || !can(`${module}.${action}`) || missingFinancialAccess)
     return (
       <div className="p-8 text-slate-600">
         <h1 className="text-xl font-bold">Acceso restringido</h1>

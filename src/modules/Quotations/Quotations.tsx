@@ -4,6 +4,7 @@ import { AddButton } from "../../common/button";
 import QuotationTable from "./QuotationTable";
 import { UsersRound as FaUserGroup } from "lucide-react";
 import { Button } from "../../components";
+import Permission from "../../common/auth/Permission";
 
 export default function Quotations() {
   const navigate = useNavigate();
@@ -11,7 +12,9 @@ export default function Quotations() {
   return (
     <Panel>
       <HeaderPanel name="COTIZACIONES">
-        <AddButton onClick={() => navigate("/admin/quotations/new")} />
+        <Permission permission="quotations.manage">
+          <AddButton onClick={() => navigate("/admin/quotations/new")} />
+        </Permission>
         <Button
           icon={<FaUserGroup />}
           label="Clientes"

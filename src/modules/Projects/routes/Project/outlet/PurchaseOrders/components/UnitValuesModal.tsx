@@ -3,6 +3,7 @@ import { ExternalLink as FaExternalLinkAlt, X as FaTimes } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../../../../../../common/error";
 import { Table } from "../../../../../../../common/table";
+import ActionButton from "../../../../../../../components/ActionButton";
 import { purchaseOrderApi } from "../../../../../../../data/apiUrl";
 import type { PurchaseOrderUnitValue } from "../../../../../../../data/types";
 import { useFetch } from "../../../../../../../hooks";
@@ -187,14 +188,12 @@ export default function UnitValuesModal({
                     width: "10rem",
                     align: "center",
                     render: (row) => (
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-2 rounded-md bg-slate-800 px-3 py-2 text-xs font-bold text-white transition hover:bg-black"
+                      <ActionButton
+                        icon={<FaExternalLinkAlt />}
+                        label="Visualizar orden de compra"
+                        variant="ghost"
                         onClick={() => handleSeePurchaseOrder(row.purchaseOrderId)}
-                      >
-                        <FaExternalLinkAlt />
-                        Ver OC
-                      </button>
+                      />
                     ),
                   },
                 ] as const}
